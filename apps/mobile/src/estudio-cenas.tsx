@@ -42,20 +42,25 @@ export function StuAluno({ estado, fala: falaDaConversa }: { estado: 'aluno' | '
   );
 }
 
+/** O nome da etapa sem o número da lista antiga ("1. Gravar ou escrever" → "Gravar ou escrever"). */
+export function nomeDaEtapaDoEnsino(etapa: string) {
+  return etapa.replace(/^\d+\.\s*/, '');
+}
+
 /**
- * As três etapas do "Ensine ao Stu": a atual em destaque (1. gravar ou escrever, 2. revisar, 3. ver o retorno). Com a voz
- * ao vivo liberada, a primeira vira "1. Conversar, gravar ou escrever" (`primeira`), como na web.
+ * As três etapas do "Ensine ao Stu" numa linha só de indicador, como a da ponte (spec 16, item 25): "Passo 1 de 3 · Gravar
+ * ou escrever", em 14/20 800 #5E6A85, sem nada tocável (antes eram pílulas com borda, que pareciam filtros). O leitor de tela
+ * ouve "Passo 1 de 3: Gravar ou escrever". Com a voz ao vivo liberada, a primeira vira "Conversar, gravar ou escrever"
+ * (`primeira`), como na web.
  */
 export function EtapasDoEnsino({ ativa, primeira }: { ativa: 0 | 1 | 2; primeira?: string }) {
-  const etapas = primeira ? [primeira, m.ensinoEtapas[1], m.ensinoEtapas[2]] : [...m.ensinoEtapas];
+  const etapas = (primeira ? [primeira, m.ensinoEtapas[1], m.ensinoEtapas[2]] : [...m.ensinoEtapas]).map(nomeDaEtapaDoEnsino);
+  const passo = m.ponteIndicador(ativa + 1);
   return (
-    <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${etapas[ativa]}`} style={aluno.etapas}>
-      {etapas.map((etapa, indice) => (
-        <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva]}>
-          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acaoEscura }]}>{etapa}</Text>
-        </View>
-      ))}
-    </View>
+    <Text testID="ensino-passo" accessible accessibilityRole="text" accessibilityLabel={`${passo}: ${etapas[ativa]}`} accessibilityLiveRegion="polite"
+      style={aluno.etapaLinha}>
+      {`${passo} · ${etapas[ativa]}`}
+    </Text>
   );
 }
 
@@ -248,10 +253,8 @@ const aluno = StyleSheet.create({
   balaoSeta: { position: 'absolute', left: -7, top: '50%', marginTop: -6, width: 12, height: 12, backgroundColor: cores.fundo, borderLeftWidth: 2,
     borderBottomWidth: 2, borderColor: cores.gelo, transform: [{ rotate: '45deg' }] },
   balaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  etapas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  etapa: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1.5, borderColor: cores.gelo },
-  etapaAtiva: { borderColor: cores.acao, backgroundColor: cores.ceu },
-  etapaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 19 },
+  // A linha do indicador, como "Passo n de 3 · …" da ponte (cena.faixaPasso).
+  etapaLinha: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   // Como .ensino-ondas da web: cinco barras de 6 × 32 com vão de 5; sem o volume (aparelho que não informa), cheias.
   ondas: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 36 },
   barra: { width: 6, borderRadius: 3, backgroundColor: cores.acao },

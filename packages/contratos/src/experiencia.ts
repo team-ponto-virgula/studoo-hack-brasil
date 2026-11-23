@@ -58,6 +58,9 @@ const GESTO: Gesto = GESTO_CURTIR;
 /** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
 const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
 
+/** O botão de conferir a resposta: o da lição e o do "Sua vez" do "Resolva comigo". */
+const VERIFICAR = 'Verificar';
+
 export const mensagens = {
     estudio: {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
@@ -80,7 +83,7 @@ export const mensagens = {
       verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender',
       ponteMapa: 'Reforço', ponteMapaFeita: 'Ponte construída',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo, e dê um exemplo seu. O Stu, o mascote do Studoo, aponta o que faz sentido e propõe uma situação nova.',
+      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
@@ -286,22 +289,26 @@ export const mensagens = {
         comecar: 'Criar minha primeira trilha',
         entendi: 'Entendi',
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
+        /**
+         * Spec 17, mudança 2: sem palavras de dentro do produto ("citação", "ponte", "cartões objetivos"). O 5º passo (só com sessão) não mudou. O 4º passo não promete "no computador ou no
+         * celular" nem "salvo": isso não vale para o visitante (o progresso dele dura 24 h neste aparelho); o texto vale para conta e para visitante (decisão do Lead, 22/11).
+         */
         passos: [
             {
                 titulo: 'Seu material vira lição',
-                texto: 'Envie um arquivo, foto ou pedido e estude com a citação do trecho original.',
+                texto: 'Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia.',
             },
             {
-                titulo: 'O erro abre outro caminho',
-                texto: 'Quando travar, a ponte explica de outro jeito em três passos até o desafio.',
+                titulo: 'Errou? Tem outro jeito',
+                texto: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.',
             },
             {
-                titulo: 'Explique com suas palavras',
-                texto: 'Conte ao Stu o que entendeu e receba retorno em quatro cartões objetivos.',
+                titulo: 'Explique do seu jeito',
+                texto: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar.',
             },
             {
-                titulo: 'Progresso salvo no mapa',
-                texto: 'Acompanhe cada lição e ponte concluída na web e no celular, no seu ritmo.',
+                titulo: 'Seu caminho fica no mapa',
+                texto: 'Cada lição concluída fica marcada, e você continua de onde parou.',
             },
             {
                 titulo: 'O que te interessa?',
@@ -442,6 +449,8 @@ export const mensagens = {
             [nivel, ...(estudando > 0 ? [`${estudando} estudando`] : []), ...(valeus > 0 ? [`${valeus} ${valeus === 1 ? GESTO.palavra : GESTO.plural}`] : [])].join(' · '),
         mudarCompartilhamento: 'Mudar compartilhamento',
         recebida: (nome: string) => `Trilha adicionada de ${nome}. As mudanças valem só para a sua cópia; a original continua como ${nome} deixou.`,
+        /** Quem compartilhou excluiu a conta ou parou de compartilhar: sem o nome (`recebidaTemNome`). */
+        recebidaSemNome: 'Trilha adicionada da comunidade. As mudanças valem só para a sua cópia; a original continua como está.',
         apagarTitulo: 'Apagar trilha',
         apagarDica: 'Apaga a trilha, as lições e o seu progresso nela.',
         apagar: 'Apagar trilha',
@@ -538,9 +547,17 @@ export const mensagens = {
             /** Campo vazio ao salvar (revisão de 19/11). */
             vazio: 'Escreva como você quer aparecer.',
         },
-        compartilhadas: 'Trilhas que você compartilha',
+        /**
+         * Dois termos, cada um com o seu sentido (spec 16, item 32): compartilhar é ter um link (só quem o recebe abre); postar é aparecer no perfil.
+         * O título da seção fala do link, e a linha de baixo diz como aparecer no perfil.
+         */
+        compartilhadas: 'Trilhas com link',
         /** Título da seção com o total (inclui as trilhas só com o link). */
-        compartilhadasTotal: (n: number) => `Trilhas que você compartilha (${n})`,
+        compartilhadasTotal: (n: number) => `Trilhas com link (${n})`,
+        /** Sob o título, quando há trilhas com link: com a comunidade, o caminho é "Postar trilha no perfil". */
+        compartilhadasLinha: 'Só quem tem o link abre. Para aparecer no seu perfil, use “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        compartilhadasLinhaSemComunidade: 'Só quem tem o link abre. Para aparecer no seu perfil, marque “Mostrar no meu perfil”.',
         nenhuma: 'Você ainda não compartilha nenhuma trilha. Abra uma trilha e toque em “Compartilhar”.',
         nenhumaAntes: 'Você ainda não compartilha nenhuma trilha.',
         nenhumaLink: 'Abra uma trilha',
@@ -550,7 +567,8 @@ export const mensagens = {
         /** Na lista da dona, quando ninguém começou nem curtiu: uma frase só. */
         semNinguem: GESTO.semNinguem,
         publicoTitulo: 'Seu perfil público',
-        privado: 'Privado. Nenhuma trilha aparece no seu perfil.',
+        /** Perfil vazio: esta frase e a dica de baixo formam uma só ("Privado: nenhuma trilha está postada no seu perfil. Para aparecer nele, use “Postar trilha no perfil”."). */
+        privado: 'Privado: nenhuma trilha está postada no seu perfil.',
         publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
         verComoOutros: 'Ver como os outros veem',
         conta: 'Conta',
@@ -569,9 +587,9 @@ export const mensagens = {
         textoCompartilharPerfil: (nome: string) => `As trilhas de ${nome} no Studoo`,
         linkPerfilCopiado: 'Link do perfil copiado',
         // Spec 10, 7b (db773e6): com a comunidade, o perfil fica público pela folha "Postar no perfil".
-        perfilPrivadoDica: 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.',
+        perfilPrivadoDica: 'Para aparecer nele, use “Postar trilha no perfil”.',
         /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
-        perfilPrivadoDicaSemComunidade: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
+        perfilPrivadoDicaSemComunidade: 'Para aparecer nele, marque “Mostrar no meu perfil” em ao menos uma trilha.',
         alcance: (trilhas: number, pessoas: number) =>
             mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
         /**
@@ -675,7 +693,10 @@ export const mensagens = {
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
         emAltaDica: GESTO.legendaEmAlta,
-        posicao: (n: number) => `${n}º lugar`,
+        /** O que o leitor de tela ouve na capa de uma trilha do Em alta (spec 16, item 16): "1º em alta". Era "1º lugar". */
+        posicao: (n: number) => `${n}º em alta`,
+        /** O que a pílula da capa escreve: "1º" (13 px 800 sobre branco). */
+        posicaoSelo: (n: number) => `${n}º`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
         temas: 'Filtrar por tema',
@@ -720,9 +741,13 @@ export const mensagens = {
         linkCopiado: 'Link da trilha copiado',
         mais: (titulo: string) => `Mais ações para “${titulo}”`,
         denunciar: 'Denunciar',
-        demonstracao: 'Demonstração',
-        demonstracaoDica: 'Trilha pronta do modo demonstração.',
-        demonstracaoExplica: '“Demonstração” marca conteúdo de exemplo, criado para mostrar o Studoo.',
+        /** O selo do conteúdo sintético do Explorar (spec 16, item 9): "Exemplo", no selo neutro; a honestidade continua, o conteúdo segue marcado. */
+        demonstracao: 'Exemplo',
+        /** O nome do selo para o leitor de tela (a palavra "Exemplo" na tela fica escondida dele, para não repetir). */
+        demonstracaoRotulo: 'Exemplo criado pelo Studoo para mostrar o app',
+        demonstracaoDica: 'Trilha de exemplo do Studoo.',
+        /** O parágrafo do alto do Explorar saiu (spec 16, item 9); o app ainda o usa até a troca (Mobile 2), por isso a chave fica, coerente com "Exemplo". */
+        demonstracaoExplica: '“Exemplo” marca conteúdo criado pelo Studoo para mostrar o app.',
         entrarParaAgir: GESTO.faixaSemConta,
         entrar: 'Entrar',
         adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
@@ -765,14 +790,14 @@ export const mensagens = {
         publicada: 'Publicada no Explorar.',
         publicacaoSalva: 'Tema e legenda salvos.',
         materialFora: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
-        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com o rótulo “Demonstração”.',
+        demonstracaoAviso: 'Esta trilha é um exemplo do Studoo e aparece no Explorar com o rótulo “Exemplo”.',
         verNoExplorar: 'Ver no Explorar',
         irAoExplorar: 'Ver trilhas da comunidade',
         // Tela Perfil (dona)
         ajustar: 'Quem pode ver',
         ajustarRotulo: (titulo: string) => `Mudar quem pode ver “${titulo}”`,
         naSuaPagina: 'Como os outros veem',
-        perfilDemo: 'Perfil de demonstração',
+        perfilDemo: 'Perfil de exemplo',
         // Seguir (etapa C2)
         seguir: 'Seguir',
         seguindo: 'Seguindo',
@@ -1017,12 +1042,20 @@ export const mensagens = {
         contexto: 'Nova trilha',
         montandoTitulo: 'Montando sua trilha',
         aguardandoLicao: 'Ainda montando a próxima lição…',
+        /**
+         * A faixa da proposta (spec 17, mudança 2): "Sua trilha está pronta: 10 lições curtas em 3 partes." Com uma parte só, sem o "em M partes"; com uma lição só,
+         * "Sua trilha está pronta: 1 lição curta." Antes dizia "Proposta pronta", palavra de dentro do produto. Também é o anúncio do leitor de tela.
+         */
         propostaPronta: (licoes: number, partes: number) =>
-            `Proposta pronta: ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+            `Sua trilha está pronta: ${licoes} ${licoes === 1 ? 'lição curta' : 'lições curtas'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`,
         comecarLicao1: 'Começar a lição 1',
         criandoTrilha: 'Criando sua trilha…',
         anuncioCriando: 'Criando sua trilha.',
-        escrevendoLicoes: 'Escrevendo as lições da trilha. Com a IA, leva alguns segundos.',
+        /**
+         * A linha embaixo do botão "Começar a lição 1" (spec 17, mudança 1, revista em 23/11): entra 1,5 s depois do toque e dura enquanto a trilha é criada (de 12 a 21 s medidos).
+         * Por isso não promete "alguns segundos". Depois de 3 s na tela, a mesma linha troca para as frases de `dicas`.
+         */
+        escrevendoLicoes: 'Escrevendo suas lições…',
         erroCriacao: 'Não deu para criar a trilha. Confira a conexão e tente de novo.',
         propostaExpirada: 'Esta proposta expirou. Monte de novo.',
         montarDeNovo: 'Montar de novo',
@@ -1035,11 +1068,16 @@ export const mensagens = {
         contagemFinal: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
         stuMontando: 'Montando sua trilha, uma lição de cada vez',
         stuPronta: 'Trilha pronta! Confira as lições e comece quando quiser.',
+        /**
+         * As frases da espera da criação da trilha (spec 17, mudança 1, revista em 23/11), nesta ordem e em laço: depois de "Começar a lição 1", a linha "Escrevendo suas lições…"
+         * (`escrevendoLicoes`) troca, 3 s depois de aparecer, para a 1ª frase e, a cada 5 s, para a seguinte (`dicaDaEspera`, em @studoo/contratos, diz qual). A placa "Montando sua trilha",
+         * na geração da proposta (uns 3 s), NÃO usa as frases. São verdadeiras para conta e para visitante, sem número nem promessa que não medimos (por isso a 3ª não diz "salvo": o
+         * progresso do visitante dura 24 h neste aparelho; e "Você confere a trilha antes de começar." saiu, porque nessa espera a pessoa já conferiu a trilha). Cada uma cabe em 2 linhas em 320 px.
+         */
         dicas: [
-            'Dica: um conceito novo por lição deixa tudo mais leve.',
-            'Dica: revisões de tempos em tempos ajudam a lembrar.',
-            'Dica: errar faz parte. O feedback mostra o caminho.',
-            'Dica: lições curtas cabem em qualquer intervalo do dia.',
+            'Lições curtas, com exercício e retorno na hora.',
+            'Errou? O Stu explica de outro jeito.',
+            'Cada lição concluída fica marcada no mapa.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
         repetida: (titulo: string) => `Você já tem a trilha “${titulo}”. Quer continuar nela em vez de criar outra igual?`,
@@ -1093,7 +1131,7 @@ export const mensagens = {
         exemplo: 'Exemplo',
         exercicio: 'Exercício',
         resposta: 'Sua resposta',
-        avaliar: 'Verificar',
+        avaliar: VERIFICAR,
         avaliando: 'Verificando…',
         correta: 'Resposta correta',
         incorreta: 'Resposta incorreta',
@@ -1346,6 +1384,19 @@ export const mensagens = {
             concluir: 'Concluir lição',
             escolha: 'Conte como foi para concluir a lição.'
         }
+    },
+    /** "Resolva comigo" (spec 15, seção 4): os textos da web e do app; a frase de cada passo vem da IA. "Verificar" é o da lição. */
+    resolvaComigo: {
+        selo: 'Resolva comigo',
+        passo: (n: number, total: number) => `Passo ${n} de ${total}`,
+        proximo: 'Próximo passo',
+        voltar: 'Voltar um passo',
+        suaVez: 'Sua vez',
+        isso: 'Isso!',
+        tentarDeNovo: 'Tentar de novo',
+        metodo: 'O método',
+        agora: 'Agora é com você',
+        verificar: VERIFICAR
     },
     erros: {
         material_invalido: 'Use imagem JPG/PNG/WebP, PDF, DOCX ou CSV de até 5 MB, respeitando os limites de páginas, texto e tabela.',

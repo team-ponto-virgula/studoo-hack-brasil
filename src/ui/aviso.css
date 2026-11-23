@@ -7,8 +7,18 @@
 @media (prefers-reduced-motion: no-preference) {
   .aviso-app p { animation: aviso-sobe 220ms ease-out both; }
   @keyframes aviso-sobe { from { opacity: 0; transform: translateY(10px); } }
+  .aviso-musica p { animation: aviso-desce 220ms ease-out both; }
+  @keyframes aviso-desce { from { opacity: 0; transform: translateY(-10px); } }
 }
-.aviso-musica { bottom: max(16px,calc(var(--espaco-rodape,0px) + 12px),calc(env(safe-area-inset-bottom) + 16px)); }
+/* Spec 16, item 14: o aviso da música fica sempre no alto, 8 px abaixo do cabeçalho (ambiente-som.tsx mede e ajusta `top`); nunca cobre o balão, o rodapé nem a barra de abas.
+   O contêiner não recebe toque (herda `pointer-events: none` de .aviso-app) e só o botão "Desligar" responde. */
+.aviso-musica { top: calc(env(safe-area-inset-top, 0px) + 8px); bottom: auto; }
 .aviso-musica p { padding: 2px 8px 2px 14px; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .aviso-musica button { pointer-events: auto; flex: none; min-height: 44px; padding: 4px 10px; border: 0; border-radius: 10px; color: var(--texto); background: white; font: inherit; cursor: pointer; }
 .aviso-musica button:focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }
+/* O aviso não cobre título, campo nem botão: enquanto ele está à vista, o que vem logo depois do cabeçalho desce a altura dele mais o respiro (ambiente-som.tsx marca o elemento com
+   data-aviso-musica-abaixo e escreve a altura em --aviso-musica-reserva), e o aviso fica na faixa que abriu. Ao sair, o conteúdo volta devagar. */
+html [data-aviso-musica-abaixo] { margin-top: var(--aviso-musica-reserva, 0px); transition: margin-top 220ms ease-out; }
+/* Cabeçalho preso (o do mapa no celular, o da aula): o conteúdo rola por baixo dele, e o aviso ficaria sobre o que passa. Enquanto o aviso está à vista, o cabeçalho ganha, atrás dele, uma faixa do
+   mesmo fundo, que esconde o que rola por ali e é parte do cabeçalho (o toque na faixa não chega ao que está escondido). */
+[data-aviso-musica-faixa]::after { content: ''; position: absolute; inset: 100% 0 auto 0; height: calc(var(--aviso-musica-reserva, 0px) + 8px); background: inherit; }

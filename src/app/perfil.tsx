@@ -35,7 +35,7 @@ import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, p
 import { CartoesDoPerfil, useAvisoDoApp } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
-import { SecaoPrivacidade } from './privacidade-perfil';
+import { BotaoExcluirConta, SecaoPrivacidade } from './privacidade-perfil';
 import { usePostarNoPerfil } from './postar-no-perfil';
 import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
@@ -269,6 +269,8 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
                 <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
                 {perfil.links.length > 0 && postagem && <Botao variante="secundario" onClick={postagem.abrir}>{p.postar.botao}</Botao>}
               </div>
+              {/* Compartilhar é ter um link; aparecer no perfil é postar (spec 16, item 32): a linha diz a diferença. */}
+              {perfil.links.length > 0 && <p className="folha-texto perfil-secao__linha">{postagem ? p.compartilhadasLinha : p.compartilhadasLinhaSemComunidade}</p>}
               {perfil.links.length === 0 ? (
                 postagem ? <><p className="folha-texto">{p.postar.vazio}</p><Botao variante="secundario" className="postar-botao" onClick={postagem.abrir}>{p.postar.botao}</Botao></> :
                 <p className="folha-texto">
@@ -340,6 +342,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
         <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
         {compartilhar && perfil && !visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
         <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
+        <BotaoExcluirConta visitante={visitante} />
       </section>
       {folha && (
         <FolhaCompartilhar planoId={folha} visitante={false} comunidade={comunidade} anunciar={anunciar} aoFechar={() => setFolha(null)}

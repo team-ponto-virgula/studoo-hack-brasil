@@ -121,7 +121,7 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
   }
 }
 
-/** Embaralha uma lista sempre do mesmo jeito para a mesma semente (mulberry32): cada visita à lição tem a sua ordem. */
+/** Embaralha uma lista sempre do mesmo jeito para a mesma semente (mulberry32): a mesma semente, a mesma ordem, em qualquer plataforma. */
 export function embaralharComSemente<T>(lista: readonly T[], semente: number): T[] {
   let estado = semente >>> 0;
   const aleatorio = () => {
@@ -150,6 +150,45 @@ export function embaralharExercicio(exercicio: ExercicioPublico, semente: number
       return { ...exercicio, opcoes: embaralharComSemente(exercicio.opcoes, semente) };
     case 'verdadeiro_falso':
       return { ...exercicio, justificativas: embaralharComSemente(exercicio.justificativas, semente) };
+    default:
+      return exercicio;
+  }
+}
+
+/**
+ * A semente da ordem das opções de um exercício (spec 16, item 23). A mesma tentativa tem a mesma ordem na web e no app: a semente sai só do id da
+ * lição, do índice do exercício e da rodada (0 ao abrir a lição; cada revisão rápida sobe 1). Hash FNV-1a em inteiros de 32 bits: igual em qualquer
+ * plataforma, sem sorteio e sem relógio.
+ */
+export function sementeDasOpcoes(licaoId: string, indiceDoExercicio: number, rodada: number): number {
+  let resultado = 0x811c9dc5;
+  for (const caractere of `${licaoId}|${indiceDoExercicio}|${rodada}`) resultado = Math.imul(resultado ^ caractere.codePointAt(0)!, 0x01000193) >>> 0;
+  return resultado;
+}
+
+/**
+ * O exercício como a tentativa o mostra: as opções (as da escolha e os porquês do verdadeiro/falso) na ordem da `rodada`, a mesma na web e no app.
+ * A rodada 0 é a abertura da lição e cada revisão rápida sobe a rodada. A ordem de uma rodada nunca repete a da anterior (com 2 ou mais opções):
+ * a revisão embaralha de verdade, não só "quase sempre". Ordenar e associar ficam na ordem do servidor, que já é a mesma para todos.
+ */
+export function embaralharExercicioDaRodada(exercicio: ExercicioPublico, licaoId: string, indiceDoExercicio: number, rodada: number): ExercicioPublico {
+  const ultima = Math.max(0, Math.trunc(rodada) || 0);
+  const ordenar = <T>(lista: readonly T[]): T[] => {
+    let anterior: T[] | null = null;
+    let atual: T[] = [...lista];
+    for (let passo = 0; passo <= ultima; passo += 1) {
+      atual = embaralharComSemente(lista, sementeDasOpcoes(licaoId, indiceDoExercicio, passo));
+      const previa: T[] | null = anterior;
+      if (previa && atual.length > 1 && atual.every((item, indice) => item === previa[indice])) atual.push(atual.shift() as T);
+      anterior = atual;
+    }
+    return atual;
+  };
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return { ...exercicio, opcoes: ordenar(exercicio.opcoes) };
+    case 'verdadeiro_falso':
+      return { ...exercicio, justificativas: ordenar(exercicio.justificativas) };
     default:
       return exercicio;
   }

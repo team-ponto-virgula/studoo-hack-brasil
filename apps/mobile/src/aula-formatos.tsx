@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { TextoComFormulas } from './texto-com-formulas';
 import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
@@ -8,6 +9,8 @@ import {
   ErroStudoo,
   codificarResposta,
   conferirFala,
+  contemMarcaDeFormula,
+  falarTextoComFormulas,
   linhasDePassos,
   partesDaLacuna,
   semAspas,
@@ -23,10 +26,11 @@ import {
   type Pratica,
   type Recurso,
   type TipoTrecho,
+  mostrarContagemDaAberta,
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
+import { Botao, CaixaDoCampo, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
@@ -482,7 +486,8 @@ export function Falas({ falas }: { falas: Fala[] }) {
  * Numa lição em português, o texto fica como está.
  */
 export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma?: string; estilo?: object }) {
-  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <Text style={estilo}>{texto}</Text>;
+  // Em português (a matemática), a fórmula em linha no meio da frase (spec 15); as frases para ouvir são das outras línguas.
+  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <TextoComFormulas texto={texto} estilo={estilo as StyleProp<TextStyle>} />;
   const partes = texto.split(/“([^”]+)”/);
   const tocaveis = partes.some((parte, indice) => indice % 2 === 1 && !/[ãõçáéíóúâêôà]/i.test(parte));
   return (
@@ -522,23 +527,31 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   );
 }
 
+/** Quanto a barra da lacuna desce da linha de base: o lugar de um sublinhado (0,12 do tamanho da letra). */
+export function deslocamentoDaLacuna(fonte: number) {
+  return Math.round(fonte * 0.12 * 10) / 10;
+}
+
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
 /** `preenchimento`: o que a pessoa escreve na lacuna, no lugar do espaço, enquanto digita. Como na web. */
-function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string }) {
+function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string; puro?: boolean }) {
   const partes = partesDaLacuna(texto);
-  // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados, logo
-  // abaixo da linha (a caixa em linha da web tem a altura da linha e desce 0,1em; a borda de baixo fica ~9 px abaixo da base
-  // num texto de 20/28). A barra em linha nasce com a base na linha de base; o deslocamento a leva para o mesmo lugar.
+  // Fora do código, o texto em volta de cada lacuna pode trazer fórmula marcada ($…$): ela é desenhada em linha, e o leitor ouve a
+  // fala dela no rótulo do trecho inteiro (as fórmulas desenhadas não têm texto para o leitor).
+  const comFormula = !puro && partes.some((parte) => contemMarcaDeFormula(parte));
+  const rotulo = comFormula ? partes.map((parte) => falarTextoComFormulas(parte)).join(preenchimento ? ` ${preenchimento} ` : ' lacuna ') : undefined;
+  // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados.
+  // Banca P2-3: a barra fica na linha de base do texto em volta, como um sublinhado ("Excuse me, ___ is the museum?"); antes ela
+  // descia meia linha e ficava abaixo das letras. A barra em linha nasce com a base na linha de base: desce só 0,12em.
   const plano = StyleSheet.flatten(estilo) ?? {};
   const fonte = typeof plano.fontSize === 'number' ? plano.fontSize : 16;
-  const linha = typeof plano.lineHeight === 'number' ? plano.lineHeight : fonte * 1.5;
   const barra: ViewStyle = { width: fonte * 3.2, height: 3, marginHorizontal: fonte * 0.15, opacity: 0.7,
-    backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: linha / 2 - fonte * 0.229 + 3 }] };
+    backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: deslocamentoDaLacuna(fonte) }] };
   return (
-    <Text selectable style={estilo}>
+    <Text selectable style={estilo} accessibilityLabel={rotulo}>
       {partes.map((parte, posicao) => (
         <Text key={posicao}>
-          {parte}
+          {comFormula ? <TextoComFormulas texto={parte} estilo={estilo} /> : parte}
           {posicao < partes.length - 1 && (preenchimento
             ? <Text style={[formatos.lacuna, formatos.lacunaPreenchida]}>{preenchimento}</Text>
             : <View accessible accessibilityLabel="lacuna" style={barra} />)}
@@ -552,7 +565,7 @@ function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: 
 export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} />;
+      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} puro />;
     case 'citacao':
       return (
         <View style={formatos.citacao}>
@@ -868,6 +881,8 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
   };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve de um item: a fórmula marcada ($…$) lida pela árvore ("seno de x"), nunca o cifrão (P32). */
+  const fala = (lista: Opcao[], id: string) => falarTextoComFormulas(texto(lista, id));
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
@@ -883,7 +898,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     }
     setEscolhida((atual) => {
       const nova = atual === id ? null : id;
-      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(texto(esquerda, nova)));
+      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(fala(esquerda, nova)));
       return nova;
     });
   }
@@ -894,7 +909,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
       else {
         setEscolhidaDireita((atual) => {
           const nova = atual === id ? null : id;
-          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(texto(direita, nova)));
+          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(fala(direita, nova)));
           return nova;
         });
       }
@@ -911,11 +926,12 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     const chave = par ? par[0] : null;
     const fixo = travado(chave);
     const estado = certos && chave ? (certos.includes(chave) ? 'certo' : 'errado') : fixo ? 'certo' : null;
-    let rotulo = item.texto;
-    if (fixo && par) rotulo = t.associar.travado(texto(esquerda, par[0]), texto(direita, par[1]));
-    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
-    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(item.texto, texto(direita, escolhidaDireita));
-    else if (par) rotulo = t.associar.desfazer(texto(esquerda, par[0]), texto(direita, par[1]));
+    const falaDoItem = falarTextoComFormulas(item.texto);
+    let rotulo = falaDoItem;
+    if (fixo && par) rotulo = t.associar.travado(fala(esquerda, par[0]), fala(direita, par[1]));
+    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(fala(esquerda, escolhida), falaDoItem);
+    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(falaDoItem, fala(direita, escolhidaDireita));
+    else if (par) rotulo = t.associar.desfazer(fala(esquerda, par[0]), fala(direita, par[1]));
     return (
       <CartaoDegrau key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
         accessibilityState={{ selected: escolhida === item.id || escolhidaDireita === item.id }}
@@ -932,17 +948,17 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
-        <Text style={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]}>{item.texto}</Text>
+        <TextoComFormulas texto={item.texto} estilo={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]} />
       </CartaoDegrau>
     );
   }
 
   return (
     <View style={formatos.secaoOrdenar}>
-      <Text style={formatos.instrucao} accessibilityLiveRegion="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
-          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
-      </Text>
+      {/* A instrução mostra o item escolhido com a fórmula desenhada; o leitor ouve a fala dela (TextoComFormulas). */}
+      <TextoComFormulas estilo={formatos.instrucao} accessibilityLiveRegion="polite"
+        texto={escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao} />
       <View style={formatos.colunas}>
         <View style={formatos.coluna} accessibilityLabel={t.associar.esquerda}>{esquerda.map((item) => cartao(item, 'esquerda'))}</View>
         <View style={formatos.coluna} accessibilityLabel={t.associar.direita}>{direita.map((item) => cartao(item, 'direita'))}</View>
@@ -970,7 +986,8 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
   const [escolha = '', justificativa = ''] = valor.split(':');
   return (
     <View style={formatos.vf}>
-      <View style={formatos.afirmacao}><Text style={formatos.afirmacaoTexto}>{afirmacao}</Text></View>
+      {/* A afirmação pode trazer fórmula marcada ($…$, lição de matemática): desenhada em linha, nunca o cifrão cru. */}
+      <View style={formatos.afirmacao}><TextoComFormulas texto={afirmacao} estilo={formatos.afirmacaoTexto} /></View>
       <View style={formatos.vfGrupo}>
       <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.valor}</Text>
       <View style={formatos.valores} accessibilityRole="radiogroup" accessibilityLabel={t.verdadeiroFalso.valor}>
@@ -1012,15 +1029,24 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
   // campos que usam <Campo>.
   const rolagem = useContext(RolagemDaTela);
   const secao = useRef<ComponentRef<typeof View>>(null);
+  const campo = useRef<ComponentRef<typeof TextInput>>(null);
   return (
     <View ref={secao} style={formatos.secao}>
       <Text style={estilos.rotulo}>{t.aberta.rotulo}</Text>
-      <TextInput testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
-        onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
-        accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top"
-        style={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]} />
+      {/* No Android, a borda e o respiro ficam numa caixa em volta (banca P1-8; ver CaixaDoCampo). */}
+      <CaixaDoCampo focar={() => campo.current?.focus()} estilo={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]}>
+        {(estilo) => (
+          <TextInput ref={campo} testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
+            onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
+            accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top" style={estilo} />
+        )}
+      </CaixaDoCampo>
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
-      <Text style={[formatos.contador, usados >= minimo && { color: cores.sucesso }]}>{t.aberta.contador(usados, minimo)}</Text>
+      {/* Spec 16, item 8 (regra do contrato, a mesma da web): antes da primeira letra, só o rodapé orienta; depois, "Faltam N
+          letras" em cinza, até o mínimo. O lugar da linha fica guardado, para nada pular quando ela entra ou sai. */}
+      {mostrarContagemDaAberta(usados, minimo)
+        ? <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>
+        : <View style={formatos.contadorLugar} />}
     </View>
   );
 }
@@ -1035,11 +1061,11 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
           <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.criterios}</Text>
           {avaliacao.criterios.map((criterio, posicao) => (
             <View key={posicao} style={formatos.criterio} accessible
-              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${criterio.texto}`}>
+              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${falarTextoComFormulas(criterio.texto)}`}>
               <View style={[formatos.criterioIcone, criterio.atendido && { backgroundColor: cores.sucessoClaro }]}>
                 <Icone nome={criterio.atendido ? 'check' : 'fechar'} tamanho={14} cor={cores.fundo} />
               </View>
-              <Text style={[estilos.texto, { flex: 1, fontWeight: '700' }]}>{criterio.texto}</Text>
+              <TextoComFormulas texto={criterio.texto} estilo={[estilos.texto, { flex: 1, fontWeight: '700' }]} />
             </View>
           ))}
         </>
@@ -1378,7 +1404,8 @@ const formatos = StyleSheet.create({
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
-  contador: { alignSelf: 'flex-end', color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  contadorLugar: { height: 18 },
+  contador: { alignSelf: 'flex-end', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   correcao: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   criterio: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   criterioIcone: { width: 22, height: 22, borderRadius: 11, marginTop: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E3A24A' },

@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ErroStudoo,
+  estadoDoCompartilhamento,
+  recebidaTemNome,
   trilhaRepetida,
   type AutoAvaliacao,
   type LicaoDetalhe,
@@ -15,7 +17,7 @@ import {
   type PlanoResumo,
   type Progresso,
 } from '@studoo/contratos';
-import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { clienteStudooWeb as cliente, responderSuaVez } from '../contratos/cliente-web';
 import { invalidarElegibilidadeVozAoVivo } from './estudio';
 import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
@@ -38,8 +40,11 @@ import {
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
+import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
+import { ACAO_ABANDONAVEL, criarVezes } from './pedido-em-curso';
 import { Pedido, type IdTema } from './pedido';
+import { useCabecalhoPreso } from './cabecalho-preso';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
 import { PostarNoPerfil, usePostarNoPerfil } from './postar-no-perfil';
@@ -135,6 +140,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   } | null>(null);
   const origemConfirmacao = useRef<HTMLElement | null>(null);
   const emExecucao = useRef(false);
+  // A vez de cada pedido de `executar` e a ação em curso: um pedido abandonado (a pessoa saiu da lição durante a correção) não mexe mais na tela quando termina.
+  const vezes = useRef(criarVezes<Acao>()).current;
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const cacheLicoes = useRef<Map<string, Promise<LicaoDetalhe>>>(new Map());
@@ -248,17 +255,17 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       }
       // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
       if (ativos.length === 0 || abriuComRascunho.current) {
-        setTela({ tipo: 'objetivo', focarCampo: true });
+        // Até 1023 px o campo não ganha o foco sozinho (só no computador, ou com um rascunho salvo): com um campo de texto em foco o site esconde a cápsula de abas (teclado aberto), e quem
+        // chega sem trilha, como o visitante, ficaria sem Minhas trilhas, Explorar e Perfil na primeira tela (spec 16, item 33). O foco vai para o título, como nas outras telas.
+        setTela({ tipo: 'objetivo' });
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
-          try {
-            const plano = await cliente.obterPlano(inicial.id);
-            if (cancelado()) return;
-            setTela({ tipo: 'plano', plano });
-          } catch {
-            // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
-          }
+          // Sem o detalhe da trilha (servidor lento ou fora do ar), a falha não é engolida: antes, a pessoa ficava em "Minhas trilhas" sem erro nem botão. Ela cai no catch
+          // de baixo, que leva ao login se a sessão venceu e, nos outros casos, mostra o cartão de erro com "Tentar novamente" (busca a lista e abre a trilha de novo).
+          const plano = await cliente.obterPlano(inicial.id);
+          if (cancelado()) return;
+          setTela({ tipo: 'plano', plano });
         }
       }
       setInicio('pronto');
@@ -410,6 +417,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   async function executar<T>(acao: Acao, operacao: () => Promise<T>): Promise<Resultado<T>> {
     if (emExecucao.current) return { ok: false, codigo: 'falha' };
     emExecucao.current = true;
+    const vez = vezes.comecar(acao);
     setPendente(acao);
     setErro(null);
 
@@ -417,13 +425,29 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       return { ok: true, dados: await operacao() };
     } catch (falha) {
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
+      // Pedido abandonado (a pessoa saiu da lição durante a correção): a falha que chega depois não vira erro, nem leva ao login, em outra tela.
+      if (!vezes.ehAtual(vez)) return { ok: false, codigo };
       if (codigo === 'nao_autenticado') irParaLogin(true);
       else setErro(codigo);
       return { ok: false, codigo };
     } finally {
-      setPendente(null);
-      emExecucao.current = false;
+      if (vezes.terminar(vez)) {
+        setPendente(null);
+        emExecucao.current = false;
+      }
     }
+  }
+
+  /**
+   * Rede lenta: sair da lição durante a correção de uma resposta (até uns 30 s parada em "Verificando…"). Só a correção pode ser abandonada: a resposta continua no andamento guardado no
+   * navegador e é corrigida de novo na volta. A conclusão não (ela grava o progresso e leva à festa). O pedido abandonado segue no ar, mas deixa de valer: não solta a trava de outro
+   * pedido nem mostra erro em outra tela. Devolve se abandonou, e então a trava já está solta para o pedido seguinte (abrir a trilha).
+   */
+  function abandonarCorrecao() {
+    if (!vezes.abandonar(ACAO_ABANDONAVEL)) return false;
+    emExecucao.current = false;
+    setPendente(null);
+    return true;
   }
 
   /** Apaga uma trilha depois da confirmação; o cartão sai da lista (sem trilhas, a tela volta ao pedido). */
@@ -668,7 +692,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
-            {mensagens.planos.titulo}
+            <Icone nome="livro" />{mensagens.planos.titulo}
           </Botao>
           {planos.length > 0 && <ul className="navegacao-planos">
             {planos.slice(0, 5).map((plano) => (
@@ -679,8 +703,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </li>
             ))}
           </ul>}
-          <Botao variante="secundario" className="navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
-            <span aria-hidden="true">+</span> {mensagens.planos.novo}
+          <Botao variante="texto" className="navegacao-item navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
+            <Icone nome="lampada" />{mensagens.planos.novo}
           </Botao>
           {comunidade && (
             <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => navegar({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
@@ -692,10 +716,10 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
             {mensagens.pedido.comoFunciona}
           </Botao>
-          <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+          <button type="button" className="navegacao-item navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}>
-            {compartilhar && perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
-            <span>{(compartilhar && perfil?.nome) || mensagens.perfil.navegacao}</span>
+            <Icone nome="pessoa" />
+            <span>{mensagens.perfil.navegacao}</span>
           </button>
         </div>
       </aside>
@@ -752,7 +776,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </div>
             </section>
           )}
-          {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
+          {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
+          {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (
@@ -797,19 +822,19 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           )}
           {visivel && tela.tipo === 'plano' && (
             <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
+              selo={inicio === 'pronto' ? <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} /> : null}
               precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined}
-              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })}
-              apagar={() => apagarPlano(tela.plano, () => navegar({ tipo: 'planos' }))} />
+              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
           )}
           {visivel && tela.tipo === 'configuracoes' && (() => {
             const resumo = planos.find((item) => item.id === tela.planoId);
             const voltarDaqui = () => (tela.volta === 'plano' ? void abrirPlano(tela.planoId) : navegar({ tipo: 'planos' }));
             return (
               <TelaConfiguracoes key={tela.planoId} planoId={tela.planoId} compartilhar={Boolean(abrirFolha)} versao={versaoFolha}
-                recebidaDe={resumo?.recebida?.nome ?? null}
+                recebidaDe={resumo?.recebida ? resumo.recebida.nome : null}
                 voltar={voltarDaqui}
                 aoMudar={(conf) => setPlanos((anteriores) => anteriores.map((item) => (item.id === conf.planoId
                   ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema }
@@ -834,7 +859,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
                 return resultado.ok ? resultado.dados : null;
               }}
               concluir={(comprovante, resumo, pratica) => concluir(tela.plano, tela.licao, comprovante, resumo, pratica)}
-              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)} />
+              voltar={() => { abandonarCorrecao(); void abrirPlano(tela.plano.id, tela.licao.id); }}
+              responderSuaVez={(escolha) => responderSuaVez(tela.licao.id, escolha)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
@@ -913,6 +939,7 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
 function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
   if (plano.recebida) {
     const { nome, perfilId, foto } = plano.recebida;
+    if (!recebidaTemNome(plano.recebida)) return null;
     const texto = mensagens.compartilhar.compartilhadaPor(nome);
     return (
       <p className="marca-recebida">
@@ -921,8 +948,22 @@ function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
       </p>
     );
   }
-  if (plano.link) return <p className="selo-compartilhada"><Icone nome="compartilhar" />{mensagens.compartilhar.selo}</p>;
+  // Um estado só, curto (spec 16, item 31): "Compartilhada", "Em revisão" (neutro) ou "Não publicada" (âmbar). O texto longo fica no Perfil e na folha.
+  if (plano.link) {
+    const estado = estadoDoCompartilhamento(plano.link);
+    return <p className="selo-compartilhada" data-estado={estado}><Icone nome="compartilhar" />{rotuloDoEstado(estado)}</p>;
+  }
   return null;
+}
+
+/** O texto curto de cada estado do compartilhamento: os mesmos do app (compartilhar.entrada, compartilhar.selo, seguranca.seloEmRevisao e seguranca.seloNaoPublicada). */
+function rotuloDoEstado(estado: ReturnType<typeof estadoDoCompartilhamento>): string {
+  switch (estado) {
+    case 'em-revisao': return mensagens.seguranca.seloEmRevisao;
+    case 'nao-publicada': return mensagens.seguranca.seloNaoPublicada;
+    case 'compartilhada': return mensagens.compartilhar.selo;
+    default: return mensagens.compartilhar.entrada;
+  }
 }
 
 function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, configurar }: {
@@ -1134,9 +1175,10 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, apagar }: {
+function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar }: {
   tela: TelaPlano;
-  apagar: () => void;
+  /** O selo de sincronia, que no celular (até 767 px) sai da barra da marca e fica no cabeçalho da trilha (spec 16, item 15). */
+  selo: ReactNode;
   ocupado: boolean;
   abrindo: string | null;
   precarregarLicao: (id: string) => void;
@@ -1146,7 +1188,8 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
   configurar?: () => void;
 }) {
   const { plano, origem, liberadas = [] } = tela;
-  const postagem = usePostarNoPerfil();
+  const topoDoMapa = useRef<HTMLElement>(null);
+  useCabecalhoPreso(topoDoMapa);
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
   // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada.
   const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
@@ -1163,24 +1206,29 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
   return (
     <section className="painel painel--trilha">
       {plano.capa && <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="trilha-capa" grande />}
-      <header className="trilha-topo">
+      <header className="trilha-topo" ref={topoDoMapa}>
         <div className="trilha-topo__texto">
-          <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
+          {/* Spec 16, item 15: até 767 px a barra da marca sai do mapa e o selo de sincronia vem para cá, na linha do rótulo (com texto, ele não cabe ao lado do anel); de 768 px em diante ele fica na barra. */}
+          <div className="trilha-topo__linha">
+            <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
+            {selo && <div className="trilha-topo__selo">{selo}</div>}
+          </div>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
-          {plano.recebida ? (
+          {/* Sem o nome de quem compartilhou (conta excluída, link parado) não há "Esta trilha é de …": a linha some, e só sobra o link original, se ainda existir. */}
+          {plano.recebida && (recebidaTemNome(plano.recebida) || plano.recebida.codigoAtivo) ? (
             <p className="trilha-recebida">
               {plano.recebida.foto && <Avatar nome={plano.recebida.nome} cor="azul" foto={plano.recebida.foto} />}
-              <span>{plano.recebida.perfilId
+              {recebidaTemNome(plano.recebida) && <span>{plano.recebida.perfilId
                 ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<Link href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</Link></>
-                : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>
+                : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>}
               {plano.recebida.codigoAtivo && <Link href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</Link>}
             </p>
           ) : null}
           <div className="trilha-topo__acoes">
-            {postagem && !plano.recebida ? <MenuCartao plano={plano} compartilhar={compartilhar} configurar={configurar} apagar={apagar} ocupado={ocupado} /> : <>
+            {/* Spec 16, item 26: "Compartilhar" (ou o estado curto) e a engrenagem sempre à vista, como no app; o "•••" sozinho escondia as duas ações mais usadas (o "Postar no meu perfil" fica no "•••" dos cartões de Minhas trilhas e na folha de compartilhar). */}
             {!plano.recebida && compartilhar && (
-              <Botao variante="secundario" className="trilha-compartilhar" disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
-                <Icone nome="compartilhar" />{plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada}
+              <Botao variante="secundario" className="trilha-compartilhar" data-estado={estadoDoCompartilhamento(plano.link)} disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
+                <Icone nome="compartilhar" />{rotuloDoEstado(estadoDoCompartilhamento(plano.link))}
               </Botao>
             )}
             {/* A engrenagem leva às configurações da trilha (capa, nome, descrição, tema, quem pode ver, apagar). */}
@@ -1189,7 +1237,6 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
                 <Icone nome="engrenagem" />
               </Botao>
             )}
-            </>}
           </div>
           {tela.aviso && <p className="trilha-aviso" role="status">{tela.aviso}</p>}
         </div>
@@ -1359,7 +1406,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
         <li>
           <strong>{mensagens.licao.historia.praticou}</strong>
-          <p>{licao.objetivo}</p>
+          <TextoComFormulas como="p" texto={licao.objetivo} />
         </li>
         {resumo?.ponteConstruida && (
           <li data-tipo="ponte">

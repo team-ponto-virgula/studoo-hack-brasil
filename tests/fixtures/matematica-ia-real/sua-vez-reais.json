@@ -1,0 +1,2634 @@
+{
+ "origem": "Saídas reais da IA guardadas pelo servidor (dumps do Lead em cb532bb e bf94aed), resoluções ACEITAS antes do marco 8, sem a chave, sem a citação do material e sem os desenhos dos passos",
+ "nota": "esperado/entrega: classificação feita à mão, frase a frase, do passo do \"Sua vez\" (a frase traz o valor que a escolha acha?). 9 de 31 trazem.",
+ "casos": [
+  {
+   "caso": 1,
+   "id": "cb532bb/material-1/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Se $A = (2, 1)$, $B = (-1, 4)$ e o baricentro é $G = (1, 2)$, qual é o valor de $x_C$?",
+    "passos": [
+     {
+      "nome": "A fórmula do baricentro",
+      "texto": "A coordenada $x_G$ é a média das coordenadas $x$ dos três vértices.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Substituir os valores",
+      "texto": "Trocamos $x_G = 1$, $x_A = 2$ e $x_B = -1$ na fórmula.",
+      "formula": "1 = \\frac{2 + (-1) + x_C}{3}"
+     },
+     {
+      "nome": "Multiplicar por 3",
+      "texto": "Multiplicando os dois lados por $3$, obtemos $3 = 1 + x_C$.",
+      "formula": "3 = \\foco{1} + x_C"
+     },
+     {
+      "nome": "Isolar a incógnita",
+      "texto": "Subtraindo $1$ dos dois lados, encontramos o valor de $x_C$.",
+      "formula": "x_C = 3 - 1",
+      "tentativa": {
+       "pergunta": "Quanto vale $x_C$?",
+       "opcoes": [
+        {
+         "formula": "x_C = 3 - 1",
+         "correta": true,
+         "porque": "$3 - 1 = 2$, o valor que isola $x_C$ na equação."
+        },
+        {
+         "formula": "x_C = 3 + 1",
+         "correta": false,
+         "porque": "Ao passar o $1$ para o outro lado ele muda de sinal, então seria subtração, não soma."
+        },
+        {
+         "formula": "x_C = 1 + 3 \\times 2",
+         "correta": false,
+         "porque": "Aqui se multiplicaria $x_A$ por $3$, o que não vem da fórmula do baricentro."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 2,
+   "id": "cb532bb/material-1/licao3",
+   "esperado": "recusada",
+   "entrega": "k = 0",
+   "resolucao": {
+    "problema": "Os pontos $A = (-1, -1)$, $B = (2, 5)$ e $C = (k, 1)$ são colineares. Qual é o valor de $k$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A e B marcados no plano, com o ponto C sobre a reta que passa por eles, com ordenada 1.",
+     "x": [
+      -2,
+      3
+     ],
+     "y": [
+      -2,
+      6
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": -1,
+       "y": -1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 2,
+       "y": 5
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 0,
+       "y": 1
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A condição",
+      "texto": "Três pontos são colineares quando o determinante da matriz de coordenadas é nulo.",
+      "formula": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0"
+     },
+     {
+      "nome": "Montar a matriz",
+      "texto": "Cada linha recebe as coordenadas de um ponto seguidas de $1$.",
+      "formula": "\\begin{bmatrix} -1 & -1 & 1 \\\\ 2 & 5 & 1 \\\\ k & 1 & 1 \\end{bmatrix}"
+     },
+     {
+      "nome": "Calcular o determinante",
+      "texto": "Somando as diagonais principais e subtraindo as secundárias, chega-se a $-5 - k + 2 - 5k + 1 + 2$.",
+      "formula": "-5 - k + 2 - 5k + 1 + 2"
+     },
+     {
+      "nome": "Igualar a zero",
+      "texto": "Juntando os termos, $0 - 6k = 0$, e portanto $k = 0$.",
+      "formula": "\\resposta{k = 0}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 0",
+         "correta": true,
+         "porque": "A equação $0 - 6k = 0$ leva a $k = 0$."
+        },
+        {
+         "formula": "k = 1",
+         "correta": false,
+         "porque": "Com $k = 1$ o determinante vale $-6$, não zero."
+        },
+        {
+         "formula": "k = -1",
+         "correta": false,
+         "porque": "Com $k = -1$ o determinante vale $6$, não zero."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 3,
+   "id": "cb532bb/material-1/licao4",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os produtos das diagonais descendentes somam $2 + 5k$ e os das ascendentes somam $6 + k$. Qual valor de $k$ anula o determinante?",
+    "passos": [
+     {
+      "nome": "A condição do…",
+      "texto": "O determinante é a soma das diagonais descendentes menos a das ascendentes, e deve ser zero para os pontos serem colineares.",
+      "formula": "(2 + 5k) - (6 + k) = 0"
+     },
+     {
+      "nome": "Simplificar a equação",
+      "texto": "Subtraindo os termos semelhantes, os termos com $k$ e os números se agrupam.",
+      "formula": "\\foco{4k} - 4 = 0"
+     },
+     {
+      "nome": "Isolar k",
+      "texto": "Passando o número para o outro lado e dividindo, achamos o valor de $k$.",
+      "formula": "k = \\resposta{1}",
+      "tentativa": {
+       "pergunta": "Qual valor de $k$ anula esse determinante?",
+       "opcoes": [
+        {
+         "formula": "k = 1",
+         "correta": true,
+         "porque": "De $4k - 4 = 0$ vem $k = 1$, que zera o determinante."
+        },
+        {
+         "formula": "k = -1",
+         "correta": false,
+         "porque": "Com $k = -1$ o determinante vale $-8$, não zero."
+        },
+        {
+         "formula": "k = 4",
+         "correta": false,
+         "porque": "Com $k = 4$ o determinante vale $12$, não zero."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 4,
+   "id": "cb532bb/material-2/licao1",
+   "esperado": "recusada",
+   "entrega": "x_C = 3",
+   "resolucao": {
+    "problema": "Um triângulo tem vértices $A = (2, 1)$, $B = (4, -3)$ e baricentro $G = (3, 0)$. Qual é a abscissa $x_C$ do terceiro vértice?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo com vértices A (2, 1) e B (4, -3) e baricentro G (3, 0)",
+     "x": [
+      -1,
+      5
+     ],
+     "y": [
+      -4,
+      3
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 4,
+       "y": -3
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 3,
+       "y": 0,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 3,
+       "y": 2
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A condição da abscissa",
+      "texto": "A abscissa do baricentro é a média das abscissas dos vértices: $x_G = \\frac{x_A + x_B + x_C}{3}$.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Substituir os valores",
+      "texto": "Com $x_G = 3$, $x_A = 2$ e $x_B = 4$, fica $3 = \\frac{2 + 4 + x_C}{3}$.",
+      "formula": "3 = \\frac{2 + 4 + x_C}{3}"
+     },
+     {
+      "nome": "Multiplicar por 3",
+      "texto": "Multiplicando os dois lados por $3$, temos $9 = 6 + x_C$.",
+      "formula": "\\foco{9} = 6 + x_C"
+     },
+     {
+      "nome": "Isolar a abscissa",
+      "texto": "Subtraindo $6$ dos dois lados, $x_C = 3$.",
+      "formula": "x_C = \\resposta{3}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $x_C$?",
+       "opcoes": [
+        {
+         "formula": "x_C = 3",
+         "correta": true,
+         "porque": "De $9 = 6 + x_C$ vem $x_C = 3$."
+        },
+        {
+         "formula": "x_C = 6",
+         "correta": false,
+         "porque": "Esse é o valor de $x_A + x_B$, não de $x_C$."
+        },
+        {
+         "formula": "x_C = 9",
+         "correta": false,
+         "porque": "$9$ é o resultado antes de subtrair $6$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 5,
+   "id": "cb532bb/material-2/licao4",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Para quais valores de $k$ os pontos $A = (2, 1)$, $B = (4, 7)$ e $C = (k, 4)$ são colineares?",
+    "passos": [
+     {
+      "nome": "Montar o determinante",
+      "texto": "A colinearidade exige determinante nulo com as coordenadas e uma coluna de $1$.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 4 & 7 & 1 \\\\ k & 4 & 1 \\end{vmatrix} = 0"
+     },
+     {
+      "nome": "Aplicar a regra de…",
+      "texto": "Multiplicam-se as diagonais: três no sentido principal e três no sentido inverso.",
+      "formula": "14 + k + 16 - 7k - 8 - 2 = 0"
+     },
+     {
+      "nome": "Agrupar os termos",
+      "texto": "Somam-se os constantes e juntam-se os termos em $k$.",
+      "formula": "20 - 6k = 0"
+     },
+     {
+      "nome": "Isolar o k",
+      "texto": "Leva-se o termo em $k$ para o outro lado e divide-se pelo coeficiente.",
+      "formula": "\\foco{-6k} = -20 \\to \\resposta{k = \\frac{20}{6}}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = \\frac{20}{6}",
+         "correta": true,
+         "porque": "De $20 - 6k = 0$ vem $6k = 20$, logo $k = \\frac{20}{6}$."
+        },
+        {
+         "formula": "k = -\\frac{20}{6}",
+         "correta": false,
+         "porque": "O sinal se perde ao passar o termo: $20 - 6k = 0$ dá $6k = 20$, positivo."
+        },
+        {
+         "formula": "k = 20",
+         "correta": false,
+         "porque": "Faltou dividir pelo coeficiente $-6$ do termo em $k$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 6,
+   "id": "cb532bb/material-3/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "O baricentro de um triângulo é $G = (4, 5)$ e dois vértices são $A = (1, 2)$ e $B = (2, 6)$. Qual é a coordenada $x_C$ do terceiro vértice?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo com vértices A (1, 2) e B (2, 6) e baricentro G (4, 5); o terceiro vértice é desconhecido.",
+     "x": [
+      -1,
+      10
+     ],
+     "y": [
+      -1,
+      8
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 1,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 2,
+       "y": 6
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 4,
+       "y": 5,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 9,
+       "y": 7
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula do baricentro",
+      "texto": "A coordenada $x$ do baricentro é a média das coordenadas $x$ dos três vértices.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Substituir os valores",
+      "texto": "Com $x_G = 4$, $x_A = 1$ e $x_B = 2$, montamos a equação.",
+      "formula": "4 = \\frac{1 + 2 + x_C}{3}"
+     },
+     {
+      "nome": "Multiplicar por 3",
+      "texto": "Multiplicando os dois lados por 3, o denominador some.",
+      "formula": "12 = 1 + 2 + x_C"
+     },
+     {
+      "nome": "Isolar a incógnita",
+      "texto": "Somamos as partes conhecidas e subtraímos de 12 para achar $x_C$.",
+      "formula": "12 = 3 + x_C \\to \\resposta{x_C = 9}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $x_C$?",
+       "opcoes": [
+        {
+         "formula": "x_C = 12 - 3",
+         "correta": true,
+         "porque": "Multiplicando $x_G$ por 3 e subtraindo $x_A + x_B = 3$, obtém-se $x_C = 9$."
+        },
+        {
+         "formula": "x_C = 12 + 3",
+         "correta": false,
+         "porque": "As coordenadas conhecidas devem ser subtraídas, não somadas."
+        },
+        {
+         "formula": "x_C = 4 - 3",
+         "correta": false,
+         "porque": "Faltou multiplicar $x_G$ por 3 antes de subtrair."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 7,
+   "id": "cb532bb/material-3/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Para que valores de $k$ os pontos $A = (2, 1)$, $B = (1, 4)$ e $C = (k, -2)$ são colineares?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A e B dados e um ponto C sobre uma reta, a ser determinado pela condição de colinearidade.",
+     "x": [
+      -1,
+      5
+     ],
+     "y": [
+      -3,
+      5
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 1,
+       "y": 4
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 4,
+       "y": -2
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montar a matriz",
+      "texto": "Colocamos as coordenadas de $A$, $B$ e $C$ em linhas, com a coluna de $1$.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 1 & 4 & 1 \\\\ k & -2 & 1 \\end{vmatrix}"
+     },
+     {
+      "nome": "Calcular o determinante",
+      "texto": "Pela regra de Sarrus, o determinante vale $8 + k - 2 - 4k - 4 + 1$, que simplifica para $3 - 3k$.",
+      "formula": "8 + k - 2 - 4k - 4 + 1 = 3 - 3k"
+     },
+     {
+      "nome": "Igualar a zero",
+      "texto": "Para os pontos serem colineares, o determinante deve ser nulo.",
+      "formula": "\\foco{3 - 3k} = 0"
+     },
+     {
+      "nome": "Isolar e achar k",
+      "texto": "Resolvendo a equação, encontramos o valor de $k$ que torna os três pontos colineares.",
+      "formula": "\\resposta{k = 1}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 1",
+         "correta": true,
+         "porque": "De $3 - 3k = 0$ vem $k = 1$."
+        },
+        {
+         "formula": "k = 3",
+         "correta": false,
+         "porque": "Erro na simplificação do determinante; com $k = 3$ o determinante vale $-6$."
+        },
+        {
+         "formula": "k = -1",
+         "correta": false,
+         "porque": "Sinal trocado ao isolar $k$; com $k = -1$ o determinante vale $6$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 8,
+   "id": "cb532bb/material-3/licao4",
+   "esperado": "recusada",
+   "entrega": "k = 3",
+   "resolucao": {
+    "problema": "Para quais valores de $k$ os pontos $A = (2, 1)$, $B = (4, 5)$ e $C = (k, 3)$ são colineares? Encontre $k$.",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Plano com os pontos A (2, 1) e B (4, 5) e o ponto C sobre a reta que passa por eles",
+     "x": [
+      -1,
+      5
+     ],
+     "y": [
+      -1,
+      6
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 4,
+       "y": 5
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 3,
+       "y": 3
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montar o determinante",
+      "texto": "Com as coordenadas de $A$, $B$ e $C$ e uma coluna de $1$, montamos o determinante e igualamos a zero.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 4 & 5 & 1 \\\\ k & 3 & 1 \\end{vmatrix} = 0"
+     },
+     {
+      "nome": "Aplicar Sarrus",
+      "texto": "Somam-se as diagonais principais e subtraem-se as secundárias.",
+      "formula": "\\foco{(2 \\times 5 \\times 1) + (1 \\times 1 \\times k) + (1 \\times 4 \\times 3)} - (1 \\times 4 \\times 1) - (2 \\times 1 \\times 3) - (1 \\times 5 \\times k) = 0"
+     },
+     {
+      "nome": "Simplificar",
+      "texto": "Calculando cada produto e agrupando os termos, chega-se à equação em $k$.",
+      "formula": "10 + k + 12 - 4 - 6 - 5k = 0 \\to 12 - 4k = 0"
+     },
+     {
+      "nome": "Isolar k",
+      "texto": "Resolvendo $12 - 4k = 0$, obtemos $4k = 12$ e, dividindo por $4$, $k = 3$. Esse é o valor que torna os três pontos colineares.",
+      "formula": "k = \\resposta{3}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 3",
+         "correta": true,
+         "porque": "De $12 - 4k = 0$ vem $4k = 12$ e $k = 3$."
+        },
+        {
+         "formula": "k = 12",
+         "correta": false,
+         "porque": "Faltou dividir $12$ por $4$; $k = 12$ não zera a equação."
+        },
+        {
+         "formula": "k = -3",
+         "correta": false,
+         "porque": "O sinal está trocado: $12 - 4k = 0$ dá $k = 3$, não $-3$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 9,
+   "id": "cb532bb/trilha-1/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o ponto médio do segmento de $A(2, 2)$ a $B(8, 6)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "O segmento de A (2, 2) a B (8, 6) no plano, com o ponto médio M.",
+     "x": [
+      -1,
+      9
+     ],
+     "y": [
+      -1,
+      7
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 8,
+       "y": 6
+      },
+      {
+       "id": "M",
+       "papel": "especial",
+       "x": 5,
+       "y": 4,
+       "derivado": {
+        "tipo": "ponto_medio",
+        "de": [
+         "A",
+         "B"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O ponto médio tem a média das abscissas e a média das ordenadas.",
+      "formula": "x_M = \\foco{\\frac{x_A + x_B}{2}}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as abscissas de A e de B na fórmula.",
+      "formula": "x_M = \\frac{2 + 8}{2}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 2.",
+      "formula": "x_M = \\frac{10}{2} = \\foco{5}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas de A e de B.",
+      "formula": "y_M = \\frac{2 + 6}{2}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_M$?",
+       "opcoes": [
+        {
+         "formula": "y_M = \\frac{8}{2}",
+         "correta": true,
+         "porque": "(2 + 6) ÷ 2 = 8 ÷ 2 = 4."
+        },
+        {
+         "formula": "y_M = 2 + 6",
+         "correta": false,
+         "porque": "8 é a soma das ordenadas: falta dividir por 2."
+        },
+        {
+         "formula": "y_M = \\frac{2 + 6}{4}",
+         "correta": false,
+         "porque": "Divide-se por 2, o número de pontos, e não por 4."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto M",
+      "texto": "Então M tem abscissa 5 e ordenada 4.",
+      "formula": "M = \\resposta{(5, 4)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 10,
+   "id": "cb532bb/trilha-1/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o baricentro do triângulo de vértices $A(0, 0)$, $B(6, 2)$ e $C(3, 8)$?",
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O baricentro é a média das coordenadas dos três vértices.",
+      "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+     },
+     {
+      "nome": "Troque as abscissas",
+      "texto": "Coloque as abscissas de A, B e C na fórmula.",
+      "formula": "x_G = \\frac{0 + 6 + 3}{3}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 3.",
+      "formula": "x_G = \\frac{9}{3} = \\foco{3}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas dos três vértices.",
+      "formula": "y_G = \\frac{0 + 2 + 8}{3}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_G$?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{10}{3}",
+         "correta": true,
+         "porque": "A soma das ordenadas é 10 e divide-se por 3: 10 ÷ 3."
+        },
+        {
+         "formula": "y_G = 0 + 2 + 8",
+         "correta": false,
+         "porque": "10 é só a soma: falta dividir por 3."
+        },
+        {
+         "formula": "y_G = \\frac{10}{2}",
+         "correta": false,
+         "porque": "São três vértices, então divide-se por 3."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto G",
+      "texto": "Então o baricentro tem abscissa 3 e ordenada 10/3.",
+      "formula": "G = \\resposta{(3, \\frac{10}{3})}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 11,
+   "id": "cb532bb/trilha-1/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os pontos $A(0, 1)$, $B(2, 5)$ e $C(3, 7)$ estão alinhados?",
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O determinante mistura as coordenadas dos três pontos.",
+      "formula": "D = \\foco{x_A(y_B - y_C) + x_B(y_C - y_A) + x_C(y_A - y_B)}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Substitua cada coordenada na expressão.",
+      "formula": "D = 0(5 - 7) + 2(7 - 1) + 3(1 - 5)"
+     },
+     {
+      "nome": "Calcule cada parcela",
+      "texto": "Resolva os parênteses e multiplique.",
+      "formula": "D = 0 - 12 + 12",
+      "tentativa": {
+       "pergunta": "Quanto vale o determinante D?",
+       "opcoes": [
+        {
+         "formula": "D = 0",
+         "correta": true,
+         "porque": "0 − 12 + 12 = 0."
+        },
+        {
+         "formula": "D = 24",
+         "correta": false,
+         "porque": "Somar 12 e 12 é o dobro: um dos termos tem sinal negativo."
+        },
+        {
+         "formula": "D = -12",
+         "correta": false,
+         "porque": "Falta cancelar a parcela que vem do ponto C."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Conclusão",
+      "texto": "Como o determinante é zero, os três pontos estão na mesma reta.",
+      "formula": "D = \\resposta{0} \\to \\text{colineares}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 12,
+   "id": "cb532bb/trilha-2/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o ponto médio do segmento de $A(2, 1)$ a $B(8, 7)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "O segmento de A (2, 1) a B (8, 7) no plano, com o ponto médio M.",
+     "x": [
+      -1,
+      9
+     ],
+     "y": [
+      -1,
+      8
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 8,
+       "y": 7
+      },
+      {
+       "id": "M",
+       "papel": "especial",
+       "x": 5,
+       "y": 4,
+       "derivado": {
+        "tipo": "ponto_medio",
+        "de": [
+         "A",
+         "B"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A condição",
+      "texto": "O ponto médio tem a média das abscissas e a média das ordenadas das pontas.",
+      "formula": "x_M = \\foco{\\frac{x_A + x_B}{2}}"
+     },
+     {
+      "nome": "Troque as abscissas",
+      "texto": "Coloque as abscissas de A e de B na fórmula.",
+      "formula": "x_M = \\frac{2 + 8}{2}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some e divida por 2.",
+      "formula": "x_M = \\frac{10}{2} = \\foco{5}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas de A e de B.",
+      "formula": "y_M = \\frac{1 + 7}{2}",
+      "tentativa": {
+       "pergunta": "Quanto vale a ordenada $y_M$ do ponto médio?",
+       "opcoes": [
+        {
+         "formula": "y_M = \\frac{8}{2}",
+         "correta": true,
+         "porque": "(1 + 7) ÷ 2 = 8 ÷ 2 = 4, a média das ordenadas."
+        },
+        {
+         "formula": "y_M = 1 + 7",
+         "correta": false,
+         "porque": "Isso é só a soma das ordenadas: falta dividir por 2 para tirar a média."
+        },
+        {
+         "formula": "y_M = \\frac{1 + 7}{4}",
+         "correta": false,
+         "porque": "A média de dois valores divide a soma por 2, e não por 4."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto M",
+      "texto": "Então M tem abscissa 5 e ordenada 4.",
+      "formula": "M = \\resposta{(5, 4)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 13,
+   "id": "cb532bb/trilha-2/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o baricentro do triângulo de vértices $A(0, 0)$, $B(6, 0)$ e $C(3, 9)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo de vértices A (0, 0), B (6, 0) e C (3, 9), com o baricentro G.",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      10
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 0
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 6,
+       "y": 0
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 3,
+       "y": 9
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 3,
+       "y": 3,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      },
+      {
+       "de": "C",
+       "ate": "A"
+      }
+     ],
+     "poligonos": [
+      {
+       "pontos": [
+        "A",
+        "B",
+        "C"
+       ]
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O baricentro é a média das coordenadas dos três vértices.",
+      "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+     },
+     {
+      "nome": "Troque as abscissas",
+      "texto": "Coloque as abscissas de A, B e C na fórmula.",
+      "formula": "x_G = \\frac{0 + 6 + 3}{3}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some e divida por 3.",
+      "formula": "x_G = \\frac{9}{3} = \\foco{3}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Agora use as ordenadas dos três vértices.",
+      "formula": "y_G = \\frac{0 + 0 + 9}{3}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_G$?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{9}{3}",
+         "correta": true,
+         "porque": "(0 + 0 + 9) ÷ 3 = 9 ÷ 3 = 3."
+        },
+        {
+         "formula": "y_G = 9",
+         "correta": false,
+         "porque": "9 é a soma das ordenadas: falta dividir por 3."
+        },
+        {
+         "formula": "y_G = \\frac{9}{2}",
+         "correta": false,
+         "porque": "São três vértices, então divide-se por 3, não por 2."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto G",
+      "texto": "Então o baricentro tem abscissa 3 e ordenada 3.",
+      "formula": "G = \\resposta{(3, 3)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 14,
+   "id": "cb532bb/trilha-2/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os pontos $A(0, 1)$, $B(2, 5)$ e $C(3, 7)$ estão alinhados?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A (0, 1), B (2, 5) e C (3, 7) no plano, ligados pelos segmentos AB e BC.",
+     "x": [
+      -1,
+      4
+     ],
+     "y": [
+      -1,
+      8
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 2,
+       "y": 5
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 3,
+       "y": 7
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Monte o determinante",
+      "texto": "Cada linha tem as coordenadas de um ponto e um 1 no fim.",
+      "formula": "D = \\begin{vmatrix} 0 & 1 & 1 \\\\ 2 & 5 & 1 \\\\ 3 & 7 & 1 \\end{vmatrix}"
+     },
+     {
+      "nome": "Desenvolva pela 1ª linha",
+      "texto": "Multiplique cada termo da primeira linha pelo seu cofator.",
+      "formula": "D = 0 \\times (5 - 7) - \\foco{1} \\times (2 - 3) + \\foco{1} \\times (14 - 15)"
+     },
+     {
+      "nome": "Simplifique",
+      "texto": "Os cofatores valem -2, -1 e -1.",
+      "formula": "D = 0 \\times (-2) - 1 \\times (-1) + 1 \\times (-1)"
+     },
+     {
+      "nome": "Some os termos",
+      "texto": "Some os três resultados do desenvolvimento.",
+      "formula": "D = 0 + 1 - 1",
+      "tentativa": {
+       "pergunta": "Quanto vale o determinante D?",
+       "opcoes": [
+        {
+         "formula": "D = 0",
+         "correta": true,
+         "porque": "0 + 1 - 1 = 0."
+        },
+        {
+         "formula": "D = 2",
+         "correta": false,
+         "porque": "Somar 0 + 1 - 1 dá 0, e não 2."
+        },
+        {
+         "formula": "D = -2",
+         "correta": false,
+         "porque": "Os sinais se cancelam: 0 + 1 - 1 = 0."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Conclusão",
+      "texto": "Como $D = 0$, os três pontos estão na mesma reta.",
+      "formula": "\\resposta{D = 0}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 15,
+   "id": "bf94aed/material-1/licao1",
+   "esperado": "recusada",
+   "entrega": "y_G = 3",
+   "resolucao": {
+    "problema": "Um triângulo tem $A = (0, 1)$, $B = (3, 1)$ e $C = (3, 7)$. Quais são as coordenadas de $x_G$ e $y_G$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo de vértices A (0, 1), B (3, 1) e C (3, 7) no plano cartesiano.",
+     "x": [
+      -1,
+      4
+     ],
+     "y": [
+      -1,
+      8
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 3,
+       "y": 1
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 3,
+       "y": 7
+      },
+      {
+       "id": "G",
+       "papel": "procurado",
+       "x": 2,
+       "y": 3
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      },
+      {
+       "de": "C",
+       "ate": "A"
+      }
+     ],
+     "poligonos": [
+      {
+       "pontos": [
+        "A",
+        "B",
+        "C"
+       ]
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula de x_G",
+      "texto": "A coordenada $x$ do baricentro é a média das coordenadas $x$ dos três vértices.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Calculando x_G",
+      "texto": "Somando as abscissas: $0 + 3 + 3 = 6$, e dividindo por $3$ obtemos $x_G = 2$.",
+      "formula": "x_G = \\frac{0 + 3 + 3}{3} = \\foco{2}"
+     },
+     {
+      "nome": "A fórmula de y_G",
+      "texto": "A coordenada $y$ do baricentro é a média das coordenadas $y$ dos três vértices.",
+      "formula": "y_G = \\frac{y_A + y_B + y_C}{3}"
+     },
+     {
+      "nome": "Calculando y_G",
+      "texto": "Somando as ordenadas: $1 + 1 + 7 = 9$, e dividindo por $3$ obtemos $y_G = 3$.",
+      "formula": "y_G = \\frac{1 + 1 + 7}{3}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_G$?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{9}{3} = 3",
+         "correta": true,
+         "porque": "Somando $1 + 1 + 7 = 9$ e dividindo por $3$ dá $3$."
+        },
+        {
+         "formula": "y_G = \\frac{9}{2} = 4.5",
+         "correta": false,
+         "porque": "São três vértices, então divide-se por $3$, não por $2$."
+        },
+        {
+         "formula": "y_G = 9",
+         "correta": false,
+         "porque": "Falta dividir a soma por $3$."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O baricentro",
+      "texto": "O baricentro é $G = (2, 3)$, com cada coordenada igual à média das coordenadas dos vértices.",
+      "formula": "G = (\\resposta{2}, \\resposta{3})"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 16,
+   "id": "bf94aed/material-1/licao2",
+   "esperado": "recusada",
+   "entrega": "y_C = -2",
+   "resolucao": {
+    "problema": "Com $G = (2, 1)$, $A = (3, 2)$ e $B = (-1, 3)$, quais são as coordenadas de $C$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A (3, 2) e B (-1, 3) e o baricentro G (2, 1).",
+     "x": [
+      -2,
+      5
+     ],
+     "y": [
+      -3,
+      4
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 3,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": -1,
+       "y": 3
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 2,
+       "y": 1,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 4,
+       "y": -2
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula do baricentro",
+      "texto": "O baricentro é a média das coordenadas dos três vértices: $x_G = \\frac{x_A + x_B + x_C}{3}$.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Isolando x_C",
+      "texto": "Multiplicando por $3$ e passando $A$ e $B$ para o outro lado, temos $x_C = 3x_G - x_A - x_B$.",
+      "formula": "x_C = 3x_G - x_A - x_B"
+     },
+     {
+      "nome": "Calculando x_C",
+      "texto": "Substituindo $x_G = 2$, $x_A = 3$ e $x_B = -1$: $x_C = 6 - 3 - (-1) = 4$.",
+      "formula": "x_C = 3 \\times 2 - 3 - (-1) = \\foco{4}"
+     },
+     {
+      "nome": "Calculando y_C",
+      "texto": "Agora $y_C = 3y_G - y_A - y_B = 3 \\times 1 - 2 - 3 = -2$.",
+      "formula": "y_C = 3 \\times 1 - 2 - 3 = \\resposta{-2}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $y_C$?",
+       "opcoes": [
+        {
+         "formula": "y_C = 3 \\times 1 - 2 - 3",
+         "correta": true,
+         "porque": "Substituindo os valores: $3 - 2 - 3 = -2$."
+        },
+        {
+         "formula": "y_C = 3 + 2 + 3",
+         "correta": false,
+         "porque": "Erro de sinal: os valores de $A$ e $B$ devem ser subtraídos, não somados."
+        },
+        {
+         "formula": "y_C = 1 - 2 - 3",
+         "correta": false,
+         "porque": "Faltou multiplicar $y_G$ por $3$ antes de subtrair."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 17,
+   "id": "bf94aed/material-1/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os pontos $A = (1, 0)$, $B = (3, 4)$ e $C = (5, 8)$ são colineares?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A em (1, 0) e B em (3, 4) no plano cartesiano",
+     "x": [
+      -1,
+      6
+     ],
+     "y": [
+      -1,
+      9
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 1,
+       "y": 0
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 3,
+       "y": 4
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 5,
+       "y": 8
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montar a matriz",
+      "texto": "Colocamos as coordenadas de $A$, $B$ e $C$ nas linhas e completamos com uma coluna de $1$.",
+      "formula": "\\begin{vmatrix} 1 & 0 & 1 \\\\ 3 & 4 & 1 \\\\ 5 & 8 & 1 \\end{vmatrix}"
+     },
+     {
+      "nome": "Calcular o determinante",
+      "texto": "Somamos os produtos das diagonais principais e subtraímos os das diagonais secundárias.",
+      "formula": "(1 \\times 4 \\times 1 + 0 \\times 1 \\times 5 + 1 \\times 3 \\times 8) - (1 \\times 4 \\times 5 + 1 \\times 1 \\times 8 + 0 \\times 3 \\times 1)",
+      "tentativa": {
+       "pergunta": "Qual é o valor do determinante?",
+       "opcoes": [
+        {
+         "formula": "(4 + 0 + 24) - (20 + 8 + 0)",
+         "correta": true,
+         "porque": "As diagonais principais somam $28$ e as secundárias somam $28$, logo o determinante é $0$."
+        },
+        {
+         "formula": "(4 + 0 + 24) + (20 + 8 + 0)",
+         "correta": false,
+         "porque": "O determinante subtrai as diagonais secundárias, não as soma."
+        },
+        {
+         "formula": "(4 + 0 + 24) - (20 - 8 + 0)",
+         "correta": false,
+         "porque": "O produto da diagonal secundária $1 \\times 1 \\times 8$ é $8$, não $-8$, e ele é subtraído."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Concluir",
+      "texto": "Como o determinante é $0$, os três pontos estão alinhados.",
+      "formula": "\\begin{vmatrix} 1 & 0 & 1 \\\\ 3 & 4 & 1 \\\\ 5 & 8 & 1 \\end{vmatrix} = \\resposta{0}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 18,
+   "id": "bf94aed/material-1/licao4",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Para $A = (2, 1)$, $B = (4, 3)$ e $C = (k, 6)$, qual valor de $k$ torna os pontos colineares?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A (2, 1) e B (4, 3) no plano cartesiano; o ponto C tem abscissa desconhecida k e ordenada 6.",
+     "x": [
+      -1,
+      8
+     ],
+     "y": [
+      -1,
+      7
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 4,
+       "y": 3
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 7,
+       "y": 6
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montar o determinante",
+      "texto": "Para três pontos serem colineares, o determinante da matriz com suas coordenadas e uma coluna de 1 deve ser nulo."
+     },
+     {
+      "nome": "Calcular o determinante",
+      "texto": "Substituindo os valores, o determinante fica em função de $k$.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 4 & 3 & 1 \\\\ k & 6 & 1 \\end{vmatrix} = 2 \\times 3 \\times 1 + 1 \\times 1 \\times k + 1 \\times 4 \\times 6 - 1 \\times 3 \\times k - 2 \\times 1 \\times 6 - 1 \\times 4 \\times 1"
+     },
+     {
+      "nome": "Simplificar",
+      "texto": "Somando os termos, obtemos $6 + k + 24 - 3k - 12 - 4 = 14 - 2k$.",
+      "formula": "14 - 2k"
+     },
+     {
+      "nome": "Igualar a zero",
+      "texto": "Igualando o determinante a zero, resolvemos a equação.",
+      "formula": "14 - 2k = 0",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 7",
+         "correta": true,
+         "porque": "De $14 - 2k = 0$ vem $2k = 14$, então $k = 7$."
+        },
+        {
+         "formula": "k = 14",
+         "correta": false,
+         "porque": "Isso é o valor de $14$ sem dividir por $2$; a equação dá $k = 7$."
+        },
+        {
+         "formula": "k = -7",
+         "correta": false,
+         "porque": "O sinal se inverteu; $2k = 14$ leva a $k = 7$."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Valor encontrado",
+      "texto": "Dividindo os dois lados por $2$, achamos $k = 7$.",
+      "formula": "k = \\resposta{7}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 19,
+   "id": "bf94aed/material-2/licao1",
+   "esperado": "recusada",
+   "entrega": "y_C = 6",
+   "resolucao": {
+    "problema": "Um triângulo tem vértices $A = (0, 2)$, $B = (6, 4)$ e baricentro $G = (3, 4)$. Qual é o vértice $C$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo com vértices A em (0, 2) e B em (6, 4) e baricentro G em (3, 4)",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      7
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 6,
+       "y": 4
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 3,
+       "y": 4,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 3,
+       "y": 6
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A condição do baricentro",
+      "texto": "O baricentro é a média das coordenadas dos três vértices: $x_G = (x_A + x_B + x_C) \\div 3$ e $y_G = (y_A + y_B + y_C) \\div 3$.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Multiplicando por 3",
+      "texto": "Multiplicando cada igualdade por 3, a soma das coordenadas dos vértices é o triplo da coordenada do baricentro.",
+      "formula": "3x_G = x_A + x_B + x_C"
+     },
+     {
+      "nome": "Isolando a abscissa",
+      "texto": "Substituindo $x_A = 0$, $x_B = 6$ e $x_G = 3$, obtemos $9 = 0 + 6 + x_C$, logo $x_C = 3$.",
+      "formula": "x_C = 3 \\times 3 - 0 - 6"
+     },
+     {
+      "nome": "Isolando a ordenada",
+      "texto": "Substituindo $y_A = 2$, $y_B = 4$ e $y_G = 4$, obtemos $12 = 2 + 4 + y_C$, logo $y_C = 6$.",
+      "formula": "y_C = 3 \\times 4 - 2 - 4",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $y_C$?",
+       "opcoes": [
+        {
+         "formula": "y_C = 3 \\times 4 - 2 - 4",
+         "correta": true,
+         "porque": "$12 - 6 = 6$, então a ordenada do terceiro vértice é 6."
+        },
+        {
+         "formula": "y_C = 4 - 2",
+         "correta": false,
+         "porque": "Isso subtrai as ordenadas em vez de usar o triplo da ordenada do baricentro."
+        },
+        {
+         "formula": "y_C = 2 + 4 - 4",
+         "correta": false,
+         "porque": "Isso não multiplica a ordenada do baricentro por 3 antes de subtrair."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O vértice procurado",
+      "texto": "Juntando as duas coordenadas, o terceiro vértice é $C = (3, 6)$.",
+      "formula": "C = (\\resposta{3}, \\resposta{6})"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 20,
+   "id": "bf94aed/material-2/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Para que valor de $k$ os pontos $A = (1, 2)$, $B = (3, 6)$ e $C = (k, 4)$ são colineares?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Plano com os pontos A (1, 2) e B (3, 6) e o ponto C sobre a reta que passa por eles.",
+     "x": [
+      -1,
+      4
+     ],
+     "y": [
+      -1,
+      7
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 1,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 3,
+       "y": 6
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 2,
+       "y": 4
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montar o determinante",
+      "texto": "Colocamos as coordenadas de cada ponto em uma linha e uma coluna de 1.",
+      "formula": "\\begin{vmatrix} 1 & 2 & 1 \\\\ 3 & 6 & 1 \\\\ k & 4 & 1 \\end{vmatrix} = 0"
+     },
+     {
+      "nome": "Calcular os produtos",
+      "texto": "Pelos produtos da regra de Sarrus, cada termo aparece com seu sinal.",
+      "formula": "1 \\times 6 \\times 1 = \\foco{6}"
+     },
+     {
+      "nome": "Somar e igualar a zero",
+      "texto": "Reunindo os termos, sobra uma equação em $k$ que devemos igualar a zero.",
+      "formula": "6 + 2k + 12 - 6k - 4 - 6 = 0",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 2",
+         "correta": true,
+         "porque": "Simplificando a equação, $-4k + 8 = 0$ dá $k = 2$."
+        },
+        {
+         "formula": "k = 1",
+         "correta": false,
+         "porque": "Substituindo $k = 1$ o determinante não zera."
+        },
+        {
+         "formula": "k = 4",
+         "correta": false,
+         "porque": "Com $k = 4$ o determinante vale $-8$, não zero."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Achar k",
+      "texto": "Isolando $k$ na equação obtemos o valor que anula o determinante.",
+      "formula": "8 - 4k = 0 \\to k = \\resposta{2}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 21,
+   "id": "bf94aed/material-2/licao3",
+   "esperado": "recusada",
+   "entrega": "k = 1",
+   "resolucao": {
+    "problema": "Os pontos $A = (0, 1)$, $B = (3, 4)$ e $C = (k, 2)$ devem ser colineares. Qual valor de $k$ satisfaz a condição?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Plano com os pontos A (0, 1) e B (3, 4) dados e o ponto C sobre a colinearidade",
+     "x": [
+      -2,
+      4
+     ],
+     "y": [
+      -1,
+      5
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 3,
+       "y": 4
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": -1,
+       "y": 2
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "Montando o determinante",
+      "texto": "A condição de colinearidade é o determinante nulo com as coordenadas dos três pontos.",
+      "formula": "\\begin{vmatrix} 0 & 1 & 1 \\\\ 3 & 4 & 1 \\\\ k & 2 & 1 \\end{vmatrix} = 0"
+     },
+     {
+      "nome": "Soma dos produtos",
+      "texto": "Produtos positivos: $0 \\times 4 \\times 1 = 0$, $1 \\times 1 \\times k = k$, $1 \\times 3 \\times 2 = 6$. Produtos negativos: $1 \\times 3 \\times 1 = 3$, $0 \\times 1 \\times 2 = 0$, $1 \\times 4 \\times k = 4k$.",
+      "formula": "(0 + k + 6) - (3 + 0 + 4k) = 0"
+     },
+     {
+      "nome": "Simplificando",
+      "texto": "Somando os termos, a equação fica $-3k + 3 = 0$.",
+      "formula": "-3k + 3 = 0"
+     },
+     {
+      "nome": "Isolando k",
+      "texto": "Passando o termo constante e dividindo por $-3$, chega-se a $k = 1$.",
+      "formula": "k = \\frac{-3}{-3} = \\resposta{1}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+       "opcoes": [
+        {
+         "formula": "k = 1",
+         "correta": true,
+         "porque": "A equação $-3k + 3 = 0$ leva a $k = 1$."
+        },
+        {
+         "formula": "k = -1",
+         "correta": false,
+         "porque": "Erra o sinal: com $k = -1$ o determinante não zera."
+        },
+        {
+         "formula": "k = 3",
+         "correta": false,
+         "porque": "Esse valor não satisfaz $-3k + 3 = 0$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 22,
+   "id": "bf94aed/material-2/licao4",
+   "esperado": "recusada",
+   "entrega": "y_C = 4",
+   "resolucao": {
+    "problema": "Dados $A = (0, 1)$, $B = (3, 4)$ e $G = (2, 3)$, qual o terceiro vértice $C$ do triângulo?",
+    "passos": [
+     {
+      "nome": "A condição do baricentro",
+      "texto": "O baricentro é a média das coordenadas dos três vértices, então $x_G = (x_A + x_B + x_C) \\div 3$ e $y_G = (y_A + y_B + y_C) \\div 3$.",
+      "formula": "x_G = \\frac{x_A + x_B + x_C}{3}"
+     },
+     {
+      "nome": "Substituindo os valores",
+      "texto": "Entram os dados conhecidos: na abcissa $2 = (0 + 3 + x_C) \\div 3$ e na ordenada $3 = (1 + 4 + y_C) \\div 3$.",
+      "formula": "\\foco{2} = \\frac{0 + 3 + x_C}{3}, \\foco{3} = \\frac{1 + 4 + y_C}{3}"
+     },
+     {
+      "nome": "Isolando o x",
+      "texto": "Multiplicando por $3$: $6 = 3 + x_C$, logo $x_C = 3$.",
+      "formula": "6 = 3 + x_C \\to x_C = 3"
+     },
+     {
+      "nome": "O valor de y",
+      "texto": "Na ordenada, $9 = 5 + y_C$, então $y_C = 4$.",
+      "formula": "9 = 5 + y_C \\to y_C = 4",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_C$?",
+       "opcoes": [
+        {
+         "formula": "y_C = \\frac{5}{2}",
+         "correta": false,
+         "porque": "Dividir por 2 não corresponde à média de três vértices."
+        },
+        {
+         "formula": "y_C = 4",
+         "correta": true,
+         "porque": "De $9 = 5 + y_C$ vem $y_C = 4$, como na conta feita."
+        },
+        {
+         "formula": "y_C = 9",
+         "correta": false,
+         "porque": "Esse é o total $3 \\times 3$ antes de subtrair $5$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 23,
+   "id": "bf94aed/material-3/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Um triângulo tem vértices $A = (0, 1)$, $B = (6, 3)$ e $C = (3, 8)$. Qual é a coordenada $y_G$ do baricentro?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo de vértices A em (0, 1), B em (6, 3) e C em (3, 8)",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      9
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 6,
+       "y": 3
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 3,
+       "y": 8
+      },
+      {
+       "id": "G",
+       "papel": "procurado",
+       "x": 3,
+       "y": 4
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      },
+      {
+       "de": "C",
+       "ate": "A"
+      }
+     ],
+     "poligonos": [
+      {
+       "pontos": [
+        "A",
+        "B",
+        "C"
+       ]
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula do baricentro",
+      "texto": "Cada coordenada de $G$ é a média das coordenadas correspondentes dos vértices. Para $y_G$, somamos as ordenadas e dividimos por $3$.",
+      "formula": "y_G = \\frac{y_A + y_B + y_C}{3}"
+     },
+     {
+      "nome": "Substituir as ordenadas",
+      "texto": "Com $y_A = 1$, $y_B = 3$ e $y_C = 8$, a soma das ordenadas é $1 + 3 + 8 = 12$.",
+      "formula": "y_G = \\frac{1 + 3 + 8}{3}"
+     },
+     {
+      "nome": "Dividir por 3",
+      "texto": "Dividindo $12$ por $3$ obtemos a ordenada do baricentro.",
+      "formula": "y_G = \\frac{12}{3} = \\resposta{4}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $y_G$?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{1 + 3 + 8}{3} = 4",
+         "correta": true,
+         "porque": "Somando as ordenadas e dividindo por $3$, obtemos $\\frac{12}{3} = 4$."
+        },
+        {
+         "formula": "y_G = \\frac{1 + 3 + 8}{3} = 12",
+         "correta": false,
+         "porque": "$12$ é a soma das ordenadas; ainda falta dividir por $3$."
+        },
+        {
+         "formula": "y_G = \\frac{1 + 3}{3} = \\frac{4}{3}",
+         "correta": false,
+         "porque": "Faltou incluir a ordenada $y_C = 8$ na soma."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 24,
+   "id": "bf94aed/material-3/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Se $A = (2, 1)$, $B = (5, 7)$ e o baricentro é $G = (4, 5)$, qual é o valor de $y_C$?",
+    "passos": [
+     {
+      "nome": "A fórmula do baricentro",
+      "texto": "A ordenada do baricentro é a média das ordenadas dos três vértices.",
+      "formula": "y_G = \\frac{y_A + y_B + \\foco{y_C}}{3}"
+     },
+     {
+      "nome": "Substituindo os valores",
+      "texto": "Trocando pelos valores dados, $5 = (1 + 7 + y_C) \\div 3$.",
+      "formula": "5 = \\frac{1 + 7 + y_C}{3}"
+     },
+     {
+      "nome": "Multiplicando por 3",
+      "texto": "Multiplicando os dois lados por 3, obtemos $15 = 8 + y_C$.",
+      "formula": "15 = \\foco{8} + y_C"
+     },
+     {
+      "nome": "Isolando a ordenada",
+      "texto": "Subtraindo 8 dos dois lados, encontramos a ordenada do vértice C.",
+      "formula": "\\resposta{y_C = 7}",
+      "tentativa": {
+       "pergunta": "Qual é o valor de $y_C$?",
+       "opcoes": [
+        {
+         "formula": "y_C = 3 \\times 5 - 1 - 7",
+         "correta": true,
+         "porque": "$15 - 8 = 7$, então $y_C = 7$."
+        },
+        {
+         "formula": "y_C = 5 - 1 - 7",
+         "correta": false,
+         "porque": "Faltou multiplicar $y_G$ por 3 antes de subtrair."
+        },
+        {
+         "formula": "y_C = 3 \\times 5 - 8 + 8",
+         "correta": false,
+         "porque": "Somou 8 em vez de subtrair, o que não isola $y_C$."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 25,
+   "id": "bf94aed/material-3/licao3",
+   "esperado": "recusada",
+   "entrega": "0",
+   "resolucao": {
+    "problema": "Para verificar a colinearidade de $A = (0, 1)$, $B = (2, 3)$ e $C = (4, 5)$, como fica a matriz a ser usada no determinante e qual é o valor desse determinante?",
+    "passos": [
+     {
+      "nome": "A matriz",
+      "texto": "Cada linha traz as coordenadas de um ponto seguidas de $1$.",
+      "formula": "\\begin{bmatrix} 0 & 1 & 1 \\\\ 2 & 3 & 1 \\\\ 4 & 5 & 1 \\end{bmatrix}"
+     },
+     {
+      "nome": "As diagonais principais",
+      "texto": "Multiplicando as três diagonais principais: $0 \\times 3 \\times 1 = 0$, $1 \\times 1 \\times 4 = 4$ e $1 \\times 2 \\times 5 = 10$.",
+      "formula": "0 + 4 + 10 = 14"
+     },
+     {
+      "nome": "As diagonais secundárias",
+      "texto": "Multiplicando as três diagonais secundárias: $1 \\times 3 \\times 4 = 12$, $0 \\times 1 \\times 5 = 0$ e $1 \\times 2 \\times 1 = 2$.",
+      "formula": "12 + 0 + 2 = 14"
+     },
+     {
+      "nome": "O determinante",
+      "texto": "Subtraindo a soma das secundárias da soma das principais, o determinante dá zero: os pontos são colineares.",
+      "formula": "14 - 14 = \\resposta{0}",
+      "tentativa": {
+       "pergunta": "Qual é o valor do determinante da matriz de $A = (0, 1)$, $B = (2, 3)$ e $C = (4, 5)$?",
+       "opcoes": [
+        {
+         "formula": "14 - 14 = 0",
+         "correta": true,
+         "porque": "As somas das diagonais principais e secundárias são iguais, então o determinante é zero."
+        },
+        {
+         "formula": "14 - 12 = 2",
+         "correta": false,
+         "porque": "Faltou somar a diagonal secundária que vale 2, e não apenas 12."
+        },
+        {
+         "formula": "12 - 14 = -2",
+         "correta": false,
+         "porque": "A ordem é principais menos secundárias, e as somas valem 14 e 14."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "caso": 26,
+   "id": "bf94aed/trilha-1/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o ponto médio do segmento de $A(2, 3)$ a $B(8, 7)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Segmento de A (2, 3) a B (8, 7) no plano, com o ponto médio M.",
+     "x": [
+      -1,
+      9
+     ],
+     "y": [
+      -1,
+      8
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 3
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 8,
+       "y": 7
+      },
+      {
+       "id": "M",
+       "papel": "especial",
+       "x": 5,
+       "y": 5,
+       "derivado": {
+        "tipo": "ponto_medio",
+        "de": [
+         "A",
+         "B"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O ponto médio usa a média das abscissas e a média das ordenadas.",
+      "formula": "x_M = \\foco{\\frac{x_A + x_B}{2}}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as abscissas de A e de B na fórmula da abscissa.",
+      "formula": "x_M = \\frac{2 + 8}{2}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 2.",
+      "formula": "x_M = \\frac{10}{2} = \\foco{5}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Agora faça a média das ordenadas de A e de B.",
+      "formula": "y_M = \\frac{3 + 7}{2}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_M$?",
+       "opcoes": [
+        {
+         "formula": "y_M = \\frac{10}{2}",
+         "correta": true,
+         "porque": "(3 + 7) ÷ 2 = 10 ÷ 2 = 5."
+        },
+        {
+         "formula": "y_M = 3 + 7",
+         "correta": false,
+         "porque": "10 é a soma das ordenadas: falta dividir por 2."
+        },
+        {
+         "formula": "y_M = \\frac{3 + 7}{4}",
+         "correta": false,
+         "porque": "Divide-se por 2, o número de pontas do segmento, e não por 4."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto M",
+      "texto": "Então o ponto médio tem abscissa 5 e ordenada 5.",
+      "formula": "M = \\resposta{(5, 5)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 27,
+   "id": "bf94aed/trilha-1/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o baricentro do triângulo de vértices $A(0, 2)$, $B(6, 4)$ e $C(3, 9)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo de vértices A (0, 2), B (6, 4) e C (3, 9) no plano, com o baricentro G.",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      10
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 2
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 6,
+       "y": 4
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 3,
+       "y": 9
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 3,
+       "y": 5,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      },
+      {
+       "de": "C",
+       "ate": "A"
+      }
+     ],
+     "poligonos": [
+      {
+       "pontos": [
+        "A",
+        "B",
+        "C"
+       ]
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O baricentro tem a média das abscissas e a média das ordenadas dos três vértices.",
+      "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as abscissas de A, B e C na fórmula.",
+      "formula": "x_G = \\frac{0 + 6 + 3}{3}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 3.",
+      "formula": "x_G = \\frac{9}{3} = \\foco{3}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas dos três vértices.",
+      "formula": "y_G = \\frac{2 + 4 + 9}{3}",
+      "tentativa": {
+       "pergunta": "Quanto vale a ordenada do baricentro?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{15}{3}",
+         "correta": true,
+         "porque": "2 + 4 + 9 = 15 e 15 ÷ 3 = 5."
+        },
+        {
+         "formula": "y_G = 2 + 4 + 9",
+         "correta": false,
+         "porque": "15 é só a soma das ordenadas: falta dividir por 3."
+        },
+        {
+         "formula": "y_G = \\frac{15}{2}",
+         "correta": false,
+         "porque": "São três vértices, então divide-se por 3, e não por 2."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto G",
+      "texto": "Então o baricentro tem abscissa 3 e ordenada 5.",
+      "formula": "G = \\resposta{(3, 5)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 28,
+   "id": "bf94aed/trilha-1/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os pontos $A(2, 1)$, $B(4, 3)$ e $C(6, 5)$ estão alinhados?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Os pontos A (2, 1), B (4, 3) e C (6, 5) no plano.",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      6
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 4,
+       "y": 3
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 6,
+       "y": 5
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "C"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "Para saber se três pontos estão na mesma reta, calculamos o determinante das coordenadas.",
+      "formula": "D = x_A(y_B - y_C) + x_B(y_C - y_A) + x_C(y_A - y_B)"
+     },
+     {
+      "nome": "Substitua x e y",
+      "texto": "Troque cada coordenada pelo valor do ponto correspondente.",
+      "formula": "D = 2(3 - 5) + 4(5 - 1) + 6(1 - 3)"
+     },
+     {
+      "nome": "Resolva os parênteses",
+      "texto": "Calcule cada diferença antes de multiplicar.",
+      "formula": "D = 2 \\times (-2) + 4 \\times 4 + 6 \\times (-2)"
+     },
+     {
+      "nome": "Some as parcelas",
+      "texto": "Faça as multiplicações e some tudo com atenção aos sinais.",
+      "formula": "D = -4 + 16 - 12",
+      "tentativa": {
+       "pergunta": "Quanto vale o determinante D?",
+       "opcoes": [
+        {
+         "formula": "D = -4 + 16 - 12 = 0",
+         "correta": true,
+         "porque": "-4 + 16 = 12 e 12 - 12 = 0."
+        },
+        {
+         "formula": "D = -4 + 16 + 12 = 24",
+         "correta": false,
+         "porque": "O último termo é 6 × (-2) = -12, e não +12."
+        },
+        {
+         "formula": "D = 4 + 16 - 12 = 8",
+         "correta": false,
+         "porque": "O primeiro termo é 2 × (-2) = -4, e não +4."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "Conclusão",
+      "texto": "Como o determinante deu zero, os três pontos estão na mesma reta.",
+      "formula": "D = \\resposta{0} \\to \\text{colineares}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 29,
+   "id": "bf94aed/trilha-2/licao1",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o ponto médio do segmento de $A(2, 3)$ a $B(8, 9)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "O segmento de A (2, 3) a B (8, 9) no plano, com o ponto médio M.",
+     "x": [
+      -1,
+      9
+     ],
+     "y": [
+      -1,
+      10
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 3
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 8,
+       "y": 9
+      },
+      {
+       "id": "M",
+       "papel": "especial",
+       "x": 5,
+       "y": 6,
+       "derivado": {
+        "tipo": "ponto_medio",
+        "de": [
+         "A",
+         "B"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O ponto médio tem a média das abscissas e a média das ordenadas das pontas.",
+      "formula": "x_M = \\foco{\\frac{x_A + x_B}{2}}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as abscissas de A e de B na fórmula.",
+      "formula": "x_M = \\frac{2 + 8}{2}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 2.",
+      "formula": "x_M = \\frac{10}{2} = \\foco{5}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas de A e de B.",
+      "formula": "y_M = \\frac{3 + 9}{2}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_M$?",
+       "opcoes": [
+        {
+         "formula": "y_M = \\frac{12}{2}",
+         "correta": true,
+         "porque": "(3 + 9) ÷ 2 = 12 ÷ 2 = 6."
+        },
+        {
+         "formula": "y_M = 3 + 9",
+         "correta": false,
+         "porque": "12 é a soma das ordenadas: falta dividir por 2."
+        },
+        {
+         "formula": "y_M = \\frac{3 + 9}{3}",
+         "correta": false,
+         "porque": "A média de dois valores divide por 2, e não por 3."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto M",
+      "texto": "Então M tem abscissa 5 e ordenada 6.",
+      "formula": "M = \\resposta{(5, 6)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 30,
+   "id": "bf94aed/trilha-2/licao2",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Qual é o baricentro do triângulo de vértices $A(0, 0)$, $B(6, 0)$ e $C(0, 6)$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo com vértices A (0, 0), B (6, 0) e C (0, 6) no plano, com o baricentro G.",
+     "x": [
+      -1,
+      7
+     ],
+     "y": [
+      -1,
+      7
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 0,
+       "y": 0
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 6,
+       "y": 0
+      },
+      {
+       "id": "C",
+       "papel": "dado",
+       "x": 0,
+       "y": 6
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": 2,
+       "y": 2,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      },
+      {
+       "de": "B",
+       "ate": "C"
+      },
+      {
+       "de": "C",
+       "ate": "A"
+      }
+     ],
+     "poligonos": [
+      {
+       "pontos": [
+        "A",
+        "B",
+        "C"
+       ]
+      }
+     ]
+    },
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "O baricentro tem a média das abscissas e a média das ordenadas dos três vértices.",
+      "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as abscissas de A, B e C na fórmula.",
+      "formula": "x_G = \\frac{0 + 6 + 0}{3}"
+     },
+     {
+      "nome": "Calcule x",
+      "texto": "Some as abscissas e divida por 3.",
+      "formula": "x_G = \\frac{6}{3} = \\foco{2}"
+     },
+     {
+      "nome": "O mesmo para y",
+      "texto": "Faça igual com as ordenadas dos três vértices.",
+      "formula": "y_G = \\frac{0 + 0 + 6}{3}",
+      "tentativa": {
+       "pergunta": "Quanto vale $y_G$?",
+       "opcoes": [
+        {
+         "formula": "y_G = \\frac{6}{3}",
+         "correta": true,
+         "porque": "(0 + 0 + 6) ÷ 3 = 6 ÷ 3 = 2."
+        },
+        {
+         "formula": "y_G = 0 + 0 + 6",
+         "correta": false,
+         "porque": "6 é a soma das ordenadas: falta dividir por 3."
+        },
+        {
+         "formula": "y_G = \\frac{6}{2}",
+         "correta": false,
+         "porque": "São três vértices, então divide-se por 3 e não por 2."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O ponto G",
+      "texto": "Então o baricentro tem abscissa 2 e ordenada 2.",
+      "formula": "G = \\resposta{(2, 2)}"
+     }
+    ]
+   }
+  },
+  {
+   "caso": 31,
+   "id": "bf94aed/trilha-2/licao3",
+   "esperado": "aceita",
+   "resolucao": {
+    "problema": "Os pontos $A(1, 2)$, $B(3, 6)$ e $C(5, 10)$ são colineares?",
+    "passos": [
+     {
+      "nome": "A fórmula",
+      "texto": "Use o determinante das coordenadas dos três pontos.",
+      "formula": "D = x_A(y_B - y_C) + x_B(y_C - y_A) + x_C(y_A - y_B)"
+     },
+     {
+      "nome": "Troque os valores",
+      "texto": "Coloque as coordenadas de A, B e C na fórmula.",
+      "formula": "D = 1(6 - 10) + 3(10 - 2) + 5(2 - 6)"
+     },
+     {
+      "nome": "Calcule cada parte",
+      "texto": "Resolva os parênteses e multiplique.",
+      "formula": "D = -4 + 24 - 20"
+     },
+     {
+      "nome": "Some tudo",
+      "texto": "Junte os três resultados para achar o determinante.",
+      "formula": "D = \\foco{0}",
+      "tentativa": {
+       "pergunta": "Quanto vale o determinante D?",
+       "opcoes": [
+        {
+         "formula": "D = -4 + 24 - 20",
+         "correta": true,
+         "porque": "-4 + 24 = 20 e 20 - 20 = 0."
+        },
+        {
+         "formula": "D = 4 + 24 + 20",
+         "correta": false,
+         "porque": "O primeiro e o terceiro termos são negativos: -4 e -20, não 4 e 20."
+        },
+        {
+         "formula": "D = -4 + 24 + 20",
+         "correta": false,
+         "porque": "O último termo é -20, porque 2 - 6 = -4 vezes 5."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "A conclusão",
+      "texto": "Como o determinante deu zero, os três pontos estão alinhados.",
+      "formula": "D = \\resposta{0} \\to \\text{colineares}"
+     }
+    ]
+   }
+  }
+ ]
+}

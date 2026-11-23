@@ -5,13 +5,13 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { after, test } from 'node:test';
 import { VERSAO_CONSENTIMENTO_IA, interpretarEstadoPrivacidade, privacidadeDoErro } from '@studoo/contratos/privacidade';
-import { ErroStudoo } from '@studoo/contratos';
+import { ErroStudoo, recebidaTemNome } from '@studoo/contratos';
 import { GET as privacidadeGet } from '../src/app/api/privacidade/route.ts';
 import { POST as aceitePost, DELETE as aceiteDelete } from '../src/app/api/privacidade/consentimento-ia/route.ts';
 import { DELETE as contaDelete } from '../src/app/api/conta/route.ts';
 import { POST as propostasPost } from '../src/app/api/aprendizado/propostas/route.ts';
 import { POST as aoVivoPost } from '../src/app/api/aprendizado/propostas/ao-vivo/route.ts';
-import { POST as planosPost } from '../src/app/api/aprendizado/planos/route.ts';
+import { GET as planosGet, POST as planosPost } from '../src/app/api/aprendizado/planos/route.ts';
 import { POST as materiaisPost } from '../src/app/api/estudio/materiais/route.ts';
 import { POST as vozPost } from '../src/app/api/estudio/voz/route.ts';
 import { POST as avaliarPost } from '../src/app/api/aprendizado/licoes/[id]/avaliar/route.ts';
@@ -230,6 +230,11 @@ test('excluir conta: pede a confirmação e apaga no ato a conta, as trilhas, o 
   const daBia = await banco.planoAprendizado.findMany({ where: { usuarioId: bia.id }, select: { origemNome: true, origemPerfilId: true } });
   assert.equal(daBia.length, 1);
   assert.deepEqual(daBia[0], { origemNome: null, origemPerfilId: null });
+  // O que a API entrega para o mapa e para Minhas trilhas (banca P0-3): a trilha continua RECEBIDA (sem Compartilhar nem Postar), com o nome vazio. Os clientes
+  // não montam "Esta trilha é de …" nem "Compartilhada por …" com ele (`recebidaTemNome`), em vez de escrever a frase sem ninguém.
+  const lista = (await json(planosGet(pedido('/api/aprendizado/planos', { token: bia.token })))).corpo;
+  assert.deepEqual(lista[0].recebida, { nome: '', perfilId: null, codigoAtivo: null, foto: null });
+  assert.equal(recebidaTemNome(lista[0].recebida), false);
   assert.ok(await banco.usuario.findUnique({ where: { id: bia.id } }), 'a outra conta não é tocada');
 });
 

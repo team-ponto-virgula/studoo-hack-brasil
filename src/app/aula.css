@@ -106,6 +106,14 @@
 .aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 
+/* Refino 4 (spec 16): etapa curta (cabe sem rolar e sobram 40% ou mais da área livre, medido em aula-folga.ts). O miolo vira uma coluna e o conjunto (Stu e cartão) fica centralizado na
+   vertical, no que sobra abaixo do título; no Exemplo o Stu (stu-feliz, 72, decorativo) entra acima do cartão. Sem folga, nada disto vale e tudo fica em cima, como sempre foi. */
+.aula-miolo[data-folga] { display: flex; flex-direction: column; }
+.aula-miolo[data-folga] .aula-explicacao { margin-block: auto; }
+.aula-miolo[data-folga] .aula-folga-stu { align-self: center; margin-top: auto; margin-bottom: -6px; }
+.aula-miolo[data-folga] .aula-folga-stu .stu { width: 72px; }
+.aula-miolo[data-folga] > .aula-quadro[data-etapa='exemplo'] { margin-bottom: auto; }
+
 /* Conceito: o Stu explica, num balão. */
 .aula-explicacao { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px; }
 .aula-explicacao .stu { width: 76px; margin-top: 6px; transform-origin: 50% 100%; animation: aula-stu 3400ms ease-in-out 700ms infinite; }
@@ -162,10 +170,10 @@
 .painel--aula[data-retorno='errada'] .aula-quadro[data-etapa='exercicio'] { animation: aula-tremer 440ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
 /* Opções: cartões com relevo e a tecla de atalho; o círculo do rádio fica escondido, mas segue no teclado. */
-:is(.aula-quadro, .estudio-desafio) .opcoes { gap: 12px; border: 0; padding: 0; margin: 0; }
-:is(.aula-quadro, .estudio-desafio) .opcoes input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes { gap: 12px; border: 0; padding: 0; margin: 0; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
-:is(.aula-quadro, .estudio-desafio) .opcoes label {
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label {
   position: relative;
   display: flex;
   min-height: 60px;
@@ -180,15 +188,17 @@
   transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
 }
 
-:is(.aula-quadro, .estudio-desafio) .opcoes label:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
-:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
-:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
 
+/* Refino 6 (spec 16): o quadrinho da letra cresce com o texto, sempre quadrado: lado de 1,75 × a letra (`em` é o tamanho da própria letra), no mínimo 30 px. A letra fica
+   no centro, o raio é de 9 px, e o texto da opção ocupa o resto da largura e quebra em linhas, sem passar por baixo do quadrinho. */
 .opcao-tecla {
   display: grid;
   flex: none;
-  width: 30px;
-  height: 30px;
+  width: max(30px, 1.75em);
+  aspect-ratio: 1;
   place-items: center;
   border: 2px solid var(--gelo);
   border-radius: 9px;
@@ -196,14 +206,15 @@
   font-size: 0.875rem;
   font-weight: 900;
 }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label > :not(input, .opcao-tecla) { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
 
-:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:checked) .opcao-tecla { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; animation: aula-pular 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa'] .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada'] .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
-:is(.aula-quadro, .estudio-desafio) .opcoes:disabled label { cursor: default; }
-:is(.aula-quadro, .estudio-desafio) .opcoes:disabled label:not([data-retorno]) { opacity: 0.55; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:checked) .opcao-tecla { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='certa'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; animation: aula-pular 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='certa'] .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='errada'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='errada'] .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes:disabled label { cursor: default; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes:disabled label:not([data-retorno]) { opacity: 0.55; }
 .opcoes-atalho { display: none; color: var(--texto2); font-size: 0.8125rem; }
 
 @media (hover: hover) and (pointer: fine) {
@@ -262,6 +273,9 @@
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 .aula-rodape__nota { flex: 1 1 14rem; color: var(--texto2); font-weight: 700; }
+/* Refino 11 (spec 16): a frase sobre pular, embaixo da fileira de botões, em 13/18 regular #5E6A85 (a altura da linha é 18/13 da letra: com a letra ampliada ela não aperta), alinhada à direita, com "Pular por agora". */
+.aula-rodape__pular { flex: 0 0 100%; margin: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 400; line-height: 1.3846; text-align: end; }
+.aula-rodape[data-compacto] .aula-rodape__pular { display: none; }
 
 .aula-retorno {
   display: grid;
@@ -309,6 +323,7 @@
   .aula-rodape { padding-top: 10px; }
   .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 6px; }
   .aula-rodape__nota { flex: none; text-align: center; font-size: 0.8125rem; }
+  .aula-rodape__pular { flex: none; }
   .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
   .aula-rodape__acoes > .botao { width: 100%; min-height: 48px; }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {
@@ -364,6 +379,18 @@
   .aula-rodape[data-compacto] .aula-retorno { display: flex; align-items: center; gap: 10px; }
   .aula-rodape[data-compacto] .aula-retorno__icone { float: none; flex: none; margin-right: 0; }
 }
+/* Spec 16, item 24: um acerto com o "Explique com suas palavras" aberto vira UMA linha de 64 px: o visto e o título à esquerda (16/800, #1F7A5A) e "Continuar" à direita, compacto, no mesmo verde claro;
+   o texto do retorno já saiu (já foi lido). Ao fechar o "Explique", o rodapé volta ao normal. 64 = 48 do botão + 8 de cada lado (a área segura do iPhone entra por fora). */
+.aula-rodape[data-retorno='certa'][data-compacto] { padding-block: 8px calc(8px + env(safe-area-inset-bottom)); }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__conteudo { flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno { display: flex; flex: 1 1 0; align-items: center; gap: 8px; min-width: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno__icone { float: none; flex: none; width: 32px; height: 32px; margin-right: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno__texto { min-width: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno h2 { overflow: hidden; padding-right: 0; font-size: 1rem; font-weight: 800; line-height: 1.375; text-overflow: ellipsis; white-space: nowrap; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes { flex: none; width: auto; margin-left: 0; flex-direction: row; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes > .botao { width: auto; min-width: auto; min-height: 48px; padding-inline: 18px; white-space: nowrap; }
+/* O "Ver mais abaixo" flutua sobre o conteúdo, logo acima da linha (como no app), em vez de somar uns 35 px ao rodapé: a linha do acerto mede os 64 px. */
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-mais-abaixo { position: absolute; inset: auto auto calc(100% + 8px) 50%; margin: 0; translate: -50% 0; }
 .sem-quebra { white-space: nowrap; }
 .aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
 .como-foi__sem-cronometro { margin: -4px 0 10px; padding: 4px 0; border: 0; background: none; color: var(--acao); font: inherit;
@@ -735,7 +762,9 @@
 .campo--aberta textarea[data-retorno='errada'] { border-color: #e3a24a; background: #fff6ea; }
 .campo__dica { color: var(--texto2); font-size: 0.875rem; }
 .campo__contador { justify-self: end; color: var(--alerta); font-size: 0.8125rem; font-weight: 800; }
-.campo__contador[data-pronto] { color: var(--sucesso); }
+/* Refino 8 (spec 16): a contagem da resposta aberta é cinza (#5E6A85), sem o laranja; escondida (antes da 1ª letra e depois do mínimo) ela guarda o espaço. */
+.campo--aberta .campo__contador { color: var(--texto2); }
+.campo--aberta .campo__contador[data-oculto] { visibility: hidden; }
 
 .correcao-aberta { display: grid; gap: 12px; padding: 16px 18px; border-radius: 16px; background: var(--nevoa); }
 .correcao-aberta ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -835,12 +864,12 @@
  * Depois da resposta, a cor do resultado vence a da seleção. A regra da seleção usa :has(input:checked), que pesa mais
  * que um atributo; estas repetem o :has e vêm depois, então ganham.
  */
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa']:has(input),
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='certa']:has(input),
 .vf__valores label[data-retorno='certa']:has(input) { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada']:has(input),
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='errada']:has(input),
 .vf__valores label[data-retorno='errada']:has(input) { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa']:has(input) .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
-:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada']:has(input) .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='certa']:has(input) .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='errada']:has(input) .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
 .associar .associar__colunas button[data-estado='certo'] { --cor-par: var(--sucesso-claro); border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
 .associar .associar__colunas button[data-estado='errado'] { --cor-par: #e3a24a; border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
 
@@ -986,7 +1015,7 @@
 .aula-citacao__selo {
   padding: 3px 10px;
   border-radius: 999px;
-  color: var(--acao);
+  color: var(--acao-escura);
   background: #e5ebff;
   font-size: 0.75rem;
   font-weight: 900;
@@ -1020,4 +1049,116 @@
   .aula-retorno__stu { position: absolute; top: -8px; right: 0; width: 42px; }
   .aula-retorno h2 { padding-right: 52px; }
   .aula-retorno__corpo { max-height: calc(50svh - 200px); }
+}
+
+/* ----- Matemática (spec 15): fórmula em linha, fórmula em bloco e figura, o mesmo desenho do app ----- */
+
+/* A fórmula na frase: um bloco em linha que se apoia na linha de base das palavras, só com a altura de cima; o desenho sai por baixo. */
+.formula-em-linha { position: relative; display: inline-block; overflow: visible; vertical-align: baseline; }
+.formula-em-linha > svg { position: absolute; top: 0; left: 0; overflow: visible; }
+
+/* Os visuais da lição (seção 3): abertos, na largura do conteúdo, a fórmula antes do diagrama, com 12 de vão entre eles. */
+.aula-visuais { display: grid; gap: 12px; margin-top: 16px; }
+.aula-visuais:empty { display: none; margin: 0; }
+.desenho { display: block; width: 100%; margin-inline: auto; }
+.desenho > svg { display: block; width: 100%; height: auto; }
+.desenho--caixa > svg { height: 100%; }
+.desenho--rola { overflow-x: auto; overscroll-behavior-x: contain; }
+.desenho--rola > svg { max-width: none; }
+.desenho__ponto { transform-box: view-box; }
+
+/* A fórmula que se lê mas não se desenha: o texto linear, no bloco da fórmula. */
+.desenho-formula-texto { margin: 0; padding: 10px 12px; border-radius: 14px; background: #f1f4fd; color: var(--texto); font-size: 18px; font-weight: 700; line-height: 26px; text-align: center; }
+
+/* A figura que não coube na altura (seção 13): uma linha discreta abaixo do enunciado, sem caixa. */
+.figura-em-texto { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: #5e6a85; font-size: 14px; line-height: 20px; }
+.figura-em-texto .icone { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke-width: 2; }
+
+/* Entrada (seção 12): o desenho sobe 8 em 200 ms; na caixa da figura do exercício ele aparece no lugar e o ponto resposta cresce depois. */
+@keyframes desenho-entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes desenho-aparecer { from { opacity: 0; } to { opacity: 1; } }
+@keyframes desenho-crescer { from { transform: scale(0); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .desenho[data-entrada]:not(.desenho--caixa) { animation: desenho-entrar 200ms ease-out both; }
+  .desenho--caixa[data-entrada] { animation: desenho-aparecer 200ms ease-out both; }
+  .desenho--caixa[data-entrada] .desenho__ponto { animation: desenho-crescer 200ms ease-out 200ms both; }
+}
+
+/* Com figura, o enunciado desce para 22 (seção 3): as opções começam na primeira tela. */
+.aula-miolo .aula-pergunta[data-com-visual] { font-size: 1.375rem; line-height: 1.15; }
+.aula-figura { margin: 2px 0 4px; }
+
+/* ----- Resolva comigo (spec 15, seção 4): a forma da etapa Exemplo quando a lição traz `resolucao`, a mesma tela do app ----- */
+/*
+ * Todo texto e toda fórmula do Resolva comigo é em rem: cresce com a letra grande do sistema e com o zoom do texto (WCAG 1.4.4), como as opções
+ * da aula. Em px ficam só os desenhos (os traços do indicador, o Stu, as bordas) e os espaços entre as peças.
+ */
+/* O selo e o problema: no app o problema desce 10 depois do selo (a grade da aula deixa 18). */
+.aula-miolo .resolva { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: -8px; }
+.aula-miolo .resolva-problema { margin: 0; font-size: 1.0625rem; font-weight: 700; line-height: 1.4375rem; text-wrap: wrap; }
+.resolva [tabindex='-1']:focus { outline: none; }
+
+/* O indicador "Passo n de N": N traços de 6; os feitos e o atual em azul, o atual mais largo (34). */
+.resolva-indicador { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.resolva-indicador__texto { color: var(--texto2); font-size: 0.875rem; font-weight: 800; line-height: 1.25rem; }
+.resolva-tracos { display: flex; align-items: center; gap: 4px; }
+.resolva-traco { width: 18px; height: 6px; border-radius: 3px; background: var(--gelo); }
+.resolva-traco[data-feito] { background: var(--acao); }
+.resolva-traco[data-atual] { width: 34px; }
+
+/* Um passo feito, numa linha: o visto, o nome e a fórmula reduzida; tocar reabre o passo ali mesmo. */
+.resolva-feito { padding: 6px 12px; border-radius: 14px; background: #f4f7ff; }
+.resolva-feito__linha { display: flex; width: 100%; min-height: 2.25rem; align-items: center; gap: 8px; padding: 0; border: 0; border-radius: 8px; color: var(--texto); background: none; font: inherit; text-align: left; cursor: pointer; }
+.resolva-feito__linha:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.resolva-feito__linha .icone { flex: none; width: 1rem; height: 1rem; color: var(--sucesso); }
+.resolva-feito__nome { flex: none; max-width: 55%; overflow: hidden; color: var(--texto); font-size: 0.875rem; font-weight: 800; line-height: 1.25rem; text-overflow: ellipsis; white-space: nowrap; }
+.resolva-feito__formula { flex: 1 1 0; min-width: 0; overflow: hidden; color: var(--texto2); font-size: 0.875rem; font-weight: 400; line-height: 1.25rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.resolva-feito__aberto { display: grid; gap: 8px; padding-top: 6px; }
+.resolva-feito__aberto p { margin: 0; font-size: 0.9375rem; line-height: 1.3125rem; }
+
+/* O cartão do passo atual: o Stu e a frase (400, como o texto da aula), a fórmula em bloco ou o "Sua vez". Entra subindo 8 em 200 ms. */
+.resolva-cartao { display: grid; gap: 12px; padding: 16px; border: 2px solid var(--gelo); border-radius: 20px; background: var(--fundo); }
+.resolva-cartao__topo { display: flex; align-items: flex-start; gap: 10px; }
+.resolva-cartao__topo .stu { flex: none; width: 40px; height: auto; }
+.resolva-frase { flex: 1 1 0; min-width: 0; margin: 0; font-size: 1rem; font-weight: 400; line-height: 1.375rem; }
+@keyframes resolva-entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .resolva-cartao { animation: resolva-entrar 200ms ease-out both; }
+}
+
+/* "Sua vez": o selo âmbar, a pergunta (700 sempre), as opções como as dos exercícios e o porquê. */
+.resolva-suavez { display: grid; gap: 12px; }
+.resolva-selo { justify-self: start; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; line-height: 1.125rem; text-transform: uppercase; }
+.resolva-selo--sua-vez { color: #8a5a00; background: #fff1cc; }
+.resolva-pergunta { margin: 0; font-size: 1rem; font-weight: 700; line-height: 1.375rem; }
+.resolva .opcoes { gap: 10px; }
+/* Travar as opções (enquanto confere ou depois do porquê) não as apaga: só a revelação apaga as que não são a certa nem a marcada. */
+.resolva .opcoes:disabled label:not([data-retorno]) { opacity: 1; }
+.resolva .opcoes[data-revelado]:disabled label:not([data-retorno]) { opacity: 0.55; }
+@media (hover: hover) and (pointer: fine) {
+  .resolva .opcoes:not(:disabled) label:hover:not(:has(input:checked)) { background: var(--nevoa); }
+}
+.resolva-retorno { display: grid; gap: 12px; }
+.resolva-retorno:focus { outline: none; }
+.resolva-porque { padding: 12px; border-radius: 14px; color: #7a4a00; background: #fff6ea; }
+.resolva-porque p { margin: 0; font-size: 0.9375rem; font-weight: 400; line-height: 1.3125rem; }
+.resolva-isso { display: grid; gap: 8px; padding: 12px; border-radius: 14px; color: var(--sucesso); background: #eefaf3; }
+.resolva-isso__titulo { margin: 0; font-size: 1rem; font-weight: 900; line-height: 1.375rem; }
+.resolva-isso__texto { margin: 0; font-size: 0.9375rem; font-weight: 400; line-height: 1.3125rem; }
+
+/* "Voltar um passo" (botão de texto de 44) e "O método": os passos numa linha cada e a fórmula geral. */
+.resolva-voltar { justify-self: start; min-height: 2.75rem; }
+.resolva-metodo { display: grid; gap: 6px; padding: 16px; border: 2px solid #ffe3a3; border-radius: 20px; background: #fffaf0; }
+.resolva-metodo__titulo { margin: 0; color: #8a5a00; font-size: 1rem; font-weight: 900; line-height: 1.375rem; }
+.resolva-metodo__linha { margin: 0; font-size: 0.9375rem; font-weight: 700; line-height: 1.3125rem; }
+
+/* O rodapé do Resolva comigo: as ações à direita, na largura do alto da aula (como o "Verificar" dos exercícios); a coluna não muda. */
+.aula-rodape[data-resolva] .aula-rodape__acoes { margin-left: auto; }
+
+/* "Verificar" ocupado (o Verificando… do contrato): o botão afunda e fica desligado, com o giro de 16 px na mesma linha; sem movimento, o anel fica parado. */
+.botao[data-ocupado] { box-shadow: 0 1px 0 var(--labio); transform: translateY(3px); cursor: progress; white-space: nowrap; }
+.botao__giro { flex: none; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+@keyframes botao-giro { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .botao__giro { animation: botao-giro 800ms linear infinite; }
 }

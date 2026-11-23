@@ -43,6 +43,7 @@ CAPTURAS_ESPERADAS="
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
 95-resposta-exercicio 96-resposta-errada 97-resposta-certa
+98-ponte-passo-1 98-ponte-desafio 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -335,6 +336,20 @@ rodar_maestro() {
   codigo=${PIPESTATUS[0]}
   set -e
 
+  # O driver do Maestro às vezes morre na partida, antes do primeiro comando (execução 44920181903, Android: "Server
+  # running on port [37701]" e, 0,3 s depois, "Failed to bind to address [::]:37701" no gRPC do próprio driver, e o
+  # Maestro desiste com DeviceServerDiedException em 'deviceInfo'). Não é o app nem o fluxo: o fluxo roda de novo uma vez,
+  # com o driver parado e os encaminhamentos dele desfeitos (limpar_driver_maestro, do android.sh; o adb reverse fica).
+  if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}" ] \
+    && grep -qE "DeviceServerDiedException|Failed to bind to address|Device server died" "$REGISTROS/maestro-$fase.log"; then
+    resumo "⚠️ O driver do Maestro caiu na partida da fase \`$fase\` (antes do primeiro comando); a fase rodou de novo uma vez."
+    cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
+    if declare -F limpar_driver_maestro > /dev/null; then limpar_driver_maestro; fi
+    sleep 5
+    MAESTRO_JA_REPETIU=1 rodar_maestro "$fase" "$alvo" "$@"
+    return $?
+  fi
+
   # A tela do aparelho no fim da fase: mostra onde parou, com ou sem falha. (Do passo que falha, o Maestro guarda
   # também a árvore de elementos, na saída dele: é com ela que se corrige um seletor.)
   capturar_tela_do_aparelho "$REGISTROS/tela-no-fim-de-$fase.png"
@@ -415,8 +430,20 @@ fluxo_criacao() {
     resposta="não rodou: $(tail -n 1 "$REGISTROS/resposta-da-prova.log" 2> /dev/null || echo 'as opções não foram escolhidas')"
   fi
   if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
-  # As provas da criação e das respostas vão já para o artefato das capturas, com ou sem falha.
-  find "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/resposta" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) \
+  # Os momentos "erro → ponte" e "Ensine ao Stu" (fluxo 98, aprovado pelo Lead em 21/11), na mesma trilha temporária,
+  # depois do 95 e fora da linha do tempo do som. No Android, só com o emulador nunca religado nesta execução.
+  local ponte="não rodou: o fluxo 95 não passou"
+  if [ "$resposta" = passou ]; then
+    if [ "$plataforma" = android ] && [ "${REVIVIDOS:-0}" -ne 0 ]; then
+      ponte="não rodou: o emulador foi religado nesta execução (o fluxo 98 só roda com REVIVIDOS=0)"
+    elif rodar_maestro ponte "$PASTA_DOS_FLUXOS/criacao/98-ponte-e-ensine.yaml" -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada"; then
+      ponte=passou
+    else
+      ponte="falhou (maestro-ponte.log e tela-no-fim-de-ponte.png, nos registros)"
+    fi
+  fi
+  # As provas da criação, das respostas e da ponte vão já para o artefato das capturas, com ou sem falha.
+  find "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/resposta" "$SAIDA_MAESTRO/ponte" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) \
     -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   comandos90="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
   comandos95="$(find "$SAIDA_MAESTRO/resposta" -type f -name commands.json -path '*95-resposta-certa-e-errada*' 2> /dev/null | head -1 || true)"
@@ -430,6 +457,11 @@ fluxo_criacao() {
     resumo "❌ Resposta errada e certa na trilha temporária (fluxo 95): $resposta."
   fi
   resumir_fundo "$REGISTROS/linha-do-tempo-criacao.txt"
+  if [ "$ponte" = passou ]; then
+    resumo "✅ Erro → ponte e \"Ensine ao Stu\" em texto na trilha temporária (fluxo 98): capturas 98 e 99."
+  else
+    resumo "❌ Erro → ponte e \"Ensine ao Stu\" (fluxo 98): $ponte."
+  fi
 
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in
@@ -482,9 +514,9 @@ fluxo_telas() {
 fluxo_telas_uma_por_vez() {
   local fluxo pedidas falhas="" naorodaram="" caiu="" quantos=0 codigo
   pedidas="$(printf '%s' "${CONFERENCIA_TELAS:-}" | tr ',' ' ' | xargs || true)"
-  if [ -z "$pedidas" ]; then
+  if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" != "1" ]; then
     fluxo_criacao || true
-  else
+  elif [ -n "$pedidas" ]; then
     resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
   fi
 
@@ -495,9 +527,14 @@ fluxo_telas_uma_por_vez() {
       continue
     fi
     if ! aparelho_responde; then
-      caiu="$fluxo"
-      naorodaram="$naorodaram $fluxo"
-      continue
+      # O Android religa o emulador (até duas vezes) e segue deste fluxo; sem isso, o resto fica como "não rodou".
+      if declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; then
+        resumo "⚠️ O aparelho parou de responder antes de \`$fluxo\` e foi religado; a conferência seguiu dali."
+      else
+        caiu="$fluxo"
+        naorodaram="$naorodaram $fluxo"
+        continue
+      fi
     fi
     quantos=$((quantos + 1))
     codigo=0
@@ -510,6 +547,14 @@ fluxo_telas_uma_por_vez() {
   done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
     "$PASTA_DOS_FLUXOS/telas/config.yaml")
 
+  # A criação por último (Android): com o aparelho de pé, religando se preciso.
+  if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" = "1" ]; then
+    if aparelho_responde || { declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; }; then
+      fluxo_criacao || true
+    else
+      resumo "❌ A prova da criação não rodou: o aparelho não respondia depois das telas."
+    fi
+  fi
   [ "$quantos" -gt 0 ] || [ -n "$caiu" ] || erro "Nenhuma tela de CONFERENCIA_TELAS existe em telas/config.yaml: $pedidas"
   if [ -n "$caiu" ]; then
     resumo "**O aparelho parou de responder antes de \`$caiu\`.** Não rodaram:$(printf ' `%s`' $naorodaram). A carga da máquina está em carga-da-maquina.log e o fim do kernel em dmesg-fim.txt, nos registros."

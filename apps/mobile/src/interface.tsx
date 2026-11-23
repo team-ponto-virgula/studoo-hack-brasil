@@ -100,6 +100,11 @@ export type OpcoesDoAviso = {
   icone?: 'check' | 'alerta' | 'valeu'; acao?: { rotulo: string; aoTocar: () => void }; duracaoMs?: number;
   /** O som do aviso (spec 12): `aviso` sem dizer nada; outro efeito (o `salvo` do perfil); `null` quando o gesto já tocou o seu. */
   som?: IdEfeitoSonoro | null;
+  /**
+   * No alto da tela, 8 abaixo do cabeçalho preso ou da barra da marca, em vez de embaixo (spec 16, item 14: o aviso da música
+   * da primeira vez nunca cobre o balão, os botões do rodapé, links nem a barra de abas).
+   */
+  noAlto?: boolean;
 };
 export type AvisoAtual = OpcoesDoAviso & { texto: string; vez: number };
 export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (texto: string, opcoes?: OpcoesDoAviso) => void; dispensar: () => void }>({
@@ -128,7 +133,8 @@ export function useAvisoDoAppRaiz() {
 }
 
 /** A faixa do aviso: até 480 de largura, fundo #0B1B5C, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
-function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
+function FaixaDoAviso({ aviso, baixo, alto }: { aviso: AvisoAtual; baixo?: number; alto?: number }) {
+  const deCima = alto !== undefined;
   const reduzir = useMovimentoReduzido();
   const { dispensar } = useContext(AvisoDoApp);
   const [entrada] = useState(() => new Animated.Value(0));
@@ -139,10 +145,12 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
     return () => animacao.stop();
   }, [aviso.vez, reduzir, entrada]);
   return (
-    <View pointerEvents="box-none" style={[estilos.avisoLugar, { bottom: baixo }]}>
+    <View pointerEvents="box-none" style={[estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}>
+      {/* Spec 12 e 16 (item 14): fora da faixa, nada é bloqueado (o lugar é box-none); dentro dela, só a ação responde. */}
       <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
         opacity: entrada,
-        transform: [{ translateY: reduzir !== false ? 0 : entrada.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+        // Embaixo, sobe 10; no alto, desce 10 (sempre vindo de onde não há nada para cobrir).
+        transform: [{ translateY: reduzir !== false ? 0 : entrada.interpolate({ inputRange: [0, 1], outputRange: [deCima ? -10 : 10, 0] }) }],
       }]}>
         {aviso.icone && <View style={estilos.avisoIcone}><Icone nome={aviso.icone} tamanho={20} cor="#FFFFFF" cheio={aviso.icone === 'valeu'} /></View>}
         <Text style={estilos.avisoTexto}>{aviso.texto}</Text>
@@ -232,9 +240,15 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [alturaFaixa, setAlturaFaixa] = useState(0);
   const [alturaAcima, setAlturaAcima] = useState(0);
+  const [faixaPresa, setFaixaPresa] = useState(false);
+  const faixaPresaAgora = useRef(false);
+  // O quanto rolou, só enquanto há um aviso no alto: ele fica 8 abaixo do que estiver preso no alto naquele momento.
+  const [roladoDoAviso, setRoladoDoAviso] = useState(0);
   // O que fica acima da faixa parada entra na conta de onde o conteúdo começa (só existe com a faixa).
   const comAcima = Boolean(faixaFixa && acimaDaFaixa);
   const acima = comAcima ? alturaAcima : 0;
+  // Onde a faixa começa no conteúdo: a partir daí, ela gruda no alto e o que rola passa por baixo dela.
+  const inicioDaFaixa = (!topo && !semCabecalho ? alturaCabecalho : 0) + (faixaColada ? 0 : 20) + acima;
   const [alturaRodape, setAlturaRodape] = useState(0);
   const [alturaBarra, setAlturaBarra] = useState(0);
   const cabecalhoNaRolagem = !topo && !semCabecalho;
@@ -249,7 +263,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const rodapePreso = comBarra && Boolean(rodape);
   // iPhone com iOS 26 ou mais novo: o rodapé neutro (das lições, da geração) fica por cima do conteúdo, para o vidro mostrar
   // o que rola por baixo. No Android, no iOS anterior e na prévia web, ele segue no fluxo, como antes.
-  const rodapeSobreposto = VIDRO && Boolean(rodape) && !estiloRodape && !rodapePreso;
+  // Com o teclado aberto, ele volta ao fluxo: o KeyboardAvoidingView ("padding") só empurra os filhos do fluxo, e o rodapé
+  // absoluto (bottom 0) ficava atrás do teclado ("Verificar" escondido na lacuna, teste nativo do iPhone 45105021514).
+  const rodapeSobreposto = rodapeFicaSobreposto(VIDRO, Boolean(rodape), Boolean(estiloRodape), rodapePreso, teclado);
   // O rodapé solto (o cartão da próxima lição, que flutua sobre o mapa): a tela dele já guarda o lugar do cartão.
   const rodapeSolto = StyleSheet.flatten(estiloRodape)?.position === 'absolute';
   // A cápsula flutua sobre o conteúdo em todas as plataformas: 8 acima da área segura de baixo e nunca menos de 16 da borda.
@@ -311,7 +327,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     // Com o teclado aberto, o campo em foco sobe para cima do rodapé (a área visível acabou de encolher).
     const abriu = Keyboard.addListener('keyboardDidShow', () => { setTeclado(true); mostrarCampoEmFoco(); });
     const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
-    return () => { abriu.remove(); fechou.remove(); };
+    // No iPhone, o estado muda já quando o teclado começa a subir (e a descer): o rodapé volta ao fluxo junto com ele, sem
+    // ficar um instante atrás do teclado. No Android só existem os eventos "Did".
+    const vaiAbrir = Platform.OS === 'ios' ? Keyboard.addListener('keyboardWillShow', () => setTeclado(true)) : null;
+    const vaiFechar = Platform.OS === 'ios' ? Keyboard.addListener('keyboardWillHide', () => setTeclado(false)) : null;
+    return () => { abriu.remove(); fechou.remove(); vaiAbrir?.remove(); vaiFechar?.remove(); };
     // O campo e a rolagem vêm de referências: o efeito só liga os ouvintes uma vez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -340,6 +360,18 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     </View>
   );
   const { aviso } = useContext(AvisoDoApp);
+  const avisoNoAlto = useRef(false);
+  avisoNoAlto.current = Boolean(aviso?.noAlto);
+  useEffect(() => {
+    if (aviso?.noAlto) setRoladoDoAviso(Math.min(Math.round(rolado.current), inicioDaFaixa + 1));
+    // Só quando um aviso novo entra.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aviso?.vez]);
+  // No alto (spec 16, item 14): 8 abaixo da faixa presa (a da trilha ou a da geração) ou, sem faixa, da barra da marca que
+  // ainda aparece; com a barra fixa no alto (topo), 8 abaixo dela, que fica fora da rolagem.
+  const altoDoAviso = 8 + (faixaFixa
+    ? Math.max(0, inicioDaFaixa - roladoDoAviso) + alturaFaixa
+    : cabecalhoNaRolagem ? Math.max(0, alturaCabecalho - roladoDoAviso) : 0);
   // O aviso fica 16 acima do que estiver embaixo: a ação presa, a cápsula, o rodapé ou, sem nenhum, a área segura de baixo.
   const ocupadoEmbaixo = rodapePreso ? zonaDaBarra + zonaDoPreso : rodape ? alturaRodape : comBarra ? zonaDaBarra : fundoSeguro;
   const baixoDoAviso = 16 + ocupadoEmbaixo;
@@ -356,7 +388,15 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   if (faixaFixa) {
     filhosDeCima.push(faixaColada
       ? <View key="faixa" style={estilos.faixaColada} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>
-      : <FundoDeBarra key="faixa" estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>);
+      // O ScrollView passa o `style` do filho preso para o invólucro que gruda e troca o do filho por `flex: 1`: o fundo e a
+      // linha ficam no filho direto (uma View), e o vidro vai dentro dele. Com o fundo dentro do FundoDeBarra, o Android
+      // perdia o branco e o mapa aparecia atrás do nome da trilha (spec 16, item 3).
+      : (
+        <View key="faixa" style={VIDRO ? estilos.faixaFixaVidro : [estilos.faixaFixa, faixaPresa && estilos.faixaFixaPresa]}
+          testID="faixa-fixa" onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>
+          <FundoDeBarra estilo={estilos.faixaFixaMiolo} estiloVidro={estilos.faixaFixaMiolo}>{faixaFixa}</FundoDeBarra>
+        </View>
+      ));
   }
 
   return (
@@ -377,7 +417,15 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             aoMedir?.(evento.nativeEvent.layout.height - sobreposicao);
             if (campoEmFoco.current) mostrarCampoEmFoco();
           }}
-          onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
+          onScroll={(evento) => {
+            const y = evento.nativeEvent.contentOffset.y;
+            rolado.current = y;
+            // A linha embaixo da faixa só aparece quando o mapa já passa por baixo dela (a faixa grudou no alto).
+            const presa = Boolean(faixaFixa) && !faixaColada && y > inicioDaFaixa + 0.5;
+            if (presa !== faixaPresaAgora.current) { faixaPresaAgora.current = presa; setFaixaPresa(presa); }
+            if (avisoNoAlto.current) setRoladoDoAviso(Math.min(Math.round(y), inicioDaFaixa + 1));
+            aoRolar?.(y);
+          }}
           // No iPhone, com a cápsula, o indicador de rolagem termina acima dela (e da ação presa).
           scrollIndicatorInsets={comBarra ? { bottom: sobreposicao } : undefined}
           automaticallyAdjustsScrollIndicatorInsets={!comBarra}
@@ -407,6 +455,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           {/* O fim da rolagem passa por baixo da cápsula, da ação presa, do rodapé de vidro e da área segura, sem esconder o último item. */}
           {fimDaRolagem > 0 && <View style={{ height: fimDaRolagem }} />}
         </ScrollView>
+        {/* O aviso do alto fica dentro desta área (abaixo da área segura e da barra fixa do alto), por cima da rolagem. */}
+        {aviso?.noAlto && <FaixaDoAviso key={aviso.vez} aviso={aviso} alto={altoDoAviso} />}
         {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
         {rodape && !rodapePreso && (() => {
           const base = StyleSheet.flatten([estilos.rodapeConteudo, estiloRodapeConteudo])?.paddingBottom;
@@ -433,7 +483,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       )}
       {comBarra && <NavegacaoInferior base={baseDaCapsula} lados={lados} aoMedir={setAlturaBarra} />}
       {flutuante && <View pointerEvents="box-none" style={[estilos.flutuante, { bottom: baixoDoAviso }]}>{flutuante}</View>}
-      {aviso && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
+      {aviso && !aviso.noAlto && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
     </SafeAreaView>
   );
 }
@@ -571,7 +621,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
   /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
   carregando?: boolean;
   /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
-  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo' | 'perigo';
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo' | 'destrutivoBaixo' | 'perigo';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
@@ -587,7 +637,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
     if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
-  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : variante === 'destrutivoBaixo' ? cores.erro : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
   // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
   // (--labio); nos botões claros, a borda e o degrau somam a faixa de 6 da web. O botão de texto não tem degrau.
@@ -617,13 +667,14 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
   if (comDegrau) {
     return (
       <Pressable ref={referencia} testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
-        accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} disabled={bloqueado}
+        accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} aria-busy={ocupado || carregando} disabled={bloqueado}
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
         style={({ pressed }) => [degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
           variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
+          variante === 'destrutivoBaixo' && estilos.botaoFaceDestrutivaBaixa,
           compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
           {conteudo}
         </View>
@@ -638,7 +689,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
       accessibilityRole="button"
       accessibilityLabel={nomeAcessivel ?? rotulo}
       accessibilityHint={dica}
-      accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }}
+      accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} aria-busy={ocupado || carregando}
       disabled={bloqueado}
       onPressIn={() => pressionar(0.97)}
       onPressOut={() => pressionar(1)}
@@ -761,13 +812,17 @@ export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio
           onPress={() => interno.current?.focus()}>{rotulo}</Text>
       )}
       <View>
-        <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
-          placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
-          // Com erro, a borda vermelha vale também em foco, com o anel vermelho claro ([aria-invalid='true']:focus da web).
-          style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, !!erro && estilos.entradaErro,
-            !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
-          onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
-          onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
+        {/* Com erro, a borda vermelha vale também em foco, com o anel vermelho claro ([aria-invalid='true']:focus da web). */}
+        <CaixaDoCampo focar={() => interno.current?.focus()}
+          estilo={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, !!erro && estilos.entradaErro,
+            !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}>
+          {(estilo) => (
+            <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
+              placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'} style={estilo}
+              onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
+              onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
+          )}
+        </CaixaDoCampo>
         {acessorio && <View style={estilos.acessorio}>{acessorio}</View>}
       </View>
       {erro && (
@@ -778,6 +833,37 @@ export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio
         </View>
       )}
     </View>
+  );
+}
+
+/**
+ * O que é da caixa (borda, fundo, respiro, tamanho, anel de foco) e o que é do texto (cor, fonte, entrelinha, alinhamento),
+ * para o Android desenhar a caixa numa View em volta do campo.
+ */
+export function separarCaixaDoTexto(estilo: StyleProp<TextStyle>): { caixa: ViewStyle; texto: TextStyle } {
+  const plano = (StyleSheet.flatten(estilo) ?? {}) as Record<string, unknown>;
+  const caixa: Record<string, unknown> = {};
+  const texto: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(plano)) {
+    if (/^(padding|border|background|outline|margin|minHeight|maxHeight|height|width|minWidth|maxWidth|alignSelf|flex|boxShadow|opacity)/.test(chave)) caixa[chave] = valor;
+    else texto[chave] = valor;
+  }
+  return { caixa: caixa as ViewStyle, texto: texto as TextStyle };
+}
+
+/**
+ * A caixa dos campos de texto (banca P1-8). No Android, quando o React Native troca o fundo do EditText (borda, cor, foco),
+ * o respiro do próprio campo volta ao do tema e o texto encosta na borda (o iPhone e a web têm os 20 px). Lá, a borda, o
+ * fundo e o respiro ficam numa View em volta, que leva o toque ao campo; o campo fica sem borda, sem fundo e sem respiro.
+ * No iPhone e na prévia web, nada muda: o próprio campo leva o estilo inteiro.
+ */
+export function CaixaDoCampo({ estilo, focar, children }: { estilo: StyleProp<TextStyle>; focar: () => void; children: (estilo: StyleProp<TextStyle>) => ReactNode }) {
+  if (Platform.OS !== 'android') return <>{children(estilo)}</>;
+  const { caixa, texto } = separarCaixaDoTexto(estilo);
+  return (
+    <Pressable accessible={false} importantForAccessibility="no" onPress={focar} style={caixa}>
+      {children([texto, estilos.campoSemCaixa])}
+    </Pressable>
   );
 }
 
@@ -948,9 +1034,49 @@ type PropsConfirmacao = {
 /** Largura média de um caractere em Nunito 800 de 16 px (para saber se o rótulo cabe na metade). */
 const LARGURA_MEDIA_DO_CARACTERE = 9.2;
 
+/**
+ * A altura útil do cartão de confirmação: a janela menos a área segura de cima e, embaixo, a maior entre a área segura e o
+ * teclado aberto, com 16 de folga de cada lado (nunca menos de 200).
+ */
+export function alturaUtilDoCartao(janela: number, margemDeCima: number, margemDeBaixo: number, teclado: number) {
+  return Math.max(200, Math.round(janela - margemDeCima - Math.max(margemDeBaixo, teclado > 0 ? teclado : 0) - 32));
+}
+
+/** A altura do teclado aberto (0 fechado): no iPhone antes de ele subir (Will), no Android quando já subiu (Did). */
+export function useAlturaDoTeclado() {
+  const [altura, setAltura] = useState(0);
+  useEffect(() => {
+    const abrir = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const fechar = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const abriu = Keyboard.addListener(abrir, (evento) => setAltura(Math.max(0, evento.endCoordinates?.height ?? 0)));
+    const fechou = Keyboard.addListener(fechar, () => setAltura(0));
+    return () => { abriu.remove(); fechou.remove(); };
+  }, []);
+  return altura;
+}
+
 export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
   confirmarDesativado = false, ocupado = false, erro, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const margens = useSafeAreaInsets();
+  // Spec 17, defeito B3 (e spec 11): o cartão nunca passa da tela. O título fica no alto, as ações presas embaixo e só o
+  // miolo (o texto, a lista de quem recebe no aceite de IA, o campo de "Excluir conta") encolhe e rola; o foco do leitor de
+  // tela vai ao título. Com o teclado aberto (o Modal do Android não encolhe com ele), o cartão sobe para cima do teclado e a
+  // altura útil desconta o teclado: título, campo e botões ficam à vista.
+  const teclado = useAlturaDoTeclado();
+  const alturaMaxima = alturaUtilDoCartao(height, margens.top, margens.bottom, teclado);
+  const miolo = useRef<ComponentRef<typeof ScrollView>>(null);
+  // O campo fica no fim do miolo: ao abrir o teclado, o miolo rola até ele.
+  useEffect(() => {
+    if (teclado <= 0) return;
+    const espera = setTimeout(() => miolo.current?.scrollToEnd({ animated: false }), 50);
+    return () => clearTimeout(espera);
+  }, [teclado]);
+  const titulo = useRef<ComponentRef<typeof Text>>(null);
+  useEffect(() => {
+    const espera = setTimeout(() => { if (titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus'); }, 250);
+    return () => clearTimeout(espera);
+  }, []);
   const reduzir = useMovimentoReduzido();
   const [entrada] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -967,15 +1093,20 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
     acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
-      <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
+      <Pressable testID="confirmacao-fundo" accessible={false} style={[estilos.modalFundo, teclado > 0 && { paddingBottom: 16 + teclado }]} onPress={() => { if (!ocupado) aoCancelar(); }}>
         <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
           transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
-          <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.confirmacaoCartao} onPress={() => {}}>
-            <Text accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
-            {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
-            {extra}
-            {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
-            {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
+          <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={[estilos.confirmacaoCartao, { maxHeight: alturaMaxima }]} onPress={() => {}}>
+            <Text ref={titulo} testID={`${testID}-titulo`} accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
+            {(texto || extra || aviso || erro) && (
+              <ScrollView ref={miolo} testID={`${testID}-miolo`} style={estilos.confirmacaoMiolo} contentContainerStyle={estilos.confirmacaoMioloConteudo}
+                keyboardShouldPersistTaps="handled" bounces={false}>
+                {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
+                {extra}
+                {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
+                {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
+              </ScrollView>
+            )}
             {/* Lado a lado: "Cancelar" à esquerda e a ação à direita; uma por linha: a ação em cima. */}
             <View style={[estilos.confirmacaoAcoes, empilhar && estilos.confirmacaoAcoesEmpilhadas]}>
               {empilhar ? <>{confirmar}{cancelar}</> : <>{cancelar}{confirmar}</>}
@@ -1144,6 +1275,14 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
   );
 }
 
+/**
+ * O rodapé neutro fica por cima do conteúdo (absoluto, para o vidro mostrar o que rola por baixo) só com o vidro, sem estilo
+ * próprio, fora da ação presa e com o teclado FECHADO; com o teclado aberto, ele fica no fluxo, acima do teclado.
+ */
+export function rodapeFicaSobreposto(vidro: boolean, temRodape: boolean, temEstiloProprio: boolean, preso: boolean, teclado: boolean) {
+  return vidro && temRodape && !temEstiloProprio && !preso && !teclado;
+}
+
 /** Liquid Glass só no iPhone com iOS 26 ou mais novo (expo-glass-effect); no iOS anterior, no Android e na prévia web, o fundo de hoje. */
 const VIDRO = Platform.OS === 'ios' && (() => {
   try { return isLiquidGlassAvailable(); } catch { return false; }
@@ -1298,6 +1437,8 @@ export const estilos = StyleSheet.create({
   entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(37, 99, 255, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
   entradaErroFocada: { outlineColor: 'rgba(194, 59, 78, 0.14)' },
   entradaComAcessorio: { paddingRight: 52 },
+  // O campo dentro da caixa do Android: a caixa desenha borda, fundo e respiro; o campo preenche o que sobra.
+  campoSemCaixa: { flexGrow: 1, padding: 0, margin: 0, borderWidth: 0, backgroundColor: 'transparent' },
   acessorio: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
@@ -1351,9 +1492,13 @@ export const estilos = StyleSheet.create({
   // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8), colada no topo ao rolar.
   faixaVao: { height: 20 },
   // .trilha-topo no celular: a linha de baixo é sombra por fora (box-shadow 0 2px 0 gelo), não borda.
-  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', boxShadow: `0 2px 0 ${cores.gelo}` },
+  // Sem vidro (Android, iPhone antes do iOS 26 e prévia web): branco a 94% sempre, e a linha de 1 #E1E7FA embaixo só quando
+  // o mapa rola sob a faixa (spec 16, item 3).
+  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.94)' },
+  faixaFixaPresa: { boxShadow: `0 1px 0 ${cores.gelo}` },
   // iOS 26: a faixa vira vidro sobre o mapa que rola por baixo (sem o branco e sem a linha de baixo).
   faixaFixaVidro: { zIndex: 6 },
+  faixaFixaMiolo: { flex: 1 },
   faixaColada: { zIndex: 6 },
   flutuante: { position: 'absolute', left: 16, right: 16, zIndex: 7, alignItems: 'center' },
   // A superfície opaca da cápsula e das ações presas: branco, contorno de 1 rgba(11, 27, 92, 0,10) por fora e sombra leve,
@@ -1365,6 +1510,9 @@ export const estilos = StyleSheet.create({
   confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 48, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  // O miolo do cartão é o único que encolhe e rola quando falta altura (as ações ficam presas embaixo, o título no alto).
+  confirmacaoMiolo: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
+  confirmacaoMioloConteudo: { gap: 12 },
   confirmacaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
   confirmacaoErro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   confirmacaoAcoes: { flexDirection: 'row', gap: 8, marginTop: 4 },
@@ -1415,6 +1563,8 @@ export const estilos = StyleSheet.create({
   botaoFaceSucesso: { backgroundColor: cores.sucesso },
   botaoFaceAlerta: { backgroundColor: cores.alerta },
   botaoFaceDestrutiva: { borderColor: '#F3C4C0', backgroundColor: cores.fundo },
+  // Spec 16, item 20 (spec 11, ação destrutiva de baixa ênfase, "Excluir conta"): secundário de 44 com borda e texto #C23B4E.
+  botaoFaceDestrutivaBaixa: { minHeight: 44, borderColor: cores.erro, backgroundColor: cores.fundo },
   // Spec 11: a ação que destrói, vermelha cheia (#C23B4E), texto branco e degrau #8F2A39.
   botaoFacePerigo: { borderColor: cores.erro, backgroundColor: cores.erro },
   botaoFaceApagada: { borderColor: cores.gelo, backgroundColor: cores.nevoa },

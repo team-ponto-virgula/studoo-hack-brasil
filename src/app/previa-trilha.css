@@ -30,7 +30,10 @@
 .painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-percurso::before {
   content: ''; display: block; height: max(0px,calc(40cqh - var(--centro))); background: #e3f3e8;
 }
-.previa-percurso { position: relative; isolation: isolate; margin: 0; padding: 0; list-style: none; }
+/* Sem `isolation`: os nós e a chegada (o troféu, a estrada do último nó) dividem a mesma pilha de camadas do mapa (o próprio .previa-mapa já é uma pilha), e o rótulo (z 2) fica por cima da
+   estrada (z 1) e do cenário também no último nó. Com o percurso isolado, a chegada, depois dele no documento, pintava por cima do nome da última lição: a estrada passava sobre o texto e o chão
+   da chegada cortava a última linha (banca P2-7). */
+.previa-percurso { position: relative; margin: 0; padding: 0; list-style: none; }
 .previa-no { position: relative; height: var(--passo); background: var(--chao); }
 /* A mesma região, fronteira e vegetação do mapa salvo. O marco ganha seu próprio espaço entre os nomes. */
 .previa-no[data-fronteira] { height: calc(var(--passo) + var(--fronteira)); }
@@ -40,13 +43,13 @@
   gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--relevo); color: var(--texto); font-weight: 850; font-size: .875rem; line-height: 1.35; }
 .previa-marco .icone { width: 16px; height: 16px; }
 .previa-cenario { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.previa-cenario .desenho { position: absolute; top: 16%; left: max(4%,calc(50% - 16rem)); --tam: 40px; }
-.previa-cenario .desenho:nth-child(2) { top: 68%; left: max(15%,calc(50% - 12rem)); --tam: 23px; }
+.previa-cenario .mundo-desenho { position: absolute; top: 16%; left: max(4%,calc(50% - 16rem)); --tam: 40px; }
+.previa-cenario .mundo-desenho:nth-child(2) { top: 68%; left: max(15%,calc(50% - 12rem)); --tam: 23px; }
 .previa-no[data-lado='esquerda'] .previa-cenario { transform: scaleX(-1); }
-.previa-cenario .desenho:nth-child(n+3) { display: none; }
+.previa-cenario .mundo-desenho:nth-child(n+3) { display: none; }
 @media (min-width: 768px) {
-  .previa-cenario .desenho:nth-child(3) { display: block; top: 41%; left: auto; right: 6%; --tam: 43px; }
-  .previa-cenario .desenho:nth-child(4) { display: block; top: 64%; left: 6%; --tam: 26px; }
+  .previa-cenario .mundo-desenho:nth-child(3) { display: block; top: 41%; left: auto; right: 6%; --tam: 43px; }
+  .previa-cenario .mundo-desenho:nth-child(4) { display: block; top: 64%; left: 6%; --tam: 26px; }
 }
 .previa-no:first-child { background: linear-gradient(#e3f3e8, var(--chao)); }
 .previa-no__centro { position: relative; width: min(100%,28rem); height: 100%; margin-inline: auto; }
@@ -84,6 +87,11 @@
 .previa-espera, .previa-erro { width: min(100%,36rem); margin-inline: auto; color: #5e6a85; font-size: .875rem; text-align: center; }
 .previa-rodape[data-salvando] .previa-ajustar, .previa-espera:not([data-visivel]) { display: none; }
 .previa-espera, .previa-erro { flex-basis: 100%; }
+/* Spec 17, mudança 1 (revista em 23/11): a linha embaixo do botão troca de "Escrevendo suas lições…" para as frases da espera, com efeito de 300 ms (a frase some em 150 ms e a próxima aparece em 150 ms;
+   reduzido: direto). Mesmo lugar e mesmo estilo da linha de sempre: centralizada, 14 px, até 2 linhas em 320 px. */
+.previa-espera__linha { display: block; transition: opacity 150ms ease-out; }
+.previa-espera__linha[data-saindo] { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .previa-espera__linha { transition: none; } }
 .previa-erro { color: #c23b4e; }
 .previa-giro { width: 16px; height: 16px; border: 2px solid #ffffff70; border-top-color: white; border-radius: 50%; animation: previa-girar .8s linear infinite; }
 [data-fase='montando'] .previa-ligacao { animation: previa-desenhar 300ms ease-out both; }

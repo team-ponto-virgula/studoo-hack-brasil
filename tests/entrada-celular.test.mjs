@@ -30,9 +30,9 @@ test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidad
   }
 });
 
-test('a conta sem trilhas abre o pedido, mas sua aba de trilhas tem um vazio próprio', () => {
+test('a conta sem trilhas abre o pedido (sem foco sozinho até 1023 px, para a cápsula aparecer), mas sua aba de trilhas tem um vazio próprio', () => {
   const estudo = readFileSync(join(raiz, 'src/app/estudo.tsx'), 'utf8');
-  assert.match(estudo, /ativos\.length === 0 \|\| abriuComRascunho\.current\) \{\s*setTela\(\{ tipo: 'objetivo', focarCampo: true/);
+  assert.match(estudo, /ativos\.length === 0 \|\| abriuComRascunho\.current\) \{(?:\s*\/\/[^\n]*)*\s*setTela\(\{ tipo: 'objetivo' \}\);/);
   assert.match(estudo, /visivel && tela\.tipo === 'objetivo' && \(\s*<Pedido/);
   const inicio = estudo.indexOf('className="painel planos-sem-trilhas"');
   const fim = estudo.indexOf('</section>', inicio);

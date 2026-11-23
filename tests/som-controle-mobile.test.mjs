@@ -66,7 +66,7 @@ test('a folha passa pelo toca-sons: a música a 60% com o leitor de tela e nova 
 test('o aviso da primeira vez: "Música de fundo ligada." com "Desligar", uma vez por aparelho, na raiz (vale na entrada)', () => {
   const aviso = corpoDe(som, 'useAvisoDaMusica');
   assert.match(som, /const CHAVE_AVISO_MUSICA = 'studoo\.sons\.avisoMusica';/);
-  assert.match(aviso, /avisar\(t\.musicaAviso, \{ som: null, acao: \{ rotulo: t\.desligarMusica, aoTocar: \(\) => void tocaSons\.definirMusicaLigada\(false\) \} \}\);/);
+  assert.match(aviso, /avisar\(t\.musicaAviso, \{ som: null, noAlto: true, acao: \{ rotulo: t\.desligarMusica, aoTocar: \(\) => void tocaSons\.definirMusicaLigada\(false\) \} \}\);/);
   assert.match(aviso, /if \(avisado !== false \|\| estado\.fundo === 'mudo' \|\| estado\.estadoFundo !== 'tocando'\) return;/);
   const sessao = readFileSync(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
   assert.match(sessao, /const avisoDoApp = useAvisoDoAppRaiz\(\);\n\s*useAvisoDaMusica\(avisoDoApp\.avisar\);/);

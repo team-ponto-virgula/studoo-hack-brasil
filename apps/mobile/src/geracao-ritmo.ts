@@ -80,7 +80,17 @@ export const RITMO_DA_GERACAO = {
   no1NaAreaLivre: 0.4,
   no1AcimaDoCentro: 52,
   no1AbaixoDoCentro: 112,
+  /**
+   * A proposta ficou pronta (spec 16, item 1): a tela rola em 600 ms, com saída suave, até o centro do nó 1 ficar no meio da
+   * área livre (entre a base da placa presa e o topo do rodapé), com o Stu feliz ao lado. O troféu fica a uma rolagem.
+   */
+  prontaAteNo1Ms: 600,
 } as const;
+
+/** Onde a rolagem para na proposta pronta: o centro do nó 1 no meio da área livre, sem rolar antes do começo. */
+export function rolagemDaTrilhaPronta(centro: number, visivel: number, topoLivre: number) {
+  return Math.max(0, Math.round(centro - (topoLivre + (visivel - topoLivre) / 2)));
+}
 
 /** Quando a passagem termina (a aula já está por inteiro na tela): 470 ms; com movimento reduzido, só a opacidade (150 ms). */
 export function fimDaPassagem(reduzir: boolean) {

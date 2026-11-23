@@ -10,7 +10,7 @@ import type {
   PlanoResumo,
   PropostaPlano,
 } from "@studoo/contratos";
-import { motivoParaRever } from "@studoo/contratos";
+import { motivoParaRever, normalizarResolucao, responderSuaVez, type Capacidades, type EscolhaNoSuaVez, type RespostaDoSuaVez } from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,
@@ -28,6 +28,8 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import { ordemDoSuaVez } from "./ordem-sua-vez";
+import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, semCifraoSolto, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
@@ -215,7 +217,7 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
   if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
-    throw new FalhaApi("ia_indisponivel");
+    throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
   }
   return conteudos;
 }
@@ -318,14 +320,29 @@ async function lerLicao(usuarioId: string, id: string) {
 
 /** Conteúdo interno da lição (com gabarito), para o reforço sem IA montar uma pergunta sobre o exercício errado. */
 export async function conteudoDaLicao(usuarioId: string, id: string): Promise<ConteudoLicao> {
-  return (await lerLicao(usuarioId, id)).conteudo;
+  const { conteudo } = await lerLicao(usuarioId, id);
+  // Quem lê o conteúdo por aqui (reforço, ponte, voz) escreve para qualquer cliente: as fórmulas em linha vão em texto linear.
+  return conteudoEhDeMatematica(conteudo) ? comTextoLinear(semCifraoSolto(conteudo)) : conteudo;
 }
 
-export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoDetalhe> {
+/** A lição é de matemática? Para o texto de IA que volta sem passar pela lição (a ponte do reforço e o "Ensine o Stu"), que chega em texto linear a todos os clientes. */
+export async function licaoEhDeMatematica(usuarioId: string, id: string): Promise<boolean> {
+  const { conteudo } = await lerLicao(usuarioId, id);
+  return conteudoEhDeMatematica(conteudo);
+}
+
+/**
+ * A lição como a pessoa a vê. `capacidades` vem do cabeçalho `X-Studoo-Capacidades`: sem `visuais@1` (build 3, site antigo) a
+ * lição não leva campo novo e o desenho de matemática vai como PNG em `recurso` (se `desenharPng`); com ele, vão `visuais`, o
+ * `visual` dos exercícios e, com `resolucao@1`, a resolução até o "Sua vez". Lição sem visual sai como sempre.
+ */
+export async function buscarLicao(
+  usuarioId: string, id: string, opcoes: { capacidades?: Capacidades; desenharPng?: boolean } = {},
+): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
   const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;
   const exercicios = [exercicio, ...(extras ?? [])].map(apresentarExercicio);
-  return {
+  const detalhe: LicaoDetalhe = {
     id: licao.id,
     planoId: licao.fluxo.planoId,
     fluxoId: licao.fluxoId,
@@ -349,10 +366,31 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
       ? { materialDe: licao.fluxo.plano.origemNome }
       : {}),
   };
+  const capacidades = opcoes.capacidades ?? SEM_CAPACIDADES;
+  const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false, usuarioId });
+  // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão. Com ele, as marcas
+  // chegam completas (os tokens soltos, `x_A`, também) e só em lição de matemática.
+  return comFormulasParaOCliente(completa, licao.conteudo, capacidades);
+}
+
+/**
+ * O "Sua vez" do "Resolva comigo": corrige a escolha e, no acerto ou na segunda errada, devolve a revelação do passo e os
+ * passos que faltam (antes disso nada disso vai ao cliente). Lição sem resolução: `nao_encontrado`.
+ */
+export async function responderSuaVezDaLicao(usuarioId: string, id: string, escolha: EscolhaNoSuaVez): Promise<RespostaDoSuaVez> {
+  const licao = await lerLicao(usuarioId, id);
+  const resolucao = licao.conteudo.resolucao ? normalizarResolucao(licao.conteudo.resolucao) : null;
+  if (!resolucao) throw new FalhaApi("nao_encontrado");
+  // O índice que chega é o que a lição mostrou: a mesma ordem por (conta, lição) que ela usou, desfeita aqui.
+  const resposta = responderSuaVez(resolucao, escolha, ordemDoSuaVez(usuarioId, licao.id));
+  if (!resposta) throw new FalhaApi("invalido");
+  return resposta;
 }
 
 /** Avalia a resposta do exercício `indice` da lição (0 é o principal). */
-export async function avaliarLicao(usuarioId: string, id: string, resposta: string, indice = 0): Promise<Avaliacao> {
+export async function avaliarLicao(
+  usuarioId: string, id: string, resposta: string, indice = 0, capacidades: Capacidades = SEM_CAPACIDADES,
+): Promise<Avaliacao> {
   const licao = await lerLicao(usuarioId, id);
   const exercicio = [licao.conteudo.exercicio, ...(licao.conteudo.extras ?? [])][indice];
   const local = exercicio ? avaliarResposta(exercicio, resposta) : null;
@@ -373,7 +411,10 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
     id,
     expiraEm: Date.now() + DURACAO_AVALIACAO,
   });
-  return { ...avaliacao, comprovante };
+  // Exercício com figura, para quem desenha (`visuais@1`): quem acertou vê o procurado virar resposta.
+  const visual = avaliacao.correta ? visualDoRetorno(licao.conteudo, indice, capacidades) : undefined;
+  const resultado = { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
+  return comFormulasParaOCliente(resultado, licao.conteudo, capacidades);
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */

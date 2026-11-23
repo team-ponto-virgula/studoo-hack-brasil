@@ -1,0 +1,182 @@
+# Os momentos 2 e 3 da demo no aparelho, na trilha temporária da prova da criação (o Lead aprovou em 21/11, pedido
+# 9bfe8743). Roda logo depois do fluxo 95, que deixou a primeira lição com o primeiro exercício acertado. Sem vídeo.
+#   - "erro → ponte": recomeça a lição, erra o primeiro exercício (RESPOSTA_ERRADA), abre "Ver outro jeito de entender" e
+#     fotografa o passo 1 da ponte e o desafio.
+#   - "Ensine ao Stu" em texto: volta ao exercício, acerta (RESPOSTA_CERTA), abre o convite do Explique, escreve uma
+#     explicação de ~130 caracteres, envia e fotografa o caderno do Stu (o retorno em quatro cartões).
+# As opções vêm de servidor/resposta-da-prova.mjs, como no fluxo 95. O desafio da ponte não é respondido: a ponte nasce
+# no servidor na hora do erro e o gabarito dela não é conhecido antes; a prova é a ponte aberta e o caminho de volta.
+# No iPhone sempre (depois do 95); no Android só depois de a criação passar e com o emulador nunca religado (REVIVIDOS=0).
+appId: host.exp.Exponent
+name: 98-ponte-e-ensine
+---
+# Do exercício acertado para o mapa e de volta à mesma lição, que reabre onde parou, com o aviso e "Recomeçar".
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: voltar-plano
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
+- evalScript: ${output.abriuPeloNo = false}
+- runFlow:
+    when:
+      visible:
+        id: comecar-licao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: comecar-licao
+      - evalScript: ${output.abriuPeloNo = true}
+- runFlow:
+    when:
+      true: ${output.abriuPeloNo == false}
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "(Começar|Continuar): .*"
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 30000
+# "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco).
+- runFlow:
+    when:
+      visible:
+        id: recomecar-licao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          id: recomecar-licao
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: confirmar-recomeco
+# Pelo conceito e pelo exemplo até o primeiro exercício.
+- repeat:
+    while:
+      notVisible:
+        id: pergunta-exercicio
+    times: 10
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: ler-mais|avancar-licao
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: pergunta-exercicio
+    timeout: 15000
+# O erro e a ponte.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: opcao-${RESPOSTA_ERRADA}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: enviar-resposta
+- extendedWaitUntil:
+    visible:
+      id: ver-outro-jeito
+    timeout: 30000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: ver-outro-jeito
+- extendedWaitUntil:
+    visible:
+      id: ponte-ver-exemplo
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 98-ponte-passo-1
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: ponte-ver-exemplo
+- extendedWaitUntil:
+    visible:
+      id: ponte-ir-desafio
+    timeout: 15000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: ponte-ir-desafio
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 98-ponte-desafio
+# De volta ao exercício, que fica limpo para a nova tentativa.
+- scrollUntilVisible:
+    element:
+      id: ponte-voltar|ponte-voltar-rodape
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: ponte-voltar|ponte-voltar-rodape
+- extendedWaitUntil:
+    visible:
+      id: pergunta-exercicio
+    timeout: 15000
+# O acerto e o "Ensine ao Stu".
+- runFlow:
+    when:
+      visible:
+        id: tentar-de-novo
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-de-novo
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: opcao-${RESPOSTA_CERTA}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: enviar-resposta
+- extendedWaitUntil:
+    visible:
+      id: convite-explique
+    timeout: 30000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: convite-explique
+# O campo não tem testID: o rótulo dele ("Sua explicação") é também o nome acessível do campo no iPhone, onde há dois
+# elementos com o texto (o rótulo em cima, index 0, e o campo, index 1). Onde só o rótulo aparece (no Android o campo usa
+# accessibilityLabelledBy), o toque vai no primeiro elemento abaixo dele, que é o campo.
+- evalScript: ${output.tocouNoCampo = false}
+- runFlow:
+    when:
+      visible:
+        text: "Sua explicação"
+        index: 1
+    commands:
+      - tapOn:
+          text: "Sua explicação"
+          index: 1
+      - evalScript: ${output.tocouNoCampo = true}
+- runFlow:
+    when:
+      true: ${output.tocouNoCampo == false}
+    commands:
+      - tapOn:
+          below:
+            text: "Sua explicação"
+- inputText: "O denominador conta as partes iguais do inteiro e o numerador as escolhidas. Numa pizza de 8 fatias, comer 3 é 3/8."
+# O teclado fica aberto: a tela rola até o botão e o toque passa (keyboardShouldPersistTaps="handled" na Tela).
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 99-ensine-explicacao-escrita
+- scrollUntilVisible:
+    element:
+      text: "Enviar minha explicação"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: "Enviar minha explicação"
+- extendedWaitUntil:
+    visible:
+      id: caderno-do-stu
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: caderno-do-stu
+    direction: DOWN
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 99-ensine-retorno-do-stu

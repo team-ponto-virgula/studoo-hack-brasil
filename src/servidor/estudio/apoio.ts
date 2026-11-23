@@ -11,10 +11,12 @@ import {
 } from '@/dominio/aprendizado/plano';
 import { banco } from '../banco/cliente';
 import { FalhaApi } from '../acesso/http';
-import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
+import { buscarLicao, conteudoDaLicao, licaoEhDeMatematica } from '../aprendizado/servico';
+import { comTextoSimples } from '../aprendizado/formulas-na-licao';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
 import { armadilhaNoTexto, normalizarResposta, termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
 import { quota } from './materiais';
+import { explicacaoTemExemplo } from './exemplo-na-explicacao';
 import {
   conteudoDaGerada,
   esquemaLicao,
@@ -31,6 +33,11 @@ import { podeUsarIa } from '../privacidade/consentimento';
  * exercício, pede outro reforço).
  */
 type Reforco = ConteudoLicao & { motivo: string; simulado: boolean; resposta?: string | null; indice?: number | null };
+/**
+ * Nenhum cliente desenha fórmula na ponte nem no retorno do "Ensine o Stu" (marco 13d): o texto que a IA escreve ali, e o que já está guardado, chega em texto
+ * linear a todos (`comTextoSimples`), e o pedido à IA diz para escrever a matemática em texto simples.
+ */
+export const PEDIDO_DE_TEXTO_SIMPLES = 'Escreva a matemática em texto simples, sem $ nem LaTeX (x², a/b, raiz de x).';
 export async function buscarApoio(
   usuarioId: string,
   licaoId: string,
@@ -40,7 +47,7 @@ export async function buscarApoio(
     where: { usuarioId_licaoId: { usuarioId, licaoId } },
   });
   const ponte = apoio?.reforco as Reforco | null;
-  return {
+  return comTextoSimples({
     erros: apoio?.erros ?? 0,
     ponte:
       ponte && conteudoValido(ponte)
@@ -54,7 +61,7 @@ export async function buscarApoio(
           }
         : null,
     ensino: (apoio?.ensino as FeedbackEnsino | null) ?? null,
-  };
+  }, await licaoEhDeMatematica(usuarioId, licaoId));
 }
 /**
  * Reforço sem IA. A lição de numerador e denominador mantém a explicação com chocolate da demonstração do material;
@@ -201,7 +208,7 @@ async function reforcoDaIa(licao: LicaoDetalhe, resposta: string | null, indice:
   const result = await pedirJson(
     'ponte_reforco',
     objeto({ motivo: texto, licao: esquemaLicao }),
-    'A resposta é do exercício exercicioErrado. Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres.',
+    `A resposta é do exercício exercicioErrado. Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres. ${PEDIDO_DE_TEXTO_SIMPLES}`,
     { licao, exercicioErrado, resposta },
   );
   const r = result as { motivo: string; licao: unknown };
@@ -239,7 +246,8 @@ export async function avaliarPonte(
       where: { usuarioId_licaoId: { usuarioId, licaoId } },
       data: { reforcoConcluido: true },
     });
-  return { ...resultado, apoio: await buscarApoio(usuarioId, licaoId) };
+  // O retorno da ponte (`feedback`) também é texto de IA: vai em texto linear, como o apoio que vem junto.
+  return comTextoSimples({ ...resultado, apoio: await buscarApoio(usuarioId, licaoId) }, await licaoEhDeMatematica(usuarioId, licaoId));
 }
 
 /**
@@ -267,14 +275,13 @@ function frasesDaLicaoNoTexto(conteudo: ConteudoLicao, explicacao: string): stri
 }
 
 function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: string): FeedbackEnsino {
-  const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
   // Numa lição de idioma, usar uma frase da lição (“I'm here on vacation”) ou citar uma frase entre aspas já é dar um
   // exemplo, mesmo sem escrever “por exemplo”.
   const frasesUsadas = frasesDaLicaoNoTexto(conteudo, explicacao);
   const citou = (conteudo.falas?.length ?? 0) > 0 && /[“"][^”"]*\p{L}+\s+\p{L}+[^”"]*[”"]/u.test(explicacao);
-  // Exemplo é o que a pessoa marca como exemplo, inclusive do jeito falado (“tipo quando…”, “quando eu…”). Um “quando”
-  // solto não conta: números e “quando” aparecem em qualquer explicação de violão.
-  const marcouExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|tipo quando|tipo se|tipo:|quando eu|se eu|no meu caso|comigo|e o caso de|no caso de)(?=\W|$)/i.test(semAcento);
+  // Exemplo é o que a pessoa marca como exemplo, inclusive do jeito falado (“tipo quando…”, “quando eu…”), e o exemplo concreto sem marca
+  // (“Numa pizza de 8 fatias, comer 3 é 3/8”). Um “quando” ou um número soltos não contam (ver exemplo-na-explicacao.ts).
+  const marcouExemplo = explicacaoTemExemplo(explicacao);
   const comExemplo = marcouExemplo || citou || frasesUsadas.length > 0;
   const termos = termosDaLicao(conteudo);
   const trouxe = termosPresentes(explicacao, termos);
@@ -369,7 +376,7 @@ async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<Feed
       pergunta: texto,
       proximoPasso: texto,
     }),
-    'A tarefa da pessoa é explicar a ideia desta lição com as próprias palavras, como se ensinasse um amigo; não é responder a um exercício. Avalie a explicação em relação à ideia da lição (título, objetivo, conceito e exemplo). Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna na compreensão da ideia ou diga que não identificou lacuna neste recorte. A lacuna e o próximo passo falam da ideia da lição, nunca de uma questão de exercício. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres.',
+    `A tarefa da pessoa é explicar a ideia desta lição com as próprias palavras, como se ensinasse um amigo; não é responder a um exercício. Avalie a explicação em relação à ideia da lição (título, objetivo, conceito e exemplo). Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna na compreensão da ideia ou diga que não identificou lacuna neste recorte. A lacuna e o próximo passo falam da ideia da lição, nunca de uma questão de exercício. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres. ${PEDIDO_DE_TEXTO_SIMPLES}`,
     { licao: recorteDeEnsino(licao), explicacao },
   );
   const x = result as FeedbackEnsino;
@@ -415,6 +422,8 @@ export async function ensinarStu(
       feedback = ensinoFalso(licao, await conteudo(), explicacao);
     }
   }
+  // O retorno do "Ensine o Stu" chega em texto linear a todos os clientes (a IA devolve `$…$` de vez em quando), e é assim que fica guardado.
+  feedback = comTextoSimples(feedback, await licaoEhDeMatematica(usuarioId, licaoId));
   await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId } },
     create: {

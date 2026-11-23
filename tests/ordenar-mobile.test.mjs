@@ -45,7 +45,7 @@ test('a tela: arrastar com 180 ms no cartão e na hora pela alça, ações do le
   for (const chamada of tela.match(/use[A-Z]\w*Gesture\(\{[\s\S]*?\n\s*\}\);/g) ?? []) assert.doesNotMatch(chamada, /\.\.\./, 'sem espalhar objeto na configuração do gesto');
   assert.match(tela, /name: 'moverParaCima', label: t\.moverParaCima/);
   assert.match(tela, /name: 'moverParaBaixo', label: t\.moverParaBaixo/);
-  assert.match(tela, /t\.travadoRotulo\(texto, posicao\) : t\.cartaoRotulo\(posicao, total, texto\)/);
+  assert.match(tela, /t\.travadoRotulo\(falado, posicao\) : t\.cartaoRotulo\(posicao, total, falado\)/, 'o rótulo com a fala do item (P32)');
   assert.match(tela, /accessibilityState=\{\{ selected: estado === 'escolhido'/);
   // Na web, o react-native-web não lê o accessibilityState: o escolhido vai com aria-pressed (spec 08; achado na prévia, 19/11).
   assert.match(tela, /aria-pressed=\{estado === 'escolhido'\}/);

@@ -108,7 +108,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Antes de estudar, desenhe o ___ do assunto e liste as suas partes.",
           "mapa",
           "O mapa mostra as partes e a ordem em que elas se ligam.",
-          "A palavra é mapa. Ele organiza as partes do assunto antes de você entrar nos detalhes.",
+          "Releia o conceito: é o desenho que mostra as partes do assunto e como elas se ligam.",
         ),
       };
     case "0.1":
@@ -139,7 +139,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Depois de ler um exemplo, tente ___ o exemplo sem olhar.",
           "refazer",
           "Refazer sem olhar mostra o que você entendeu e o que ainda falta.",
-          "A palavra é refazer. Repetir o exemplo sem olhar é o que mostra se você entendeu.",
+          "Releia o exemplo: o que você faz com ele quando cobre a solução e tenta chegar sozinho ao resultado?",
         ),
       };
     case "1.0":
@@ -233,7 +233,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Na revisão ativa, você tenta lembrar antes de ___ as anotações.",
           "consultar",
           "Tentar lembrar primeiro dá mais resultado do que reler.",
-          "A palavra é consultar. A revisão ativa pede o esforço de lembrar antes de abrir as anotações.",
+          "Releia o conceito: o esforço de lembrar vem antes. Que verbo diz o que você faz com as anotações depois?",
         ),
       };
     case "2.2":

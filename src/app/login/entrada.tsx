@@ -187,7 +187,11 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
             <Paisagem compacta className="entrada-banner">
               <Mascote expressao="stu-acolhida" tamanho={76} sombra prioridade animado="laco" className="stu" />
             </Paisagem>
-            <h1>{mensagens.login.titulo}</h1>
+            {/* Refino 10 (spec 16): até 767 px o Stu da acolhida (72, acenando) fica à direita do título, alinhado ao topo dele; a faixa de paisagem de cima sai. Parado com movimento reduzido. */}
+            <div className="entrada-titulo-faixa">
+              <h1>{mensagens.login.titulo}</h1>
+              <Mascote expressao="stu-acolhida" tamanho={72} prioridade animado="laco" className="entrada-stu-celular" />
+            </div>
             <p className="introducao">{mensagens.login.instrucoes}</p>
             <button ref={linkComoFunciona} type="button" className="acesso-link" onClick={() => setVendoApresentacao(true)}>
               {mensagens.acesso.verComoFunciona}

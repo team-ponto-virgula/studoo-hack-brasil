@@ -1,3 +1,5 @@
+import { geometria } from "./demo-geometria";
+import { funcoes } from "./demo-funcoes";
 import { ILUSTRACAO_VIOLAO } from "./ilustracao-violao";
 import type { Opcao } from "@studoo/contratos";
 import type { PlanoInterno } from "@/dominio/aprendizado/plano";
@@ -36,7 +38,7 @@ const violao: Demo = {
           {
             titulo: "Conhecer as partes do violão",
             objetivo: "Reconhecer as partes do violão que você usa para afinar e tocar.",
-            conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa. Quem é destro aperta as cordas no braço com a mão esquerda e toca as cordas sobre a boca com a direita (quem é canhoto, ao contrário).",
+            conceito: "O violão tem três partes: a cabeça, com as tarraxas que afinam as cordas; o braço, com as casas; e o corpo, com a boca. As cordas contam de baixo para cima (a 1ª é a mais fina, a 6ª a mais grossa); a mão esquerda aperta o braço e a direita toca sobre a boca (canhoto, ao contrário).",
             exemplo: "Para afinar a 6ª corda (a mais grossa, o número 4 da ilustração), você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
             recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "① tarraxa, na cabeça · ② casa, no braço (entre dois trastes) · ③ boca, no corpo · ④ 6ª corda, a mais grossa", fonte: "Ilustração" },
             origem: origemViolao,
@@ -85,7 +87,7 @@ const violao: Demo = {
           {
             titulo: "Montar o acorde Lá menor (Am)",
             objetivo: "Posicionar os dedos para tocar o acorde Lá menor.",
-            conceito: "Um acorde é um grupo de notas tocadas juntas. O diagrama abaixo mostra o braço do violão em pé, com a cabeça para cima, como se você olhasse para ele de frente: as linhas verticais são as cordas, com a 6ª (a mais grossa) à esquerda, e as horizontais são os trastes. É o mesmo violão da lição 1, só que em pé: a 6ª corda, que ficava no alto com o violão deitado, aparece à esquerda. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
+            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama, o braço aparece em pé, de frente: as linhas verticais são as cordas, com a 6ª (a mais grossa) à esquerda, e as horizontais são os trastes. Os números dizem o dedo (1 indicador, 2 médio, 3 anelar); X é corda que não soa e O, corda solta.",
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
@@ -174,7 +176,7 @@ const violao: Demo = {
           {
             titulo: "Ritmo: batida para baixo e para cima",
             objetivo: "Tocar uma batida simples, para baixo e para cima, em quatro tempos.",
-            conceito: "A batida marca o pulso da música e é feita pela mão que toca as cordas, perto da boca do violão. Na batida mais simples, essa mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. Um compasso é um grupo de tempos; nesta batida, cada compasso tem 4 tempos (o mais comum na música popular), e tocar 8 compassos é contar de 1 a 4 oito vezes.",
+            conceito: "A batida marca o pulso da música e é feita pela mão que toca as cordas, perto da boca. Na batida mais simples, a mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. Um compasso é um grupo de tempos (aqui, 4), e tocar 8 compassos é contar de 1 a 4 oito vezes.",
             exemploTipo: "demonstracao",
             exemplo: "Ouça a batida com o Lá menor e conte junto: 1 e 2 e 3 e 4 e. No número, a mão desce (↓); no “e”, a mão sobe (↑).",
             recurso: { tipo: "acorde", nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0], batida: true },
@@ -366,7 +368,7 @@ const ingles: Demo = {
           {
             titulo: "Cumprimentar e se apresentar",
             objetivo: "Cumprimentar alguém, dizer seu nome, de onde você é e por que veio (até na imigração do aeroporto).",
-            conceito: "Para começar uma conversa em inglês, três frases curtas resolvem: um cumprimento (“Hello!”, olá), seu nome (“I'm Ana”, eu sou a Ana) e de onde você vem (“I'm from Brazil”, eu sou do Brasil). “Nice to meet you” (prazer em conhecer) mostra simpatia. Na imigração do aeroporto, o agente pergunta o motivo da viagem (“What is the purpose of your visit?”), e você responde: “I'm here on vacation” (estou aqui de férias).",
+            conceito: "Para começar uma conversa em inglês, três frases curtas resolvem: um cumprimento (“Hello!”, olá), seu nome (“I'm Ana”, eu sou a Ana) e de onde você vem (“I'm from Brazil”, eu sou do Brasil). Na imigração, perguntam o motivo da viagem (“What is the purpose of your visit?”) e você responde “I'm here on vacation” (estou aqui de férias).",
             exemplo: "Na recepção de um hotel: “Hello! I'm Ana. I'm from Brazil.” A pessoa responde: “Nice to meet you, Ana!”",
             falas: [
               falaEn("Hello! I'm Ana.", "Olá! Eu sou a Ana."),
@@ -1254,7 +1256,7 @@ const fracoes: Demo = {
           {
             titulo: "O que o numerador e o denominador contam",
             objetivo: "Ler uma fração dizendo o que cada número conta.",
-            conceito: "Uma fração mostra partes de um inteiro dividido em partes iguais. O número de baixo, o denominador, diz em quantas partes iguais o inteiro foi dividido. O número de cima, o numerador, diz quantas dessas partes estamos considerando.",
+            conceito: "Uma fração mostra partes de um inteiro dividido em partes iguais. O denominador, embaixo, diz em quantas partes iguais o inteiro foi dividido; o numerador, em cima, diz quantas delas estamos considerando.",
             exemplo: "Uma pizza foi cortada em 8 fatias iguais e você comeu 3. Você comeu 3/8 da pizza: 8 é o total de fatias iguais e 3 são as que você comeu.",
             recurso: { tipo: "fracao", numerador: 3, denominador: 8, rotulo: "3/8" },
             origem: origemFracoes,
@@ -1471,7 +1473,7 @@ const fotografia: Demo = {
           {
             titulo: "Lente limpa e mãos firmes",
             objetivo: "Evitar fotos embaçadas antes mesmo de enquadrar.",
-            conceito: "Muitas fotos borradas não são culpa do celular. A lente fica engordurada no bolso e deixa tudo nebuloso, e a mão que treme na hora do toque borra a imagem. Limpe a lente e segure o celular com as duas mãos, cotovelos junto ao corpo.",
+            conceito: "Muitas fotos borradas não são culpa do celular: a lente engordurada deixa tudo nebuloso, e a mão que treme na hora do toque borra a imagem. Limpe a lente e segure o celular com as duas mãos, cotovelos junto ao corpo.",
             exemplo: "Uma foto de um prato no restaurante sai leitosa. Depois de passar a barra da camiseta na lente e apoiar os cotovelos na mesa, a mesma foto sai nítida.",
             origem: origemFotografia,
             exercicio: {
@@ -1554,7 +1556,7 @@ const fotografia: Demo = {
           {
             titulo: "Usar a luz natural",
             objetivo: "Escolher a luz certa para cada foto.",
-            conceito: "A luz muda tudo. A luz da janela, vinda de lado, é suave e valoriza rostos. O sol do meio-dia faz sombras duras e olhos apertados. Perto do nascer e do pôr do sol vem a hora dourada, com luz quente e suave.",
+            conceito: "A luz muda tudo: a luz da janela, vinda de lado, é suave e valoriza rostos. O sol do meio-dia faz sombras duras e olhos apertados. Perto do nascer e do pôr do sol vem a hora dourada, com luz quente e suave.",
             exemplo: "O mesmo retrato fica duro ao meio-dia no quintal e suave perto da janela, com a pessoa de lado para a luz.",
             recurso: {
               tipo: "linha_do_tempo",
@@ -1705,7 +1707,7 @@ const fotografia: Demo = {
 };
 
 /** Demos na ordem de reconhecimento. SQL tem a sua própria trilha em `falsa.ts`. */
-export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia, fracoes, fotografia];
+export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia, fracoes, fotografia, geometria, funcoes];
 
 export function demoDoObjetivo(objetivo: string): Demo | undefined {
   return DEMOS.find((demo) => demo.reconhecer(objetivo));

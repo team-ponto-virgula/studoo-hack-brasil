@@ -14,6 +14,7 @@
   line-height: 1;
 }
 .avatar[data-grande] { width: 56px; height: 56px; font-size: 1.5rem; }
+.avatar[data-inicial]::before { content: attr(data-inicial); }
 
 .campo-dica { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.45; }
 .regras-publicacao { margin: 12px 0 16px; }
@@ -140,16 +141,21 @@
   border-radius: 999px; background: var(--ceu); color: var(--acao-escura); font-size: 0.8125rem; font-weight: 900;
 }
 .selo-compartilhada .icone { width: 14px; height: 14px; }
+/* Spec 16, item 31: o mesmo estado curto do Perfil (spec 14): "Em revisão" no selo neutro e "Não publicada" no âmbar. */
+.selo-compartilhada[data-estado='em-revisao'] { background: #f1f4fd; color: #5e6a85; }
+.selo-compartilhada[data-estado='nao-publicada'] { background: #fff6ea; color: #9a5b00; }
 .marca-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 8px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .marca-recebida a { color: var(--acao); }
 .trilha-compartilhar { margin-top: 10px; }
 .trilha-compartilhar .icone { width: 18px; height: 18px; }
+.trilha-compartilhar[data-estado='em-revisao'] { color: #5e6a85; }
+.trilha-compartilhar[data-estado='nao-publicada'] { color: #9a5b00; background: #fff6ea; }
 .trilha-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 8px 0 0; color: var(--texto2); font-weight: 800; }
 .trilha-recebida a { color: var(--acao); }
 .trilha-aviso { margin: 8px 0 0; padding: 10px 14px; border-radius: 14px; background: #e3f6ea; color: #14513b; font-weight: 800; }
 
 /* Tela Perfil. */
-.painel--perfil { display: grid; gap: 20px; width: min(100%, 44rem); }
+.painel--perfil { display: grid; gap: 20px; width: min(100%, 680px); }
 .perfil-cartao { display: grid; gap: 12px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 .perfil-cartao__linha { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .perfil-cartao__nome { flex: 1 1 8rem; min-width: 0; margin: 0; font-size: 1.25rem; font-weight: 900; overflow-wrap: anywhere; }
@@ -173,8 +179,6 @@
 .postar-estado[data-revisao='pendente'] { background: var(--nevoa); }
 .postar-estado[data-revisao='recusado'] { color: #9a5b00; background: #fff6ea; }
 .postar-estado[data-erro] { color: var(--erro); background: none; padding: 0; }
-.trilha-topo__acoes .plano-cartao__menu { position: relative; inset: auto; }
-.trilha-topo__acoes .plano-cartao__opcoes { left: 0; right: auto; }
 
 .perfil-links { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .perfil-link { display: grid; gap: 6px; padding: 14px 16px; border: 2px solid var(--gelo); border-radius: 16px; }
@@ -190,17 +194,10 @@
 .perfil-conta__email span { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .painel--perfil > .botao, .perfil-secao > .botao { justify-self: start; }
 
-/* Navegação: cartão do perfil no rodapé da lateral; "Perfil" no cabeçalho só onde não há lateral nem barra de baixo. */
-.navegacao-perfil {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 10px; border: 2px solid var(--gelo);
-  border-radius: 16px; background: var(--fundo); color: var(--texto); font: inherit; font-weight: 900; text-align: start; cursor: pointer;
-}
-.navegacao-perfil[aria-current] { border-color: var(--acao); color: var(--acao); }
-.navegacao-perfil span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (hover: hover) { .navegacao-perfil:hover:not(:disabled) { background: var(--nevoa); } }
+/* Navegação: "Perfil" no rodapé da lateral, igual aos outros três itens (spec 16, item 18; o estilo único está em globals.css); "Perfil" no cabeçalho só onde não há lateral nem cápsula de abas embaixo (spec 16, item 33). */
 .perfil-cabecalho { display: none; }
 @media (max-width: 1023px) { .perfil-cabecalho { display: inline-flex; } }
-@media (max-width: 767px) { .estudo[data-navegacao] .perfil-cabecalho { display: none; } }
+@media (max-width: 1023px) { .estudo[data-navegacao] .perfil-cabecalho { display: none; } }
 
 /* Adicionar por link (tela de nova trilha). */
 .por-link__abrir {

@@ -215,6 +215,22 @@ test('sem IA, o “Explique” reconhece frases da lição como exemplo e não s
   assert.doesNotMatch(falado.lacuna, /Faltou só um exemplo/);
 });
 
+test('sem IA, o “Explique” reconhece o exemplo concreto sem marca (“Numa pizza de 8 fatias, comer 3 é 3/8”) e não pede o exemplo de novo', async () => {
+  const u = await pessoa();
+  const fracoes = await aceitarProposta(u, (await gerarProposta(u, 'Entender, comparar e somar frações')).token);
+  const id = fracoes.fluxos[0].licoes[0].id;
+  const termos = termosDaLicao(DEMOS.find(({ chave }) => chave === 'fracoes').plano.fluxos[0].licoes[0]);
+  // O que a banca viu: a explicação TEM o exemplo, mas o cartão "O que revisar" dizia "Faltou só um exemplo seu".
+  const comExemplo = await ensinarStu(u, id, `${termos.join(', ')}. Numa pizza de 8 fatias, comer 3 é 3/8.`);
+  assert.equal(comExemplo.simulado, true);
+  assert.match(comExemplo.acertos.join(' '), /Você usou um exemplo/);
+  assert.doesNotMatch(comExemplo.lacuna, /Faltou só um exemplo/);
+  assert.doesNotMatch(comExemplo.proximoPasso, /Escreva uma situação sua/);
+  // Sem exemplo nenhum (só as ideias da lição), o pedido do exemplo continua valendo.
+  const semExemplo = await ensinarStu(u, id, `As ideias que importam: ${termos.join(', ')}.`);
+  assert.match(semExemplo.lacuna, /Faltou só um exemplo/);
+});
+
 test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem no retorno local', async () => {
   const u = await pessoa();
   const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
@@ -325,7 +341,7 @@ test('material expirado não gera proposta', async () => {
     codigo('nao_encontrado'),
   );
 });
-test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados', async () => {
+test('OpenAI: schema, recusa, citação inventada (não derruba), página inexistente, áudio e feedback validados', async () => {
   const original = globalThis.fetch;
   const anterior = { ...process.env };
   process.env.IA = 'openai';
@@ -380,10 +396,16 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
         status: 'completed',
         output_text: JSON.stringify({ titulo: 'Frações', licoes: [l, l, l] }),
       });
+    // Marco 6: a citação que não casa com a página (inventada, reescrita) não derruba a proposta: a referência vira um trecho literal da
+    // página (aqui o começo dela). Só a lição que cita uma página que não existe é recusada.
+    const comCitacaoInventada = await proporMaterial(u, material.id, 'Frações');
+    assert.equal(comCitacaoInventada.fluxos.flatMap((fluxo) => fluxo.licoes).length, 3);
+    l.pagina = 9;
     await assert.rejects(
       proporMaterial(u, material.id, 'Frações'),
       codigo('ia_indisponivel'),
     );
+    l.pagina = 1;
     l.trecho =
       'O denominador indica em quantas partes iguais o inteiro foi dividido.';
     const proposta = await proporMaterial(u, material.id, 'Frações');

@@ -104,10 +104,11 @@ test('P5: com a confirmação de tirar do Explorar aberta, a linha não muda (se
   assert.match(folha, /if \(ligada\) \{ marcar\(\); await ligar\(id, linha\.link\); \}\s*else if \(linha\.link\) await desligar\(id, linha\.link, marcar\);/);
 });
 
-test('a dica do perfil privado aponta para "Postar trilha no perfil" com a comunidade (spec 10, 7b)', async () => {
+test('a dica do perfil privado aponta para "Postar trilha no perfil" com a comunidade (spec 10, 7b; textos da spec 16, item 32)', async () => {
   const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
-  assert.equal(mensagens.perfil.perfilPrivadoDica, 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.');
-  assert.equal(mensagens.perfil.perfilPrivadoDicaSemComunidade, 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.');
+  assert.equal(mensagens.perfil.perfilPrivadoDica, 'Para aparecer nele, use “Postar trilha no perfil”.');
+  assert.equal(mensagens.perfil.perfilPrivadoDicaSemComunidade, 'Para aparecer nele, marque “Mostrar no meu perfil” em ao menos uma trilha.');
+  assert.equal(`${mensagens.perfil.privado} ${mensagens.perfil.perfilPrivadoDica}`, 'Privado: nenhuma trilha está postada no seu perfil. Para aparecer nele, use “Postar trilha no perfil”.', 'as duas metades formam a frase do Designer');
   const fonte = await ler('apps/mobile/src/perfil.tsx');
   assert.match(fonte, /`\$\{p\.privado\} \$\{comunidade \? p\.perfilPrivadoDica : p\.perfilPrivadoDicaSemComunidade\}`/);
   // Em 390 o título ocupa a largura e o botão desce para baixo dele (quebra da fileira).

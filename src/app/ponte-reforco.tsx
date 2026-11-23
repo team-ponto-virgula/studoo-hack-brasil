@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { ApoioEstudo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
@@ -19,6 +19,8 @@ type Props = {
   tentarCarregar: () => void;
   verificar: (resposta: string) => Promise<Resultado | undefined>;
   voltar?: () => void;
+  /** Spec 16, item 27: nas lições feitas de material, "De onde veio esta ideia" (a citação do material), recolhido, depois do cartão do passo e antes de "Voltar ao exercício". */
+  origem?: ReactNode;
 };
 
 /** A apresentação e a lição mostram as mesmas três tábuas. As margens ficam nas posições 0 e 4. */
@@ -36,7 +38,7 @@ export function FaixaDaPonte({ posicao, comemorar = false }: { posicao: number; 
   );
 }
 
-export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro, tentarCarregar, verificar, voltar }: Props) {
+export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro, tentarCarregar, verificar, voltar, origem }: Props) {
   const [passo, setPasso] = useState(1);
   const [resposta, setResposta] = useState('');
   const [resultado, setResultado] = useState<Resultado>();
@@ -110,6 +112,7 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
         {erro && <p role="alert" className="campo-erro">{erro}</p>}
       </>}
     </div>
+    {origem}
     {!concluida && <Botao variante="texto" onClick={voltar}>{m.ponteVoltarExercicio}</Botao>}
     <footer ref={rodape} className="reforco__rodape"><Botao variante={concluida ? 'sucesso' : 'primario'}
       disabled={ocupado || (!ponte && !erro) || (!concluida && passo === 3 && !resposta)} onClick={() => void agir()}>{acao}</Botao></footer>

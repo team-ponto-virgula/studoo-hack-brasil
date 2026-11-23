@@ -1,0 +1,140 @@
+{
+  "origem": "Spec 15, seção 15, caso 1: parábola com duas raízes, vértice e intercepto. No exercício \"Qual é o vértice?\" o V é o procurado.",
+  "bruto": {
+    "tipo": "funcao",
+    "alt": "Parábola de f(x) = x² − 4x + 3, com as raízes A e B, o vértice V e o intercepto C.",
+    "curvas": [
+      {
+        "latex": "x^2 - 4x + 3"
+      }
+    ],
+    "pontos": [
+      {
+        "id": "A",
+        "tipo": "raiz"
+      },
+      {
+        "id": "B",
+        "tipo": "raiz"
+      },
+      {
+        "id": "V",
+        "tipo": "vertice"
+      },
+      {
+        "id": "C",
+        "tipo": "intercepto"
+      }
+    ]
+  },
+  "guardado": {
+    "tipo": "funcao",
+    "alt": "Parábola de f(x) = x² − 4x + 3, com as raízes A e B, o vértice V e o intercepto C.",
+    "curvas": [
+      {
+        "nome": "f",
+        "latex": "x^2 - 4x + 3"
+      }
+    ],
+    "pontos": [
+      {
+        "id": "A",
+        "papel": "especial",
+        "tipo": "raiz",
+        "x": 1,
+        "y": 0
+      },
+      {
+        "id": "B",
+        "papel": "especial",
+        "tipo": "raiz",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "V",
+        "papel": "especial",
+        "tipo": "vertice",
+        "x": 2,
+        "y": -1
+      },
+      {
+        "id": "C",
+        "papel": "especial",
+        "tipo": "intercepto",
+        "x": 0,
+        "y": 3
+      }
+    ]
+  },
+  "exercicioDoVertice": {
+    "bruto": {
+      "tipo": "funcao",
+      "alt": "Parábola de f(x) = x² − 4x + 3, com os pontos A, B e C. O vértice é o procurado.",
+      "curvas": [
+        {
+          "latex": "x^2 - 4x + 3"
+        }
+      ],
+      "pontos": [
+        {
+          "id": "A",
+          "tipo": "raiz"
+        },
+        {
+          "id": "B",
+          "tipo": "raiz"
+        },
+        {
+          "id": "V",
+          "papel": "procurado",
+          "tipo": "vertice"
+        },
+        {
+          "id": "C",
+          "tipo": "intercepto"
+        }
+      ]
+    },
+    "guardado": {
+      "tipo": "funcao",
+      "alt": "Parábola de f(x) = x² − 4x + 3, com os pontos A, B e C. O vértice é o procurado.",
+      "curvas": [
+        {
+          "nome": "f",
+          "latex": "x^2 - 4x + 3"
+        }
+      ],
+      "pontos": [
+        {
+          "id": "A",
+          "papel": "especial",
+          "tipo": "raiz",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "B",
+          "papel": "especial",
+          "tipo": "raiz",
+          "x": 3,
+          "y": 0
+        },
+        {
+          "id": "V",
+          "papel": "procurado",
+          "tipo": "vertice",
+          "x": 2,
+          "y": -1
+        },
+        {
+          "id": "C",
+          "papel": "especial",
+          "tipo": "intercepto",
+          "x": 0,
+          "y": 3
+        }
+      ]
+    }
+  }
+}

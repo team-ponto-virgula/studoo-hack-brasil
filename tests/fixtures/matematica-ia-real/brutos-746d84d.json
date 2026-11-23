@@ -1,0 +1,847 @@
+{
+ "origem": "Saídas BRUTAS da IA real (dumps do Lead em 746d84d), só o que o conferidor recusava por forma; sem chave",
+ "casos": {
+  "material-2/licao1": {
+   "motivoAntes": "a conta não fecha em \"12 = 3 + (−1) + x_C12 = 1 + 5 + y_C\": 12 = 122 é falso, com x_C = 10 (o \\quad sumia e colava x_C com o 12)",
+   "visuais": [
+    {
+     "tipo": "formula",
+     "alt": "Fórmula das coordenadas do baricentro: média das coordenadas dos vértices",
+     "latex": "x_G = \\frac{x_A + x_B + x_C}{3} \\quad y_G = \\frac{y_A + y_B + y_C}{3}",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    {
+     "tipo": "formula",
+     "alt": "Isolando a coordenada desconhecida do terceiro vértice",
+     "latex": "x_C = 3 x_G - x_A - x_B \\quad y_C = 3 y_G - y_A - y_B",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    }
+   ],
+   "resolucao": {
+    "problema": "Um triângulo tem vértices $A = (3, 1)$, $B = (-1, 5)$ e baricentro $G = (4, 4)$. Qual é o vértice $C$?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Triângulo com A em (3, 1) e B em (-1, 5), baricentro G em (4, 4); o terceiro vértice é procurado",
+     "latex": null,
+     "de": null,
+     "ate": null,
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 3,
+       "y": 1,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": -1,
+       "y": 5,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null
+      },
+      {
+       "id": "G",
+       "papel": "especial",
+       "x": null,
+       "y": null,
+       "valor": null,
+       "rotulo": null,
+       "derivado": {
+        "tipo": "baricentro",
+        "de": [
+         "A",
+         "B",
+         "C"
+        ]
+       }
+      },
+      {
+       "id": "C",
+       "papel": "procurado",
+       "x": 10,
+       "y": 6,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null
+      }
+     ],
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    "passos": [
+     {
+      "nome": "A condição do baricentro",
+      "texto": "O baricentro é a média das coordenadas dos três vértices, então $3 x_G = x_A + x_B + x_C$ e $3 y_G = y_A + y_B + y_C$.",
+      "formula": "3 x_G = x_A + x_B + x_C",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Substitua os valores",
+      "texto": "Com $A = (3, 1)$, $B = (-1, 5)$ e $G = (4, 4)$, troque cada coordenada nas duas igualdades.",
+      "formula": "12 = 3 + (-1) + x_C \\quad 12 = 1 + 5 + y_C",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Isole a abscissa",
+      "texto": "Junte os termos conhecidos e deixe $x_C$ sozinho.",
+      "formula": "\\foco{12} = 2 + x_C",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Agora a ordenada",
+      "texto": "Faça o mesmo com as ordenadas: junte os termos conhecidos e isole $y_C$.",
+      "formula": "y_C = 12 - 6",
+      "visual": null,
+      "tentativa": {
+       "pergunta": "Quanto vale $x_C$?",
+       "opcoes": [
+        {
+         "texto": null,
+         "formula": "x_C = 12 - 2",
+         "correta": true,
+         "porque": "Subtraindo $2$ de $12$ obtém-se a abscissa procurada."
+        },
+        {
+         "texto": null,
+         "formula": "x_C = 12 + 2",
+         "correta": false,
+         "porque": "Somar $2$ não isola $x_C$: é preciso subtrair o termo conhecido."
+        },
+        {
+         "texto": null,
+         "formula": "x_C = 12 \\div 3",
+         "correta": false,
+         "porque": "A divisão por $3$ já foi usada ao multiplicar $x_G$ por $3$; agora basta subtrair."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O vértice C",
+      "texto": "Juntando as duas coordenadas encontradas, obtemos o terceiro vértice.",
+      "formula": "C = (\\resposta{10}, \\resposta{6})",
+      "visual": {
+       "tipo": "plano",
+       "alt": "Triângulo com A em (3, 1), B em (-1, 5) e o terceiro vértice marcado, com o baricentro G",
+       "latex": null,
+       "de": null,
+       "ate": null,
+       "pontos": [
+        {
+         "id": "A",
+         "papel": "dado",
+         "x": 3,
+         "y": 1,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null
+        },
+        {
+         "id": "B",
+         "papel": "dado",
+         "x": -1,
+         "y": 5,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null
+        },
+        {
+         "id": "G",
+         "papel": "especial",
+         "x": null,
+         "y": null,
+         "valor": null,
+         "rotulo": null,
+         "derivado": {
+          "tipo": "baricentro",
+          "de": [
+           "A",
+           "B",
+           "C"
+          ]
+         }
+        },
+        {
+         "id": "C",
+         "papel": "resposta",
+         "x": 10,
+         "y": 6,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null
+        }
+       ],
+       "segmentos": null,
+       "poligonos": [
+        {
+         "pontos": [
+          "A",
+          "B",
+          "C"
+         ]
+        }
+       ],
+       "guias": null,
+       "intervalos": null
+      },
+      "tentativa": null
+     }
+    ]
+   }
+  },
+  "material-2/licao2": {
+   "motivoAntes": "passo 2: fórmula: símbolo \"&\" fora da lista (posição 24) (\\foco{2 & 3 & 1} dentro de uma matriz)",
+   "visuais": [
+    {
+     "tipo": "formula",
+     "alt": "Determinante da matriz com as coordenadas dos pontos e coluna de uns",
+     "latex": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    {
+     "tipo": "formula",
+     "alt": "Matriz dos pontos A, B e C do exemplo do material",
+     "latex": "\\begin{bmatrix} -1 & -1 & 1 \\\\ 2 & 5 & 1 \\\\ k & 1 & 1 \\end{bmatrix}",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    }
+   ],
+   "resolucao": {
+    "problema": "Monte a matriz associada aos pontos $P = (2, 3)$, $Q = (-1, 4)$ e $R = (6, 0)$ no teste de colinearidade.",
+    "visual": null,
+    "passos": [
+     {
+      "nome": "A forma da matriz",
+      "texto": "Cada ponto vira uma linha da matriz, com abscissa, ordenada e o número 1 no fim.",
+      "formula": "\\begin{bmatrix} x_P & y_P & 1 \\\\ x_Q & y_Q & 1 \\\\ x_R & y_R & 1 \\end{bmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Primeira linha",
+      "texto": "A primeira linha repete as coordenadas de $P$ e termina com 1.",
+      "formula": "\\begin{bmatrix} \\foco{2 & 3 & 1} \\\\ x_Q & y_Q & 1 \\\\ x_R & y_R & 1 \\end{bmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Segunda linha",
+      "texto": "A segunda linha traz as coordenadas de $Q$ e o 1 final.",
+      "formula": "\\begin{bmatrix} 2 & 3 & 1 \\\\ \\foco{-1 & 4 & 1} \\\\ x_R & y_R & 1 \\end{bmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Agora complete a última linha",
+      "texto": "Escreva a terceira linha com as coordenadas de $R$ e a coluna de uns.",
+      "formula": "\\begin{bmatrix} 2 & 3 & 1 \\\\ -1 & 4 & 1 \\\\ 6 & 0 & 1 \\end{bmatrix}",
+      "visual": null,
+      "tentativa": {
+       "pergunta": "Qual é a terceira linha da matriz?",
+       "opcoes": [
+        {
+         "texto": null,
+         "formula": "\\begin{bmatrix} 6 & 0 & 1 \\end{bmatrix}",
+         "correta": true,
+         "porque": "A linha de $R$ traz abscissa, ordenada e o 1."
+        },
+        {
+         "texto": null,
+         "formula": "\\begin{bmatrix} 1 & 6 & 0 \\end{bmatrix}",
+         "correta": false,
+         "porque": "O 1 fica no fim, não no começo da linha."
+        },
+        {
+         "texto": null,
+         "formula": "\\begin{bmatrix} 0 & 6 & 1 \\end{bmatrix}",
+         "correta": false,
+         "porque": "A abscissa vem antes da ordenada."
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "material-2/licao3": {
+   "motivoAntes": "passo 1: fórmula: ambiente matrix fora da lista (posição 72); visuais[1]: palavra solta (aei)",
+   "visuais": [
+    {
+     "tipo": "formula",
+     "alt": "Regra de Sarrus: repetir as duas primeiras colunas",
+     "latex": "\\begin{vmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{vmatrix} \\begin{matrix} a & b \\\\ d & e \\\\ g & h \\end{matrix}",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    {
+     "tipo": "formula",
+     "alt": "Determinante pela soma das descendentes menos as ascendentes",
+     "latex": "\\text{det} = (aei + bfg + cdh) - (ceg + afh + bdi)",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    }
+   ],
+   "resolucao": {
+    "problema": "Calcule o determinante de $\\begin{bmatrix} 2 & 1 & 3 \\\\ 1 & 2 & 1 \\\\ 4 & 1 & 2 \\end{bmatrix}$.",
+    "visual": null,
+    "passos": [
+     {
+      "nome": "Repetir as colunas",
+      "texto": "Repetimos as duas primeiras colunas à direita da matriz para aplicar Sarrus.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 3 \\\\ 1 & 2 & 1 \\\\ 4 & 1 & 2 \\end{vmatrix} \\begin{matrix} 2 & 1 \\\\ 1 & 2 \\\\ 4 & 1 \\end{matrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Produtos descendentes",
+      "texto": "Somamos os três produtos das diagonais descendentes.",
+      "formula": "2 \\times 2 \\times 2 + 1 \\times 1 \\times 4 + 3 \\times 1 \\times 1",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Produtos ascendentes",
+      "texto": "Agora calculamos os três produtos das diagonais ascendentes, que serão subtraídos.",
+      "formula": "3 \\times 2 \\times 4 + 1 \\times 1 \\times 2 + 2 \\times 1 \\times 1",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Juntar e calcular",
+      "texto": "Subtraímos a soma dos ascendentes da soma dos descendentes e obtemos o determinante.",
+      "formula": "(8 + 4 + 3) - (24 + 2 + 2) = \\resposta{-13}",
+      "visual": null,
+      "tentativa": null
+     }
+    ]
+   }
+  },
+  "material-2/licao3-nova-tentativa": {
+   "motivoAntes": "passo 1: fórmula: matriz maior que 4 × 4 (posição 6) (Sarrus com as colunas repetidas, 3 × 5)",
+   "visuais": [
+    {
+     "tipo": "formula",
+     "alt": null,
+     "latex": "\\begin{vmatrix} a & b & c \\\\ d & e & f \\\\ g & h & i \\end{vmatrix} = aei + bfg + cdh - ceg - bdi - afh",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    }
+   ],
+   "resolucao": {
+    "problema": "Calcule o determinante de $\\begin{bmatrix} 2 & 1 & 3 \\\\ 1 & 4 & 2 \\\\ 3 & 2 & 1 \\end{bmatrix}$.",
+    "visual": {
+     "tipo": "formula",
+     "alt": null,
+     "latex": "\\begin{vmatrix} 2 & 1 & 3 \\\\ 1 & 4 & 2 \\\\ 3 & 2 & 1 \\end{vmatrix}",
+     "de": null,
+     "ate": null,
+     "pontos": null,
+     "segmentos": null,
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    "passos": [
+     {
+      "nome": "Repetir as colunas",
+      "texto": "Escreva as duas primeiras colunas à direita da matriz, formando as diagonais.",
+      "formula": "\\begin{vmatrix} 2 & 1 & 3 & 2 & 1 \\\\ 1 & 4 & 2 & 1 & 4 \\\\ 3 & 2 & 1 & 3 & 2 \\end{vmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Diagonais descendentes",
+      "texto": "Multiplique os três termos de cada diagonal descendente.",
+      "formula": "\\foco{2 \\times 4 \\times 1} + 1 \\times 2 \\times 3 + 3 \\times 1 \\times 2",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Diagonais ascendentes",
+      "texto": "Multiplique os três termos de cada diagonal ascendente e subtraia.",
+      "formula": "3 \\times 4 \\times 3 + 2 \\times 2 \\times 2 + 1 \\times 1 \\times 1",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Juntar os termos",
+      "texto": "Some os produtos descendentes e subtraia os ascendentes, cuidando dos sinais.",
+      "formula": "8 + 6 + 6 - 36 - 8 - 1",
+      "visual": null,
+      "tentativa": {
+       "pergunta": "Qual é o valor do determinante?",
+       "opcoes": [
+        {
+         "texto": null,
+         "formula": "8 + 6 + 6 - 36 - 8 - 1",
+         "correta": true,
+         "porque": "Somando os descendentes, $20$, e subtraindo os ascendentes, $45$, o determinante é $-25$."
+        },
+        {
+         "texto": null,
+         "formula": "8 + 6 + 6 + 36 + 8 + 1",
+         "correta": false,
+         "porque": "Os produtos ascendentes devem ser subtraídos, não somados."
+        },
+        {
+         "texto": null,
+         "formula": "36 + 8 + 1 - 8 - 6 - 6",
+         "correta": false,
+         "porque": "A ordem está invertida: os descendentes somam e os ascendentes subtraem."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O determinante",
+      "texto": "O valor final é a soma dos descendentes menos a soma dos ascendentes.",
+      "formula": "\\resposta{-25}",
+      "visual": {
+       "tipo": "formula",
+       "alt": null,
+       "latex": "\\begin{vmatrix} 2 & 1 & 3 \\\\ 1 & 4 & 2 \\\\ 3 & 2 & 1 \\end{vmatrix} = -25",
+       "de": null,
+       "ate": null,
+       "pontos": null,
+       "segmentos": null,
+       "poligonos": null,
+       "guias": null,
+       "intervalos": null
+      },
+      "tentativa": null
+     }
+    ]
+   }
+  },
+  "trilha-1/licao3": {
+   "motivoAntes": "opção 2: precisa de texto ou de fórmula, só um dos dois",
+   "resolucao": {
+    "problema": "Os pontos $A(0, 1)$, $B(2, 3)$ e $C(4, 5)$ estão alinhados?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Pontos A, B e C no plano, com a reta que passa por A e B.",
+     "latex": null,
+     "de": null,
+     "ate": null,
+     "pontos": [
+      {
+       "id": "A",
+       "x": 0,
+       "y": 1,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "dado"
+      },
+      {
+       "id": "B",
+       "x": 2,
+       "y": 3,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "dado"
+      },
+      {
+       "id": "C",
+       "x": 4,
+       "y": 5,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "procurado"
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "B"
+      }
+     ],
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    "passos": [
+     {
+      "nome": "Monte o determinante",
+      "texto": "Coloque as coordenadas de cada ponto em uma linha e complete com 1.",
+      "formula": "D = \\begin{vmatrix} 0 & 1 & 1 \\\\ 2 & 3 & 1 \\\\ 4 & 5 & 1 \\end{vmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Desenvolva",
+      "texto": "Some os produtos das diagonais principais e subtraia os das secundárias.",
+      "formula": "D = 0 \\times 3 + 1 \\times 4 + 1 \\times 10 - 1 \\times 2 - 3 \\times 4 - 1 \\times 0",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Calcule a soma",
+      "texto": "Junte os termos com atenção aos sinais.",
+      "formula": "D = 14 - \\foco{14}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Interprete",
+      "texto": "Compare o determinante com zero para decidir se há alinhamento.",
+      "formula": "D = \\resposta{0}",
+      "visual": null,
+      "tentativa": {
+       "pergunta": "O que esse valor de D significa para os três pontos?",
+       "opcoes": [
+        {
+         "texto": "Os pontos estão alinhados, pois a área do triângulo é zero.",
+         "formula": null,
+         "correta": true,
+         "porque": "Determinante zero indica área nula, ou seja, os pontos ficam na mesma reta."
+        },
+        {
+         "texto": "Os pontos formam um triângulo de área 7.",
+         "formula": "A = \\frac{14}{2}",
+         "correta": false,
+         "porque": "O determinante já foi zerado na conta; não há área positiva."
+        },
+        {
+         "texto": "Os pontos estão alinhados, pois a área vale 14.",
+         "formula": null,
+         "correta": false,
+         "porque": "Área zero é o que mostra alinhamento, e o valor de D é zero."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "O veredito",
+      "texto": "Como o determinante deu zero, os três pontos ficam na mesma reta.",
+      "formula": "D = \\resposta{0}",
+      "visual": {
+       "tipo": "plano",
+       "alt": "Pontos A, B e C alinhados no plano.",
+       "latex": null,
+       "de": null,
+       "ate": null,
+       "pontos": [
+        {
+         "id": "A",
+         "x": 0,
+         "y": 1,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "B",
+         "x": 2,
+         "y": 3,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "C",
+         "x": 4,
+         "y": 5,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "resposta"
+        }
+       ],
+       "segmentos": [
+        {
+         "de": "A",
+         "ate": "C"
+        }
+       ],
+       "poligonos": null,
+       "guias": null,
+       "intervalos": null
+      },
+      "tentativa": null
+     }
+    ]
+   }
+  },
+  "trilha-1/licao3-tentativa2": {
+   "motivoAntes": "passo 2: fórmula: matrizes demais (posição 127) (três determinantes numa fórmula)",
+   "resolucao": {
+    "problema": "Os pontos $A(1, 1)$, $B(3, 5)$ e $C(5, 9)$ estão alinhados?",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Os pontos A (1, 1), B (3, 5) e C (5, 9) no plano, com o segmento de A a C e o ponto médio P entre eles.",
+     "latex": null,
+     "de": null,
+     "ate": null,
+     "pontos": [
+      {
+       "id": "A",
+       "x": 1,
+       "y": 1,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "dado"
+      },
+      {
+       "id": "B",
+       "x": 3,
+       "y": 5,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "dado"
+      },
+      {
+       "id": "C",
+       "x": 5,
+       "y": 9,
+       "valor": null,
+       "rotulo": null,
+       "derivado": null,
+       "papel": "dado"
+      }
+     ],
+     "segmentos": [
+      {
+       "de": "A",
+       "ate": "C"
+      }
+     ],
+     "poligonos": null,
+     "guias": null,
+     "intervalos": null
+    },
+    "passos": [
+     {
+      "nome": "Monte o determinante",
+      "texto": "Coloque as coordenadas de cada ponto numa linha, terminando com 1.",
+      "formula": "\\begin{vmatrix} 1 & 1 & 1 \\\\ 3 & 5 & 1 \\\\ 5 & 9 & 1 \\end{vmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Expanda pela 1ª linha",
+      "texto": "Multiplique cada elemento da primeira linha pelo determinante 2 por 2 que sobra.",
+      "formula": "1 \\times \\begin{vmatrix} 5 & 1 \\\\ 9 & 1 \\end{vmatrix} - 1 \\times \\begin{vmatrix} 3 & 1 \\\\ 5 & 1 \\end{vmatrix} + 1 \\times \\begin{vmatrix} 3 & 5 \\\\ 5 & 9 \\end{vmatrix}",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Calcule cada parte",
+      "texto": "Faça as contas dos três determinantes menores, com atenção aos sinais.",
+      "formula": "1 \\times (5 - 9) - 1 \\times (3 - 5) + 1 \\times (27 - 25)",
+      "visual": null,
+      "tentativa": null
+     },
+     {
+      "nome": "Junte os termos",
+      "texto": "Agora some os três resultados e veja o que acontece com o total.",
+      "formula": "D = -4 + 2 + 2",
+      "visual": {
+       "tipo": "plano",
+       "alt": "Os pontos A (1, 1), B (3, 5) e C (5, 9) no plano, com o segmento de A a C e o ponto médio P entre eles.",
+       "latex": null,
+       "de": null,
+       "ate": null,
+       "pontos": [
+        {
+         "id": "A",
+         "x": 1,
+         "y": 1,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "B",
+         "x": 3,
+         "y": 5,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "C",
+         "x": 5,
+         "y": 9,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "P",
+         "x": null,
+         "y": null,
+         "valor": null,
+         "rotulo": null,
+         "derivado": {
+          "tipo": "ponto_medio",
+          "de": [
+           "A",
+           "C"
+          ]
+         },
+         "papel": "especial"
+        }
+       ],
+       "segmentos": [
+        {
+         "de": "A",
+         "ate": "C"
+        }
+       ],
+       "poligonos": null,
+       "guias": null,
+       "intervalos": null
+      },
+      "tentativa": {
+       "pergunta": "Quanto vale o determinante $D$?",
+       "opcoes": [
+        {
+         "texto": null,
+         "formula": "D = \\resposta{0}",
+         "correta": true,
+         "porque": "-4 + 2 + 2 = 0."
+        },
+        {
+         "texto": null,
+         "formula": "D = -4 + 2",
+         "correta": false,
+         "porque": "Faltou somar a terceira parte, 27 - 25 = 2."
+        },
+        {
+         "texto": null,
+         "formula": "D = 4 + 2 + 2",
+         "correta": false,
+         "porque": "O primeiro termo é 5 - 9 = -4, e não 4."
+        }
+       ]
+      }
+     },
+     {
+      "nome": "A conclusão",
+      "texto": "Como o determinante é zero, os pontos estão na mesma reta.",
+      "formula": "D = \\resposta{0} \\to A, B \\text{ e } C \\text{ alinhados}",
+      "visual": {
+       "tipo": "plano",
+       "alt": "Os pontos A (1, 1), B (3, 5) e C (5, 9) alinhados no plano, com o segmento de A a C e o ponto médio P entre eles.",
+       "latex": null,
+       "de": null,
+       "ate": null,
+       "pontos": [
+        {
+         "id": "A",
+         "x": 1,
+         "y": 1,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "B",
+         "x": 3,
+         "y": 5,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "C",
+         "x": 5,
+         "y": 9,
+         "valor": null,
+         "rotulo": null,
+         "derivado": null,
+         "papel": "dado"
+        },
+        {
+         "id": "P",
+         "x": null,
+         "y": null,
+         "valor": null,
+         "rotulo": null,
+         "derivado": {
+          "tipo": "ponto_medio",
+          "de": [
+           "A",
+           "C"
+          ]
+         },
+         "papel": "resposta"
+        }
+       ],
+       "segmentos": [
+        {
+         "de": "A",
+         "ate": "C"
+        }
+       ],
+       "poligonos": null,
+       "guias": null,
+       "intervalos": null
+      },
+      "tentativa": null
+     }
+    ]
+   }
+  }
+ }
+}
