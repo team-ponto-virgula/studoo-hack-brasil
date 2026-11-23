@@ -2,7 +2,6 @@ import { Fragment } from 'react';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
-import { CABECALHO_NA_RAIZ } from '@/servidor/acesso/raiz';
 import { Desenho } from '../../ui/mundo';
 import { Mascote } from '../../ui/mascote';
 import { BotaoSom } from '../som';
@@ -166,7 +165,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
  * A página de apresentação do Studoo (spec 18): servidor, rápida, com ilhas de cliente pequenas para animação, aparelho, QR e visitante.
  * Serve `/conheca` (para compartilhar) e, para quem não tem sessão, a `/`. O aparelho, os links e a origem do QR são lidos a CADA pedido.
  */
-export async function PaginaDeApresentacao() {
+export async function PaginaDeApresentacao({ naRaiz = false }: { naRaiz?: boolean } = {}) {
   const cabecalhos = await headers();
   const biscoitos = await cookies();
   // O módulo do visitante abre o cliente do banco ao ser importado: aqui, só na hora do pedido, a página (e o teste dela) não depende do banco.
@@ -178,7 +177,7 @@ export async function PaginaDeApresentacao() {
       origem={origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
       comSessao={escolherInicio(biscoitos.get(nomeCookieSessao())?.value) === 'app'}
       visitante={visitanteAtivo()}
-      naRaiz={cabecalhos.get(CABECALHO_NA_RAIZ) === '1'}
+      naRaiz={naRaiz}
     />
   );
 }
