@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
+import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
 import './pedido.css';
+import { pedirAceiteIa } from './aceite-ia';
 import { MaterialParaTrilha } from './estudio';
 import type { PropostaPlano } from '@studoo/contratos';
 
@@ -107,6 +109,16 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const descricao = [mostrarCurto && 'objetivo-erro', 'objetivo-dica', 'objetivo-privacidade', mostrarContador && 'objetivo-contador']
     .filter(Boolean).join(' ');
   const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'rede';
+  // "Agora não" no aceite de IA deixava um aviso sem saída (spec 17, defeito B4): o botão reabre o mesmo cartão e, com "Permitir e continuar", o pedido segue.
+  const semAceite = falha === 'consentimento_ia';
+  async function permitirDeNovo() {
+    if (ocupado) return;
+    try {
+      if (await pedirAceiteIa(await cliente.privacidade())) tentar();
+    } catch {
+      // Sem conseguir abrir o cartão, o aviso e o botão continuam; a pessoa tenta de novo.
+    }
+  }
 
   function tentar() {
     if (ocupado || !texto) return;
@@ -159,6 +171,8 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <EstadoErro codigo={falha}>
           {falha === 'limite_geracoes' && temPlanos ? (
             <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>
+          ) : semAceite ? (
+            <Botao variante="secundario" disabled={ocupado} onClick={() => void permitirDeNovo()}>{mensagens.privacidade.permitirAgora}</Botao>
           ) : repetivel ? (
             <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>
           ) : null}

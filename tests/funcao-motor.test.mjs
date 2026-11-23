@@ -148,6 +148,18 @@ test("o seno: x marcado em 0, π/2, π, 3π/2 e 2π, y em −1, 0 e 1, escalas i
   assert.ok(desenho.altura < 280, "o desenho é mais baixo que o plano de sempre (320)");
 });
 
+test("o seno, refino 7 (spec 16): o P (π, 0) cobre o π do eixo em todo contexto (enunciado, retorno e aula): só aquele número sai, a grade fica e o rótulo do ponto diz o π", () => {
+  for (const tipo of ["enunciado", "retorno", "aula"]) {
+    const desenho = desenharVisual(caso("seno"), { tipo });
+    const numeros = textosDas(desenho, "numero");
+    assert.ok(!numeros.includes("π"), `${tipo}: o π do eixo sai (a bolinha do P o cobre)`);
+    for (const fica of ["π/2", "3π/2", "2π", "0", "1", "−1"]) assert.ok(numeros.includes(fica), `${tipo}: ${fica} fica`);
+    assert.ok(textosDas(desenho, "rotulo").includes("P (π, 0)"), `${tipo}: o rótulo do ponto diz o π`);
+    const verticais = desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade" && primitiva.x1 === primitiva.x2);
+    assert.equal(verticais.length, 5, `${tipo}: a grade continua de π/2 em π/2, inclusive em π (a pessoa ainda conta)`);
+  }
+});
+
 test("até três curvas, em azul, roxo e azul-marinho tracejado (6 e 4), cada uma com o nome e a fórmula dela na faixa de cima", () => {
   const validado = validarVisual({
     tipo: "funcao", alt: "Uma parábola e duas retas.", curvas: [{ latex: "x^2 - 2" }, { latex: "x", nome: "g" }, { latex: "-x + 2", nome: "h" }],

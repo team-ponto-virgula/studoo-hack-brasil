@@ -236,16 +236,11 @@
   border-radius: 28px;
   background: var(--nevoa);
 }
-.apresentacao-quadro__topo {
-  display: flex;
-  justify-content: flex-end;
-}
 .apresentacao-quadro *,
 .apresentacao-mapa * {
   animation: none !important;
 }
 .apresentacao-quadro--ponte .ponte-cena { margin-bottom: 0; min-width: 0; }
-.apresentacao-quadro .estudio-legenda { margin: 0; text-align: center; }
 .apresentacao-caderno { margin: 0; min-width: 0; }
 .apresentacao-caderno .ensino-caderno__cartao { padding: 10px 12px; }
 .apresentacao-caderno .ensino-caderno__cartao h3 { font-size: 0.75rem; }
@@ -259,7 +254,6 @@
 }
 @media (min-width: 768px) {
   .apresentacao-caderno { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .apresentacao-caderno .estudio-legenda { grid-column: 1 / -1; }
 }
 @media (max-width: 767px) {
   .apresentacao-quadro { padding: 12px; border-radius: 22px; }

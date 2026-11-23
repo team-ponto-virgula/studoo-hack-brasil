@@ -1,4 +1,10 @@
 /* Privacidade: folha do aceite de IA, seção "Privacidade e dados" do Perfil e a política pública. */
+
+/* O cartão do aceite de IA (spec 17, defeito B3): o título e os botões ficam fixos e só o texto do meio rola; abre no topo, com o foco no título. */
+.folha.folha--aceite { display: flex; flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
+.folha--aceite > .folha-titulo { flex: none; margin: 0; padding: 20px 20px 12px; }
+.folha-aceite__corpo { display: grid; gap: 14px; flex: 1 1 auto; min-height: 0; padding: 0 20px 14px; overflow-y: auto; overscroll-behavior: contain; }
+.folha-aceite__rodape { display: grid; gap: 10px; flex: none; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border-top: 2px solid var(--nevoa); background: var(--fundo); }
 .privacidade-subtitulo { margin: 0; font-size: 1rem; }
 .privacidade-provedores { display: grid; gap: 10px; }
 .privacidade-provedores > ul { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }

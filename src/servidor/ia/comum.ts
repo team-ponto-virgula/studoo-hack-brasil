@@ -3,6 +3,7 @@ import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/
 import {
   LIMITES_ESQUELETO,
   conteudoValido,
+  dicaDaLacunaSemAResposta,
   exercicioValido,
   falaValida,
   normalizarResposta,
@@ -10,6 +11,7 @@ import {
   recursoValido,
   somValido,
   termosPresentes,
+  textoDizARespostaDaLacuna,
 } from "@/dominio/aprendizado/plano";
 import type { EventoEstrutura } from "./gerador";
 import {
@@ -274,7 +276,7 @@ export const instrucoesDaLicao = [
   "- trecho é opcional. trechoTipo diz o visual: codigo (só para código de programação), frase, citacao, formula ou passos (um passo por linha). fala, opcional, é um áudio para ouvir (texto, idioma e pronuncia, como nas falas da lição; pronuncia null fora de idiomas); num exercício de escuta, deixe o trecho null para o texto não aparecer de cara.",
   "- Nos campos que não se aplicam ao tipo, use null (e [] no gabarito de ordenar e associar).",
   "- Formato das listas: cada item de opcoes, itens, esquerda e direita é um objeto com id e texto, nunca um texto solto. Exemplo de ordenar: \"itens\": [{\"id\": \"i1\", \"texto\": \"Lave as mãos\"}, {\"id\": \"i2\", \"texto\": \"Separe os ingredientes\"}, {\"id\": \"i3\", \"texto\": \"Acenda o fogo\"}]. Exemplo de associar: \"esquerda\": [{\"id\": \"e1\", \"texto\": \"6ª corda\"}, {\"id\": \"e2\", \"texto\": \"1ª corda\"}], \"direita\": [{\"id\": \"d1\", \"texto\": \"Mi grave\"}, {\"id\": \"d2\", \"texto\": \"Mi agudo\"}].",
-  "- feedbackCorreto explica por que a resposta está certa; feedbackIncorreto explica o erro e mostra o caminho certo, com gentileza.",
+  "- feedbackCorreto explica por que a resposta está certa; feedbackIncorreto explica o erro e aponta o caminho, com gentileza. Na lacuna, a pessoa lê o feedbackIncorreto e tenta de novo: ele dá uma pista que leva à resposta (a regra, a pergunta a fazer, a conta a montar), mas nunca escreve a resposta, nem um valor do gabarito, nem o resultado da conta.",
   "- Se o título da lição começar com \"Revisão\", misture conceitos das lições anteriores.",
   "Não use markdown nem emojis. Não peça dados pessoais. Nada de práticas perigosas.",
 ].join("\n");
@@ -339,14 +341,15 @@ const pronunciaDe = (valor: unknown) => (textoAte(valor, 160) ? { pronuncia: tex
 
 /**
  * Erros comuns da lacuna e da aberta: até quatro, com termos e aviso nos limites. Sai o termo que `vale` (uma resposta
- * aceita, ou o que a resposta modelo traz): o aviso de erro nunca aparece para quem acertou.
+ * aceita, ou o que a resposta modelo traz): o aviso de erro nunca aparece para quem acertou. Sai também a armadilha cujo aviso
+ * `avisoEntrega` (na lacuna, o aviso que diz a resposta certa: a dica depois do erro aponta o caminho, nunca o valor).
  */
-function armadilhasDe(valor: unknown, vale: (termo: string) => boolean) {
+function armadilhasDe(valor: unknown, vale: (termo: string) => boolean, avisoEntrega: (aviso: string) => boolean = () => false) {
   if (!Array.isArray(valor)) return undefined;
   const armadilhas = valor.flatMap((item) => {
     const { termos, aviso } = (item ?? {}) as Record<string, unknown>;
     const juntos = alternativasDe(termos).split("|").map((termo) => termo.trim()).filter((termo) => termo && !vale(termo)).join("|");
-    return juntos && juntos.length <= 200 && textoAte(aviso, 300) ? [{ termos: juntos, aviso: textoAte(aviso, 300) }] : [];
+    return juntos && juntos.length <= 200 && textoAte(aviso, 300) && !avisoEntrega(textoAte(aviso, 300)) ? [{ termos: juntos, aviso: textoAte(aviso, 300) }] : [];
   }).slice(0, 4);
   return armadilhas.length > 0 ? armadilhas : undefined;
 }
@@ -379,17 +382,20 @@ const TIPOS_EXERCICIO = ["multipla_escolha", "lacuna", "ordenar", "associar", "v
  * O exercício normalizado e válido, ou o motivo de não fechar, sem conteúdo: `<tipo>:<campo>` (como `ordenar:itens`),
  * `<tipo>:validacao` (normalizou, mas não passa nas regras do domínio), `tipo` (tipo desconhecido) ou `formato`.
  */
-function lerExercicio(bruto: unknown): { exercicio: ExercicioInterno | null; motivo?: string; figura?: { enviada: boolean; aceita: boolean; motivo?: string } } {
+function lerExercicio(bruto: unknown): { exercicio: ExercicioInterno | null; motivo?: string; figura?: { enviada: boolean; aceita: boolean; motivo?: string }; dicaAparada?: true } {
   const lido = montarExercicio(bruto);
   if (typeof lido === "string") return { exercicio: null, motivo: lido };
   if (!exercicioValido(lido)) return { exercicio: null, motivo: `${(lido as ExercicioInterno).tipo}:validacao` };
+  // A dica da lacuna que dizia a resposta foi aparada (spec 17, B5): fica registrado, para medir o quanto a IA ainda entrega a resposta.
+  const dicaAparada = lido.tipo === "lacuna" && lido.feedbackIncorreto !== textoDe((bruto as { feedbackIncorreto?: unknown }).feedbackIncorreto) ? { dicaAparada: true as const } : {};
   // A figura do enunciado (matemática, spec 15) se valida sozinha: a que não vale some, e o exercício fica como sempre foi.
   // A que mostra a resposta (o par da opção certa já é um ponto rotulado dela) também some, e o relato diz qual ponto (marco 13).
   const figura = lerFiguraDoExercicio((bruto as { visual?: unknown }).visual, lido);
-  if (!figura.enviada) return { exercicio: lido };
+  if (!figura.enviada) return { exercicio: lido, ...dicaAparada };
   return {
     exercicio: figura.figura ? { ...lido, visual: figura.figura } : lido,
     figura: { enviada: true, aceita: figura.figura !== undefined, ...(figura.motivo ? { motivo: figura.motivo } : {}) },
+    ...dicaAparada,
   };
 }
 
@@ -476,8 +482,17 @@ function montarExercicio(bruto: unknown): ExercicioInterno | string {
     case "lacuna": {
       // Na lacuna, a armadilha é uma resposta errada inteira; uma resposta aceita nunca vira armadilha.
       const aceitas = new Set(gabarito.map(normalizarResposta));
-      const armadilhas = armadilhasDe(exercicio.armadilhas, (termo) => aceitas.has(normalizarResposta(termo)));
-      return { tipo: "lacuna", ...base, gabarito, ...(exercicio.exata === true ? { exata: true } : {}), ...(armadilhas ? { armadilhas } : {}) };
+      // A dica depois do erro aponta o caminho e nunca diz a resposta (spec 17, B5): a frase da dica que traz uma resposta aceita sai (e, sem nenhuma que sirva, entra a dica padrão), e a
+      // armadilha cujo aviso traz a resposta sai. A lição nunca cai por causa disto.
+      const armadilhas = armadilhasDe(exercicio.armadilhas, (termo) => aceitas.has(normalizarResposta(termo)), (aviso) => textoDizARespostaDaLacuna(aviso, gabarito));
+      return {
+        tipo: "lacuna",
+        ...base,
+        feedbackIncorreto: dicaDaLacunaSemAResposta(base.feedbackIncorreto, gabarito),
+        gabarito,
+        ...(exercicio.exata === true ? { exata: true } : {}),
+        ...(armadilhas ? { armadilhas } : {}),
+      };
     }
     default:
       return TIPOS_EXERCICIO.includes(String(exercicio.tipo)) ? `${String(exercicio.tipo)}:formato` : "tipo";
@@ -508,6 +523,8 @@ export type LicaoNormalizada = {
   descartados: string[];
   /** O conceito passou do balão do Stu (3 frases, 2 na primeira lição, cerca de 50 palavras) e foi cortado na última frase que cabe. */
   conceitoCortado?: true;
+  /** A dica depois do erro de uma lacuna dizia a resposta (spec 17, B5): a frase foi tirada (ou, sem nenhuma que sirva, entrou a dica padrão). */
+  dicaDaLacunaAparada?: true;
   /** O tipo do extra que virou principal quando o principal não fechou. */
   promovido?: string;
   /** O que a matemática da lição deu (visuais, figuras, resolução). Só quando o modelo mandou algo disso. */
@@ -648,6 +665,7 @@ export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDa
     conteudo: valido,
     descartados,
     ...(conceitoCurto.cortou ? { conceitoCortado: true as const } : {}),
+    ...(lidos.some((lido) => lido.exercicio && lido.dicaAparada) ? { dicaDaLacunaAparada: true as const } : {}),
     ...(promovido ? { promovido } : {}),
     ...(relato ? { matematica: relato } : {}),
   });
