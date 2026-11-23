@@ -264,7 +264,7 @@ reviver_aparelho() {
   pkill -f "qemu-system-x86_64.*-avd $avd" 2> /dev/null || true
   adb kill-server > /dev/null 2>&1 || true
   adb start-server > /dev/null 2>&1 || true
-  nohup "$emulador" -avd "$avd" -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none \
+  nohup "$emulador" -avd "$avd" -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none \
     -cores 3 -memory 4096 > "$REGISTROS/emulador-religado-$REVIVIDOS.log" 2>&1 &
   fim=$(( $(date +%s) + 360 ))
   while [ "$(date +%s)" -lt "$fim" ]; do
