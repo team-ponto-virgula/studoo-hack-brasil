@@ -687,7 +687,9 @@ export function Estudo({ cliente, sair, expirar }: {
   // na prévia abertos dele).
   const aba = abaDe(etapa);
   // Spec 04 (item 5) e spec 05 (d8df51c): a barra aparece também sem trilhas, senão não há "Minhas trilhas" para tocar.
-  const comNavegacaoAgora = planos !== null && !pendente && (ABAS.includes(aba) || (comunidade && aba === 'explorar'));
+  // Com um pedido em andamento, ela continua à vista e só desliga (spec 05: "com uma ação em andamento, as abas ficam
+  // desligadas", como a web): antes ela sumia, e com a rede lenta o mapa ficava segundos sem navegação.
+  const comNavegacaoAgora = planos !== null && (ABAS.includes(aba) || (comunidade && aba === 'explorar'));
   const telaDaComunidade = ['explorar', 'perfilPublico', 'previaTrilha'].includes(etapa.tipo);
   const acoes = (
     <>
