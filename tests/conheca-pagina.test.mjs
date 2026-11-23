@@ -475,6 +475,29 @@ test('animações só dentro de prefers-reduced-motion: no-preference (com a par
   assert.match(css, /transition: opacity 300ms linear/, 'a troca da tela do S2: 300 ms, sumir e aparecer');
 });
 
+test('a troca de tela do herói não deixa quadro vazio: a nova entra por cima da que sai, que fica inteira por baixo até a nova terminar, e só troca com a próxima captura carregada', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-tela\[data-ativa\] \{ opacity: 1; z-index: 2; \}/, 'a tela de agora fica por cima');
+  assert.match(css, /\.cn-tela\[data-saindo\] \{ opacity: 1; z-index: 1; \}/, 'a que sai fica inteira por baixo (a soma das opacidades nunca cai abaixo de 1)');
+  assert.doesNotMatch(css, /\.cn-heroi__celular \.cn-tela \{ transition: opacity/, 'sem transição de opacidade nas telas (a que saía sumia na hora e a nova subia do zero)');
+  assert.match(css, /\.cn-heroi__celular\[data-pronto\] \.cn-tela\[data-ativa\] \{ animation: cn-entrar 400ms cubic-bezier\(0\.2, 0\.8, 0\.2, 1\) both; \}/, 'a troca continua em 400 ms, com a nova subindo 12 px');
+  assert.match(css, /@keyframes cn-entrar \{ from \{ opacity: 0; transform: translateY\(12px\); \} to \{ opacity: 1; transform: none; \} \}/);
+  const ilha = ler('src/app/conheca/ilhas/celular-heroi.tsx');
+  assert.match(ilha, /data-saindo=\{indice === troca\.anterior \|\| undefined\}/, 'a que sai leva a marca na mesma troca em que a nova leva data-ativa');
+  assert.match(ilha, /setTroca\(\{ ativa: proxima, anterior: ativaAgora\.current \}\);/, 'um estado só: nova e anterior mudam juntas');
+  assert.match(ilha, /onAnimationEnd=\{\(evento\) => \{ if \(evento\.target === evento\.currentTarget && indice === troca\.ativa\) soltarAnterior\(\); \}\}/, 'a que saiu só é solta quando a nova terminou de entrar');
+  assert.match(ilha, /imagem && imagem\.complete && imagem\.naturalWidth > 0/, 'só entra uma captura que já chegou');
+  assert.match(ilha, /if \(!pronta\(proxima\)\) \{ agendar\(250\); return; \}/, 'rede lenta: a atual fica e a pergunta se repete (nunca uma tela vazia)');
+  // Com movimento reduzido nada muda: só a proposta pronta, parada (o laço nem roda).
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.cn-heroi__celular \.cn-tela \{ opacity: 0 !important; transition: none; \}\n  \.cn-heroi__celular \.cn-tela:nth-child\(2\) \{ opacity: 1 !important; \}/);
+  assert.match(ilha, /!reduzido\.matches/);
+  // O teste de navegador (Chromium e WebKit, a cada 50 ms, dois ciclos, soma mínima 0,95) mora em scripts/qa/heroi-troca.mjs.
+  const roteiro = ler('scripts/qa/heroi-troca.mjs');
+  assert.match(roteiro, /ciclos \* 3 \* 3500/);
+  assert.match(roteiro, /setTimeout\(passo, 50\)/);
+  assert.match(roteiro, /argumento\("minimo", "0\.95"\)/);
+});
+
 test('as ilhas de movimento respeitam o movimento reduzido e a aba escondida, e só rodam com o herói na tela', () => {
   const heroi = ler('src/app/conheca/ilhas/celular-heroi.tsx');
   assert.match(heroi, /prefers-reduced-motion: reduce/);

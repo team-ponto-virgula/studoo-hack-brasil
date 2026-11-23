@@ -39,3 +39,11 @@ Para encerrar o servidor, parar o PostgreSQL e descartar os dados criados por es
 ```sh
 node scripts/qa/ensaio-ia.mjs parar 3892
 ```
+
+## Troca de tela do herói da página de apresentação
+
+```sh
+node scripts/qa/heroi-troca.mjs --base=http://localhost:3000 [--motor=chromium|webkit]
+```
+
+Amostra a cada 50 ms, por dois ciclos, as opacidades das três telas do celular do herói (`/conheca`) e exige que a soma nunca fique abaixo de 0,95: a troca não pode deixar quadro vazio (a tela que sai fica inteira por baixo até a nova terminar de entrar por cima). Sai com 1 se falhar. Roda com o site no ar, sem banco e sem IA.

@@ -184,7 +184,9 @@
 .cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 10px; height: 10px; border-radius: 50%; }
 .cn-captura { display: block; width: 100%; height: 100%; object-fit: fill; }
 .cn-tela { position: absolute; inset: 0; opacity: 0; }
-.cn-tela[data-ativa] { opacity: 1; }
+.cn-tela[data-ativa] { opacity: 1; z-index: 2; }
+/* A tela que sai fica INTEIRA e por baixo até a nova terminar de entrar por cima dela: nenhum quadro vazio na troca (a soma das opacidades nunca cai abaixo de 1). */
+.cn-tela[data-saindo] { opacity: 1; z-index: 1; }
 .cn-heroi__celular { position: relative; }
 @media (min-width: 768px) { .cn-heroi__celular .cn-celular { --celular: 300px; } }
 
@@ -195,7 +197,6 @@
   .cn-heroi__celular .cn-tela:nth-child(2) .cn-captura[hidden] { display: block !important; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .cn-heroi__celular .cn-tela { transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
   .cn-heroi__celular[data-pronto] .cn-tela[data-ativa] { animation: cn-entrar 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 }
 @keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }

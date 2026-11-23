@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CapturaDaTela, Celular } from '../celular';
 import type { CapturaOtimizada, Plataforma } from '../imagens';
 
@@ -9,14 +9,16 @@ const MS_POR_TELA = 3500;
 export interface TelaDoHeroi { captura: CapturaOtimizada; alt: string }
 
 /**
- * O celular do herói (spec 18, 1.4): três capturas nativas em laço, 3,5 s cada; a troca é uma só de sumir e aparecer, em 400 ms, com
- * a nova subindo 12 px (o CSS faz). O laço só roda com o herói na tela, a aba à vista e sem movimento reduzido; com movimento reduzido
- * fica só a proposta pronta, parada (o CSS). A primeira captura carrega já; a segunda e a terceira só entram no código quando o laço
- * começa. O conjunto tem um rótulo só, e a troca nunca é anunciada.
+ * O celular do herói (spec 18, 1.4): três capturas nativas em laço, 3,5 s cada; a troca leva 400 ms, com a nova subindo 12 px (o CSS faz), SEM quadro vazio: a nova entra POR CIMA
+ * da que sai, e a que sai fica inteira (`data-saindo`) por baixo até a nova terminar de entrar (`animationend`); a soma das opacidades das telas nunca cai abaixo de 1 (antes, a que saía
+ * sumia na hora e a nova subia de zero: a tela do celular ficava desbotada na troca). A troca só acontece quando a próxima captura já chegou (rede lenta: espera, não mostra vazio). O laço só
+ * roda com o herói na tela, a aba à vista e sem movimento reduzido; com movimento reduzido fica só a proposta pronta, parada (o CSS). A primeira captura carrega já; a segunda e a terceira só
+ * entram no código quando o laço começa. O conjunto tem um rótulo só, e a troca nunca é anunciada.
  */
 export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly TelaDoHeroi[]; rotulo: string; plataforma: Plataforma }) {
   const raiz = useRef<HTMLDivElement>(null);
-  const [ativa, setAtiva] = useState(0);
+  const [troca, setTroca] = useState<{ ativa: number; anterior: number | null }>({ ativa: 0, anterior: null });
+  const ativaAgora = useRef(0);
   const [rodando, setRodando] = useState(false);
   const [liberadas, setLiberadas] = useState(false);
 
@@ -40,15 +42,39 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
   useEffect(() => {
     if (!rodando) return;
     setLiberadas(true);
-    const relogio = window.setInterval(() => setAtiva((atual) => (atual + 1) % telas.length), MS_POR_TELA);
-    return () => window.clearInterval(relogio);
+    let relogio = 0;
+    /** A captura da tela `indice` já chegou (carregada e com tamanho): só então ela pode entrar. */
+    const pronta = (indice: number) => {
+      const imagem = raiz.current?.querySelectorAll<HTMLImageElement>('.cn-captura')[indice];
+      return Boolean(imagem && imagem.complete && imagem.naturalWidth > 0);
+    };
+    function agendar(ms: number) { relogio = window.setTimeout(passo, ms); }
+    function passo() {
+      const proxima = (ativaAgora.current + 1) % telas.length;
+      // Rede lenta: a próxima ainda não chegou, então a atual fica e a pergunta se repete em 250 ms (nunca entra uma tela vazia).
+      if (!pronta(proxima)) { agendar(250); return; }
+      setTroca({ ativa: proxima, anterior: ativaAgora.current });
+      ativaAgora.current = proxima;
+      agendar(MS_POR_TELA);
+    }
+    agendar(MS_POR_TELA);
+    return () => window.clearTimeout(relogio);
   }, [rodando, telas.length]);
+
+  /** A tela que saiu só deixa de aparecer quando a nova terminou de entrar (e, por garantia, 1,6 s depois da troca se a aba estiver à vista). */
+  const soltarAnterior = useCallback(() => setTroca((atual) => (atual.anterior === null ? atual : { ...atual, anterior: null })), []);
+  useEffect(() => {
+    if (troca.anterior === null) return;
+    const relogio = window.setTimeout(() => { if (!document.hidden) soltarAnterior(); }, 1600);
+    return () => window.clearTimeout(relogio);
+  }, [troca, soltarAnterior]);
 
   return (
     <div ref={raiz} className="cn-heroi__celular" data-pronto={liberadas || undefined}>
       <Celular rotulo={rotulo} plataforma={plataforma}>
         {telas.map((tela, indice) => (
-          <div key={tela.alt} className="cn-tela" data-ativa={indice === ativa || undefined}>
+          <div key={tela.alt} className="cn-tela" data-ativa={indice === troca.ativa || undefined} data-saindo={indice === troca.anterior || undefined}
+            onAnimationEnd={(evento) => { if (evento.target === evento.currentTarget && indice === troca.ativa) soltarAnterior(); }}>
             <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} />
           </div>
         ))}
