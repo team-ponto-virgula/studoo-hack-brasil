@@ -2,8 +2,17 @@
 // reinícios e as reduções de volume. Separado de linha-do-tempo-som.mjs para ser testado (tests/fundo-continuo.test.mjs).
 const segundos = (ms) => `${(ms / 1000).toFixed(2)} s`;
 
+// O que separa a oscilação do emulador de uma pausa (Android, decisão do Lead de 23/11): a posição parada por menos de 1 s,
+// com o reprodutor tocando o tempo todo e sem comando de som do app a até 1 s. O emulador roda com -noaudio e o mixer dele
+// engasga ("throttle" no logcat, centenas de vezes por execução): a posição fica parada uns 400–600 ms e segue, sem o app
+// pausar nada (execuções 45087664838 e 45089424008). No iPhone qualquer pausa continua sendo falha.
+export const OSCILACAO_MAXIMA_MS = 1000;
+export const COMANDO_PERTO_MS = 1000;
+
 // --- O lofi_estudo: começo, voltas do laço e o que fugiu do contínuo (pausa, reinício, redução), sobre as amostras dele.
-export function analisarFundo(lista, efeitosDoApp = []) {
+// `opcoes.plataforma` ('iphone' ou 'android') e `opcoes.comandosDoApp` (todos os comandos de som do app, { t, som }) só
+// servem à oscilação do emulador: no Android, a travada curta sai de `ocorrencias` e vai para `oscilacoes`.
+export function analisarFundo(lista, efeitosDoApp = [], opcoes = {}) {
   const ordem = [...lista].sort((a, b) => a.t - b.t);
   const inicio = ordem.find((amostra) => amostra.tocando);
   if (!inicio) return null;
@@ -22,6 +31,14 @@ export function analisarFundo(lista, efeitosDoApp = []) {
   let segmento = [];
   for (const amostra of ordem.filter((item) => item.t >= inicio.t)) {
     const anterior = ultima[amostra.jogador];
+    // A cauda da volta do laço: o reprodutor que acabou de sair ainda manda uma amostra "tocando" no fim da faixa, com o
+    // volume descendo, depois de o outro entrar (execução 45053145066: B em 89,00 s com volume 0,096, 94 ms depois de A
+    // entrar em 0,026 s). Não é ele entrando de novo: sem isto, a amostra virava um "reinício" com o que entrou em 0,03 s.
+    if (amostra.jogador !== ativo && amostra.tocando && noFim(amostra) && voltas.at(-1)?.de === amostra.jogador && naTroca(amostra.t)) {
+      ultima[amostra.jogador] = amostra;
+      ultimaTocando[amostra.jogador] = amostra;
+      continue;
+    }
     if (amostra.jogador !== ativo && amostra.tocando) {
       const saindo = ultimaTocando[ativo] ?? ultima[ativo];
       // O outro reprodutor entrou: volta do laço se o que saía estava no fim da faixa; senão, a música recomeçou.
@@ -63,7 +80,7 @@ export function analisarFundo(lista, efeitosDoApp = []) {
         aberta.estavel = piso - base <= aberta.ms + 50 ? aberta.estavel + 1 : 0;
         aberta.ms = Math.max(aberta.ms, piso - base);
         if (aberta.estavel >= 2) {
-          ocorrencias.push({ t: aberta.t, tipo: 'pausa', texto: `a posição do reprodutor ${trecho[i].jogador} parou ${aberta.ms} ms enquanto o relógio andava` });
+          ocorrencias.push({ t: aberta.t, tipo: 'pausa', travada: true, ms: aberta.ms, texto: `a posição do reprodutor ${trecho[i].jogador} parou ${aberta.ms} ms enquanto o relógio andava` });
           base = piso;
           aberta = null;
         }
@@ -72,7 +89,7 @@ export function analisarFundo(lista, efeitosDoApp = []) {
         base = Math.min(base, piso);
       }
     });
-    if (aberta) ocorrencias.push({ t: aberta.t, tipo: 'pausa', texto: `a posição do reprodutor ${trecho[0].jogador} parou ${aberta.ms} ms enquanto o relógio andava (no fim das amostras)` });
+    if (aberta) ocorrencias.push({ t: aberta.t, tipo: 'pausa', travada: true, ms: aberta.ms, texto: `a posição do reprodutor ${trecho[0].jogador} parou ${aberta.ms} ms enquanto o relógio andava (no fim das amostras)` });
   }
   // Volume: o de referência é o maior do reprodutor que toca depois da subida; abaixo dele (fora da subida e das voltas do
   // laço), é redução, no efeito se começou até 1 s depois do comando de um efeito.
@@ -98,6 +115,21 @@ export function analisarFundo(lista, efeitosDoApp = []) {
     }
   }
   fecharReducao();
+  // Só no Android: a travada curta (posição parada por menos de 1 s, com o reprodutor tocando, que é o único caso em que
+  // a posição para dentro de um trecho) e sem comando de som do app perto vira oscilação do emulador. O resto (parado,
+  // reinício, redução, travada de 1 s ou mais, travada perto de um comando do app) continua em `ocorrencias`.
+  const oscilacoes = [];
+  if (opcoes.plataforma === 'android') {
+    const comandos = opcoes.comandosDoApp ?? [];
+    for (let i = ocorrencias.length - 1; i >= 0; i -= 1) {
+      const ocorrencia = ocorrencias[i];
+      if (!ocorrencia.travada || ocorrencia.ms >= OSCILACAO_MAXIMA_MS) continue;
+      if (comandos.some((comando) => Math.abs(comando.t - ocorrencia.t) <= COMANDO_PERTO_MS)) continue;
+      oscilacoes.push({ ...ocorrencia, tipo: 'oscilação do emulador' });
+      ocorrencias.splice(i, 1);
+    }
+    oscilacoes.sort((a, b) => a.t - b.t);
+  }
   ocorrencias.sort((a, b) => a.t - b.t);
-  return { inicio, fim: ordem[ordem.length - 1], ocorrencias, voltas, referencia, ordem, subidaAte, naTroca };
+  return { inicio, fim: ordem[ordem.length - 1], ocorrencias, oscilacoes, voltas, referencia, ordem, subidaAte, naTroca };
 }

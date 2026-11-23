@@ -30,7 +30,7 @@
 //        --plataforma iphone|android [--fundo lofi_estudo]
 import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { analisarFundo } from './fundo-continuo.mjs';
+import { OSCILACAO_MAXIMA_MS, analisarFundo } from './fundo-continuo.mjs';
 
 const { values: opcoes } = parseArgs({
   options: {
@@ -140,12 +140,16 @@ const doFundo = daJanela.filter((amostra) => amostra.id === FUNDO);
 const idsDeFundo = new Set(amostras.map((amostra) => amostra.id));
 const efeitosDoApp = eventos.filter((evento) => evento.tipo === 'comando' && evento.som !== FUNDO && !idsDeFundo.has(evento.som));
 
-const analise = analisarFundo(doFundo, efeitosDoApp);
+// No Android, a travada curta do emulador sem comando do app perto vira oscilação (aviso, fora do veredito); no iPhone, não.
+const ehAndroid = opcoes.plataforma === 'android';
+const comandosDoApp = eventos.filter((evento) => evento.tipo === 'comando' && evento.origem === 'comando (app)').map((evento) => ({ t: evento.t, som: evento.som }));
+const analise = analisarFundo(doFundo, efeitosDoApp, { plataforma: ehAndroid ? 'android' : 'iphone', comandosDoApp });
 if (analise) {
   const { inicio } = analise;
   eventos.push({ t: inicio.t, origem: 'fundo (player do app)', texto: `${inicio.id} tocando (reprodutor ${inicio.jogador}, posição ${segundos(inicio.pos)}, volume ${inicio.vol.toFixed(3)})` });
   for (const volta of analise.voltas) eventos.push({ t: volta.t, origem: 'fundo (player do app)', texto: `volta do laço: o reprodutor ${volta.para} entra no fim da faixa do ${volta.de}` });
   for (const ocorrencia of analise.ocorrencias) eventos.push({ t: ocorrencia.t, origem: 'fundo (player do app)', texto: `${ocorrencia.tipo.toUpperCase()}: ${ocorrencia.texto}` });
+  for (const oscilacao of analise.oscilacoes) eventos.push({ t: oscilacao.t, origem: 'fundo (player do app)', texto: `OSCILAÇÃO DO EMULADOR (aviso): ${oscilacao.texto}` });
 }
 for (const id of outrasFaixas) {
   const primeira = daJanela.find((amostra) => amostra.id === id && tocandoDeFato(amostra));
@@ -219,6 +223,7 @@ function conferirPonto({ antes, depois, durante = null, volume }) {
   const de = Math.min(antes[0], volume[0]);
   const ate = Math.max(depois[1], volume[1]);
   const problemas = [];
+  const avisos = [];
   const outras = daJanela.filter((amostra) => amostra.id !== FUNDO && tocandoDeFato(amostra) && amostra.t >= de && amostra.t <= ate);
   if (outras.length) problemas.push(`outra faixa tocando (${[...new Set(outras.map((amostra) => amostra.id))].join(', ')})`);
   for (const ocorrencia of analise.ocorrencias.filter((item) => item.t >= de && item.t <= ate)) problemas.push(`${ocorrencia.tipo}: ${ocorrencia.texto}`);
@@ -239,7 +244,10 @@ function conferirPonto({ antes, depois, durante = null, volume }) {
     } else {
       const piso = (lista) => Math.min(...lista.filter((amostra) => amostra.jogador === ultimaAntes.jogador).map((amostra) => amostra.t - amostra.pos));
       const diferenca = piso(d) - piso(a);
-      if (diferenca > LIMITE_POSICAO_MS) problemas.push(`a posição ficou ${diferenca} ms atrás do relógio`);
+      // No Android, o atraso de menos de 1 s com uma oscilação do emulador dentro do ponto é a própria oscilação (aviso).
+      const oscilouAqui = ehAndroid && analise.oscilacoes.some((item) => item.t >= de && item.t <= ate);
+      if (diferenca > LIMITE_POSICAO_MS && oscilouAqui && diferenca < OSCILACAO_MAXIMA_MS) avisos.push(`a posição ficou ${diferenca} ms atrás do relógio (oscilação do emulador)`);
+      else if (diferenca > LIMITE_POSICAO_MS) problemas.push(`a posição ficou ${diferenca} ms atrás do relógio`);
       else if (diferenca < -LIMITE_POSICAO_MS) problemas.push(`a posição pulou ${-diferenca} ms à frente do relógio`);
       posicao = `posição ${segundos(ultimaAntes.pos)} → ${segundos(primeiraDepois.pos)} em ${segundos(primeiraDepois.t - ultimaAntes.t)} de relógio`;
     }
@@ -247,7 +255,9 @@ function conferirPonto({ antes, depois, durante = null, volume }) {
   if (problemas.length) return { estado: 'falha', texto: [...new Set(problemas)].join('; ') };
   const faltam = [!a.length && 'antes', u !== null && !u.length && 'durante o efeito', !d.length && 'depois'].filter(Boolean);
   if (faltam.length) return { estado: 'inconclusivo', texto: `sem amostra do ${FUNDO} tocando ${faltam.join(', ')}` };
-  return { estado: 'coberto', texto: `tocando antes${u ? ', durante' : ''} e depois; ${posicao}; volume ${analise.referencia.toFixed(3)}` };
+  const oscilou = ehAndroid ? analise.oscilacoes.filter((item) => item.t >= de && item.t <= ate).length : 0;
+  const nota = [...avisos, ...(oscilou && !avisos.length ? [`${oscilou} oscilação(ões) do emulador no ponto`] : [])];
+  return { estado: 'coberto', texto: `tocando antes${u ? ', durante' : ''} e depois; ${posicao}; volume ${analise.referencia.toFixed(3)}${nota.length ? `; ⚠️ ${nota.join('; ')}` : ''}` };
 }
 
 const TELAS = [
@@ -314,3 +324,10 @@ console.log(`Fundo: ${veredito} — ${FUNDO}${analise ? '' : ' sem amostra tocan
   + `pausas ${conta('pausa')}, reinícios ${conta('reinício')}, reduções ${conta('redução no efeito') + conta('redução fora de efeito')}; outras faixas: ${outrasFaixas.join(', ') || 'nenhuma'}; `
   + `${daJanela.length} amostras na janela${amostras.length > daJanela.length ? ` (${amostras.length - daJanela.length} fora dela)` : ''}; volume de referência ${analise?.referencia?.toFixed(3) ?? '?'}.`
   + `${motivo} Estado do reprodutor (expo-audio), não a saída no alto-falante.`);
+// A oscilação do emulador (só Android): sempre uma linha, com a quantidade e os segundos, fora do veredito acima.
+if (ehAndroid) {
+  const lista = analise?.oscilacoes ?? [];
+  console.log(`Oscilações do emulador: ${lista.length}${lista.length ? ` (em ${lista.map((item) => `${quando(item.t)} [${item.ms} ms]`).join(', ')})` : ''}; `
+    + `travadas da posição abaixo de ${OSCILACAO_MAXIMA_MS / 1000} s com o reprodutor tocando e sem comando de som do app a até 1 s; não derrubam o veredito. `
+    + 'O emulador roda com -noaudio: a música no Android só se prova no aparelho de verdade.');
+}
