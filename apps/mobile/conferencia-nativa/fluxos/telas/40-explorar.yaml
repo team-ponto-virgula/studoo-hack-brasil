@@ -3,10 +3,16 @@ appId: host.exp.Exponent
 name: 40-explorar
 ---
 - runFlow: ../partes/reabrir.yaml
+# A barra some enquanto o app espera um pedido (servidor lento): a espera é por ela, com folga, antes do toque.
+- extendedWaitUntil:
+    visible:
+      id: nav-explorar
+    timeout: 90000
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: nav-explorar
     retryTapIfNoChange: true
+- runFlow: ../partes/tentar-de-novo.yaml
 - extendedWaitUntil:
     visible:
       id: titulo-explorar

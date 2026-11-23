@@ -209,6 +209,11 @@ metro() {
   iniciar_metro ios --go
 }
 
+# Para o Expo Go no simulador antes de repetir uma fase que falhou na abertura (rodar_com_abertura_repetida, em comum.sh).
+parar_app_do_aparelho() {
+  xcrun simctl terminate "$(udid)" host.exp.Exponent > /dev/null 2>&1 || true
+}
+
 # O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o log do simulador, ao vivo,
 # só do Expo Go e só do que é áudio (CoreAudio, CoreMedia, AVFAudio, a descoberta das unidades de áudio) ou do registro de
 # som do app, se ele existir. O log guardado no fim (simulador-expo-go.log) não tem os níveis info e debug, onde o áudio
