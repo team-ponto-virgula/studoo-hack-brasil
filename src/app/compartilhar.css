@@ -193,10 +193,10 @@
 .perfil-conta__email span { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .painel--perfil > .botao, .perfil-secao > .botao { justify-self: start; }
 
-/* Navegação: "Perfil" no rodapé da lateral, igual aos outros três itens (spec 16, item 18; o estilo único está em globals.css); "Perfil" no cabeçalho só onde não há lateral nem barra de baixo. */
+/* Navegação: "Perfil" no rodapé da lateral, igual aos outros três itens (spec 16, item 18; o estilo único está em globals.css); "Perfil" no cabeçalho só onde não há lateral nem cápsula de abas embaixo (spec 16, item 33). */
 .perfil-cabecalho { display: none; }
 @media (max-width: 1023px) { .perfil-cabecalho { display: inline-flex; } }
-@media (max-width: 767px) { .estudo[data-navegacao] .perfil-cabecalho { display: none; } }
+@media (max-width: 1023px) { .estudo[data-navegacao] .perfil-cabecalho { display: none; } }
 
 /* Adicionar por link (tela de nova trilha). */
 .por-link__abrir {

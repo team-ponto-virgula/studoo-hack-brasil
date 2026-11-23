@@ -109,9 +109,10 @@
 
 }
 
-/* Tablet: coluna única centrada, com o próximo passo dentro da faixa do topo. */
+/* Tablet: coluna única centrada. O cartão do próximo passo continua grudado no pé da tela, mas 12 px acima da cápsula de abas (spec 16, item 33). */
 @media (min-width: 768px) and (max-width: 1023px) {
   .painel--trilha { width: min(100%, 36rem); margin-inline: auto; }
+  .estudo[data-navegacao] .trilha-proximo { bottom: calc(var(--altura-navegacao) + 12px); }
 }
 
 /* Computador: faixa larga no topo, com o próximo passo à direita; o mapa usa a largura toda, com o caminho no centro. */
