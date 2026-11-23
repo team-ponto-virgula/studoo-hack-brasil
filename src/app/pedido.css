@@ -322,6 +322,17 @@
   transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
+/* O campo cresce com o texto e com o exemplo (o placeholder), até meia tela, também com a letra ampliada: a cópia invisível do texto, na mesma célula da grade, dá a altura (banca P2-5).
+   Os recuos, a borda e a letra da cópia repetem os do campo (a de baixo muda no celular junto com o campo). */
+.pedido-novo .pedido-campo__caixa { display: grid; }
+.pedido-novo .pedido-campo__caixa > textarea, .pedido-novo .pedido-campo__caixa::after { grid-area: 1 / 1; }
+.pedido-novo .pedido-campo__caixa::after {
+  content: attr(data-replica) ' ';
+  box-sizing: border-box; max-height: 50svh; overflow: hidden; visibility: hidden; pointer-events: none;
+  padding: 18px 20px; border: 3px solid transparent;
+  font-size: 1.1875rem; font-weight: 700; line-height: 1.4; white-space: pre-wrap; overflow-wrap: break-word;
+}
+.pedido-novo .pedido-campo__caixa[data-vazio]::after { font-weight: 600; }
 .pedido-novo .pedido-campo textarea:focus { border-color: var(--acao); box-shadow: 0 5px 0 #b9c7f5; outline: none; }
 .pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
 .pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
@@ -429,6 +440,7 @@
   .pedido-heroi__stu { width: 82px; height: 82px; }
   .pedido-heroi__stu .stu { width: 72px; }
   .pedido-novo .pedido-campo textarea { min-height: 88px; padding: 12px 16px; }
+  .pedido-novo .pedido-campo__caixa::after { padding: 12px 16px; }
   .pedido-novo .pedido-criar { min-height: 48px; }
   .pedido-alternar { min-height: 64px; padding-block: 8px; }
 }

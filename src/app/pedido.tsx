@@ -184,10 +184,13 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       <form hidden={modo !== 'ideia'} className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
         <div className="campo pedido-campo">
           <label htmlFor="objetivo" className="somente-leitor">{mensagens.inicio.campo}</label>
-          <textarea ref={campo} id="objetivo" name="objetivo" rows={2} maxLength={LIMITES_GERACAO.objetivoMax} required
-            value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
-            placeholder={mensagens.inicio.exemplo} data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
-            onChange={evento => aoMudar(evento.target.value)} />
+          {/* O campo cresce com o texto e com o exemplo (o placeholder), também com a letra ampliada: a cópia invisível do texto (data-replica) dá a altura (banca P2-5). */}
+          <div className="pedido-campo__caixa" data-replica={objetivo || mensagens.inicio.exemplo} data-vazio={!objetivo || undefined}>
+            <textarea ref={campo} id="objetivo" name="objetivo" rows={2} maxLength={LIMITES_GERACAO.objetivoMax} required
+              value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
+              placeholder={mensagens.inicio.exemplo} data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
+              onChange={evento => aoMudar(evento.target.value)} />
+          </div>
           {mostrarCurto && <p className="campo-erro" id="objetivo-erro">{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}</p>}
           <small id="objetivo-dica" className="somente-leitor">{mensagens.inicio.ajuda}</small>
           <small id="objetivo-privacidade" className="somente-leitor">{mensagens.pedido.privacidade}</small>
