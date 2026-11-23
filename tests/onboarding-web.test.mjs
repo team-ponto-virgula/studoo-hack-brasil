@@ -1,5 +1,6 @@
-// Onboarding e primeira vez na web (spec 17, mudanças 1, 2 e 4): a placa das duas esperas (a geração da proposta e a criação da trilha depois de "Começar a lição 1"), a faixa da proposta com o texto
-// novo e o tour sem selos de demonstração. Os textos e a conta do tempo são do contrato (tests/onboarding-contrato.test.mjs); aqui está o que a web faz com eles.
+// Onboarding e primeira vez na web (spec 17, mudanças 1, 2 e 4): a espera da criação da trilha depois de "Começar a lição 1" (a linha embaixo do botão, que diz "Escrevendo suas lições…" e depois troca de frase;
+// a placa do alto da geração NÃO tem frases), a faixa da proposta com o texto novo e o tour sem selos de demonstração. Os textos e a conta do tempo são do contrato (tests/onboarding-contrato.test.mjs);
+// aqui está o que a web faz com eles.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -7,7 +8,7 @@ import { register } from 'node:module';
 import { join, resolve } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { dicaDaEspera, dicaDaEsperaLonga } from '@studoo/contratos';
+import { dicaDaEspera } from '@studoo/contratos';
 import { mensagens } from '@studoo/contratos/experiencia';
 
 register('data:text/javascript,' + encodeURIComponent(`export async function load(url, contexto, proximo) {
@@ -47,52 +48,57 @@ function relogioDeBrinquedo() {
   };
 }
 
-const qualDicaDaProposta = (ms) => dicaDaEspera(ms, g.dicas.length);
-function ensaiar({ reduzido = false, qualDica = qualDicaDaProposta } = {}) {
+const qualDica = (ms) => dicaDaEspera(ms, g.dicas.length);
+/** `comecaEm`: o instante (do toque em "Começar a lição 1") em que a linha aparece e o relógio das frases liga; as horas dos `vistos` são sempre contadas desde o toque. */
+function ensaiar({ reduzido = false, comecaEm = 0, qualDicaDaVez = qualDica } = {}) {
   const relogio = relogioDeBrinquedo();
+  relogio.avancar(comecaEm);
   const vistos = [];
-  const desligar = trocarDicasDaEspera({ qualDica, reduzido: () => reduzido, aoMudar: (estado) => vistos.push({ ...estado, em: relogio.agora() }), relogio });
+  const desligar = trocarDicasDaEspera({ qualDica: qualDicaDaVez, reduzido: () => reduzido, aoMudar: (estado) => vistos.push({ ...estado, em: relogio.agora() }), relogio });
   return { relogio, vistos, desligar };
 }
 const entradas = (vistos) => vistos.filter((estado) => !estado.saindo).map((estado) => [estado.indice, estado.em]);
 
-test('a espera da proposta: nos 3 primeiros segundos nada muda; aos 3 s a 1ª frase entra com o efeito de 300 ms (some em 150, aparece em 150)', () => {
+test('a linha de espera: nos 3 primeiros segundos nada muda ("Escrevendo suas lições…" fica); aos 3 s a 1ª frase entra com o efeito de 300 ms (some em 150, aparece em 150)', () => {
   const { relogio, vistos } = ensaiar();
   relogio.avancar(2999);
-  assert.deepEqual(vistos, [], '"Montando sua trilha" fica na placa');
+  assert.deepEqual(vistos, [], '"Escrevendo suas lições…" fica na linha');
   relogio.avancar(1);
-  assert.deepEqual(vistos, [{ indice: null, saindo: true, em: 3000 }], 'aos 3 s, "Montando sua trilha" começa a sumir');
+  assert.deepEqual(vistos, [{ indice: null, saindo: true, em: 3000 }], 'aos 3 s, "Escrevendo suas lições…" começa a sumir');
   relogio.avancar(150);
   assert.deepEqual(vistos.at(-1), { indice: 0, saindo: false, em: 3150 }, 'aos 3,15 s, a 1ª frase aparece');
   assert.equal(vistos.length, 2);
 });
 
-test('a espera da proposta: as quatro frases, uma nova a cada 5 s, em laço, sempre com o efeito (a frase some e a seguinte aparece 150 ms depois)', () => {
+test('a linha de espera: as três frases, uma nova a cada 5 s, em laço, sempre com o efeito (a frase some e a seguinte aparece 150 ms depois)', () => {
   const { relogio, vistos } = ensaiar();
   relogio.avancar(30000);
-  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [2, 13150], [3, 18150], [0, 23150], [1, 28150]]);
+  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [2, 13150], [0, 18150], [1, 23150], [2, 28150]]);
   const saidas = vistos.filter((estado) => estado.saindo);
-  assert.deepEqual(saidas.map((estado) => [estado.indice, estado.em]), [[null, 3000], [0, 8000], [1, 13000], [2, 18000], [3, 23000], [0, 28000]], 'cada troca começa com a frase de agora sumindo');
+  assert.deepEqual(saidas.map((estado) => [estado.indice, estado.em]), [[null, 3000], [0, 8000], [1, 13000], [2, 18000], [0, 23000], [1, 28000]], 'cada troca começa com a frase de agora sumindo');
   for (let i = 0; i < saidas.length; i += 1) assert.equal(entradas(vistos)[i][1] - saidas[i].em, 150, 'cada troca dura 300 ms: 150 sumindo e 150 aparecendo');
 });
 
-test('a espera da criação (depois de "Começar a lição 1"): "Criando sua trilha…" por 3 s e depois as frases 1, 2 e 4, a cada 5 s, em laço, sem a 3ª', () => {
-  const { relogio, vistos } = ensaiar({ qualDica: dicaDaEsperaLonga });
-  relogio.avancar(2999);
-  assert.deepEqual(vistos, [], '"Criando sua trilha…" fica na placa');
-  relogio.avancar(32001);
-  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [3, 13150], [0, 18150], [1, 23150], [3, 28150], [0, 33150]]);
-  assert.equal(entradas(vistos).some(([indice]) => indice === 2), false, '"Você confere a trilha antes de começar." não entra: a pessoa já conferiu');
-  assert.deepEqual(vistos[0], { indice: null, saindo: true, em: 3000 }, 'aos 3 s, "Criando sua trilha…" começa a sumir');
+test('depois de "Começar a lição 1": a linha entra 1,5 s depois do toque, a 1ª frase aos 4,5 s (3 s de linha) e as três giram a cada 5 s, em laço', () => {
+  const { relogio, vistos } = ensaiar({ comecaEm: 1500 });
+  relogio.avancar(23500);
+  // Horas desde o toque: a linha entrou aos 1,5 s (1500); a troca começa aos 4,5 s (4500) e a 1ª frase aparece 150 ms depois.
+  assert.deepEqual(vistos[0], { indice: null, saindo: true, em: 4500 }, 'aos 4,5 s do toque, "Escrevendo suas lições…" começa a sumir');
+  assert.deepEqual(entradas(vistos), [[0, 4650], [1, 9650], [2, 14650], [0, 19650], [1, 24650]]);
+  // Espera curta medida (12 s): "Escrevendo suas lições…", a frase 1 e o começo da 2. Espera longa (25 s): as três frases e a 1 de novo.
+  const ate = (ms) => entradas(vistos).filter(([, em]) => em <= ms).map(([indice]) => indice);
+  assert.deepEqual(ate(12000), [0, 1]);
+  assert.deepEqual(ate(25000), [0, 1, 2, 0, 1]);
+  assert.equal(vistos.filter((estado) => estado.em < 4500).length, 0, 'antes dos 4,5 s do toque a linha só diz "Escrevendo suas lições…"');
 });
 
-test('movimento reduzido: a troca é imediata, sem a etapa de sumir, nas duas esperas', () => {
-  const proposta = ensaiar({ reduzido: true });
-  proposta.relogio.avancar(18000);
-  assert.deepEqual(proposta.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 2, saindo: false, em: 13000 }, { indice: 3, saindo: false, em: 18000 }]);
-  const criacao = ensaiar({ reduzido: true, qualDica: dicaDaEsperaLonga });
-  criacao.relogio.avancar(18000);
-  assert.deepEqual(criacao.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 3, saindo: false, em: 13000 }, { indice: 0, saindo: false, em: 18000 }]);
+test('movimento reduzido: a troca é imediata, sem a etapa de sumir', () => {
+  const linha = ensaiar({ reduzido: true });
+  linha.relogio.avancar(18000);
+  assert.deepEqual(linha.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 2, saindo: false, em: 13000 }, { indice: 0, saindo: false, em: 18000 }]);
+  const doToque = ensaiar({ reduzido: true, comecaEm: 1500 });
+  doToque.relogio.avancar(13000);
+  assert.deepEqual(doToque.vistos.map((estado) => [estado.indice, estado.em]), [[0, 4500], [1, 9500], [2, 14500]], 'aos 4,5 s do toque a frase 1 entra na hora');
 });
 
 test('desligar para tudo (inclusive uma troca no meio do efeito) e não deixa temporizador vivo', () => {
@@ -103,32 +109,30 @@ test('desligar para tudo (inclusive uma troca no meio do efeito) e não deixa te
   assert.equal(relogio.pendentes(), 0);
   relogio.avancar(60000);
   assert.equal(vistos.length, 1, 'nada mais mudou depois de desligar');
-  const outro = ensaiar({ qualDica: dicaDaEsperaLonga });
-  outro.relogio.avancar(1000);
-  outro.desligar();
-  assert.equal(outro.relogio.pendentes(), 0);
-  outro.relogio.avancar(60000);
-  assert.deepEqual(outro.vistos, []);
+  const antesDaTroca = ensaiar();
+  antesDaTroca.relogio.avancar(1000);
+  antesDaTroca.desligar();
+  assert.equal(antesDaTroca.relogio.pendentes(), 0, 'a lição abriu ou a criação falhou antes da 1ª frase: a linha sai e as frases param');
+  antesDaTroca.relogio.avancar(60000);
+  assert.deepEqual(antesDaTroca.vistos, []);
 });
 
 test('com uma frase só, ela entra uma vez e o laço não troca de novo; sem frases, nunca há troca', () => {
-  const uma = ensaiar({ qualDica: (ms) => dicaDaEspera(ms, 1) });
+  const uma = ensaiar({ qualDicaDaVez: (ms) => dicaDaEspera(ms, 1) });
   uma.relogio.avancar(40000);
   assert.deepEqual(uma.vistos.filter((estado) => !estado.saindo).map((estado) => estado.indice), [0]);
-  const nenhuma = ensaiar({ qualDica: (ms) => dicaDaEspera(ms, 0) });
+  const nenhuma = ensaiar({ qualDicaDaVez: (ms) => dicaDaEspera(ms, 0) });
   nenhuma.relogio.avancar(40000);
   assert.deepEqual(nenhuma.vistos, []);
 });
 
-test('a placa: a linha que se vê é escondida do leitor de tela, e a região viva só leva o texto anunciado (que não muda quando a frase troca)', () => {
-  const html = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.dicas[1], anunciado: g.montandoTitulo, ehDica: true }));
-  assert.equal(html, `<p class="previa-placa" role="status" data-dica=""><span class="somente-leitor">Montando sua trilha</span><span class="previa-placa__linha" aria-hidden="true">Errou? O Stu explica de outro jeito.</span></p>`);
-  const outra = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.dicas[2], anunciado: g.montandoTitulo, ehDica: true }));
-  assert.equal(html.match(/<span class="somente-leitor">[^<]*<\/span>/)[0], outra.match(/<span class="somente-leitor">[^<]*<\/span>/)[0], 'trocar a frase não muda o que é anunciado');
-  assert.notEqual(html, outra);
+test('a placa: não tem frases que se revezam; a linha que se vê é escondida do leitor de tela, e a região viva só leva o texto anunciado', () => {
   const montando = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.montandoTitulo, anunciado: g.montandoTitulo }));
   assert.equal(montando, `<p class="previa-placa" role="status"><span class="somente-leitor">Montando sua trilha</span><span class="previa-placa__linha" aria-hidden="true">Montando sua trilha</span></p>`);
-  assert.match(renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.dicas[0], anunciado: g.montandoTitulo, ehDica: true, saindo: true })), /data-saindo="true"/);
+  const pronta = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.propostaPronta(10, 3), anunciado: `${g.propostaPronta(10, 3)} ${g.comecarLicao1}.` }));
+  assert.equal(pronta, `<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 10 lições curtas em 3 partes. Começar a lição 1.</span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 10 lições curtas em 3 partes.</span></p>`);
+  // Sem o estado de "frase" nem o de "saindo": a placa só mostra o texto que lhe passam.
+  assert.doesNotMatch(renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.dicas[0], anunciado: g.montandoTitulo, ehDica: true, saindo: true })), /data-dica|data-saindo/);
 });
 
 const parametros = (extra = {}) => ({
@@ -136,11 +140,12 @@ const parametros = (extra = {}) => ({
 });
 const trilhaEmGeracao = (nos, proposta = null) => ({ objetivo: 'Culinária: receitas básicas', titulo: 'Culinária: receitas básicas', fluxos: nos, proposta });
 
-test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta com a faixa nova; "Criando sua trilha…" enquanto a trilha é criada', () => {
+test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta com a faixa nova; enquanto a trilha é criada a placa segue com a faixa e o botão diz "Criando sua trilha…"', () => {
   const montando = renderToStaticMarkup(createElement(PreviaTrilha, {
     ...parametros(), geracao: trilhaEmGeracao([{ titulo: 'Parte 1', licoes: ['Organizar antes de cozinhar'] }]),
   }));
   assert.match(montando, /<p class="previa-placa" role="status"><span class="somente-leitor">Montando sua trilha<\/span><span class="previa-placa__linha" aria-hidden="true">Montando sua trilha<\/span><\/p>/);
+  assert.doesNotMatch(montando, /previa-espera/, 'na geração da proposta não há linha de espera nem frases');
   const fluxos = [
     { titulo: 'Parte 1', licoes: [{ titulo: 'Organizar antes de cozinhar' }, { titulo: 'Cortes básicos' }] },
     { titulo: 'Parte 2', licoes: [{ titulo: 'Arroz soltinho' }, { titulo: 'Temperar na medida' }] },
@@ -156,38 +161,51 @@ test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta c
   assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe([fluxos[0]]), umaParte) })), /aria-hidden="true">Sua trilha está pronta: 2 lições curtas\.</);
   const umaLicao = { ...proposta, fluxos: [{ titulo: 'Parte 1', licoes: [{ titulo: 'A' }] }] };
   assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe(umaLicao.fluxos), umaLicao) })), /aria-hidden="true">Sua trilha está pronta: 1 lição curta\.</);
-  // Depois de "Começar a lição 1" (o aceite está salvando): a placa diz "Criando sua trilha…", e o leitor segue ouvindo só a proposta pronta (a criação já é anunciada pelo estudo).
+  // Pronta, antes do toque: a linha de espera existe no lugar dela, escondida, com o texto de sempre; o botão não está ocupado e a linha não é região viva.
+  assert.match(pronta, /<p class="previa-espera"><span class="previa-espera__linha">Escrevendo suas lições…<\/span><\/p>/);
+  assert.doesNotMatch(pronta, /aria-busy/);
+  // Depois de "Começar a lição 1" (o aceite está salvando): a placa SEGUE com a faixa da proposta (sem "Criando sua trilha…" nem frases), e o botão fica afundado, ocupado e com o giro.
   const criando = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'salvando' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
-  assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 6 lições curtas em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Criando sua trilha…<\/span><\/p>/);
-  // Se a criação falha, a placa volta à faixa da proposta.
+  assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 6 lições curtas em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span><\/p>/);
+  assert.match(criando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>|<button[^>]*aria-busy="true"[^>]*class="[^"]*previa-comecar/);
+  assert.match(criando, /previa-giro[\s\S]*?Criando sua trilha…/);
+  // Se a criação falha, a placa continua com a faixa, o erro de sempre aparece e a linha de espera sai.
   const erro = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'erro' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
   assert.match(erro, /aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span>/);
+  assert.match(erro, /<p class="previa-erro" role="alert">Não deu para criar a trilha\. Confira a conexão e tente de novo\.<\/p>/);
+  assert.doesNotMatch(erro, /previa-espera" data-visivel/);
 });
 
-test('o fonte da tela: as duas esperas usam a conta e as listas do contrato, a espera longa de 12 s da geração continua valendo, e a criação não é anunciada de novo', () => {
+test('o fonte da tela: só a criação tem frases, o relógio liga quando a linha aparece e usa a conta do contrato, a placa não leva frase e a criação não é anunciada de novo', () => {
   const tela = ler('src/app/previa-trilha.tsx');
-  assert.match(tela, /const criando = !!proposta && aceite === 'salvando' && !passagem;/);
-  assert.match(tela, /const espera = useDicaDaEspera\(!proposta \? 'proposta' : criando \? 'criacao' : null\);/);
-  assert.match(tela, /const qualDica = espera === 'criacao' \? dicaDaEsperaLonga : \(decorridoMs: number\) => dicaDaEspera\(decorridoMs, t\.dicas\.length\);/);
-  assert.match(tela, /const dicaDaVez = espera\.indice !== null && !\(semNovidade && !proposta\) \? t\.dicas\[espera\.indice\] : null;/);
-  assert.match(tela, /\(criando \? dicaDaVez \?\? t\.criandoTrilha : t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\)\)\s*: semNovidade \? t\.aguardandoLicao : dicaDaVez \?\? t\.montandoTitulo;/);
+  assert.match(tela, /function useDicaDaEspera\(ativa: boolean\): EstadoDaEspera \{/);
+  assert.match(tela, /trocarDicasDaEspera\(\{ qualDica: \(decorridoMs\) => dicaDaEspera\(decorridoMs, t\.dicas\.length\), reduzido: movimentoReduzido, aoMudar: setEstado \}\)/, 'a conta do contrato, a mesma do app');
+  assert.match(tela, /const linhaDaEspera = !!proposta && demorou && aceite === 'salvando' && !passagem;/, 'a linha entra 1,5 s depois do toque (demorou) e sai com a troca de tela ou com o erro');
+  assert.match(tela, /const espera = useDicaDaEspera\(linhaDaEspera\);/, 'o relógio das frases liga quando a linha aparece, não no toque');
+  assert.match(tela, /const textoDaLinha = espera\.indice === null \? t\.escrevendoLicoes : t\.dicas\[espera\.indice\];/);
+  assert.match(tela, /const placa = proposta \? t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\) : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/, 'a placa: sem frases, e com a faixa da proposta também na criação');
+  assert.match(tela, /<PlacaDaGeracao texto=\{placa\} anunciado=\{placaAnunciada\} \/>/);
   assert.match(tela, /const placaAnunciada = proposta \? `\$\{t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\)\} \$\{t\.comecarLicao1\}\.` : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/);
-  assert.match(tela, /trocarDicasDaEspera\(\{ qualDica, reduzido: movimentoReduzido, aoMudar: setEstado \}\)/);
+  assert.match(tela, /<p className="previa-espera" data-visivel=\{linhaDaEspera \|\| undefined\}>\s*<span className="previa-espera__linha" data-saindo=\{espera\.saindo \|\| undefined\}>\{textoDaLinha\}<\/span>\s*<\/p>/, 'a linha não é região viva (sem role): a troca a cada 5 s não é anunciada');
+  assert.match(tela, /className="previa-comecar" aria-disabled=\{salvando\} aria-busy=\{salvando \|\| undefined\}/, 'o botão fica ocupado enquanto a trilha é criada');
   const regras = ler('src/app/previa-trilha-regras.ts');
   assert.match(regras, /import \{ ESPERA_DA_GERACAO, faltaParaTrocarADica \} from '@studoo\/contratos';/, 'o relógio é o do contrato, o mesmo do app');
   assert.doesNotMatch(tela, /setInterval/, 'um temporizador por troca, que dorme o tempo certo (não acorda a cada quadro)');
-  // As frases não são escritas na tela: vêm de `geracao.dicas` (e a lista da espera longa, de `dicaDaEsperaLonga`).
+  assert.doesNotMatch(tela, /dicaDaEsperaLonga|DICAS_DA_ESPERA_LONGA|dicaDaVez|ehDica/, 'os nomes obsoletos e a frase na placa saíram');
+  // As frases não são escritas na tela: vêm de `geracao.dicas`.
   assert.doesNotMatch(tela, /Lições curtas, com exercício|Errou\? O Stu explica|cada lição concluída|Cada lição concluída/);
 });
 
-test('o CSS da placa: a linha da frase é 15/20, 600, #0B1B5C e centralizada; a placa guarda 2 linhas de altura; reduzido, sem transição', () => {
+test('o CSS: a placa volta a ser a de antes das frases; a linha de espera troca com efeito de 300 ms (150 para sumir e 150 para aparecer), e reduzido, sem transição', () => {
   const css = ler('src/app/previa-trilha.css');
-  assert.match(css, /\.previa-placa\[data-dica\] \{ text-align: center; \}/);
-  assert.match(css, /\.previa-placa\[data-dica\] \.previa-placa__linha \{ color: #0b1b5c; font-size: \.9375rem; font-weight: 600; line-height: 1\.3333; \}/);
-  assert.match(css, /min-height: calc\(2\.5rem \+ 22px\)/, '2 linhas de 20 px mais o respiro: o mapa embaixo não pula quando a frase tem 1 ou 2 linhas');
-  assert.match(css, /\.previa-placa__linha \{ display: block; transition: opacity 150ms ease-out; \}/, '150 ms para sumir e 150 ms para aparecer = 300 ms');
-  assert.match(css, /\.previa-placa__linha\[data-saindo\] \{ opacity: 0; \}/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.previa-placa__linha \{ transition: none; \} \}/);
+  assert.doesNotMatch(css, /data-dica|\.previa-placa__linha/, 'a placa não tem frases: nada de estado de frase nem de efeito nela');
+  assert.doesNotMatch(css, /min-height: calc\(2\.5rem \+ 22px\)/, 'a placa não precisa mais guardar duas linhas');
+  assert.match(css, /\.previa-espera__linha \{ display: block; transition: opacity 150ms ease-out; \}/, '150 ms para sumir e 150 ms para aparecer = 300 ms');
+  assert.match(css, /\.previa-espera__linha\[data-saindo\] \{ opacity: 0; \}/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.previa-espera__linha \{ transition: none; \} \}/);
+  // A linha segue no lugar e no estilo de hoje: centralizada, 14 px, #5E6A85, escondida enquanto não é a hora.
+  assert.match(css, /\.previa-espera, \.previa-erro \{ width: min\(100%,36rem\); margin-inline: auto; color: #5e6a85; font-size: \.875rem; text-align: center; \}/);
+  assert.match(css, /\.previa-espera:not\(\[data-visivel\]\) \{ display: none; \}/);
 });
 
 test('o tour: nenhuma arte leva o selo "Modo demonstração" nem a linha "Retorno automático" (spec 17, mudança 4)', () => {

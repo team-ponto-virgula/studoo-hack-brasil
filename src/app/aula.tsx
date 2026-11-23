@@ -42,6 +42,7 @@ import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type Nome
 import { FiguraDoExercicio, VisuaisDaLicao, alturaDoDesenhoDaFigura, caixaDaFigura, descricaoDaFiguraRevelada } from './desenho';
 import { ApoioDaLicao } from './estudio';
 import { useFolgaDaEtapa } from './aula-folga';
+import { podeSairDaLicao } from './pedido-em-curso';
 import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
@@ -699,9 +700,12 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
     if (avaliacao) void avancar();
   };
 
-  /** Sair da lição: o andamento fica guardado, então sai direto (e continua de onde parou na volta). Devolve se saiu. */
+  /**
+   * Sair da lição: o andamento fica guardado, então sai direto (e continua de onde parou na volta). Devolve se saiu. Com a rede lenta, o X também sai durante a correção de uma
+   * resposta ("Verificando…"): o pedido é abandonado (estudo.tsx) e a resposta digitada, que já está no andamento, é corrigida de novo na volta. Na conclusão o X segue travado.
+   */
   sairAgora.current = (peloVoltar = false) => {
-    if (ocupado && !peloVoltar) return false;
+    if (!podeSairDaLicao(pendente, peloVoltar)) return false;
     voltar();
     return true;
   };
@@ -755,7 +759,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   return (
     <article ref={telaDaAula} className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
       <header className="aula-topo">
-        <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => sairAgora.current()}>
+        <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={!podeSairDaLicao(pendente)} onClick={() => sairAgora.current()}>
           <Icone nome="fechar" />
         </button>
         <div className="aula-andamento">

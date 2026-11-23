@@ -2,8 +2,8 @@ import { ESPERA_DA_GERACAO, faltaParaTrocarADica } from '@studoo/contratos';
 
 /*
  * Regras puras da prévia da trilha. A rolagem (spec 16, item 1): quando a trilha fica pronta, a tela rola em 600 ms, com saída suave, até o nó 1 ficar no
- * centro da área livre (entre o alto e o rodapé); com movimento reduzido, vai direto. O troféu fica a uma rolagem de distância. As esperas (spec 17, mudança 1): a placa
- * do alto troca de frase a cada 5 s, na geração da proposta e na criação da trilha (`trocarDicasDaEspera`). Sem DOM aqui: o teste confere a conta com um relógio de brinquedo.
+ * centro da área livre (entre o alto e o rodapé); com movimento reduzido, vai direto. O troféu fica a uma rolagem de distância. A espera (spec 17, mudança 1, revista em 23/11):
+ * a linha embaixo de "Começar a lição 1" troca de frase a cada 5 s na criação da trilha (`trocarDicasDaEspera`). Sem DOM aqui: o teste confere a conta com um relógio de brinquedo.
  */
 
 /** A duração da rolagem até o nó 1 quando a proposta fica pronta. */
@@ -141,11 +141,10 @@ export interface EstadoDaEspera {
 }
 
 /**
- * Liga a troca das frases da espera a partir de agora (spec 17, mudança 1): a placa diz o seu texto de sempre ("Montando sua trilha" ou "Criando sua trilha…") por 3 s e depois, a cada 5 s, a
- * frase seguinte, em laço. Cada troca é um efeito de 300 ms: a frase some (150 ms, `saindo`) e a seguinte aparece (150 ms); com movimento reduzido, a troca é direta. Quem decide a frase da vez é
- * `qualDica(decorridoMs)`, que devolve o índice em `mensagens.geracao.dicas` (ou `null` nos 3 primeiros segundos): `dicaDaEspera` do contrato na geração da proposta (as quatro frases) e
- * `dicaDaEsperaLonga` na criação da trilha depois de "Começar a lição 1" (as frases 1, 2 e 4), as mesmas do app. O relógio dorme `faltaParaTrocarADica` e confere de novo se acordar um
- * instante antes. Devolve quem desliga tudo (sem chamar `aoMudar`).
+ * Liga a troca das frases da linha de espera a partir de agora (spec 17, mudança 1, revista em 23/11): a linha embaixo do botão "Começar a lição 1" diz "Escrevendo suas lições…" por 3 s e depois, a cada
+ * 5 s, a frase seguinte, em laço. Cada troca é um efeito de 300 ms: a frase some (150 ms, `saindo`) e a seguinte aparece (150 ms); com movimento reduzido, a troca é direta. Quem decide a frase da vez
+ * é `qualDica(decorridoMs)`, que devolve o índice em `mensagens.geracao.dicas` (ou `null` nos 3 primeiros segundos): `dicaDaEspera` do contrato, o mesmo do app. O tempo conta desde que esta função é
+ * chamada, isto é, desde que a linha aparece. O relógio dorme `faltaParaTrocarADica` e confere de novo se acordar um instante antes. Devolve quem desliga tudo (sem chamar `aoMudar`).
  */
 export function trocarDicasDaEspera({ qualDica, reduzido, aoMudar, relogio = relogioDoNavegador }: {
   qualDica: (decorridoMs: number) => number | null;

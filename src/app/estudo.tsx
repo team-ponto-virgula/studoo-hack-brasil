@@ -42,6 +42,7 @@ import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geraca
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
+import { ACAO_ABANDONAVEL, criarVezes } from './pedido-em-curso';
 import { Pedido, type IdTema } from './pedido';
 import { useCabecalhoPreso } from './cabecalho-preso';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
@@ -139,6 +140,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   } | null>(null);
   const origemConfirmacao = useRef<HTMLElement | null>(null);
   const emExecucao = useRef(false);
+  // A vez de cada pedido de `executar` e a ação em curso: um pedido abandonado (a pessoa saiu da lição durante a correção) não mexe mais na tela quando termina.
+  const vezes = useRef(criarVezes<Acao>()).current;
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const cacheLicoes = useRef<Map<string, Promise<LicaoDetalhe>>>(new Map());
@@ -256,13 +259,11 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
-          try {
-            const plano = await cliente.obterPlano(inicial.id);
-            if (cancelado()) return;
-            setTela({ tipo: 'plano', plano });
-          } catch {
-            // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
-          }
+          // Sem o detalhe da trilha (servidor lento ou fora do ar), a falha não é engolida: antes, a pessoa ficava em "Minhas trilhas" sem erro nem botão. Ela cai no catch
+          // de baixo, que leva ao login se a sessão venceu e, nos outros casos, mostra o cartão de erro com "Tentar novamente" (busca a lista e abre a trilha de novo).
+          const plano = await cliente.obterPlano(inicial.id);
+          if (cancelado()) return;
+          setTela({ tipo: 'plano', plano });
         }
       }
       setInicio('pronto');
@@ -414,6 +415,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   async function executar<T>(acao: Acao, operacao: () => Promise<T>): Promise<Resultado<T>> {
     if (emExecucao.current) return { ok: false, codigo: 'falha' };
     emExecucao.current = true;
+    const vez = vezes.comecar(acao);
     setPendente(acao);
     setErro(null);
 
@@ -421,13 +423,29 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       return { ok: true, dados: await operacao() };
     } catch (falha) {
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
+      // Pedido abandonado (a pessoa saiu da lição durante a correção): a falha que chega depois não vira erro, nem leva ao login, em outra tela.
+      if (!vezes.ehAtual(vez)) return { ok: false, codigo };
       if (codigo === 'nao_autenticado') irParaLogin(true);
       else setErro(codigo);
       return { ok: false, codigo };
     } finally {
-      setPendente(null);
-      emExecucao.current = false;
+      if (vezes.terminar(vez)) {
+        setPendente(null);
+        emExecucao.current = false;
+      }
     }
+  }
+
+  /**
+   * Rede lenta: sair da lição durante a correção de uma resposta (até uns 30 s parada em "Verificando…"). Só a correção pode ser abandonada: a resposta continua no andamento guardado no
+   * navegador e é corrigida de novo na volta. A conclusão não (ela grava o progresso e leva à festa). O pedido abandonado segue no ar, mas deixa de valer: não solta a trava de outro
+   * pedido nem mostra erro em outra tela. Devolve se abandonou, e então a trava já está solta para o pedido seguinte (abrir a trilha).
+   */
+  function abandonarCorrecao() {
+    if (!vezes.abandonar(ACAO_ABANDONAVEL)) return false;
+    emExecucao.current = false;
+    setPendente(null);
+    return true;
   }
 
   /** Apaga uma trilha depois da confirmação; o cartão sai da lista (sem trilhas, a tela volta ao pedido). */
@@ -756,7 +774,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </div>
             </section>
           )}
-          {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
+          {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
+          {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (
@@ -839,7 +858,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
                 return resultado.ok ? resultado.dados : null;
               }}
               concluir={(comprovante, resumo, pratica) => concluir(tela.plano, tela.licao, comprovante, resumo, pratica)}
-              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)}
+              voltar={() => { abandonarCorrecao(); void abrirPlano(tela.plano.id, tela.licao.id); }}
               responderSuaVez={(escolha) => responderSuaVez(tela.licao.id, escolha)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
