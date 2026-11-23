@@ -136,15 +136,32 @@ test('modo visitante desligado: no lugar de "Experimentar sem conta" entra "Entr
   assert.ok(achar(ligado, 'Experimentar sem conta').every((b) => b.tag === 'button'));
 });
 
-test('quem já tem sessão: "Entrar" (cabeçalho e rodapé) vira "Abrir o Studoo", que abre o app', () => {
+test('quem já tem sessão: "Entrar" e "Experimentar sem conta" viram "Abrir o Studoo", que abre o app com a sessão que existe', () => {
   const fora = desenhar({ aparelho: 'android' });
   assert.equal(achar(fora, 'Abrir o Studoo').length, 0);
   assert.equal(achar(fora, 'Entrar').filter((b) => /href="\/login"/.test(b.atributos)).length >= 2, true);
   const dentro = desenhar({ aparelho: 'android', comSessao: true });
-  const abrir = achar(dentro, 'Abrir o Studoo');
-  assert.equal(abrir.length, 2, 'cabeçalho e rodapé');
-  for (const botao of abrir) assert.match(botao.atributos, /href="\/"/);
+  const links = achar(dentro, 'Abrir o Studoo').filter((b) => b.tag === 'a');
+  assert.equal(links.length, 2, 'cabeçalho e rodapé');
+  for (const botao of links) assert.match(botao.atributos, /href="\/"/);
   assert.equal(achar(dentro, 'Entrar').filter((b) => /href="\/login"/.test(b.atributos)).length, 0);
+  assert.equal(achar(dentro, 'Experimentar sem conta').length, 0, 'com sessão o botão não oferece criar outra');
+  assert.ok(achar(dentro, 'Abrir o Studoo').filter((b) => b.tag === 'button').length >= 2, 'o herói e a chamada final');
+  // Com o modo visitante desligado, quem tem sessão continua abrindo o app (não cai no login).
+  const semVisitante = desenhar({ aparelho: 'android', comSessao: true, visitante: false });
+  assert.equal(achar(semVisitante, 'Entrar').filter((b) => /href="\/login"/.test(b.atributos)).length, 0);
+  assert.ok(achar(semVisitante, 'Abrir o Studoo').filter((b) => b.tag === 'button').length >= 2);
+});
+
+test('a ideia da ficha vai para o rascunho que o app já lê e apaga (a mesma chave do estudo.tsx), e com sessão não se cria outra sessão', () => {
+  const ilha = ler('src/app/conheca/ilhas/visitante.tsx');
+  const chave = ilha.match(/CHAVE_IDEIA_INICIAL = '([^']+)'/)?.[1];
+  assert.equal(chave, 'studoo.rascunho.objetivo');
+  const app = ler('src/app/estudo.tsx');
+  assert.ok(app.includes(`sessionStorage.getItem('${chave}')`), 'o app lê o rascunho ao abrir');
+  assert.ok(app.includes(`sessionStorage.removeItem('${chave}')`), 'e o apaga');
+  assert.match(ilha, /if \(!comSessao\) await cliente\.entrarVisitante\(\)/, 'quem tem sessão não troca o cookie por um de visitante');
+  assert.ok(!/studoo:ideia-inicial/.test(ilha), 'sem a chave antiga, que ninguém lia');
 });
 
 test('o link "Pular para o conteúdo" é o primeiro da página e leva ao herói (S1)', () => {

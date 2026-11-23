@@ -29,6 +29,8 @@ export interface DadosDeInstalar {
   /** "114,9 MB", ou null quando o arquivo do link em uso não foi medido. */
   tamanho: string | null;
   visitanteAtivo: boolean;
+  /** A pessoa já tem sessão: "Experimentar sem conta" vira "Abrir o Studoo" e não cria outra sessão. */
+  comSessao: boolean;
   /** O cartão do QR, já desenhado no servidor; null quando o servidor não tem origem pública confiável. */
   qr: ReactNode | null;
 }
@@ -63,7 +65,7 @@ function useBaixando() {
  * (nenhum botão principal baixa o arquivo, que não instala ali) e, ao lado, o cartão do QR; sem largura para o QR (menos de 1024 px),
  * um botão de texto leva ao S4. O servidor já escolhe o aparelho certo no primeiro desenho; o navegador só corrige o iPad.
  */
-export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, qr, lugar }: DadosDeInstalar & { lugar: 'heroi' | 'final' }) {
+export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr, lugar }: DadosDeInstalar & { lugar: 'heroi' | 'final' }) {
   const aparelho = useAparelho(inicial);
   const { baixando, comoInstalar, aoBaixar } = useBaixando();
   const [folha, setFolha] = useState(false);
@@ -71,7 +73,7 @@ export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, v
   const fecharFolha = useCallback(() => setFolha(false), []);
 
   const textoVisitante = (variante: 'texto' | 'primario') => (
-    <BotaoVisitante ativo={visitanteAtivo} variante={variante} className={variante === 'primario' ? 'cn-botao-principal' : 'cn-visitante-texto'} />
+    <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante={variante} className={variante === 'primario' ? 'cn-botao-principal' : 'cn-visitante-texto'} />
   );
 
   if (aparelho === 'computador') {
@@ -114,12 +116,10 @@ export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, v
       )}
       {textoVisitante('texto')}
       <p className="cn-apoio">{testflight ? textos.acoes.iphoneTestflight.apoio : textos.acoes.iphoneEmBreve.apoio}</p>
-      {folha && <FolhaIphone aoFechar={fecharFolha} visitanteAtivo={visitanteAtivo} />}
+      {folha && <FolhaIphone aoFechar={fecharFolha} visitanteAtivo={visitanteAtivo} comSessao={comSessao} />}
     </div>
   );
 }
-
-/** O botão do iPhone no computador (a ação secundária do cabeçalho do S4 não existe; aqui só a folha para quem pede). */
 
 type Aba = 'android' | 'iphone';
 
@@ -130,7 +130,7 @@ type Aba = 'android' | 'iphone';
  * três passos dele e "Instalar no iPhone"; sem, os três da Tela de Início, "O app para iPhone chega em breve pelo TestFlight." e
  * "Experimentar sem conta".
  */
-export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, qr }: DadosDeInstalar) {
+export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr }: DadosDeInstalar) {
   const aparelho = useAparelho(inicial);
   const { baixando, comoInstalar, aoBaixar } = useBaixando();
   const [aba, setAba] = useState<Aba>(ehIos(inicial) ? 'iphone' : 'android');
@@ -210,7 +210,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
             <PassosDoIphone />
             <p className="cn-apoio cn-apoio--painel">{textos.acoes.iphoneEmBreve.apoio}</p>
             <div className="cn-painel__acao">
-              <BotaoVisitante ativo={visitanteAtivo} variante="primario" className="cn-botao-principal" />
+              <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="primario" className="cn-botao-principal" />
             </div>
           </>
         )}

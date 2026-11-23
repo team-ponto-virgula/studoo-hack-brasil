@@ -52,7 +52,7 @@ export interface ContextoDaPagina {
 export function PaginaVista({ aparelho, links, origem, comSessao, visitante }: ContextoDaPagina) {
   const tamanho = tamanhoDoApk(links);
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
-  const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante };
+  const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
   const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: '/' } : { rotulo: textos.cabecalho.entrar, href: '/login' };
   const qrDoHeroi = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-heroi" /> : null;
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
@@ -114,7 +114,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante }: C
           </div>
           <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
           <p className="cn-secao__linha">{textos.s3.linha}</p>
-          <Fichas visitanteAtivo={visitante} />
+          <Fichas visitanteAtivo={visitante} comSessao={comSessao} />
         </section>
 
         <section id="baixar" className="cn-secao cn-s4" aria-labelledby="cn-titulo-s4" data-revelar>

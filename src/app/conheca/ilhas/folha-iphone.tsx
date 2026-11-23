@@ -19,7 +19,7 @@ export function foraDoSafariNoIphone(userAgent: string): boolean {
  * Início", "Entendi" e "Experimentar sem conta". É a folha do Studoo (nunca janela do sistema): foco no título, Tab preso nela,
  * Esc e toque fora fecham, e o foco volta ao botão que a abriu.
  */
-export default function FolhaIphone({ aoFechar, visitanteAtivo }: { aoFechar: () => void; visitanteAtivo: boolean }) {
+export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { aoFechar: () => void; visitanteAtivo: boolean; comSessao: boolean }) {
   const caixa = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const idTitulo = useId();
@@ -69,7 +69,7 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo }: { aoFechar: ()
         <PassosDoIphone />
         <div className="folha-acoes folha-acoes--empilhadas cn-folha__acoes">
           <button type="button" className="botao botao--primario" onClick={aoFechar}>{t.entendi}</button>
-          <BotaoVisitante ativo={visitanteAtivo} variante="texto" />
+          <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="texto" />
         </div>
       </div>
     </div>
