@@ -7,11 +7,40 @@ name: 02-entrar
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: login-email
+# Logo depois de religar o simulador (sem_preenchimento, em ios.sh), o teclado chega frio, e na execução 44926124145 o
+# primeiro texto se perdeu: "Input text" COMPLETED e o campo vazio ("Informe um e-mail válido"). Espera o teclado subir
+# antes de digitar e confere o e-mail no campo; sem ele, apaga, toca de novo e digita uma vez mais. O runner conta as
+# digitações e põe ⚠️ no resumo quando houve a segunda (fluxo_entrar, em comum.sh). O e-mail é o da conta sintética.
+- waitForAnimationToEnd:
+    timeout: 2500
 - inputText: ${EMAIL}
+- waitForAnimationToEnd:
+    timeout: 1000
+- runFlow:
+    when:
+      notVisible:
+        text: ${EMAIL}
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: login-email
+      - eraseText: 60
+      - waitForAnimationToEnd:
+          timeout: 2500
+      - inputText: ${EMAIL}
+      - waitForAnimationToEnd:
+          timeout: 1000
+# Opcional: se o Maestro não enxergar o valor do campo, o aviso fica no registro (WARNED), sem derrubar o fluxo; a entrada
+# mesmo se confere logo abaixo, pela barra de baixo depois do "Entrar".
+- assertVisible:
+    text: ${EMAIL}
+    optional: true
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: login-senha
 # Com `label`, a saída do Maestro mostra esta frase no lugar do texto digitado.
+- waitForAnimationToEnd:
+    timeout: 1500
 - inputText:
     text: ${SENHA}
     label: Digitar a senha da conta sintética

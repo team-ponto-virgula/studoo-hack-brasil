@@ -137,6 +137,27 @@ ligar() {
   echo "Simulador $id ligando em segundo plano."
 }
 
+# Reinicia o serviço de confiança (trustd) do simulador, se o launchctl dele deixar: o login pendurado parou na avaliação
+# de confiança do certificado (comum.sh, fluxo_entrar). O que o launchctl respondeu fica em confianca-reiniciada.log.
+reiniciar_confianca_do_aparelho() {
+  local id
+  id="$(udid)"
+  {
+    echo "$(date -u +%H:%M:%S) reiniciando o trustd do simulador $id"
+    xcrun simctl spawn "$id" launchctl kickstart -k system/com.apple.trustd 2>&1 \
+      || xcrun simctl spawn "$id" launchctl stop com.apple.trustd 2>&1 \
+      || echo "o launchctl do simulador não reiniciou o trustd"
+  } >> "$REGISTROS/confianca-reiniciada.log" 2>&1
+  return 0
+}
+
+# O simulador ainda está ligado? Usado antes de cada fluxo quando a conferência roda uma lista de telas
+# (CONFERENCIA_TELAS, comum.sh fluxo_telas_uma_por_vez). O iPhone não religa o simulador: se ele não estiver ligado, os
+# fluxos que faltam ficam como "não rodou".
+aparelho_responde() {
+  xcrun simctl list devices booted 2> /dev/null | grep -qF "$(udid)"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # simulador: espera ligar, instala a CA local e o Expo Go
 
@@ -209,15 +230,22 @@ metro() {
   iniciar_metro ios --go
 }
 
+# Para o Expo Go no simulador antes de repetir uma fase que falhou na abertura (rodar_com_abertura_repetida, em comum.sh).
+parar_app_do_aparelho() {
+  xcrun simctl terminate "$(udid)" host.exp.Exponent > /dev/null 2>&1 || true
+}
+
 # O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o log do simulador, ao vivo,
-# só do Expo Go e só do que é áudio (CoreAudio, CoreMedia, AVFAudio, a descoberta das unidades de áudio) ou do registro de
-# som do app, se ele existir. O log guardado no fim (simulador-expo-go.log) não tem os níveis info e debug, onde o áudio
-# escreve.
+# só do Expo Go e só o registro de som do app ("[som] ..."), que é o que o veredito do fundo usa
+# (servidor/linha-do-tempo-som.mjs). Até a execução 45104180946 o predicado trazia também o CoreAudio e o CoreMedia em
+# nível debug: 95% das 14 mil linhas, sem entrar no veredito, com o `log` e o diagnosticd entre os processos de mais CPU
+# numa máquina com carga ~300. A linha do tempo do iPhone passa a não listar os eventos do sistema de áudio (o Android
+# continua com o logcat).
 iniciar_registro_de_audio() {
   # O estilo padrão do log traz o fuso de cada linha ("2026-11-19 19:50:05.120123+0000"), para a linha do tempo não
   # depender do fuso da máquina.
   xcrun simctl spawn "$(udid)" log stream --level debug --predicate \
-    'process == "Expo Go" AND (subsystem BEGINSWITH "com.apple.coreaudio" OR subsystem BEGINSWITH "com.apple.coremedia" OR subsystem BEGINSWITH "com.apple.avfaudio" OR subsystem BEGINSWITH "com.apple.audio" OR subsystem == "com.facebook.react.log" OR eventMessage CONTAINS "[som]" OR eventMessage CONTAINS[c] "AudioUnit")' \
+    'process == "Expo Go" AND eventMessage CONTAINS "[som]"' \
     > "$1" 2>&1 &
   echo $! > "$SAIDA/registro-de-audio.pid"
 }

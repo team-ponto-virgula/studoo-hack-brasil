@@ -19,8 +19,11 @@ appId: host.exp.Exponent
     direction: DOWN
     timeout: 240000
     speed: 50
+    centerElement: true
     waitToSettleTimeoutMs: 500
-# No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
+# A barra de baixo flutua por cima do conteúdo (iOS 26 e Android): o botão pode ter parado atrás dela. A rolagem acima
+# centraliza o botão e o arrasto sobe mais um pouco. Na execução 45098808095 (Android, fluxo 33), sem centralizar, o botão
+# "Continuar: Frações…" parou em y 1339–1443 com a barra em 1372–1496: o toque caiu em "Minhas trilhas" e a lista ficou.
 - swipe:
     waitToSettleTimeoutMs: 1000
     start: 50%, 55%
@@ -29,6 +32,27 @@ appId: host.exp.Exponent
 - tapOn:
     waitToSettleTimeoutMs: 1500
     text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+# Pelo estado: se a lista continuar na tela (o toque foi para a barra), sobe mais e toca de novo uma vez.
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: titulo-planos
+      notVisible:
+        id: titulo-plano
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 60%
+          end: 50%, 30%
+          duration: 800
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
 - extendedWaitUntil:
     visible:
       id: titulo-plano
@@ -53,6 +77,43 @@ appId: host.exp.Exponent
       - tapOn:
           waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar): .*"
+# A lição pode não abrir com o servidor lento: na execução 45105021514 (iPhone, fluxo 33, carga ~470), o pedido da lição
+# foi largado pelo app aos 15 s (499 no proxy) e o mapa mostrou "Confira a conexão e tente novamente." (tentar-planos).
+# Pelo estado: com esse cartão, "Tentar novamente", o mapa de novo e a lição aberta outra vez (o cartão "Começar lição"
+# ou o nó atual), uma vez.
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: tentar-planos
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-planos
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano
+          timeout: 60000
+      - runFlow:
+          when:
+            visible:
+              id: comecar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: comecar-licao
+      - runFlow:
+          when:
+            notVisible:
+              id: comecar-licao
+            visible: "(Começar|Continuar): .*"
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                text: "(Começar|Continuar): .*"
 - extendedWaitUntil:
     visible: 'Etapa 1 de \d+'
     timeout: 30000
