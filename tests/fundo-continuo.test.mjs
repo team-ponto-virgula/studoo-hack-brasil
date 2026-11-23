@@ -61,3 +61,52 @@ test('parar no meio da faixa continua sendo pausa', () => {
   const r = analisarFundo(lista);
   assert.ok(r.ocorrencias.some((o) => o.tipo === 'pausa'), 'pausa acusada');
 });
+
+// --- Oscilação do emulador (Android, decisão do Lead de 23/11): a travada curta da posição, com o reprodutor tocando e sem
+// comando de som do app a até 1 s, vira aviso (`oscilacoes`) só no Android. O resto continua falha nas duas plataformas.
+// A trava: depois de 20 amostras, o relógio anda `ms` a mais que a posição, uma vez, e segue junto (como no logcat das
+// execuções 45087664838 e 45089424008, 412–580 ms).
+function comTravada(ms, jogador = 'A') {
+  const lista = [];
+  for (let i = 0; i < 40; i += 1) lista.push(amostra(10_000 + i * 500 + (i >= 20 ? ms : 0), jogador, true, 20_000 + i * 500));
+  return { lista, t: 10_000 + 20 * 500 + ms };
+}
+
+test('Android: travada curta (450 ms), tocando e sem comando do app, vira oscilação do emulador, não pausa', () => {
+  const { lista } = comTravada(450);
+  const r = analisarFundo(lista, [], { plataforma: 'android', comandosDoApp: [] });
+  assert.deepEqual(r.ocorrencias.filter((o) => o.tipo === 'pausa'), []);
+  assert.equal(r.oscilacoes.length, 1, 'uma oscilação');
+  assert.equal(r.oscilacoes[0].tipo, 'oscilação do emulador');
+  assert.ok(r.oscilacoes[0].ms >= 400 && r.oscilacoes[0].ms < 1000);
+});
+
+test('Android: posição parada por 1 s ou mais continua pausa (falha)', () => {
+  const { lista } = comTravada(1_200);
+  const r = analisarFundo(lista, [], { plataforma: 'android', comandosDoApp: [] });
+  assert.ok(r.ocorrencias.some((o) => o.tipo === 'pausa'), 'pausa acusada');
+  assert.equal(r.oscilacoes.length, 0);
+});
+
+test('Android: travada curta a até 1 s de um comando de som do app continua pausa (falha)', () => {
+  const { lista, t } = comTravada(450);
+  const r = analisarFundo(lista, [], { plataforma: 'android', comandosDoApp: [{ t: t - 600, som: 'geracao_licao' }] });
+  assert.ok(r.ocorrencias.some((o) => o.tipo === 'pausa'), 'pausa acusada');
+  assert.equal(r.oscilacoes.length, 0);
+});
+
+test('Android: o reprodutor parado (o app pausou) continua pausa (falha)', () => {
+  const a = tocando('A', 10_000, 20_000, 30_000);
+  const lista = [...a, amostra(a.at(-1).t + 400, 'A', false, 30_200), ...tocando('A', a.at(-1).t + 900, 30_200, 34_000)];
+  const r = analisarFundo(lista, [], { plataforma: 'android', comandosDoApp: [] });
+  assert.ok(r.ocorrencias.some((o) => o.tipo === 'pausa' && !o.travada), 'pausa do reprodutor parado acusada');
+});
+
+test('iPhone: a mesma travada curta continua pausa (falha); o critério não muda', () => {
+  const { lista } = comTravada(450);
+  for (const opcoes of [{ plataforma: 'iphone', comandosDoApp: [] }, {}]) {
+    const r = analisarFundo(lista, [], opcoes);
+    assert.ok(r.ocorrencias.some((o) => o.tipo === 'pausa'), 'pausa acusada');
+    assert.equal(r.oscilacoes.length, 0);
+  }
+});

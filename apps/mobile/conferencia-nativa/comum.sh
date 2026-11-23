@@ -519,6 +519,10 @@ resumir_fundo() {
     'Fundo: INCONCLUSIVO '*) resumo "⚠️ $fundo" ;;
     *) resumo "⚠️ Fundo nos fluxos 90 e 95: inconclusivo, a linha do tempo não chegou ao veredito (linha-do-tempo-criacao.txt, nos registros)." ;;
   esac
+  # Android: a oscilação do emulador (travadas curtas, fora do veredito) aparece sempre, com a quantidade e os segundos.
+  local oscilacoes
+  oscilacoes="$(grep -m 1 '^Oscilações do emulador: ' "$1" 2> /dev/null || true)"
+  if [ -n "$oscilacoes" ]; then resumo "⚠️ $oscilacoes"; fi
 }
 
 fluxo_criacao() {
