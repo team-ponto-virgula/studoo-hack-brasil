@@ -156,7 +156,7 @@ export function MaterialParaTrilha({
       <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
-          <label className="estudio-arquivo">
+          <label className="estudio-arquivo botao botao--secundario">
             {mensagens.inicio.arquivo}
             <input
               type="file"
@@ -168,7 +168,7 @@ export function MaterialParaTrilha({
               }}
             />
           </label>
-          <label className="estudio-arquivo">
+          <label className="estudio-arquivo botao botao--secundario">
             {mensagens.inicio.camera}
             <input
               type="file"

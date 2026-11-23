@@ -46,17 +46,21 @@
     margin-top: 0;
   }
 }
-.estudio-arquivo {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  min-height: 48px;
-  border: 2px dashed var(--acao);
-  border-radius: 14px;
-  color: var(--acao);
-  font-weight: 700;
-  cursor: pointer;
+/* Spec 16, item 28: até 767 px "Escolher arquivo" e "Usar a câmera" são botões secundários comuns (o desenho de área de soltar arquivo, tracejado, não existe no celular e parecia rascunho);
+   a área tracejada fica só a partir de 768 px. */
+.estudio-arquivo { position: relative; }
+@media (min-width: 768px) {
+  .estudio-arquivo.botao {
+    display: flex;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    border: 2px dashed var(--acao);
+    border-radius: 14px;
+    background: transparent;
+    box-shadow: none;
+    font-weight: 700;
+    text-align: start;
+  }
 }
 .estudio-arquivo input {
   position: absolute;
