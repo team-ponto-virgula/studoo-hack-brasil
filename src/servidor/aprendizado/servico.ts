@@ -217,7 +217,7 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
   if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
-    throw new FalhaApi("ia_indisponivel");
+    throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
   }
   return conteudos;
 }

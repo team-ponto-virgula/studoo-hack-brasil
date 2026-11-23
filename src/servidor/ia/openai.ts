@@ -17,7 +17,7 @@ import {
   lerLinha,
   correcaoDoFormato,
   normalizarConteudo,
-  normalizarLicao,
+  normalizarLicaoSegura,
   promptDaLicao,
   sinalComPrazo,
   validarBaseUrl,
@@ -243,6 +243,12 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
     },
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
+      // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
+      let ultimoMotivo: string | undefined;
+      const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
+        ultimoMotivo = dados.motivo;
+        registrar("ia_indisponivel", dados);
+      };
       if (esqueleto.gerador !== GERADOR_OPENAI || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
       // Lição de matemática: o primeiro pedido leva fórmulas, figuras e resolução. Se ele não fecha (prazo, erro do provedor, formato), a
       // segunda tentativa volta ao pedido de sempre, sem matemática: a matemática nunca derruba a lição, e o aceite não falha por ela.
@@ -267,14 +273,14 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
             registrar("resolucao_nova_tentativa", { aceita: false, motivo: "falhou" });
             return reserva.conteudo;
           }
-          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
             continue;
           }
-          if (estourou()) throw new FalhaApi("ia_indisponivel");
+          if (estourou()) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
-          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          registrarFalha({ motivo: "rede", tentativa });
           continue;
         }
         let bruto: unknown;
@@ -286,12 +292,12 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
             return reserva.conteudo;
           }
           if (erro instanceof FalhaApi) throw erro; // recusa do modelo
-          registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
+          registrarFalha({ motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
           desligarMatematica("formato");
           continue;
         }
-        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
+        const lida = normalizarLicaoSegura(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
           const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
           if (ajustes.length > 0) {
@@ -316,12 +322,12 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
           return reserva.conteudo;
         }
-        registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
+        registrarFalha({ motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
         desligarMatematica("formato");
       }
       if (reserva) return reserva.conteudo;
-      throw new FalhaApi("ia_indisponivel");
+      throw new FalhaApi("ia_indisponivel", undefined, ultimoMotivo);
     },
   };
 }

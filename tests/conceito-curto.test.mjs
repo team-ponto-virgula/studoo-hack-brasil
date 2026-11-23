@@ -200,7 +200,7 @@ test('o pedido à IA diz a regra do balão, e a primeira lição da trilha leva 
   const deepseek = ler('src/servidor/ia/deepseek.ts');
   assert.match(deepseek, /conceito: "Explicação clara e direta do conceito em até 3 frases \(2 na primeira lição da trilha\)\."/);
   for (const adaptador of ['src/servidor/ia/openai.ts', 'src/servidor/ia/deepseek.ts']) {
-    assert.match(ler(adaptador), /normalizarLicao\(bruto, origemDoConteudo\(esqueleto\.origem\), \{ primeiraLicao: fluxo === 0 && licao === 0 \}\)/, `${adaptador} diz qual é a primeira lição`);
+    assert.match(ler(adaptador), /normalizarLicaoSegura\(bruto, origemDoConteudo\(esqueleto\.origem\), \{ primeiraLicao: fluxo === 0 && licao === 0 \}\)/, `${adaptador} diz qual é a primeira lição (pela leitura protegida, que não deixa uma exceção virar 500)`);
   }
 });
 

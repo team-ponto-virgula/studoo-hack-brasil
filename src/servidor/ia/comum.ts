@@ -543,6 +543,20 @@ export function normalizarConteudo(bruto: unknown, origem: string, opcoes: Opcoe
 /** O que a normalização precisa saber da lição: se é a primeira da trilha (o balão do Stu tem até 2 frases, e não 3). */
 export type OpcoesDaLicao = { primeiraLicao?: boolean };
 
+/**
+ * `normalizarLicao` sem deixar uma exceção do próprio código subir como erro do servidor (HTTP 500 no aceite da proposta): o JSON vem do modelo, e um formato que a leitura não previu (um campo aninhado
+ * a ponto de estourar a pilha, por exemplo) vale como formato inválido: a segunda tentativa de formato e, falhando de novo, `ia_indisponivel` (503). A lição válida sai igual. No motivo vai só o nome da
+ * exceção (`excecao:RangeError`), nunca a mensagem nem o conteúdo.
+ */
+export function normalizarLicaoSegura(bruto: unknown, origem: string, opcoes: OpcoesDaLicao = {}): LicaoNormalizada {
+  try {
+    return normalizarLicao(bruto, origem, opcoes);
+  } catch (erro) {
+    const nome = erro instanceof Error && /^[A-Za-z][A-Za-z0-9]{0,39}$/.test(erro.name) ? erro.name : "Erro";
+    return { conteudo: null, motivo: `excecao:${nome}`, descartados: [] };
+  }
+}
+
 export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDaLicao = {}): LicaoNormalizada {
   if (typeof bruto !== "object" || bruto === null) return { conteudo: null, motivo: "json", descartados: [] };
   const dado = bruto as Record<string, unknown>;
