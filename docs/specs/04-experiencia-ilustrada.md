@@ -95,17 +95,16 @@ Um iPhone SE (375 × 667, áreas 20 / 0) fica com cerca de 569 de altura útil: 
 
 O dono pediu animações na geração e a tela acompanhando até a última lição. Hoje o título ocupa um cartão alto e o mapa fica parado no alto: da terceira lição em diante, o que nasce fica abaixo da dobra, e a pessoa só vê o rodapé contar. Vale para web, Android e iPhone. Esboço: `geracao-390.png`, na pasta de trabalho do Designer (`ux/05-geracao-acompanhada`).
 
-Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam (que voltaram em 22/11 em outra forma, com frases que explicam o Studoo; spec 17, mudança 1), as estrelinhas, o "Mais uma!", o confete, as contagens e a tela Escrevendo suas lições.
+Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam (que voltaram em 23/11 em outra forma e só na espera depois de "Começar a lição 1"; spec 17, mudança 1), as estrelinhas, o "Mais uma!", o confete, as contagens e a tela Escrevendo suas lições.
 
 **A tela durante a geração.**
 - O cartão do título vira uma faixa de 52 px presa embaixo do cabeçalho: os três pontinhos que digitam e o nome do pedido (Nunito 800 de 15 px, numa linha, com reticências), sem contagem. O mapa ganha o resto da tela.
-- A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade:
-  - "Montando sua trilha" (`montandoTitulo`) nos primeiros 3 s;
-  - depois, enquanto chegam lições, as quatro frases de `geracao.dicas`, uma a cada 5 s, em laço (exceção de 22/11 à regra "sem dicas que se revezam", pela spec 17, mudança 1: elas explicam o Studoo e são verdadeiras para conta e visitante);
+- A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade, sem dicas que se revezam:
+  - "Montando sua trilha" (`montandoTitulo`) enquanto chegam lições;
   - "Ainda montando a próxima lição…" (`aguardandoLicao`) depois de 12 s sem lição nova;
   - "Sua trilha está pronta: 9 lições curtas em 3 partes." (`propostaPronta`) no fim.
 
-  As frases não são anunciadas pelo leitor de tela, uma a uma. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
+  A exceção de 23/11 à regra "sem dicas que se revezam" vale só na espera depois de "Começar a lição 1", na linha "Escrevendo suas lições…" (spec 17, mudança 1), e não nesta placa. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
 - O rodapé: "Cancelar" e "Montando a trilha", sem a contagem de lições.
 
 **Cada lição que nasce**, do evento até a próxima espera:
@@ -197,12 +196,8 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
   - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
 - C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta. Com a música ligada, o Lo-fi continua por baixo (spec 12): não baixa, não para e não recomeça, também na passagem para a aula.
-- C5: sem confete, sem "Mais uma!", sem contagens, sem barra e sem visto por lição. Durante a espera, a placa mostra "Montando sua trilha" por 3 s e depois as quatro frases de `geracao.dicas`, a cada 5 s (spec 17).
-  - **Teste do app** (`tests/criacao-trilha-mobile.test.mjs`, perto das linhas 120 a 122, do Mobile 2): deixa de exigir a ausência de `dicas` e de `setInterval` na `PlacaDaGeracao`. Passa a exigir:
-    - `montandoTitulo` nos 3 s iniciais;
-    - a troca entre os itens de `mensagens.geracao.dicas`;
-    - nenhuma troca com movimento reduzido.
-    O resto (sem confete, sem "Mais uma!", sem estrelinhas, sem contagem) continua.
+- C5: sem confete, sem dicas que se revezam na placa, sem "Mais uma!", sem contagens, sem barra e sem visto por lição. A troca de frases só existe na espera depois de "Começar a lição 1" (spec 17, mudança 1).
+  - **Teste do app** (`tests/criacao-trilha-mobile.test.mjs`, perto das linhas 120 a 122, do Mobile 2): a `PlacaDaGeracao` continua sem `dicas` e sem `setInterval`. A troca das frases (`mensagens.geracao.dicas`, sem troca com movimento reduzido) é testada na espera do aceite, onde a linha "Escrevendo suas lições…" é desenhada.
 - C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
 - C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
 - C8: com tamanho de texto padrão, "Criando sua trilha…" fica numa linha em 320, 360 e 390. Em 360×800 e 390×844, conferir que a ação principal aparece na largura toda sem rolar, antes de "Ajustar pedido", também com fonte grande do sistema no Android e no iPhone e com ampliação de texto a 200% na web. O botão e as mensagens podem ganhar linhas para exibir o texto inteiro. O rodapé acompanha a altura medida do conteúdo e da área segura para manter o fim do mapa acessível, inclusive sob o vidro no iPhone. Conferir a prévia pronta, a espera depois de 1,5 s, a falha e a expiração. Em 600 px, vale a pilha; em 601 px, verificar que os controles continuam legíveis.
