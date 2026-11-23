@@ -118,3 +118,45 @@ export function encurtarConceito(texto: string, { primeiraLicao = false }: { pri
   const resto = texto.slice(corte).trim();
   return { conceito, resto, cortou: resto !== '' };
 }
+
+/*
+ * O título do balão, "O Stu explica", é desenhado pelo cliente acima do texto. A IA às vezes o repete no começo do próprio conceito ("O Stu explica: a regra dos terços…") e o balão
+ * mostra o título duas vezes. `tirarRotuloDoConceito` tira esse rótulo do COMEÇO do texto, e só ele: "O Stu explica" no meio do texto, ou numa frase que continua ("O Stu explica que…"),
+ * fica como veio. Vale para "O Stu explica:" e "Stu explica:" (sem diferença de maiúsculas), com negrito ou aspas em volta ("**O Stu explica:**", "“O Stu explica”:"), com travessão no lugar
+ * dos dois-pontos, sozinho numa linha, ou repetido ("O Stu explica: O Stu explica: …").
+ */
+const MOLDURAS: [abre: string, fecha: string][] = [['**', '**'], ['__', '__'], ['*', '*'], ['_', '_'], ['"', '"'], ['“', '”'], ["'", "'"], ['‘', '’'], ['«', '»']];
+const escaparParaRegra = (trecho: string) => trecho.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const NOME_DO_ROTULO = String.raw`(?:o\s+)?stu\s+explica`;
+/** O que separa o rótulo do texto: dois-pontos, travessão ou hífen com espaço depois, ou a quebra de linha. */
+const SEPARADOR_DO_ROTULO = String.raw`[:：]|[-–—](?=\s)|\n`;
+const ROTULO_DO_BALAO = new RegExp(
+  String.raw`^\s*(?:[#>•-]+\s*)?(?:`
+    // Moldura com os dois-pontos dentro ("**O Stu explica:**") ou fora ("“O Stu explica”: …", "**O Stu explica** — …").
+    + MOLDURAS.map(([abre, fecha]) => String.raw`${escaparParaRegra(abre)}\s*${NOME_DO_ROTULO}\s*[:：]\s*${escaparParaRegra(fecha)}`).join('|')
+    + '|'
+    + MOLDURAS.map(([abre, fecha]) => String.raw`${escaparParaRegra(abre)}\s*${NOME_DO_ROTULO}\s*${escaparParaRegra(fecha)}\s*(?:${SEPARADOR_DO_ROTULO})`).join('|')
+    + String.raw`|${NOME_DO_ROTULO}\s*(?:${SEPARADOR_DO_ROTULO}))\s*`,
+  'iu',
+);
+
+/** A 1ª palavra é só de minúsculas (2 letras ou mais, ou o artigo "a"/"o")? Então começa por maiúscula; variável solta ("x"), "iPhone", "pH", "km/h", fórmula, citação e código ficam como estão. */
+function comInicialMaiuscula(texto: string): string {
+  if (!/^(?:\p{Ll}[\p{Ll}\p{M}]+|[ao])(?=[\s,;:]|$)/u.test(texto)) return texto;
+  const [primeira] = texto;
+  return primeira.toLocaleUpperCase('pt-BR') + texto.slice(primeira.length);
+}
+
+/**
+ * O conceito sem o rótulo "O Stu explica:" repetido no começo (uma vez ou mais). Sem rótulo, volta o texto IGUAL (sem aparar nem mudar letra). Com rótulo, volta o resto aparado e, se a 1ª
+ * palavra é só de minúsculas ("a regra…", porque depois de dois-pontos se escreve em minúscula), com a inicial maiúscula ("A regra…"). Se só sobra o rótulo, volta "" (como um conceito vazio).
+ */
+export function tirarRotuloDoConceito(texto: string): string {
+  let atual = texto;
+  for (let vez = 0; vez < 3; vez += 1) {
+    const sem = atual.replace(ROTULO_DO_BALAO, '');
+    if (sem === atual) break;
+    atual = sem;
+  }
+  return atual === texto ? texto : comInicialMaiuscula(atual.trim());
+}

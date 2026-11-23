@@ -299,7 +299,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         }
         const lida = normalizarLicaoSegura(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
-          const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
+          const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.rotuloDoConceitoTirado ? ["conceito:rotulo_tirado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
           if (ajustes.length > 0) {
             registrar("licao_ajustada", { detalhe: ajustes.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
