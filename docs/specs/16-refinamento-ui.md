@@ -146,7 +146,7 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
 
 **15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
 - **Hoje:** a barra da marca, com "Progresso salvo agora", vem em cima do cabeçalho da trilha, e os dois somam quase 30% da tela. O app não tem a barra da marca no mapa (iPhone `10`).
-- **Regra:** no mapa, até 767 px, a barra da marca não aparece, e o selo de sincronia entra no cabeçalho da trilha, à direita do anel.
+- **Regra:** no mapa, até 767 px, a barra da marca não aparece, e o selo de sincronia entra no cabeçalho da trilha, na linha do rótulo "Sua trilha", à direita dele. Em 320, quando não cabe, ele desce para a linha de baixo do rótulo. Não fica ao lado do anel, porque a pílula com texto não cabe ali nos celulares (leitura do Web & API, confirmada em 23/11).
 - **Onde:** web, para igualar o app.
 
 **16. Os números gigantes nas capas do "Em alta"** (web e iPhone `40` e `41`)
@@ -171,12 +171,15 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
 - **Regra:**
   - os quatro itens são iguais: 48 px de altura, ícone de 20 (os da cápsula do app: livro, lâmpada, bússola e pessoa), rótulo 16 800 e raio 14;
   - fora da seleção, sem fundo e com o texto em `#0B1B5C`;
-  - selecionado, com fundo `#E9E7FF` e texto e ícone em `#2563FF`, a mesma subcápsula da barra de abas;
+  - selecionado, com fundo `#E9E7FF` e texto e ícone em `#1D4ED8` (5,53:1), a mesma subcápsula da barra de abas da spec 05. O `#2563FF` sobre `#E9E7FF` dá 4,03:1 e não passa;
+  - o item "Perfil" tem só o ícone e "Perfil", sem avatar nem nome, igual aos outros três;
   - "Perfil" continua embaixo.
 - **Onde:** web a partir de 1024 px.
 
 **19. A política de privacidade aparece duas vezes no Perfil** (web 390 e 1440, iPhone `55` e `63`)
 - **Regra:** "Política de privacidade do Studoo" sai da seção "Privacidade e dados" e fica só em "Ajuda". Na seção sobram "Ver quem recebe" (secundário) e "Permitir o uso de IA" ou a chave, conforme o estado.
+  - "Ver quem recebe" continua com o link da política de cada provedor (por exemplo, a da OpenAI): é outra política, não repetição;
+  - o cartão de aceite da IA continua com o link da política do Studoo, porque faz parte do aceite.
 - **Onde:** as três plataformas.
 
 **20. "Excluir conta" diferente na web e no app**
@@ -314,3 +317,19 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 - **Onde:** o app, para igualar a web. Substitui o item 12.
 
 A captura da web da proposta (`01-aprender-funcoes-trilha-pronta`) confirma de novo os itens 1 (a tela no troféu) e 13 (cenário gigante na web).
+
+## Conferência do lote 2 na web (Web & API, `34f542d`, 23/11)
+
+Capturas antes e depois no Chromium, com servidor local e IA falsa (não é o site publicado).
+- **Itens 13 a 21 conferidos e aprovados:**
+  - enfeites do mapa pequenos e dos lados;
+  - sem a barra da marca no mapa até 767 px, com o selo na linha de "Sua trilha";
+  - a pílula "1º";
+  - só o tema na capa e "Exemplo" na linha de informações;
+  - a navegação lateral com um estilo só e a seleção em `#E9E7FF` com `#1D4ED8`;
+  - a política do Studoo só em "Ajuda";
+  - "Excluir conta" depois de "Sair", com borda vermelha;
+  - a coluna do Perfil estreita.
+- **O item 22** não foi feito, e está certo: depende de a entrada levar o progresso do visitante (spec 17, mudança 3, adiada).
+- **Ainda falta:** o "•••" sozinho no alto do mapa. Ele é do item 26 (lote 3), que não estava neste lote.
+- **Nota da conferência:** na lateral, a lista de trilhas sob "Minhas trilhas" repete nomes iguais nas capturas. São dados sintéticos com trilhas duplicadas, não defeito da tela.
