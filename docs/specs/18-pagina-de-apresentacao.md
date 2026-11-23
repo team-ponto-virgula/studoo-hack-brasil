@@ -226,7 +226,21 @@ Capturas nativas do build 4 (simulador do iPhone ou emulador do Android, com a o
 
 Nada de prévia web dentro de moldura de celular.
 
-**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4). As do herói são provisórias, até a rodada limpa que o Lead pediu ao Mobile & QA: as três telas da mesma trilha ("Fotografia com o celular"), nas duas plataformas. A troca vai ser só de arquivo.
+**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4). O herói final chegou (rodada 45277267126): as três telas da mesma trilha, "Fotografia com o celular", nas duas plataformas.
+
+| Lugar | Provisória | Final, da rodada limpa |
+|---|---|---|
+| Herói 1 | final: `heroi-1-iphone-pedido-fotografia.png` e `heroi-1-android-pedido-fotografia.png` (rodada 45277267126) | "Fotografia com o celular" no campo, sem teclado |
+| Herói 2 (e versão parada) | final: `heroi-2-iphone-proposta-pronta.png` e `heroi-2-android-proposta-pronta.png` | A trilha pronta da mesma trilha, sem o aviso de trilha repetida. A do iPhone traz no alto a linha pequena "Trilha pronta do Studoo, a mais próxima do seu pedido…", do servidor sem IA real. Ela é aceita; se houver uma rodada com IA real, a troca é só de arquivo, e não bloqueia |
+| Herói 3 | final: `heroi-3-iphone-licao-acerto.png` e `heroi-3-android-licao-acerto.png` | "Lente limpa e mãos firmes", com "Mandou bem!" |
+| S2, momento 1 | Uma lição de material com o cartão "[1] Fonte do seu material" aberto |
+| S2, momento 2 | A ponte "Outro jeito de entender", no passo 1 |
+| S2, momento 3 | O retorno do "Explique com suas palavras" com os cartões |
+| S2, momento 4 | O mapa no app com "Progresso salvo agora", e a mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) |
+
+Nada de prévia web dentro de moldura de celular.
+
+**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4). O herói final chegou (rodada 45277267126): as três telas da mesma trilha, "Fotografia com o celular", nas duas plataformas.
 
 | Lugar | Provisória | Final, da rodada limpa |
 |---|---|---|
@@ -241,7 +255,7 @@ Nada de prévia web dentro de moldura de celular.
 **Regras de uso:**
 - **As capturas nativas não são recortadas** (decisão do Lead). A barra de status de cada sistema fica.
 - **Cada celular mostra capturas de uma plataforma só.** O laço do herói não mistura iPhone e Android, para a hora e os ícones não mudarem entre uma tela e outra.
-- **No herói,** quem abre no Android vê as três do Android, e os outros veem as três do iPhone, quando a rodada limpa chegar. Até lá, o laço provisório pode misturar, porque é provisório.
+- **No herói,** quem abre no Android vê as três do Android, e os outros veem as três do iPhone.
 - **A moldura própria do Studoo** segue a plataforma da captura: a ilha no alto para o iPhone, e um ponto de câmera de 10 px, centralizado, para o Android. Ela não desenha relógio; o que aparece é o da captura.
 - **Nos momentos do S2,** cada celular tem a sua moldura, e as plataformas podem ser diferentes entre um momento e outro.
 - **Exportação:** WebP com a largura da moldura em 2× (680 px no herói do computador), até 120 KB cada, sem recorte.
