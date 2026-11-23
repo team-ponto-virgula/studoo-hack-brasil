@@ -651,10 +651,25 @@ export function ApoioDaLicao({
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
   }, [ensino]);
+  // "De onde veio esta ideia" (a citação do material): fica sob o exercício e, spec 16 item 27, também na ponte, depois do cartão do passo. Lição sem material não o mostra.
+  const cartaoOrigem = !!licao.referencias?.length && (
+    <details className="estudio-card">
+      <summary>{m.origem}</summary>
+      {licao.referencias.map((r, i) => (
+        <blockquote key={i}>
+          <strong>
+            {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
+          </strong>
+          <p>{r.trecho}</p>
+          {r.leitura === 'ocr' && <small>{m.ocr}</small>}
+        </blockquote>
+      ))}
+    </details>
+  );
   if (avaliacao?.correta === false && pedidoPonte > 0 && !gravando && etapaVoz !== 'ativa') {
     return (
       <div className="estudio-apoio">
-        <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback}
+        <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback} origem={cartaoOrigem || undefined}
           ocupado={ocupado || gravando} erro={erro} voltar={aoVoltarExercicio} tentarCarregar={carregarPonte}
           verificar={async (resposta) => {
             let resultado;
@@ -668,28 +683,15 @@ export function ApoioDaLicao({
       </div>
     );
   }
-  return (
-    <div className="estudio-apoio">
-      {!!licao.referencias?.length && (
-        <details className="estudio-card">
-          <summary>{m.origem}</summary>
-          {licao.referencias.map((r, i) => (
-            <blockquote key={i}>
-              <strong>
-                {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
-              </strong>
-              <p>{r.trecho}</p>
-              {r.leitura === 'ocr' && <small>{m.ocr}</small>}
-            </blockquote>
-          ))}
-        </details>
   // Spec 16, item 25: o indicador de passos do "Explique" (a mesma conta do app).
   const passoDoEnsino = linhaDoPassoDoEnsino(
     passoAtivoDoEnsino({ gravando, vozAtiva: etapaVoz === 'ativa', temRetorno: Boolean(ensino), temTexto: Boolean(texto.trim()) }),
     [vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0], m.ensinoEtapas[1], m.ensinoEtapas[2]],
     m.ponteIndicador,
   );
-      )}
+  return (
+    <div className="estudio-apoio">
+      {cartaoOrigem}
       {ultimo && <details
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
