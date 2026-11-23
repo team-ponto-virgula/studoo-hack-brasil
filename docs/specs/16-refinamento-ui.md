@@ -142,6 +142,13 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
   1. se a pessoa toca no nó e o balão abre enquanto o aviso está à vista, o aviso fecha na hora, sem animação;
   2. o aviso nunca bloqueia o toque fora dele (spec 12), e só o "Desligar" responde dentro dele.
   Não entra regra de altura nem posição diferente por tela, e nada muda na spec 07.
+- **Espaço reservado para o aviso** (conferido em `fbf05eb`, 23/11): enquanto o aviso está à vista, o conteúdo logo depois do cabeçalho desce a altura dele mais 8 px (56 px), e o aviso nunca cobre título, mascote, campo ou botão. Aceito, com uma regra para a saída:
+  - **ao entrar**, o conteúdo desce em 220 ms; com movimento reduzido, na hora;
+  - **ao sair** (7 s, "Desligar" ou o balão do nó), o aviso some, mas o espaço continua até a pessoa trocar de tela;
+  - o conteúdo não sobe de volta na mesma tela. Um salto de 56 px para cima, 7 s depois, mudaria de lugar o botão que a pessoa ia tocar;
+  - na tela seguinte, o espaço não existe mais;
+  - como o aviso aparece uma vez por aparelho, o vão vazio aparece no máximo uma vez.
+  - Não troquei por "aviso menor" nem por "só sobre área vazia": o menor continuaria cobrindo o título em 768, e a área vazia muda de lugar a cada tela.
 - **Onde:** as três plataformas.
 
 **15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
