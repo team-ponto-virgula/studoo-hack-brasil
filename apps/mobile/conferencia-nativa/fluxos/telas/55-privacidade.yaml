@@ -52,11 +52,23 @@ name: 55-privacidade
 - inputText: EXCLUIR
 - waitForAnimationToEnd:
     timeout: 1500
+# A prova do conserto do teclado (feat/refino-app 22ce2de: o cartão sobe para cima do teclado, com os botões presos): com o
+# teclado AINDA ABERTO, "Excluir para sempre" (confirmacao-confirmar) e "Cancelar" (confirmacao-cancelar) estão na árvore.
+# Obrigatório nas duas plataformas. No Android, o que fica atrás do teclado sai da árvore (execução 45077874039: cartão até
+# y=1253, teclado a partir de 962, nenhum dos dois botões achado), então achar os dois é achá-los acima do teclado. A
+# espera (até 5 s) cobre a subida do cartão depois de o teclado abrir; se faltar, o Maestro guarda a hierarquia da falha.
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-confirmar
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-cancelar
+    timeout: 5000
+# A captura com o teclado aberto e os dois botões à vista.
 - takeScreenshot: 57-excluir-conta-digitado
-# No Android o cartão (um Modal) não sobe com o teclado: depois de digitar, "Cancelar" e "Excluir" ficam atrás dele e somem
-# da árvore (execução 45077874039: o cartão ia até y=1253 e o teclado começava em 962; "confirmacao-cancelar" não foi
-# achado). O teclado fecha antes (no Android, com o teclado aberto, o Voltar fecha só o teclado, não o cartão). O iPhone
-# não precisa: lá o botão fica à vista e o fluxo passa.
+# Só depois da prova o teclado fecha no Android, para o cancelamento seguir como antes (com o teclado aberto, o Voltar
+# fecha só o teclado, não o cartão). O iPhone não precisa: lá o toque em Cancelar já passava com o teclado aberto.
 - runFlow:
     when:
       platform: Android
