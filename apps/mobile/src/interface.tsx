@@ -263,7 +263,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const rodapePreso = comBarra && Boolean(rodape);
   // iPhone com iOS 26 ou mais novo: o rodapé neutro (das lições, da geração) fica por cima do conteúdo, para o vidro mostrar
   // o que rola por baixo. No Android, no iOS anterior e na prévia web, ele segue no fluxo, como antes.
-  const rodapeSobreposto = VIDRO && Boolean(rodape) && !estiloRodape && !rodapePreso;
+  // Com o teclado aberto, ele volta ao fluxo: o KeyboardAvoidingView ("padding") só empurra os filhos do fluxo, e o rodapé
+  // absoluto (bottom 0) ficava atrás do teclado ("Verificar" escondido na lacuna, teste nativo do iPhone 45105021514).
+  const rodapeSobreposto = rodapeFicaSobreposto(VIDRO, Boolean(rodape), Boolean(estiloRodape), rodapePreso, teclado);
   // O rodapé solto (o cartão da próxima lição, que flutua sobre o mapa): a tela dele já guarda o lugar do cartão.
   const rodapeSolto = StyleSheet.flatten(estiloRodape)?.position === 'absolute';
   // A cápsula flutua sobre o conteúdo em todas as plataformas: 8 acima da área segura de baixo e nunca menos de 16 da borda.
@@ -325,7 +327,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     // Com o teclado aberto, o campo em foco sobe para cima do rodapé (a área visível acabou de encolher).
     const abriu = Keyboard.addListener('keyboardDidShow', () => { setTeclado(true); mostrarCampoEmFoco(); });
     const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
-    return () => { abriu.remove(); fechou.remove(); };
+    // No iPhone, o estado muda já quando o teclado começa a subir (e a descer): o rodapé volta ao fluxo junto com ele, sem
+    // ficar um instante atrás do teclado. No Android só existem os eventos "Did".
+    const vaiAbrir = Platform.OS === 'ios' ? Keyboard.addListener('keyboardWillShow', () => setTeclado(true)) : null;
+    const vaiFechar = Platform.OS === 'ios' ? Keyboard.addListener('keyboardWillHide', () => setTeclado(false)) : null;
+    return () => { abriu.remove(); fechou.remove(); vaiAbrir?.remove(); vaiFechar?.remove(); };
     // O campo e a rolagem vêm de referências: o efeito só liga os ouvintes uma vez.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1267,6 +1273,14 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
       </Modal>
     </>
   );
+}
+
+/**
+ * O rodapé neutro fica por cima do conteúdo (absoluto, para o vidro mostrar o que rola por baixo) só com o vidro, sem estilo
+ * próprio, fora da ação presa e com o teclado FECHADO; com o teclado aberto, ele fica no fluxo, acima do teclado.
+ */
+export function rodapeFicaSobreposto(vidro: boolean, temRodape: boolean, temEstiloProprio: boolean, preso: boolean, teclado: boolean) {
+  return vidro && temRodape && !temEstiloProprio && !preso && !teclado;
 }
 
 /** Liquid Glass só no iPhone com iOS 26 ou mais novo (expo-glass-effect); no iOS anterior, no Android e na prévia web, o fundo de hoje. */
