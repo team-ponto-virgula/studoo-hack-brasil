@@ -45,6 +45,22 @@ name: 90-criacao-da-trilha
     id: faixa-geracao
     optional: true
 # Pronta: o "Começar" aparece quando a última lição entra no caminho.
+# Proposta lenta (execução 45104180946, iPhone, máquina com carga ~300): o servidor não começou a responder em 15 s
+# (o limite do app até o começo da resposta, api-nativa.ts), o app largou o pedido (499 no proxy) e mostrou o cartão de
+# erro com "Tentar novamente" (tentar-geracao). Repetir não cria trilha a mais: a proposta só vira trilha no aceite. Uma
+# repetição; o resumo diz "Criação: tentativas N" (comum.sh, fluxo_criacao).
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha|tentar-geracao
+    timeout: 120000
+- runFlow:
+    when:
+      visible:
+        id: tentar-geracao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-geracao
 - extendedWaitUntil:
     visible:
       id: comecar-trilha

@@ -236,14 +236,16 @@ parar_app_do_aparelho() {
 }
 
 # O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o log do simulador, ao vivo,
-# só do Expo Go e só do que é áudio (CoreAudio, CoreMedia, AVFAudio, a descoberta das unidades de áudio) ou do registro de
-# som do app, se ele existir. O log guardado no fim (simulador-expo-go.log) não tem os níveis info e debug, onde o áudio
-# escreve.
+# só do Expo Go e só o registro de som do app ("[som] ..."), que é o que o veredito do fundo usa
+# (servidor/linha-do-tempo-som.mjs). Até a execução 45104180946 o predicado trazia também o CoreAudio e o CoreMedia em
+# nível debug: 95% das 14 mil linhas, sem entrar no veredito, com o `log` e o diagnosticd entre os processos de mais CPU
+# numa máquina com carga ~300. A linha do tempo do iPhone passa a não listar os eventos do sistema de áudio (o Android
+# continua com o logcat).
 iniciar_registro_de_audio() {
   # O estilo padrão do log traz o fuso de cada linha ("2026-11-19 19:50:05.120123+0000"), para a linha do tempo não
   # depender do fuso da máquina.
   xcrun simctl spawn "$(udid)" log stream --level debug --predicate \
-    'process == "Expo Go" AND (subsystem BEGINSWITH "com.apple.coreaudio" OR subsystem BEGINSWITH "com.apple.coremedia" OR subsystem BEGINSWITH "com.apple.avfaudio" OR subsystem BEGINSWITH "com.apple.audio" OR subsystem == "com.facebook.react.log" OR eventMessage CONTAINS "[som]" OR eventMessage CONTAINS[c] "AudioUnit")' \
+    'process == "Expo Go" AND eventMessage CONTAINS "[som]"' \
     > "$1" 2>&1 &
   echo $! > "$SAIDA/registro-de-audio.pid"
 }

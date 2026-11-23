@@ -256,6 +256,11 @@ aquecer_servidor() {
       tempo="$(curl -s -o /dev/null -m 30 -w '%{http_code} %{time_total}s' --cacert "$TLS/ca.crt" "$API$rota" 2> /dev/null || echo 'sem resposta')"
       echo "volta $volta $rota $tempo" >> "$REGISTROS/aquecimento.log"
     done
+    # A rota da proposta ao vivo (fluxo 90), sem sessão: responde 401 sem gerar nada nem gastar o limite da conta, mas
+    # carrega o módulo da rota antes do primeiro pedido de verdade.
+    tempo="$(curl -s -o /dev/null -m 30 -w '%{http_code} %{time_total}s' --cacert "$TLS/ca.crt" -X POST -H 'Content-Type: application/json' \
+      --data '{"objetivo":"aquecimento"}' "$API/api/aprendizado/propostas/ao-vivo" 2> /dev/null || echo 'sem resposta')"
+    echo "volta $volta POST /api/aprendizado/propostas/ao-vivo $tempo" >> "$REGISTROS/aquecimento.log"
   done
   wc -l < "$REGISTROS/proxy.log" | tr -d ' ' > "$REGISTROS/proxy-inicio-dos-fluxos.txt"
   echo "Servidor aquecido: $(wc -l < "$REGISTROS/aquecimento.log" | tr -d ' ') pedidos (aquecimento.log)."
@@ -296,20 +301,27 @@ resumir_proxy() {
   [ -f "$registro" ] || return 0
   inicio="$(cat "$REGISTROS/proxy-inicio-dos-fluxos.txt" 2> /dev/null || echo 0)"
   # A linha pode começar pela hora (proxy-https.mjs desde 23/11): "01:23:45.678 GET /api/sessao 200 12ms".
+  # Sem operador ternário nem comparação dentro dos argumentos do printf: o awk do macOS (o da BWK) recusa
+  # `horas != "" ? … : …` ali ("syntax error", execução 45104180946, que derrubou a coleta do iPhone). Só if/else.
   linha="$(tail -n +"$((inicio + 1))" "$registro" | awk '
     { hora = ""; if ($1 ~ /^[0-9][0-9]:[0-9][0-9]:/) { hora = $1; $1 = ""; $0 = $0 } }
     $1 ~ /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/ {
       total++
-      if ($3 ~ /^5[0-9][0-9]$/) { cinco++; if (hora != "" && cinco <= 6) horas = horas (horas == "" ? "" : ", ") hora }
+      if ($3 ~ /^5[0-9][0-9]$/) {
+        cinco++
+        if (hora != "" && cinco <= 6) { if (horas == "") horas = hora; else horas = horas ", " hora }
+      }
       if ($3 == "499") desistiu++
       ms = $NF; sub(/ms$/, "", ms); ms += 0
       if (ms > 3000) lentos++
-      if (ms > maximo) { maximo = ms; lento = $1 " " $2 (hora != "" ? " às " hora : "") }
+      if (ms > maximo) { maximo = ms; lento = $1 " " $2; if (hora != "") lento = lento " às " hora }
     }
     $1 == "conexão" && / fechada / && /sem TLS conclu/ { semtls++ }
     END {
-      printf "%d pedidos, %d com 5xx%s, %d desistidos pelo app (499), %d acima de 3 s (o mais lento: %d ms, %s), %d conexões fechadas sem TLS concluído", total, cinco, horas != "" ? " (" horas ")" : "", desistiu, lentos, maximo, lento, semtls
-    }')"
+      quando = ""
+      if (horas != "") quando = " (" horas ")"
+      printf "%d pedidos, %d com 5xx%s, %d desistidos pelo app (499), %d acima de 3 s (o mais lento: %d ms, %s), %d conexões fechadas sem TLS concluído", total + 0, cinco + 0, quando, desistiu + 0, lentos + 0, maximo + 0, lento, semtls + 0
+    }')" || linha="(o resumo do proxy.log falhou; o registro está nos registros)"
   resumo "Servidor local durante os fluxos (proxy.log, depois do aquecimento): $linha. A carga de cada processo, a cada 10 s, está em carga-dos-processos.log."
 }
 
@@ -593,6 +605,12 @@ fluxo_criacao() {
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
   if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
   if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  # A proposta lenta pede "Tentar novamente" uma vez no próprio fluxo 90: sempre no resumo, com ⚠️ quando houve.
+  if grep -q 'Tap on id: tentar-geracao.*COMPLETED' "$REGISTROS/maestro-criacao.log" 2> /dev/null; then
+    resumo "⚠️ Criação: tentativas 2. A proposta ao vivo não começou a chegar em 15 s e o fluxo 90 tocou em \"Tentar novamente\" uma vez (maestro-criacao.log; os horários no proxy.log e a carga em carga-dos-processos.log)."
+  else
+    resumo "Criação: tentativas 1."
+  fi
   # O emulador caiu no meio da prova da criação duas vezes (execuções 44911656576 e 45064765725, numa troca de tela, com o
   # Maestro esperando o toque e o emulador fora do adb no fim). No Android, se ele não responde depois da falha, ele é
   # religado (até duas vezes no total), a trilha da tentativa sai (o fluxo 95 precisa de exatamente uma trilha nova) e a
