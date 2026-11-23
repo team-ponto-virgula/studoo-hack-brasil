@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-23T15:47:31.819Z",
+  "person": "Julio Akamine",
+  "appleRoles": [
+    "DEVELOPER",
+    "GENERATE_INDIVIDUAL_KEYS"
+  ],
+  "allAppsVisible": false,
+  "provisioningAllowed": false,
+  "visibleAppIds": [
+    "6837508955"
+  ],
+  "canGenerateIndividualApiKey": true,
+  "keyCreated": false,
+  "uploadPerformed": false,
+  "nextStep": "Julio gera a própria chave individual no perfil do App Store Connect e guarda o .p8 e Key ID em segredo local/Cloud."
+}

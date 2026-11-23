@@ -42,7 +42,9 @@ npx eas-cli@latest build --platform ios --profile testflight
 
 Para automações/CI, pode usar um token pessoal limitado à organização e ao papel Developer, disponibilizado como `EXPO_TOKEN`. O login interativo não exige um token fornecido pelo titular.
 
-**Enviar ao TestFlight exige também autenticação Apple.** A organização não possui chave App Store Connect armazenada. O perfil `submit.testflight` atual usa `EXPO_ASC_API_KEY_PATH`, `EXPO_ASC_KEY_ID` e `EXPO_ASC_ISSUER_ID` do ambiente privado do operador. Esses valores precisam estar configurados por canal seguro para o envio; a função Developer na Expo não fornece uma chave Apple por si só.
+**Para Julio enviar ao TestFlight**, foi preparado o perfil `submit.testflight-individual`, com a chave individual dele: arquivo `.p8` e Key ID, sem Issuer ID. A permissão de geração dessa chave já foi habilitada no App Store Connect, mantendo acesso somente ao Studoo. [Geração e comando de envio](ENVIO-JULIO-TESTFLIGHT.md).
+
+O perfil `submit.testflight`, com as três variáveis privadas da chave de equipe, continua disponível ao operador Cloud. A organização não possui chave App Store Connect armazenada; a função Developer na Expo não fornece uma chave Apple por si só.
 
 A organização tem proteção de credenciais e variáveis desligada, conforme a configuração conferida. Os certificados/perfis de assinatura compartilhados estão disponíveis para os builds. Foram encontrados zero canais EAS Update e zero variáveis de projeto/conta a migrar nesta candidata.
 

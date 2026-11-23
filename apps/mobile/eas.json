@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.0.0",
+    "version": ">= 27.11.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -74,6 +74,17 @@
         "ascApiKeyPath": "$EXPO_ASC_API_KEY_PATH",
         "ascApiKeyId": "$EXPO_ASC_KEY_ID",
         "ascApiKeyIssuerId": "$EXPO_ASC_ISSUER_ID",
+        "language": "pt-BR"
+      }
+    },
+    "testflight-individual": {
+      "extends": "production",
+      "ios": {
+        "bundleIdentifier": "com.studoo.mobile.dev",
+        "appleTeamId": "PYZ6U56AMV",
+        "ascAppId": "6837508955",
+        "ascApiKeyPath": "$EXPO_ASC_INDIVIDUAL_KEY_PATH",
+        "ascApiKeyId": "$EXPO_ASC_INDIVIDUAL_KEY_ID",
         "language": "pt-BR"
       }
     }
