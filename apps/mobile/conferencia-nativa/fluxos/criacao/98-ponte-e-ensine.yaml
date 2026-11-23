@@ -292,18 +292,53 @@ name: 98-ponte-e-ensine
           below:
             text: "Sua explicação"
 - inputText: "O denominador conta as partes iguais do inteiro e o numerador as escolhidas. Numa pizza de 8 fatias, comer 3 é 3/8."
-# O teclado fica aberto: a tela rola até o botão e o toque passa (keyboardShouldPersistTaps="handled" na Tela).
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 99-ensine-explicacao-escrita
+# No Android, com o teclado aberto, a parte que rola fica entre o cabeçalho e o painel do acerto, acima do teclado (y
+# 207–748 de 1560 na execução 45105021514), e a rolagem do Maestro arrasta pelo centro da tela (y ~780), que cai no
+# painel: sete arrastos não moveram nada e "Enviar minha explicação", embaixo do campo, ficou fora da tela. O teclado
+# fecha antes (com ele aberto, o Voltar fecha só o teclado). No iPhone o toque já passava com o teclado aberto
+# (keyboardShouldPersistTaps="handled" na Tela).
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+      - waitForAnimationToEnd:
+          timeout: 1500
 - scrollUntilVisible:
     element:
       text: "Enviar minha explicação"
     direction: DOWN
-    timeout: 10000
+    timeout: 120000
+    optional: true
+# Se a rolagem não chegou, "Ver mais abaixo" (mais-abaixo, a pílula do rodapé) desce a lição até o fim.
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        text: "Enviar minha explicação"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: mais-abaixo
+          optional: true
+- extendedWaitUntil:
+    visible:
+      text: "Enviar minha explicação"
+    timeout: 15000
 - tapOn:
     waitToSettleTimeoutMs: 1500
     text: "Enviar minha explicação"
+# O retorno do Stu (caderno-do-stu) entra abaixo do campo: no Android, fora da tela não está na árvore, então a lição
+# desce até ele (pelo mesmo prazo do emulador lento) antes de exigir que esteja à vista.
+- scrollUntilVisible:
+    element:
+      id: caderno-do-stu
+    direction: DOWN
+    timeout: 120000
+    optional: true
 - extendedWaitUntil:
     visible:
       id: caderno-do-stu
@@ -312,7 +347,8 @@ name: 98-ponte-e-ensine
     element:
       id: caderno-do-stu
     direction: DOWN
-    timeout: 10000
+    timeout: 30000
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 99-ensine-retorno-do-stu
