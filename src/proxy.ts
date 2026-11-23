@@ -4,7 +4,9 @@ import { lerCookieSessao, origemStudoo } from "@/servidor/acesso/origem";
 
 export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === "/" && !lerCookieSessao(request)) {
-    const redirect = NextResponse.redirect(new URL("/login", request.url));
+    const destino = new URL("/login", request.url);
+    destino.search = request.nextUrl.search;
+    const redirect = NextResponse.redirect(destino);
     redirect.headers.set("Cache-Control", "no-store");
     return redirect;
   }

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { NextRequest } from 'next/server';
 import { abertura, criarControleAbertura, permiteAbertura } from '@studoo/contratos/abertura';
+import { proxy } from '../src/proxy.ts';
 
 function cenario() {
   let agora = 0, sequencia = 0;
@@ -33,6 +35,25 @@ test('somente aberturas limpas de entrada recebem a assinatura; links e retornos
   assert.equal(permiteAbertura('/login', '?erro=google_invalido'), false);
   assert.equal(permiteAbertura('/', '?code=oauth&state=x'), false);
   assert.equal(permiteAbertura('/', '', '#licao'), false);
+});
+
+test('entrada sem sessão preserva a consulta ao redirecionar ao login da mesma origem', () => {
+  for (const consulta of ['', '?retorno=1', '?next=https://externo.example/&redirect_uri=//externo.example']) {
+    const origem = 'https://studoo.example.test';
+    const resposta = proxy(new NextRequest(`${origem}/${consulta}`));
+    assert.equal(resposta.status, 307);
+    assert.equal(resposta.headers.get('Cache-Control'), 'no-store');
+    assert.equal(resposta.headers.get('Set-Cookie'), null);
+    const destino = new URL(resposta.headers.get('Location'));
+    assert.equal(destino.origin, origem);
+    assert.equal(destino.pathname, '/login');
+    assert.equal(destino.search, consulta);
+    const login = proxy(new NextRequest(destino, { headers: { 'x-studoo-abertura': 'forjado', 'x-studoo-nonce': 'forjado' } }));
+    assert.equal(login.headers.get('x-middleware-request-x-studoo-abertura'), consulta ? '0' : '1');
+    const nonce = login.headers.get('x-middleware-request-x-studoo-nonce');
+    assert.ok(nonce && nonce !== 'forjado');
+    assert.ok(login.headers.get('Content-Security-Policy').includes(`'nonce-${nonce}'`));
+  }
 });
 
 test('prontidão imediata inicia a saída imediatamente, sem esperar acomodação ou tempo mínimo', () => {
