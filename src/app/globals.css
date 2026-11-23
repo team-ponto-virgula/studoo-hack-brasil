@@ -834,7 +834,8 @@ html[data-pausado='true'] *, html[data-pausado='true'] *::before, html[data-paus
 }
 button, a, label { -webkit-tap-highlight-color: transparent; }
 button { touch-action: manipulation; }
-@media (max-width: 767px) {
+/* Até 1023 px (celular e tablet) a navegação é a cápsula de abas embaixo; a partir de 1024 px, a lateral (spec 16, item 33). */
+@media (max-width: 1023px) {
   html:has(.estudo[data-navegacao]) {
     --margem-ilha-esq: max(16px, calc(env(safe-area-inset-left) + 8px));
     --margem-ilha-dir: max(16px, calc(env(safe-area-inset-right) + 8px));
@@ -844,19 +845,11 @@ button { touch-action: manipulation; }
     --espaco-rodape: calc(var(--altura-navegacao) + var(--espaco-acao-fixa, 0px) + 16px);
     scroll-padding-bottom: var(--espaco-rodape);
   }
-  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra[data-presa], .trilha-vazia)) {
+  html:has(.estudo[data-navegacao] .editor-perfil__barra[data-presa]) {
     --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
   }
   .estudo[data-navegacao] .planos-movel { display: none; }
   .estudo[data-navegacao] .estudo-principal { padding-bottom: var(--espaco-rodape); }
-  .estudo[data-navegacao] .acao-principal {
-    inset: auto var(--margem-ilha-dir) calc(var(--altura-navegacao) + 12px) var(--margem-ilha-esq);
-    max-width: 480px;
-    margin-inline: auto;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
   .navegacao-mobile {
     position: fixed;
     z-index: 4;
@@ -909,10 +902,24 @@ button { touch-action: manipulation; }
     --altura-navegacao: 0px;
     --espaco-acao-fixa: 0px;
   }
+}
+/* Só no celular (até 767 px) as ações de rodapé (a principal, o próximo passo da trilha) flutuam; no tablet elas ficam no fluxo da página. */
+@media (max-width: 767px) {
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .trilha-vazia)) {
+    --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
+  }
+  .estudo[data-navegacao] .acao-principal {
+    inset: auto var(--margem-ilha-dir) calc(var(--altura-navegacao) + 12px) var(--margem-ilha-esq);
+    max-width: 480px;
+    margin-inline: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
   /* O teclado não cobre o envio: com campo ativo a ação volta ao fluxo de leitura. */
   html[data-teclado='true'] .estudo[data-navegacao] :is(.acao-principal, .editor-perfil__barra) { position: static; }
 }
-@media (max-width: 767px) and (forced-colors: active) {
+@media (max-width: 1023px) and (forced-colors: active) {
   .navegacao-mobile button[aria-current] { border: 2px solid Highlight; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -945,7 +952,7 @@ button { touch-action: manipulation; }
   .retomada > .botao { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .retomada { animation: none; } }
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .estudo[data-navegacao] .painel--planos > .acao-principal { display: none; }
   .estudo[data-navegacao] .planos-ativos { margin-bottom: 0; }
   /* Nova trilha (pedido vazio, com ideia, com material e prévia): 40 px entre o último conteúdo e a barra de baixo. */

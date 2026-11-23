@@ -243,11 +243,15 @@
 }
 @keyframes perfil-barra-entrar { from { transform: translateY(8px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .editor-perfil__barra[data-presa] { animation: none; } }
-/* Computador e tablet (768 px ou mais): a barra presa fica 16 px acima da borda de baixo da janela. O fim da rolagem reserva essa
+/* Computador (1024 px ou mais): a barra presa fica 16 px acima da borda de baixo da janela. O fim da rolagem reserva essa
    margem, a altura do bloco (medida em --altura-acao-fixa) e 12 px de folga, para o último item da página (Sair) não ficar atrás
-   dela (spec 10, "Barra de salvar: só com alteração"). Até 767 px a reserva é a de --espaco-rodape (globals.css), que soma a cápsula. */
-@media (min-width: 768px) {
+   dela (spec 10, "Barra de salvar: só com alteração"). Até 1023 px a reserva é a de --espaco-rodape (globals.css), que soma a cápsula. */
+@media (min-width: 1024px) {
   .estudo-principal:has(.editor-perfil__barra[data-presa]) { padding-bottom: calc(16px + var(--altura-acao-fixa, 64px) + 12px); }
+}
+/* Tablet (768 a 1023 px): a barra presa continua na coluna do formulário, mas sobe para 12 px acima da cápsula de abas (spec 16, item 33). */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .estudo[data-navegacao] .editor-perfil__barra[data-presa] { bottom: calc(var(--altura-navegacao) + 12px); }
 }
 @media (max-width: 400px) { .estado-perfil-curto { display: inline; } .estado-perfil-longo { display: none; } }
 @media (max-width: 767px) {

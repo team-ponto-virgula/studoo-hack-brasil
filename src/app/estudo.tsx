@@ -255,7 +255,9 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       }
       // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
       if (ativos.length === 0 || abriuComRascunho.current) {
-        setTela({ tipo: 'objetivo', focarCampo: true });
+        // Até 1023 px o campo não ganha o foco sozinho (só no computador, ou com um rascunho salvo): com um campo de texto em foco o site esconde a cápsula de abas (teclado aberto), e quem
+        // chega sem trilha, como o visitante, ficaria sem Minhas trilhas, Explorar e Perfil na primeira tela (spec 16, item 33). O foco vai para o título, como nas outras telas.
+        setTela({ tipo: 'objetivo' });
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
