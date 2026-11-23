@@ -204,8 +204,12 @@ export function Estudo({ cliente, sair, expirar }: {
             const plano = await cliente.obterPlano(inicial.id);
             if (!ativo) return;
             setEtapa((atual) => atual.tipo === 'planos' ? { tipo: 'plano', plano } : atual);
-          } catch {
-            // Sem o detalhe, a pessoa fica em Meus planos e escolhe de lá.
+          } catch (falha) {
+            // Sem o detalhe (rede lenta, servidor fora), a pessoa fica em Minhas trilhas, que funciona, mas com o erro e
+            // "Tentar novamente" (busca a lista e abre a trilha de novo); antes, a lista ficava parada sem dizer nada.
+            if (!ativo) return;
+            if (sessaoInvalida(falha)) await expirarGuardando();
+            else mostrarErro(falha);
           }
         }
       } catch (falha) {
