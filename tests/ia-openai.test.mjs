@@ -13,6 +13,7 @@ const { iniciarGeracao } = await import("../src/servidor/aprendizado/geracao.ts"
 const { obterGerador } = await import("../src/servidor/ia/gerador.ts");
 const { GERADOR_OPENAI, MODELO_PADRAO, normalizarConteudo } = await import("../src/servidor/ia/openai.ts");
 const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.ts");
+const { FalhaApi } = await import("../src/servidor/acesso/http.ts");
 
 /*
  * Adaptador da OpenAI (Responses API) contra um servidor local que imita a API: streaming SSE para a estrutura e
@@ -54,6 +55,8 @@ const licaoDeEscolha = {
 let servidor;
 let pedidos = [];
 let modo = "normal";
+/** Quantos pedidos de lição o servidor falso já recebeu (o modo "leitura-estoura-*" muda a resposta pela ordem). */
+let pedidosDeLicao = 0;
 
 function responderStreaming(resposta, linhas) {
   resposta.writeHead(200, { "Content-Type": "text/event-stream" });
@@ -103,6 +106,14 @@ before(async () => {
         responderStreaming(resposta, linhasDaTrilha);
         return;
       }
+      // O JSON da lição aninhado a ponto de estourar a pilha na leitura (RangeError dentro de normalizarLicao): na primeira vez (ou sempre), e depois a lição boa.
+      if (modo === "leitura-estoura-depois-ok" || modo === "leitura-estoura-sempre") {
+        pedidosDeLicao += 1;
+        const texto = modo === "leitura-estoura-sempre" || pedidosDeLicao === 1 ? licaoQueEstouraALeitura : JSON.stringify(licaoDeEscolha);
+        resposta.writeHead(200, { "Content-Type": "application/json" });
+        resposta.end(JSON.stringify({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: texto }] }] }));
+        return;
+      }
       // Correções durante a aula: cada pedido diz o seu formato pelo nome do esquema.
       const formato = dados.text?.format?.name;
       let saida = licaoDeEscolha;
@@ -125,6 +136,7 @@ after(async () => {
 });
 
 beforeEach(() => {
+  pedidosDeLicao = 0;
   process.env.IA = "openai";
   process.env.OPENAI_API_KEY = "chave-de-teste";
   delete process.env.OPENAI_MODELO;
@@ -545,4 +557,36 @@ test("429 da OpenAI: retry-after respeitado, uma nova tentativa e resposta norma
   } finally {
     console.error = original;
   }
+});
+
+// O 500 do aceite (Lead, 23/11): uma exceção de dentro de normalizarLicao subia crua até o tratarRota e virava HTTP 500, sem a segunda tentativa de formato. Um campo aninhado demais no JSON do modelo
+// estoura a pilha da leitura (RangeError, medido a partir de 2 000 níveis). Agora vale como formato inválido: pede de novo e, falhando de novo, é ia_indisponivel (503).
+const aninhado = (niveis) => {
+  let texto = "1";
+  for (let i = 0; i < niveis; i += 1) texto = `{"a":${texto}}`;
+  return texto;
+};
+const licaoQueEstouraALeitura = JSON.stringify({ ...licaoDeEscolha, resolucao: "@@" }).replace('"@@"', aninhado(20_000));
+const esqueletoDeViolao = () => ({
+  gerador: GERADOR_OPENAI,
+  titulo: "Violão do zero",
+  objetivo: "Tocar as primeiras músicas no violão.",
+  origem: "IA da OpenAI (teste)",
+  fluxos: [{ titulo: "Primeiros passos", licoes: [{ titulo: "Conhecer as partes do violão" }, { titulo: "Afinar as cordas" }] }],
+});
+
+test("OpenAI: JSON que estoura a pilha na leitura da lição vale como formato inválido: pede de novo e a lição sai (nada de 500)", async () => {
+  modo = "leitura-estoura-depois-ok";
+  const conteudo = await obterGerador().gerarConteudo(esqueletoDeViolao(), 0, 0, new AbortController().signal);
+  assert.ok(conteudoValido(conteudo));
+  assert.equal(pedidosDeLicao, 2, "a segunda tentativa, de formato");
+});
+
+test("OpenAI: se a leitura estoura nas duas tentativas, o erro é ia_indisponivel (503, motivo formato), nunca uma exceção crua (500)", async () => {
+  modo = "leitura-estoura-sempre";
+  const erro = await obterGerador().gerarConteudo(esqueletoDeViolao(), 0, 0, new AbortController().signal).catch((falha) => falha);
+  assert.ok(erro instanceof FalhaApi, `veio ${erro instanceof Error ? erro.name : typeof erro}`);
+  assert.equal(erro.codigo, "ia_indisponivel");
+  assert.equal(erro.motivo, "formato");
+  assert.equal(pedidosDeLicao, 2);
 });

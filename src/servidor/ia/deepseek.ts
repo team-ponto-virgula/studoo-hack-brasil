@@ -13,7 +13,7 @@ import {
   instrucoesDaLicao,
   lerLinha,
   correcaoDoFormato,
-  normalizarLicao,
+  normalizarLicaoSegura,
   promptDaLicao,
   sinalComPrazo,
   validarBaseUrl,
@@ -370,6 +370,12 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
     },
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
+      // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
+      let ultimoMotivo: string | undefined;
+      const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
+        ultimoMotivo = dados.motivo;
+        registrar("ia_indisponivel", dados);
+      };
       if (esqueleto.gerador !== GERADOR_DEEPSEEK || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
       // Lição de matemática: o primeiro pedido leva fórmulas, figuras e resolução. Se ele não fecha (prazo, erro do provedor, vazio, formato),
       // a segunda tentativa volta ao pedido de sempre, sem matemática: a matemática nunca derruba a lição, e o aceite não falha por ela.
@@ -405,14 +411,14 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         } catch (erro) {
           const guardada = usarReserva("falhou");
           if (guardada) return guardada;
-          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
             continue;
           }
-          if (estourou()) throw new FalhaApi("ia_indisponivel");
+          if (estourou()) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
-          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          registrarFalha({ motivo: "rede", tentativa });
           continue;
         }
         let texto: string;
@@ -421,19 +427,19 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         } catch {
           const guardada = usarReserva("rede");
           if (guardada) return guardada;
-          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : "rede");
             continue;
           }
-          if (estourou()) throw new FalhaApi("ia_indisponivel");
-          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          if (estourou()) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
+          registrarFalha({ motivo: "rede", tentativa });
           continue;
         }
         if (!texto.trim()) {
           const guardada = usarReserva("vazio");
           if (guardada) return guardada;
-          registrar("ia_indisponivel", { motivo: "vazio", tentativa });
+          registrarFalha({ motivo: "vazio", tentativa });
           desligarMatematica("vazio");
           continue;
         }
@@ -444,12 +450,12 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         } catch {
           const guardada = usarReserva("formato");
           if (guardada) return guardada;
-          registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
+          registrarFalha({ motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
           desligarMatematica("formato");
           continue;
         }
-        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
+        const lida = normalizarLicaoSegura(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
           const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
           if (ajustes.length > 0) {
@@ -472,12 +478,12 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         }
         const guardada = usarReserva("formato");
         if (guardada) return guardada;
-        registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
+        registrarFalha({ motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
         desligarMatematica("formato");
       }
       if (reserva) return reserva.conteudo;
-      throw new FalhaApi("ia_indisponivel");
+      throw new FalhaApi("ia_indisponivel", undefined, ultimoMotivo);
     },
   };
 }

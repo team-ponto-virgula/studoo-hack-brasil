@@ -17,6 +17,7 @@ const { pedirJson } = await import("../src/servidor/estudio/ia.ts");
 const { transcrever } = await import("../src/servidor/estudio/voz.ts");
 const { gerarConteudos } = await import("../src/servidor/aprendizado/servico.ts");
 const { normalizarLicao } = await import("../src/servidor/ia/comum.ts");
+const { FalhaApi } = await import("../src/servidor/acesso/http.ts");
 const { readFile } = await import("node:fs/promises");
 const { banco } = await import("../src/servidor/banco/cliente.ts");
 const { GET: getAuthConfig } = await import("../src/app/api/auth/config/route.ts");
@@ -755,4 +756,42 @@ test("opções e justificativas em texto puro também fecham (o gabarito aponta 
   assert.deepEqual(lida.conteudo.exercicio.gabarito, ["a"]);
   assert.deepEqual(lida.conteudo.extras[0].justificativas.map((o) => o.texto), vf.opcoes);
   assert.deepEqual(lida.conteudo.extras[0].gabarito, ["verdadeiro", "a"]);
+});
+
+// O 500 do aceite (Lead, 23/11): uma exceção de dentro de normalizarLicao subia crua até o tratarRota e virava HTTP 500, sem a segunda tentativa de formato. O JSON do modelo é de fora: um campo
+// aninhado demais estoura a pilha da leitura (RangeError, medido a partir de 2 000 níveis; a validação de matemática lê os campos de forma recursiva). Agora vale como formato inválido.
+const aninhado = (niveis) => {
+  let texto = "1";
+  for (let i = 0; i < niveis; i += 1) texto = `{"a":${texto}}`;
+  return texto;
+};
+const licaoQueEstouraALeitura = JSON.stringify({ ...licaoValida, resolucao: "@@" }).replace('"@@"', aninhado(20_000));
+
+test("DeepSeek: JSON que estoura a pilha na leitura da lição vale como formato inválido (pede de novo), e não como erro do servidor (500)", async () => {
+  assert.throws(() => normalizarLicao(JSON.parse(licaoQueEstouraALeitura), "IA"), RangeError, "a leitura pura estoura: é o caso real");
+  const { conteudo, logs, pedidos } = await conteudoComRegistro([licaoQueEstouraALeitura, licaoValida]);
+  assert.ok(!(conteudo instanceof Error), `veio ${conteudo instanceof Error ? conteudo.name : "?"}`);
+  assert.equal(conteudo.exercicio.tipo, "multipla_escolha");
+  assert.equal(pedidos.length, 2, "a segunda tentativa, de formato");
+  const formato = logs.find((l) => l.motivo === "formato");
+  assert.ok(formato, "registrado como formato");
+  assert.deepEqual({ detalhe: formato.detalhe, tentativa: formato.tentativa }, { detalhe: "excecao:RangeError", tentativa: 0 });
+  assert.ok(JSON.stringify(logs).length < 2000, "o registro não carrega o JSON do modelo");
+});
+
+test("DeepSeek: se a leitura estoura nas duas tentativas, o erro é ia_indisponivel (503, motivo formato), nunca uma exceção crua (500)", async () => {
+  const { conteudo, pedidos } = await conteudoComRegistro([licaoQueEstouraALeitura, licaoQueEstouraALeitura]);
+  assert.equal(pedidos.length, 2);
+  assert.ok(conteudo instanceof FalhaApi, `veio ${conteudo instanceof Error ? conteudo.name : typeof conteudo}`);
+  assert.equal(conteudo.codigo, "ia_indisponivel");
+  assert.equal(conteudo.motivo, "formato");
+});
+
+test("a lição válida sai igual com a leitura protegida (o conteúdo é o mesmo que a leitura direta devolve)", async () => {
+  const { conteudo } = await conteudoComRegistro([licaoValida]);
+  const direto = normalizarLicao(licaoValida, "IA do DeepSeek (teste)").conteudo;
+  assert.equal(conteudo.exercicio.tipo, direto.exercicio.tipo);
+  assert.deepEqual(conteudo.exercicio.opcoes, direto.exercicio.opcoes);
+  assert.equal(conteudo.conceito, direto.conceito);
+  assert.equal(conteudo.exemplo, direto.exemplo);
 });

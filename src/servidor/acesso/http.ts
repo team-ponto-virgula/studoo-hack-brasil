@@ -1,6 +1,7 @@
 import type { CodigoErro } from "@studoo/contratos";
 import { mensagensApi } from "@/mensagens/erros-api";
 import type { CanalSessao } from "@/servidor/banco/gerado/client";
+import { descreverErroInterno } from "./erro-interno";
 import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
@@ -49,8 +50,10 @@ const statusErros: Record<CodigoErro, number> = {
 };
 
 export class FalhaApi extends Error {
-  /** `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). */
-  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>) {
+  /**
+   * `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). `motivo`: o porquê curto ("formato", "tempo"…), só para o registro do servidor (nunca vai na resposta).
+   */
+  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>, public readonly motivo?: string) {
     super(codigo);
   }
 }
@@ -104,7 +107,8 @@ async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
     const status = statusErros[codigo];
     const correlationId = crypto.randomUUID();
     if (status >= 500) {
-      console.error(JSON.stringify({ correlationId, codigo, status, duracaoMs: Math.round(performance.now() - inicio) }));
+      // Além da duração: o nome do erro, o `code` (Prisma), o primeiro quadro da pilha e o motivo curto, sem conteúdo (SEGURANCA.md §8). Antes só havia a duração, e o 500 não dizia a causa.
+      console.error(JSON.stringify({ correlationId, codigo, status, duracaoMs: Math.round(performance.now() - inicio), ...descreverErroInterno(erro) }));
     }
     const resposta = responder({ ...extra, codigo, mensagem: mensagensApi[codigo] }, status);
     resposta.headers.set("X-Correlation-Id", correlationId);
