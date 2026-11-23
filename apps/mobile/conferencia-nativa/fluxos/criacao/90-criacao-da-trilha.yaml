@@ -30,6 +30,12 @@ name: 90-criacao-da-trilha
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 90-criacao-pedido
+# Medição do rodapé acima do teclado ("Montar minha trilha" na Nova trilha): com o teclado aberto, este passo procura um texto que não existe e dá
+# aviso; o Maestro guarda a árvore dele (screen-hierarchy/…-medir-pedido.json), e servidor/rodape-teclado.mjs mede ali a
+# base do elemento contra o topo do teclado ("Rodapé acima do teclado" no resumo; NÃO derruba a rodada).
+- assertVisible:
+    text: "medir-pedido"
+    optional: true
 - startRecording: criacao-transicao
 - tapOn:
     waitToSettleTimeoutMs: 1500

@@ -43,7 +43,7 @@ CAPTURAS_ESPERADAS="
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
 95-resposta-exercicio 96-resposta-errada 97-resposta-certa
-98-ponte-passo-1 98-ponte-desafio 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
+98-ponte-passo-1 98-ponte-desafio 98-lacuna-teclado-aberto 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -674,6 +674,16 @@ fluxo_criacao() {
     resumo "❌ Erro → ponte e \"Ensine ao Stu\" (fluxo 98): $ponte."
   fi
 
+  # O rodapé acima do teclado, medido nas árvores dos fluxos 90 e 98 (servidor/rodape-teclado.mjs): uma linha por medição
+  # no resumo; "NÃO" marca a rodada para falhar na coleta (teclado-falhou.txt).
+  rm -f "$SAIDA/teclado-falhou.txt"
+  local medicoes codigo_teclado=0
+  medicoes="$(node "$AQUI/servidor/rodape-teclado.mjs" "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/ponte" "$HOME/.maestro/tests" 2>&1)" || codigo_teclado=$?
+  printf '%s\n' "$medicoes" > "$REGISTROS/rodape-teclado.txt"
+  while IFS= read -r linha_teclado; do [ -n "$linha_teclado" ] && resumo "$linha_teclado"; done <<< "$medicoes"
+  if [ "$codigo_teclado" -eq 1 ]; then
+    printf '%s\n' "$medicoes" | grep -m 1 ': NÃO' > "$SAIDA/teclado-falhou.txt" || echo "rodapé atrás do teclado" > "$SAIDA/teclado-falhou.txt"
+  fi
   # O resultado dos três, para o modo só da criação (fluxo_so_criacao): "passou" ou o motivo de cada um.
   RESULTADO_DA_CRIACAO="90 $fluxo; 95 $resposta; 98 $ponte"
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
@@ -958,6 +968,9 @@ coletar_fim() {
   fi
   if [ -f "$SAIDA/criacao-falhou.txt" ]; then
     erro "A prova da criação de trilha falhou: $(head -1 "$SAIDA/criacao-falhou.txt")"
+  fi
+  if [ -f "$SAIDA/teclado-falhou.txt" ]; then
+    erro "Rodapé atrás do teclado: $(head -1 "$SAIDA/teclado-falhou.txt")"
   fi
   resumo "✅ As $TOTAL_DE_CAPTURAS capturas do percurso saíram."
 }

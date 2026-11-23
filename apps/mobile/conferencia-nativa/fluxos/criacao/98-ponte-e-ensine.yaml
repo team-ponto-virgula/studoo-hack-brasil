@@ -245,6 +245,16 @@ name: 98-ponte-e-ensine
           waitToSettleTimeoutMs: 1000
           id: resposta-licao
       - inputText: "5"
+      # A lacuna digitada, com o teclado aberto, antes de enviar: a captura e a medição do Verificar (o conserto 97136b1).
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - takeScreenshot: 98-lacuna-teclado-aberto
+      # Medição do rodapé acima do teclado (o Verificar da lacuna): com o teclado aberto, este passo procura um texto que não existe e dá
+      # aviso; o Maestro guarda a árvore dele (screen-hierarchy/…-medir-lacuna.json), e servidor/rodape-teclado.mjs mede ali a
+      # base do elemento contra o topo do teclado ("Rodapé acima do teclado" no resumo; NÃO derruba a rodada).
+      - assertVisible:
+          text: "medir-lacuna"
+          optional: true
       # iPhone: com o teclado aberto, o rodapé com o "Verificar" fica atrás do teclado (execução 45105021514: com o
       # teclado aberto, enviar-resposta em y 812–864 de 874, sem a área segura; o toque caiu no teclado e a resposta não
       # foi). O envio vai pela tecla do teclado ("Enviar", returnKeyType="send" com onSubmitEditing no campo), como a
@@ -323,6 +333,12 @@ name: 98-ponte-e-ensine
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 99-ensine-explicacao-escrita
+# Medição do rodapé acima do teclado (o rodapé com o campo do Explique em foco): com o teclado aberto, este passo procura um texto que não existe e dá
+# aviso; o Maestro guarda a árvore dele (screen-hierarchy/…-medir-explique.json), e servidor/rodape-teclado.mjs mede ali a
+# base do elemento contra o topo do teclado ("Rodapé acima do teclado" no resumo; NÃO derruba a rodada).
+- assertVisible:
+    text: "medir-explique"
+    optional: true
 # No Android, com o teclado aberto, a parte que rola fica entre o cabeçalho e o painel do acerto, acima do teclado (y
 # 207–748 de 1560 na execução 45105021514), e a rolagem do Maestro arrasta pelo centro da tela (y ~780), que cai no
 # painel: sete arrastos não moveram nada e "Enviar minha explicação", embaixo do campo, ficou fora da tela. O teclado
