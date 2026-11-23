@@ -1,20 +1,22 @@
 /*
- * A espera da geração que se acompanha (spec 17, mudança 1). A placa do alto diz "Montando sua trilha" (`mensagens.geracao.montandoTitulo`) nos 3 primeiros segundos e
- * depois troca, a cada 5 s, entre as frases de `mensagens.geracao.dicas`, em laço, com o efeito de aparecer e sumir em 300 ms (com movimento reduzido, a troca é imediata).
- * A conta é pura e igual na web e no app: cada cliente só passa o tempo que o relógio dele mediu desde que a espera começou e desenha o que ela devolve.
+ * A espera da criação da trilha (spec 17, mudança 1, revista em 23/11). Depois de "Começar a lição 1", a criação leva de 12 a 21 s: o botão fica afundado, com o giro e "Criando sua trilha…"
+ * (`mensagens.geracao.criandoTrilha`), e 1,5 s depois do toque entra embaixo dele a linha "Escrevendo suas lições…" (`mensagens.geracao.escrevendoLicoes`). Três segundos depois de aparecer,
+ * a MESMA linha troca para as frases de `mensagens.geracao.dicas` e, a cada 5 s, para a seguinte, em laço, com o efeito de aparecer e sumir em 300 ms (com movimento reduzido, a troca é
+ * imediata). A placa "Montando sua trilha" da geração da proposta (uns 3 s) não usa as frases.
+ * A conta é pura e igual na web e no app: cada cliente passa o tempo que o relógio dele mediu desde que a LINHA apareceu (1,5 s depois do toque, não desde o toque) e desenha o que ela devolve.
  */
 
 export const ESPERA_DA_GERACAO = {
-  /** Os primeiros segundos, em que a placa ainda diz "Montando sua trilha". */
+  /** Os primeiros segundos da linha, em que ela ainda diz "Escrevendo suas lições…". */
   antesDaPrimeiraMs: 3000,
-  /** Cada frase fica na placa este tempo, até a troca (inclui o efeito). */
+  /** Cada frase fica na linha este tempo, até a troca (inclui o efeito). */
   trocaACadaMs: 5000,
   /** Aparecer e sumir: a frase some e a próxima aparece em 300 ms no total (150 ms cada metade). Com movimento reduzido, 0. */
   efeitoMs: 300,
 } as const;
 
 /**
- * Qual frase mostrar `decorridoMs` depois que a espera começou: `null` nos 3 primeiros segundos (vale "Montando sua trilha"); depois, o índice da frase (0 a `total` - 1),
+ * Qual frase mostrar `decorridoMs` depois que a linha apareceu: `null` nos 3 primeiros segundos (vale "Escrevendo suas lições…"); depois, o índice da frase (0 a `total` - 1),
  * mudando a cada 5 s e voltando à primeira depois da última. Tempo inválido ou negativo conta como o começo; sem frases, nunca há troca.
  */
 export function dicaDaEspera(decorridoMs: number, total: number): number | null {
@@ -23,7 +25,7 @@ export function dicaDaEspera(decorridoMs: number, total: number): number | null 
   return Math.floor((decorridoMs - ESPERA_DA_GERACAO.antesDaPrimeiraMs) / ESPERA_DA_GERACAO.trocaACadaMs) % total;
 }
 
-/** Quanto falta, em ms, para a próxima troca (da placa para a 1ª frase ou de uma frase para a seguinte): o relógio do cliente dorme exatamente isso, sem acordar a cada quadro. */
+/** Quanto falta, em ms, para a próxima troca (do texto de sempre para a 1ª frase ou de uma frase para a seguinte): o relógio do cliente dorme exatamente isso, sem acordar a cada quadro. */
 export function faltaParaTrocarADica(decorridoMs: number): number {
   const { antesDaPrimeiraMs: antes, trocaACadaMs: troca } = ESPERA_DA_GERACAO;
   const agora = Number.isFinite(decorridoMs) && decorridoMs > 0 ? decorridoMs : 0;
@@ -32,22 +34,19 @@ export function faltaParaTrocarADica(decorridoMs: number): number {
 }
 
 /*
- * A espera longa (spec 17, mudança 1, versão de 22/11): depois de "Começar a lição 1", a trilha leva de 15 a 18 s para ser criada. A mesma placa mostra "Criando sua trilha…"
- * (`mensagens.geracao.criandoTrilha`) por 3 s e depois as frases de `mensagens.geracao.dicas` SEM a 3ª ("Você confere a trilha antes de começar."), porque a pessoa já conferiu a trilha:
- * a 1ª, a 2ª e a 4ª, trocando a cada 5 s, em laço, até a lição abrir. O relógio é o mesmo da espera da proposta; muda só a lista. O tempo conta desde o toque em "Começar a lição 1".
+ * Obsoletos (revisão de 23/11). Na versão de 22/11 a criação da trilha tinha uma lista própria de frases, porque a "Você confere a trilha antes de começar." ficava de fora dela. Essa frase
+ * saiu de `mensagens.geracao.dicas`, que agora só tem as três que valem, e a criação usa `dicaDaEspera` e `faltaParaTrocarADica` como a espera de qualquer outra tela. Os três nomes abaixo
+ * continuam exportados, com os índices das três frases, só para as versões do app que ainda os leem não quebrarem.
  */
 
-/** Os índices de `mensagens.geracao.dicas` que valem na espera longa, em ordem: a 1ª, a 2ª e a 4ª frase (a 3ª fica de fora). */
-export const DICAS_DA_ESPERA_LONGA = [0, 1, 3] as const;
+/** @deprecated Use `dicaDaEspera(decorridoMs, mensagens.geracao.dicas.length)`. Agora são os três índices das três frases. */
+export const DICAS_DA_ESPERA_LONGA = [0, 1, 2] as const;
 
-/**
- * Qual frase mostrar `decorridoMs` depois do toque em "Começar a lição 1": `null` nos 3 primeiros segundos (vale "Criando sua trilha…"); depois, o índice em `mensagens.geracao.dicas`
- * (0, 1 ou 3), mudando a cada 5 s e voltando à primeira depois da última. Tempo inválido ou negativo conta como o começo.
- */
+/** @deprecated Use `dicaDaEspera(decorridoMs, mensagens.geracao.dicas.length)`, contando o tempo desde que a linha "Escrevendo suas lições…" aparece. */
 export function dicaDaEsperaLonga(decorridoMs: number): number | null {
   const posicao = dicaDaEspera(decorridoMs, DICAS_DA_ESPERA_LONGA.length);
   return posicao === null ? null : DICAS_DA_ESPERA_LONGA[posicao];
 }
 
-/** Quanto falta, em ms, para a próxima troca da espera longa: o mesmo relógio da espera da proposta (3 s e depois 5 s), com o nome que o cliente da espera longa procura. */
+/** @deprecated Use `faltaParaTrocarADica`. */
 export const faltaParaTrocarADicaLonga = faltaParaTrocarADica;

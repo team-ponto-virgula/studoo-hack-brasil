@@ -1051,7 +1051,11 @@ export const mensagens = {
         comecarLicao1: 'Começar a lição 1',
         criandoTrilha: 'Criando sua trilha…',
         anuncioCriando: 'Criando sua trilha.',
-        escrevendoLicoes: 'Escrevendo as lições da trilha. Com a IA, leva alguns segundos.',
+        /**
+         * A linha embaixo do botão "Começar a lição 1" (spec 17, mudança 1, revista em 23/11): entra 1,5 s depois do toque e dura enquanto a trilha é criada (de 12 a 21 s medidos).
+         * Por isso não promete "alguns segundos". Depois de 3 s na tela, a mesma linha troca para as frases de `dicas`.
+         */
+        escrevendoLicoes: 'Escrevendo suas lições…',
         erroCriacao: 'Não deu para criar a trilha. Confira a conexão e tente de novo.',
         propostaExpirada: 'Esta proposta expirou. Monte de novo.',
         montarDeNovo: 'Montar de novo',
@@ -1065,14 +1069,14 @@ export const mensagens = {
         stuMontando: 'Montando sua trilha, uma lição de cada vez',
         stuPronta: 'Trilha pronta! Confira as lições e comece quando quiser.',
         /**
-         * As frases da espera da geração (spec 17, mudança 1), nesta ordem e em laço: depois de 3 s de "Montando sua trilha", a placa do alto troca a cada 5 s entre elas
-         * (`dicaDaEspera`, em @studoo/contratos, diz qual). São verdadeiras para conta e para visitante, sem número nem promessa que não medimos (por isso a 4ª não diz "salvo": o
-         * progresso do visitante dura 24 h neste aparelho). Cada uma cabe em 2 linhas em 320 px.
+         * As frases da espera da criação da trilha (spec 17, mudança 1, revista em 23/11), nesta ordem e em laço: depois de "Começar a lição 1", a linha "Escrevendo suas lições…"
+         * (`escrevendoLicoes`) troca, 3 s depois de aparecer, para a 1ª frase e, a cada 5 s, para a seguinte (`dicaDaEspera`, em @studoo/contratos, diz qual). A placa "Montando sua trilha",
+         * na geração da proposta (uns 3 s), NÃO usa as frases. São verdadeiras para conta e para visitante, sem número nem promessa que não medimos (por isso a 3ª não diz "salvo": o
+         * progresso do visitante dura 24 h neste aparelho; e "Você confere a trilha antes de começar." saiu, porque nessa espera a pessoa já conferiu a trilha). Cada uma cabe em 2 linhas em 320 px.
          */
         dicas: [
             'Lições curtas, com exercício e retorno na hora.',
             'Errou? O Stu explica de outro jeito.',
-            'Você confere a trilha antes de começar.',
             'Cada lição concluída fica marcada no mapa.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
