@@ -8,7 +8,7 @@
 export interface Retangulo { top: number; bottom: number; left: number; width: number; height: number }
 
 /** O que o aviso pede aos cabeçalhos: o que ele fica abaixo. A barra da marca da entrada, o cabeçalho do app, o do mapa e o da aula, o do tour e o da geração (com a placa que diz o que acontece). */
-export const CABECALHOS_DO_ALTO = '.som-marca, .recuperar-topo, .estudo-cabecalho, .trilha-topo, .aula-topo, .apresentacao-topo, .previa-cabecalho, .previa-placa';
+export const CABECALHOS_DO_ALTO = '.som-marca, .recuperar-topo, .estudo-cabecalho, .trilha-topo, .aula-topo, .apresentacao-topo, .previa-cabecalho, .previa-placa, .cn-cabecalho';
 
 /** O balão de um nó do mapa: com ele aberto, o aviso fecha na hora. */
 export const BALAO_DO_NO = '.caminho-balao';

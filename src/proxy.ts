@@ -45,4 +45,4 @@ export function proxy(request: NextRequest) {
   return resposta;
 }
 
-export const config = { matcher: ["/", "/login", "/cadastro", "/recuperar", "/privacidade", "/suporte", "/equipe/:path*", "/t/:codigo*", "/p/:id*", "/explorar"] };
+export const config = { matcher: ["/", "/login", "/cadastro", "/recuperar", "/privacidade", "/suporte", "/conheca", "/equipe/:path*", "/t/:codigo*", "/p/:id*", "/explorar"] };

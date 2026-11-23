@@ -1,0 +1,32 @@
+import type { ReactNode } from 'react';
+import type { CapturaOtimizada, Plataforma } from './imagens';
+
+/**
+ * A moldura própria do Studoo (spec 18, 1.4): retângulo de raio 44, borda de 10 px #0B1B5C e sombra suave. Segue a plataforma da captura: a
+ * ilha no alto para o iPhone e um ponto de câmera de 10 px, centralizado, para o Android. Não desenha relógio (o que aparece é o da captura) e
+ * não imita um aparelho de verdade nem de marca. O tamanho vem do CSS (`--celular`), e a tela mantém a proporção das capturas nativas.
+ */
+export function Celular({ children, className = '', rotulo, plataforma = 'iphone' }: { children: ReactNode; className?: string; rotulo?: string; plataforma?: Plataforma }) {
+  return (
+    <div className={`cn-celular ${className}`.trim()} data-plataforma={plataforma} role={rotulo ? 'group' : undefined} aria-label={rotulo}>
+      <span className="cn-celular__ilha" aria-hidden="true" />
+      <div className="cn-celular__tela">{children}</div>
+    </div>
+  );
+}
+
+/** Uma captura nativa do app: WebP em 1x e 2x, com largura e altura declaradas (nada pula). */
+export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '' }: {
+  captura: CapturaOtimizada;
+  alt: string;
+  /** A primeira do herói: carrega já e com prioridade. As outras só quando chegam perto da tela. */
+  prioridade?: boolean;
+  escondida?: boolean;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
+      alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'auto'} decoding="async" draggable={false} hidden={escondida || undefined} />
+  );
+}

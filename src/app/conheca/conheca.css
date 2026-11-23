@@ -1,0 +1,351 @@
+/*
+ * Página de apresentação do Studoo (spec 18). Tudo com prefixo `cn-` para não esbarrar no resto do site; as cores, as fontes e os botões
+ * são os do Studoo (globals.css). Animação só com CSS, e SÓ dentro de `prefers-reduced-motion: no-preference`: com movimento reduzido (ou sem
+ * JavaScript) a página mostra tudo inteiro e parado. Nenhuma animação mexe em opacidade ou posição de algo que já está à vista no layout:
+ * só `opacity` e `transform`, então nenhum salto de layout.
+ */
+.cn-pagina {
+  --cn-ceu: #eaf0ff;
+  --cn-margem: 20px;
+  --cn-coluna: 1160px;
+  --cn-marinho: #0b1b5c;
+  --cn-borda-cartao: #e1e7fa;
+  position: relative;
+  overflow-x: clip;
+  background: var(--fundo);
+  color: var(--texto);
+}
+@media (min-width: 768px) { .cn-pagina { --cn-margem: 40px; } }
+@media (min-width: 1024px) { .cn-pagina { --cn-margem: 64px; } }
+
+.cn-pagina :where(h1, h2, h3) { text-wrap: balance; }
+.cn-pagina p { max-width: none; }
+
+/* ---------- Cabeçalho: logo, som do site e Entrar ---------- */
+.cn-cabecalho {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 var(--cn-margem);
+  background: var(--cn-ceu);
+}
+@media (min-width: 1024px) { .cn-cabecalho { min-height: 72px; } }
+.cn-cabecalho__acoes { display: flex; align-items: center; gap: 4px; }
+.cn-cabecalho .logo-quadro { display: block; }
+.cn-cabecalho .logo { width: 124px; height: auto; }
+.cn-entrar { min-height: 44px; padding-inline: 16px; }
+
+/* ---------- Botões da página ---------- */
+.cn-botao-principal { width: 100%; min-height: 56px; padding-inline: 24px; font-size: 1.0625rem; text-decoration: none; }
+.cn-botao-principal .cn-icone { flex: none; }
+.cn-icone { display: block; flex: none; }
+.cn-visitante-texto { width: 100%; min-height: 48px; }
+.cn-apoio { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 20px; }
+.cn-apoio--instalar { color: var(--texto); }
+.cn-erro { margin: 4px 0 0; color: var(--erro); font-size: 0.875rem; line-height: 20px; font-weight: 700; }
+.botao[data-enviando] { opacity: 0.7; pointer-events: none; }
+.cn-botao-principal[data-baixando] { background: var(--sucesso); }
+
+/* ---------- Primeira dobra ---------- */
+.cn-heroi {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  padding: 24px var(--cn-margem) 0;
+  background: linear-gradient(180deg, var(--cn-ceu) 0%, #fff 82%);
+  overflow: clip;
+}
+.cn-heroi:focus { outline: none; }
+.cn-heroi__ceu { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.cn-heroi__ceu .cn-nuvem { position: absolute; width: 104px; height: auto; opacity: 0.95; }
+.cn-heroi__ceu .cn-nuvem--1 { top: 168px; right: -18px; }
+.cn-heroi__ceu .cn-nuvem--2 { top: 520px; left: -28px; width: 88px; }
+.cn-colina {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: 0;
+  height: 300px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, #c9e9bb 0%, #e3f4da 62%, #fff 100%);
+}
+.cn-heroi__texto { position: relative; z-index: 1; display: grid; align-content: start; }
+.cn-heroi__titulo { font: 700 2rem/38px Quicksand, sans-serif; letter-spacing: -0.035em; color: var(--texto); }
+.cn-heroi__subtitulo { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
+.cn-acoes { margin-top: 24px; display: grid; gap: 8px; }
+.cn-acoes--celular, .cn-acoes--computador { justify-items: stretch; }
+.cn-heroi__palco { position: relative; z-index: 1; display: flex; justify-content: center; align-items: flex-end; margin-top: 8px; }
+.cn-heroi__stu { display: none; }
+@media (max-width: 380px) {
+  .cn-heroi__titulo { font-size: 1.75rem; line-height: 34px; }
+  .cn-heroi__subtitulo { font-size: 1rem; line-height: 24px; }
+}
+@media (min-width: 768px) {
+  .cn-heroi { padding-top: 32px; }
+  .cn-heroi__texto { width: 100%; max-width: 560px; margin-inline: auto; text-align: center; }
+  .cn-acoes { justify-items: center; }
+  .cn-acoes--celular .cn-botao-principal, .cn-acoes--computador .cn-botao-principal { max-width: 420px; }
+  .cn-acoes--celular .cn-visitante-texto { max-width: 420px; }
+  .cn-heroi__ceu .cn-nuvem--1 { top: 120px; right: 6%; width: 128px; }
+  .cn-heroi__ceu .cn-nuvem--2 { top: 420px; left: 4%; width: 108px; }
+}
+@media (min-width: 1024px) {
+  .cn-heroi {
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
+    max-width: calc(var(--cn-coluna) + 2 * var(--cn-margem));
+    margin-inline: auto;
+    padding: 56px var(--cn-margem) 0;
+    overflow: visible;
+    background: none;
+  }
+  .cn-heroi::before { content: ''; position: absolute; inset: 0 calc(50% - 50vw); z-index: 0; background: linear-gradient(180deg, var(--cn-ceu) 0%, #fff 86%); }
+  .cn-heroi__ceu { inset: 0 calc(50% - 50vw); overflow: hidden; }
+  .cn-heroi__ceu .cn-nuvem--1 { top: 72px; right: 8%; width: 156px; }
+  .cn-heroi__ceu .cn-nuvem--2 { top: 380px; left: 3%; width: 120px; }
+  .cn-colina { left: 36%; right: -6%; height: 230px; }
+  .cn-heroi__texto { max-width: none; margin: 0; text-align: left; }
+  .cn-heroi__titulo { font-size: 3.5rem; line-height: 64px; }
+  .cn-heroi__subtitulo { margin-top: 16px; font-size: 1.25rem; line-height: 30px; }
+  .cn-acoes { margin-top: 32px; justify-items: start; }
+  .cn-heroi__palco { justify-content: flex-start; align-self: end; margin-top: 0; gap: 0; }
+  .cn-heroi__stu { display: block; order: -1; width: 160px; margin-right: -28px; margin-bottom: 8px; position: relative; z-index: 2; }
+  .cn-heroi__palco .cn-celular { --celular: 340px; transform: rotate(-4deg); transform-origin: 50% 100%; }
+}
+
+/* A fileira do computador: "Experimentar sem conta" (principal, 56 px) e, ao lado, o cartão do QR com o topo alinhado ao botão. */
+.cn-acoes--computador .cn-acoes__linha { display: grid; gap: 12px; }
+.cn-acoes--computador .cn-acoes__botoes { display: grid; gap: 8px; }
+.cn-instalar-celular { width: 100%; min-height: 48px; }
+.cn-instalar-celular--sem-qr { display: inline-flex; }
+.cn-qr { display: none; }
+@media (min-width: 1024px) {
+  .cn-acoes--computador .cn-acoes__linha { display: flex; align-items: flex-start; gap: 24px; }
+  .cn-acoes--computador .cn-acoes__botoes { flex: 0 0 auto; min-width: 280px; }
+  .cn-acoes--computador .cn-botao-principal { width: auto; min-width: 280px; max-width: none; }
+  .cn-acoes--computador .cn-instalar-celular--sem-qr { display: none; }
+  .cn-acoes--computador[data-lugar='final'] .cn-instalar-celular--sem-qr { display: inline-flex; }
+  .cn-qr { display: grid; }
+  .cn-acoes--computador .cn-apoio--qr { margin-top: 8px; max-width: 280px; }
+  .cn-acoes--computador[data-lugar='final'] .cn-acoes__linha { justify-content: center; }
+  .cn-acoes--computador[data-lugar='final'] .cn-acoes__botoes { justify-items: center; min-width: 0; }
+}
+.cn-apoio--qr { display: none; }
+@media (min-width: 1024px) { .cn-apoio--qr { display: block; } }
+.cn-acoes--computador[data-lugar='final'] .cn-acoes__botoes { justify-items: center; }
+
+/* O cartão do QR: 196 × 248, borda de 2 px, raio 20. */
+.cn-qr {
+  width: 196px;
+  min-height: 248px;
+  box-sizing: border-box;
+  grid-template-rows: auto auto auto 1fr;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 12px 4px;
+  border: 2px solid var(--cn-borda-cartao);
+  border-radius: 20px;
+  background: #fff;
+  text-align: center;
+}
+.cn-qr__titulo { margin: 0; font: 800 0.9375rem/20px Nunito, sans-serif; letter-spacing: 0; color: var(--texto); }
+.cn-qr__codigo { display: block; width: 136px; height: 136px; }
+.cn-qr__codigo svg { display: block; width: 100%; height: 100%; }
+.cn-qr__legenda { margin: 0; font-size: 0.875rem; line-height: 20px; font-weight: 700; color: var(--texto); }
+.cn-qr__arquivo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 4px; font-size: 0.8125rem; line-height: 18px; font-weight: 700; color: var(--acao-escura); text-decoration: underline; text-underline-offset: 3px; }
+.cn-painel__qr .cn-qr { display: grid; margin-inline: auto; }
+
+/* ---------- O celular (moldura própria do Studoo) ---------- */
+.cn-celular {
+  --celular: 260px;
+  position: relative;
+  box-sizing: border-box;
+  width: var(--celular);
+  border: 10px solid var(--cn-marinho);
+  border-radius: 44px;
+  background: var(--cn-marinho);
+  box-shadow: 0 24px 48px rgb(11 27 92 / 0.18);
+}
+.cn-celular__tela { position: relative; overflow: hidden; border-radius: 34px; background: #fff; aspect-ratio: 1206 / 2622; }
+.cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
+.cn-celular__ilha { position: absolute; z-index: 3; top: 8px; left: 50%; width: 28%; height: 20px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
+.cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 10px; height: 10px; border-radius: 50%; }
+.cn-captura { display: block; width: 100%; height: 100%; object-fit: fill; }
+.cn-tela { position: absolute; inset: 0; opacity: 0; }
+.cn-tela[data-ativa] { opacity: 1; }
+.cn-heroi__celular { position: relative; }
+@media (min-width: 768px) { .cn-heroi__celular .cn-celular { --celular: 300px; } }
+
+/* Com movimento reduzido: só a proposta pronta, parada (a segunda captura). */
+@media (prefers-reduced-motion: reduce) {
+  .cn-heroi__celular .cn-tela { opacity: 0 !important; transition: none; }
+  .cn-heroi__celular .cn-tela:nth-child(2) { opacity: 1 !important; }
+  .cn-heroi__celular .cn-tela:nth-child(2) .cn-captura[hidden] { display: block !important; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cn-heroi__celular .cn-tela { transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .cn-heroi__celular[data-pronto] .cn-tela[data-ativa] { animation: cn-entrar 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+}
+@keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Seções ---------- */
+.cn-secao { max-width: calc(var(--cn-coluna) + 2 * var(--cn-margem)); margin-inline: auto; padding: 72px var(--cn-margem) 0; }
+@media (min-width: 1024px) { .cn-secao { padding-top: 120px; } }
+.cn-secao__titulo { font: 700 1.75rem/34px Quicksand, sans-serif; letter-spacing: -0.02em; color: var(--texto); }
+@media (min-width: 1024px) { .cn-secao__titulo { font-size: 2.5rem; line-height: 48px; } }
+.cn-secao__linha { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
+
+/* ---------- S2: os quatro momentos ---------- */
+.cn-s2__momentos { display: grid; gap: 56px; margin-top: 32px; }
+.cn-momento { display: grid; gap: 24px; justify-items: center; }
+.cn-momento__texto { width: 100%; max-width: 560px; }
+.cn-momento__titulo { font: 800 1.25rem/26px Nunito, sans-serif; letter-spacing: 0; color: var(--texto); }
+.cn-momento__linha { margin-top: 8px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
+.cn-momento__visual { position: relative; display: grid; justify-items: center; gap: 16px; width: 100%; }
+.cn-momento__visual .cn-celular { --celular: 240px; }
+@media (min-width: 768px) {
+  .cn-s2__momentos { gap: 80px; margin-top: 40px; }
+  .cn-momento__visual .cn-celular { --celular: 280px; }
+}
+.cn-selo-sincronia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border: 2px solid var(--cn-borda-cartao);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(11 27 92 / 0.1);
+  color: var(--texto);
+  font-size: 0.875rem;
+  line-height: 20px;
+  font-weight: 800;
+}
+.cn-selo-sincronia__ponto { width: 10px; height: 10px; border-radius: 50%; background: #9aa6c4; transition: background-color 200ms linear; }
+[data-momento='4'][data-sincronizou] .cn-selo-sincronia__ponto { background: var(--sucesso-claro); }
+@media (prefers-reduced-motion: reduce) { .cn-selo-sincronia__ponto { background: var(--sucesso-claro); transition: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  [data-momento='4'][data-sincronizou] .cn-selo-sincronia { animation: cn-pulso 320ms ease-out 1; }
+}
+@keyframes cn-pulso { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+/* No computador, com movimento: o celular fica preso à direita e a tela dentro dele troca (300 ms) conforme o texto que cruza o meio. */
+@media (min-width: 1024px) {
+  .cn-s2__momentos { margin-top: 56px; gap: 0; }
+  .cn-momento { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 96px; align-items: center; justify-items: stretch; padding-block: 48px; }
+  .cn-momento__visual { justify-items: center; }
+  .cn-momento__visual .cn-celular { --celular: 300px; }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .cn-s2__momentos { display: grid; grid-template-columns: minmax(0, 1fr) 420px; column-gap: 96px; align-items: start; }
+  .cn-momento { display: contents; }
+  .cn-momento__texto { grid-column: 1; align-self: center; display: flex; flex-direction: column; justify-content: center; min-height: 72svh; max-width: 520px; }
+  .cn-momento__visual {
+    --celular: clamp(240px, calc((100svh - 120px) * 0.46), 320px);
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    position: sticky;
+    top: calc(50svh - (var(--celular) / 0.46 + 20px) / 2);
+    align-self: start;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .cn-momento__visual .cn-celular { --celular: inherit; width: var(--celular); }
+  .cn-momento .cn-celular__tela { opacity: 0; transition: opacity 300ms linear; }
+  .cn-momento[data-ativo] .cn-celular__tela { opacity: 1; }
+  .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__tela { opacity: 1; }
+  .cn-momento .cn-celular { box-shadow: none; }
+  .cn-momento:first-child .cn-celular { box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
+  .cn-momento__visual .cn-selo-sincronia { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); opacity: 0; transition: opacity 300ms linear; }
+  .cn-momento[data-momento='4'][data-ativo] .cn-selo-sincronia { opacity: 1; }
+  .cn-momento:not([data-momento='4']) .cn-selo-sincronia { display: none; }
+}
+
+/* ---------- S3: as fichas de ideias ---------- */
+.cn-s3 { display: grid; justify-items: center; text-align: center; }
+.cn-s3 .cn-secao__linha { margin-inline: auto; }
+.cn-s3__stu { width: 96px; min-height: 96px; margin-bottom: 8px; }
+.cn-s3 .cn-fichas { width: 100%; }
+.cn-fichas { margin-top: 28px; }
+.cn-fichas__pista { display: block; }
+.cn-fichas__lista { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.cn-ficha-item { display: block; }
+.cn-ficha.botao {
+  min-height: 56px;
+  gap: 10px;
+  padding: 8px 20px 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--cn-borda-cartao);
+  background: #fff;
+  color: var(--texto);
+  font-size: 1rem;
+  line-height: 22px;
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
+}
+.cn-ficha .mundo-desenho { width: 28px; height: 28px; flex: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .cn-fichas[data-correndo] { overflow: hidden; margin-inline: calc(-1 * var(--cn-margem)); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
+  .cn-fichas[data-correndo] .cn-fichas__pista { display: flex; width: max-content; animation: cn-correr 40s linear infinite; padding-block: 6px; }
+  .cn-fichas[data-correndo] .cn-fichas__lista { flex-wrap: nowrap; justify-content: flex-start; padding-right: 12px; }
+  .cn-fichas[data-correndo]:hover .cn-fichas__pista,
+  .cn-fichas[data-correndo]:focus-within .cn-fichas__pista,
+  .cn-fichas[data-correndo]:active .cn-fichas__pista { animation-play-state: paused; }
+}
+@keyframes cn-correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---------- S4: instale em 3 passos ---------- */
+.cn-s4 { scroll-margin-top: 16px; }
+.cn-abas { display: inline-grid; grid-auto-flow: column; gap: 4px; margin-top: 24px; padding: 4px; border-radius: 16px; background: var(--nevoa); border: 2px solid var(--cn-borda-cartao); }
+.cn-aba { min-width: 112px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: transparent; color: var(--texto2); font: 800 1rem/22px Nunito, sans-serif; cursor: pointer; }
+.cn-aba[aria-selected='true'] { background: var(--acao); color: #fff; }
+.cn-painel { margin-top: 28px; display: grid; gap: 24px; justify-items: start; }
+.cn-painel[hidden] { display: none; }
+.cn-painel:focus-visible { outline-offset: 6px; }
+.cn-painel__acao { display: grid; gap: 8px; width: 100%; max-width: 420px; }
+.cn-painel__qr { width: 100%; }
+.cn-ancora { position: relative; top: -16px; display: block; height: 0; }
+.cn-apoio--painel { max-width: 420px; }
+.cn-passos { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; width: 100%; max-width: 560px; }
+.cn-passo { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: 14px; font-size: 1.0625rem; line-height: 26px; font-weight: 600; color: var(--texto); }
+.cn-passo__numero { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--lavanda); color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
+.cn-passo__texto { padding-top: 3px; }
+.cn-passo__icone { display: grid; place-items: center; width: 32px; height: 32px; color: var(--acao-escura); }
+.cn-icone--passo { width: 24px; height: 24px; }
+@media (min-width: 1024px) {
+  .cn-s4 { display: block; }
+  .cn-painel { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 64px; align-items: start; }
+  .cn-painel__acao, .cn-painel__qr, .cn-apoio--painel { grid-column: 2; }
+  .cn-passos { grid-column: 1; grid-row: 1 / span 3; }
+}
+
+/* ---------- A folha do iPhone (usa a folha do Studoo, spec 11) ---------- */
+.cn-folha .cn-passos { margin-block: 4px 8px; }
+.cn-folha__aviso { padding: 10px 14px; border-radius: 14px; background: #fff3d6; color: var(--texto); font-weight: 700; }
+.cn-folha__acoes { margin-top: 8px; }
+.cn-folha .folha-fechar .cn-icone { width: 22px; height: 22px; }
+
+/* ---------- S5 e rodapé ---------- */
+.cn-s5 { display: grid; justify-items: center; gap: 20px; text-align: center; padding-bottom: 8px; }
+.cn-s5__stu { width: 160px; min-height: 160px; }
+.cn-s5 .cn-acoes { width: 100%; max-width: 420px; margin-top: 8px; }
+.cn-s5 .cn-apoio { text-align: center; }
+.cn-rodape { display: grid; justify-items: center; gap: 12px; margin-top: 72px; padding: 40px var(--cn-margem) 48px; border-top: 2px solid var(--cn-borda-cartao); background: var(--nevoa); text-align: center; }
+@media (min-width: 1024px) { .cn-rodape { margin-top: 120px; } }
+.cn-rodape__linha { margin: 0; color: var(--texto2); font-size: 0.9375rem; line-height: 20px; font-weight: 700; }
+.cn-rodape__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; }
+.cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 0.9375rem; line-height: 20px; font-weight: 800; color: var(--acao-escura); text-underline-offset: 3px; }
+
+/* ---------- Entrada de cada seção (20% na tela, uma vez) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  [data-revelar] { transition: opacity 400ms ease-out, transform 400ms ease-out; }
+  [data-revelar][data-oculto]:not([data-revelado]) { opacity: 0; transform: translateY(16px); }
+}
+@media (display-mode: standalone) { .cn-instalado-esconde { display: none; } }
