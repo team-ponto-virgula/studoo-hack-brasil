@@ -553,6 +553,8 @@ fluxo_criacao() {
     resumo "❌ Erro → ponte e \"Ensine ao Stu\" (fluxo 98): $ponte."
   fi
 
+  # O resultado dos três, para o modo só da criação (fluxo_so_criacao): "passou" ou o motivo de cada um.
+  RESULTADO_DA_CRIACAO="90 $fluxo; 95 $resposta; 98 $ponte"
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in
     0:passou)
@@ -595,6 +597,27 @@ fluxo_telas() {
   resumo "✅ Telas: mapa, Minhas trilhas, menu e confirmação, os seis exercícios, Explorar e Perfil."
 }
 
+# Só a prova da criação (CONFERENCIA_TELAS=criacao ou so-criacao; no workflow, pelo input telas_android): os fluxos 90, 95
+# e 98, depois da entrada e da conta, sem os fluxos das telas. Com a lista toda, o Android não chega à criação nos 90 min
+# do passo (execução 45078070221); assim ela roda numa parte própria. O emulador só é religado se não responder antes.
+# O passo falha se um dos três não passar; as capturas das telas aparecem como faltando na coleta, como nas outras partes.
+fluxo_so_criacao() {
+  resumo "Só a prova da criação (CONFERENCIA_TELAS=${CONFERENCIA_TELAS:-}): fluxos 90, 95 e 98, sem os fluxos das telas (as capturas das telas vão aparecer como faltando)."
+  if ! aparelho_responde; then
+    if declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; then
+      resumo "⚠️ O aparelho não respondia antes da prova da criação e foi religado (o fluxo 98 não roda depois de religar)."
+    else
+      erro "A prova da criação não rodou: o aparelho não respondia."
+    fi
+  fi
+  RESULTADO_DA_CRIACAO=""
+  fluxo_criacao || true
+  if [ "$RESULTADO_DA_CRIACAO" != "90 passou; 95 passou; 98 passou" ] || [ -f "$SAIDA/criacao-falhou.txt" ]; then
+    erro "A prova da criação não passou inteira (${RESULTADO_DA_CRIACAO:-sem resultado}). O sumário acima diz o que faltou."
+  fi
+  resumo "✅ Só a prova da criação: 90, 95 e 98 passaram."
+}
+
 # As mesmas telas, uma sessão do Maestro por fluxo, na ordem de telas/config.yaml (o Android liga com TELAS_UMA_POR_VEZ=1).
 # Na execução 44726250118 o emulador sumiu do adb no fluxo 70, depois de 12 min na mesma sessão, e os 12 fluxos seguintes
 # falharam em milissegundos ("device not found"). Aqui cada fluxo abre e fecha a própria sessão, o aparelho é conferido
@@ -604,6 +627,12 @@ fluxo_telas() {
 fluxo_telas_uma_por_vez() {
   local fluxo pedidas falhas="" naorodaram="" caiu="" quantos=0 codigo
   pedidas="$(printf '%s' "${CONFERENCIA_TELAS:-}" | tr ',' ' ' | xargs || true)"
+  # "criacao" (ou "so-criacao") no lugar das telas: só a prova da criação (90, 95 e 98), sem os fluxos das telas.
+  case " $pedidas " in
+    *" criacao "* | *" so-criacao "*)
+      fluxo_so_criacao
+      return ;;
+  esac
   if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" != "1" ]; then
     fluxo_criacao || true
   elif [ -n "$pedidas" ]; then
