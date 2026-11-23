@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ListaProvedores, useConsentimentoIa } from './consentimento-ia';
 import { Botao, Campo, CartaoConfirmacao, estilos } from './interface';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
-import { abrirNoNavegador, dataCurta } from './social';
+import { dataCurta } from './social';
 import { cores, fontes } from './tema';
 
 /*
@@ -17,10 +17,9 @@ import { cores, fontes } from './tema';
 
 const t = mensagens.privacidade;
 
-export function SecaoPrivacidade({ desativado, visitante }: { desativado: boolean; visitante: boolean }) {
+export function SecaoPrivacidade({ desativado }: { desativado: boolean }) {
   const { estado, permitido, permitir, revogar, politicaUrl } = useConsentimentoIa();
   const [verQuem, setVerQuem] = useState(false);
-  const [excluindo, setExcluindo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
   const ia = estado?.consentimentoIa;
@@ -54,15 +53,24 @@ export function SecaoPrivacidade({ desativado, visitante }: { desativado: boolea
         {ia?.necessario && (permitido
           ? <Botao rotulo={t.revogar} testID="privacidade-revogar" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(false)} estilo={p.acao} />
           : <Botao rotulo={t.permitirAgora} testID="privacidade-permitir" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(true)} estilo={p.acao} />)}
-        {politicaUrl && (
-          <Botao rotulo={t.politica} testID="privacidade-politica" variante="secundario" desativado={desativado} acao={() => abrirNoNavegador(politicaUrl)} estilo={p.acao} />
-        )}
       </View>
       {/* O aviso de "Pronto" ou o erro, anunciado ao leitor de tela (role="status" na web). */}
       {aviso ? <Text testID="privacidade-aviso" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text> : null}
-      <Botao rotulo={t.excluir} testID="excluir-conta" variante="destrutivo" desativado={desativado} acao={() => setExcluindo(true)} estilo={p.excluir} />
-      {excluindo && <ConfirmarExclusao visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
     </View>
+  );
+}
+
+/**
+ * "Excluir conta" (spec 16, item 20): o secundário de 44 com borda e texto #C23B4E, igual nas três plataformas, depois de
+ * "Sair" (na seção Conta). Abre a mesma confirmação com "digite EXCLUIR".
+ */
+export function BotaoExcluirConta({ desativado, visitante }: { desativado: boolean; visitante: boolean }) {
+  const [excluindo, setExcluindo] = useState(false);
+  return (
+    <>
+      <Botao rotulo={t.excluir} testID="excluir-conta" variante="destrutivoBaixo" desativado={desativado} acao={() => setExcluindo(true)} estilo={p.excluir} />
+      {excluindo && <ConfirmarExclusao visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
+    </>
   );
 }
 

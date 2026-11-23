@@ -256,13 +256,11 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
-          try {
-            const plano = await cliente.obterPlano(inicial.id);
-            if (cancelado()) return;
-            setTela({ tipo: 'plano', plano });
-          } catch {
-            // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
-          }
+          // Sem o detalhe da trilha (servidor lento ou fora do ar), a falha não é engolida: antes, a pessoa ficava em "Minhas trilhas" sem erro nem botão. Ela cai no catch
+          // de baixo, que leva ao login se a sessão venceu e, nos outros casos, mostra o cartão de erro com "Tentar novamente" (busca a lista e abre a trilha de novo).
+          const plano = await cliente.obterPlano(inicial.id);
+          if (cancelado()) return;
+          setTela({ tipo: 'plano', plano });
         }
       }
       setInicio('pronto');
@@ -756,7 +754,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </div>
             </section>
           )}
-          {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
+          {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
+          {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (

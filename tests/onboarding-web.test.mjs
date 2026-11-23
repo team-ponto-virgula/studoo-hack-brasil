@@ -67,32 +67,31 @@ test('a espera da proposta: nos 3 primeiros segundos nada muda; aos 3 s a 1ª fr
   assert.equal(vistos.length, 2);
 });
 
-test('a espera da proposta: as quatro frases, uma nova a cada 5 s, em laço, sempre com o efeito (a frase some e a seguinte aparece 150 ms depois)', () => {
+test('a espera da proposta: as três frases, uma nova a cada 5 s, em laço, sempre com o efeito (a frase some e a seguinte aparece 150 ms depois)', () => {
   const { relogio, vistos } = ensaiar();
   relogio.avancar(30000);
-  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [2, 13150], [3, 18150], [0, 23150], [1, 28150]]);
+  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [2, 13150], [0, 18150], [1, 23150], [2, 28150]]);
   const saidas = vistos.filter((estado) => estado.saindo);
-  assert.deepEqual(saidas.map((estado) => [estado.indice, estado.em]), [[null, 3000], [0, 8000], [1, 13000], [2, 18000], [3, 23000], [0, 28000]], 'cada troca começa com a frase de agora sumindo');
+  assert.deepEqual(saidas.map((estado) => [estado.indice, estado.em]), [[null, 3000], [0, 8000], [1, 13000], [2, 18000], [0, 23000], [1, 28000]], 'cada troca começa com a frase de agora sumindo');
   for (let i = 0; i < saidas.length; i += 1) assert.equal(entradas(vistos)[i][1] - saidas[i].em, 150, 'cada troca dura 300 ms: 150 sumindo e 150 aparecendo');
 });
 
-test('a espera da criação (depois de "Começar a lição 1"): "Criando sua trilha…" por 3 s e depois as frases 1, 2 e 4, a cada 5 s, em laço, sem a 3ª', () => {
+test('a espera da criação (depois de "Começar a lição 1"): "Criando sua trilha…" por 3 s e depois as três frases, a cada 5 s, em laço', () => {
   const { relogio, vistos } = ensaiar({ qualDica: dicaDaEsperaLonga });
   relogio.avancar(2999);
   assert.deepEqual(vistos, [], '"Criando sua trilha…" fica na placa');
   relogio.avancar(32001);
-  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [3, 13150], [0, 18150], [1, 23150], [3, 28150], [0, 33150]]);
-  assert.equal(entradas(vistos).some(([indice]) => indice === 2), false, '"Você confere a trilha antes de começar." não entra: a pessoa já conferiu');
+  assert.deepEqual(entradas(vistos), [[0, 3150], [1, 8150], [2, 13150], [0, 18150], [1, 23150], [2, 28150], [0, 33150]]);
   assert.deepEqual(vistos[0], { indice: null, saindo: true, em: 3000 }, 'aos 3 s, "Criando sua trilha…" começa a sumir');
 });
 
 test('movimento reduzido: a troca é imediata, sem a etapa de sumir, nas duas esperas', () => {
   const proposta = ensaiar({ reduzido: true });
   proposta.relogio.avancar(18000);
-  assert.deepEqual(proposta.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 2, saindo: false, em: 13000 }, { indice: 3, saindo: false, em: 18000 }]);
+  assert.deepEqual(proposta.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 2, saindo: false, em: 13000 }, { indice: 0, saindo: false, em: 18000 }]);
   const criacao = ensaiar({ reduzido: true, qualDica: dicaDaEsperaLonga });
   criacao.relogio.avancar(18000);
-  assert.deepEqual(criacao.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 3, saindo: false, em: 13000 }, { indice: 0, saindo: false, em: 18000 }]);
+  assert.deepEqual(criacao.vistos, [{ indice: 0, saindo: false, em: 3000 }, { indice: 1, saindo: false, em: 8000 }, { indice: 2, saindo: false, em: 13000 }, { indice: 0, saindo: false, em: 18000 }]);
 });
 
 test('desligar para tudo (inclusive uma troca no meio do efeito) e não deixa temporizador vivo', () => {
