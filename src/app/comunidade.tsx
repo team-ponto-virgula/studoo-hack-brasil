@@ -85,7 +85,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {!semDono && (
           <p className="cartao-trilha__dono">
             {cartao.dono.perfilId
-              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>
+              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={`${c.por(cartao.dono.nome)}. ${c.perfilDe(cartao.dono.nome)}`}>
                 <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
                 <span className="cartao-trilha__por">por </span><span className="cartao-trilha__nome">{cartao.dono.nome}</span>
               </Link>
@@ -111,11 +111,12 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
           {principal}
           {!sua && (
             // Coração, "Valeu" e a contagem; marcado, o coração enche (com um pulo curto) e tocar de novo retira.
+            // O nome começa pelo que se vê ("Curtir 5"): sem contagem, o rótulo de sempre; com ela, "Curtir 5 curtidas: “Título”" (o nome contém o texto visível, WCAG 2.5.3).
             <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)}
-              aria-label={`${cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}${cartao.valeus > 0 ? ` (${c.valeus(cartao.valeus)})` : ''}`}
+              aria-label={cartao.valeus > 0 ? `${c.valeu} ${c.valeus(cartao.valeus)}: “${cartao.titulo}”` : cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}
               disabled={ocupado} onClick={() => acoes.valeu(cartao)}>
               <Icone nome="valeu" /><span aria-hidden="true">{c.valeu}</span>
-              {cartao.valeus > 0 && <span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span>}
+              {cartao.valeus > 0 && <>{' '}<span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span></>}
             </button>
           )}
           {sua

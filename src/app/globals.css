@@ -426,7 +426,7 @@ button, input, textarea { font: inherit; }
 .planos-vazio__halo { display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--lavanda, #eeebff); }
 .planos-vazio__halo span { display: block; }
 .planos-vazio h2 { font-size: 1.25rem; }
-.planos-vazio p { color: var(--texto2); font-size: 1rem; line-height: 1.5; }
+.planos-vazio p { color: var(--texto); font-size: 1rem; line-height: 1.5; }
 .planos-vazio .botao { width: 100%; min-height: 48px; }
 @media (prefers-reduced-motion: no-preference) {
   .planos-vazio { animation: planos-vazio-entrar 200ms ease-out; }

@@ -30,7 +30,10 @@
 .painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-percurso::before {
   content: ''; display: block; height: max(0px,calc(40cqh - var(--centro))); background: #e3f3e8;
 }
-.previa-percurso { position: relative; isolation: isolate; margin: 0; padding: 0; list-style: none; }
+/* Sem `isolation`: os nós e a chegada (o troféu, a estrada do último nó) dividem a mesma pilha de camadas do mapa (o próprio .previa-mapa já é uma pilha), e o rótulo (z 2) fica por cima da
+   estrada (z 1) e do cenário também no último nó. Com o percurso isolado, a chegada, depois dele no documento, pintava por cima do nome da última lição: a estrada passava sobre o texto e o chão
+   da chegada cortava a última linha (banca P2-7). */
+.previa-percurso { position: relative; margin: 0; padding: 0; list-style: none; }
 .previa-no { position: relative; height: var(--passo); background: var(--chao); }
 /* A mesma região, fronteira e vegetação do mapa salvo. O marco ganha seu próprio espaço entre os nomes. */
 .previa-no[data-fronteira] { height: calc(var(--passo) + var(--fronteira)); }

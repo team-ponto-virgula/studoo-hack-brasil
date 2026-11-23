@@ -92,10 +92,9 @@ export const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? err
 export function Avatar({ nome, cor, foto = null, grande = false, tamanho }: { nome: string; cor: CorPerfil; foto?: string | null; grande?: boolean; tamanho?: 'p' | 'm' | 'g' }) {
   const t = tamanho ?? (grande ? 'm' : 'p');
   return (
-    <span className="avatar" data-tamanho={t} data-grande={t !== 'p' || undefined} data-foto={foto ? true : undefined} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
-      {foto
-        ? <img src={enderecoFoto(foto, t === 'g' ? 512 : 128)} alt="" width={t === 'g' ? 112 : t === 'm' ? 56 : 32} height={t === 'g' ? 112 : t === 'm' ? 56 : 32} decoding="async" draggable={false} />
-        : inicialDoNome(nome)}
+    // A inicial (sem foto) vem do CSS (`data-inicial`), e não de um texto dentro do link ou botão que leva o avatar: o texto do avatar, que é só enfeite, fazia o nome acessível não conter o que se vê (axe, rótulo no nome).
+    <span className="avatar" data-tamanho={t} data-grande={t !== 'p' || undefined} data-foto={foto ? true : undefined} data-inicial={foto ? undefined : inicialDoNome(nome)} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
+      {foto && <img src={enderecoFoto(foto, t === 'g' ? 512 : 128)} alt="" width={t === 'g' ? 112 : t === 'm' ? 56 : 32} height={t === 'g' ? 112 : t === 'm' ? 56 : 32} decoding="async" draggable={false} />}
     </span>
   );
 }

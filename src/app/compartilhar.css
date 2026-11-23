@@ -14,6 +14,7 @@
   line-height: 1;
 }
 .avatar[data-grande] { width: 56px; height: 56px; font-size: 1.5rem; }
+.avatar[data-inicial]::before { content: attr(data-inicial); }
 
 .campo-dica { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.45; }
 .regras-publicacao { margin: 12px 0 16px; }
