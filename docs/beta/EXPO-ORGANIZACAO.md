@@ -10,6 +10,10 @@ Conferência de **23/11/2026, 14:45 UTC**. [Estado sanitizado](conferencia-cloud
 - Projeto existente transferido para **[@studoo/studoo-mobile](https://expo.dev/accounts/studoo/projects/studoo-mobile)**.
 - `apps/mobile/app.json` atualizado para `expo.owner: studoo`. O UUID continua `81f67b49-67e1-4807-bf88-16f187169dfd`; slug, scheme, bundle e IDs Apple foram preservados.
 
+## Foto da organização
+
+A foto foi atualizada com a versão quadrada do logo já usada no ícone do app: fundo azul, os dois “o” como óculos brancos e o sorriso do Studoo. A API confirmou a mudança; a imagem processada pela Expo respondeu 200 e foi inspecionada visualmente. [Imagem conferida](conferencia-cloud/expo-avatar-verificado.jpg) e [registro do upload](conferencia-cloud/expo-avatar.json).
+
 ## O que foi conferido de fato
 
 | Verificação | Resultado |
