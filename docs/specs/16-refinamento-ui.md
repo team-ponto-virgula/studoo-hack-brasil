@@ -26,6 +26,9 @@ As mudanças de tela do app congelam na noite de 25/11: P0 e P1 cabem até lá, 
 - **Regra:**
   - ao ficar pronta, a tela rola em 600 ms (saída suave) até o nó 1 aparecer inteiro no alto da área livre, com o rótulo à vista. Não entra céu vazio acima dele para centralizá-lo: em tela baixa, isso empurraria o conteúdo útil para baixo, sem mudar o que a pessoa entende (decisão de 21/11, opção A do Lead);
   - o botão de texto "Ver o fim da trilha" leva ao troféu;
+  - **Exceção, com o aviso de trilha repetida** ("Você já tem a trilha “…”. Quer continuar nela…?", com "Abrir a que já existe"): a tela não rola sozinha até o nó 1 e abre no topo, com o aviso inteiro à vista. Rolada, ela mostrava só o botão, cortado sob a barra de status e sem o texto que o explica (simulador iPhone, build 4, `92-criacao-pronta`; P1, decisão de 23/11). A pessoa decide primeiro entre abrir a que já existe e seguir com a nova.
+    - Na web, o aviso fica logo acima de "Começar a lição 1" e não sofre com a rolagem.
+    - Igualar a posição do app à da web fica para depois do hackathon. Até lá, a regra mínima é a de abrir no topo.
   - o Stu (`stu-feliz`) passa para o lado do nó 1;
   - o troféu continua a uma rolagem de distância;
   - com movimento reduzido, a tela vai direto ao nó 1.
