@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { mensagens } from '../mensagens/pt-BR';
 import { tocaSons } from './sons';
+import { BALAO_DO_NO, CABECALHOS_DO_ALTO, cabecalhoDoAlto, lugarDoAviso } from './aviso-musica-regras';
 import '../ui/aviso.css';
 
 const chaveAviso = 'studoo.sons.avisoMusica';
@@ -35,43 +36,31 @@ export function AmbienteSom() {
   }, [visivel, emFoco]);
   useLayoutEffect(() => {
     if (!visivel) return;
-    const tamanho = new ResizeObserver(posicionar);
-    let ancora: Element | null = null;
     function posicionar() {
       const el = aviso.current;
       if (!el) return;
-      const previa = document.querySelector('.painel--geracao:not([inert])');
-      const controles = previa?.querySelector('.previa-seguir') ?? previa?.querySelector('.previa-rodape') ?? null;
-      if (ancora !== controles) {
-        if (ancora) tamanho.unobserve(ancora);
-        if (controles) tamanho.observe(controles);
-        ancora = controles;
-      }
-      if (controles) {
-        const caixa = controles.getBoundingClientRect();
-        el.style.top = 'auto';
-        el.style.left = caixa.left + caixa.width / 2 + 'px';
-        el.style.bottom = innerHeight - caixa.top + 16 + 'px';
-        el.style.maxWidth = '';
-        return;
-      }
-      const barra = document.querySelector('.som-marca, .recuperar-topo')?.getBoundingClientRect();
-      const ilha = document.querySelector('.navegacao-mobile')?.getBoundingClientRect();
-      el.style.top = barra ? Math.max(8, barra.bottom + 8) + 'px' : '';
-      el.style.left = barra ? barra.left + barra.width / 2 + 'px' : '';
-      el.style.bottom = barra ? 'auto' : ilha?.height ? innerHeight - ilha.top + 16 + 'px' : '';
-      el.style.maxWidth = barra ? Math.min(innerWidth - 32, barra.width) + 'px' : '';
+      // Se a pessoa toca num nó e o balão abre com o aviso à vista, o aviso fecha na hora, sem animação (spec 16, item 14).
+      if (document.querySelector(BALAO_DO_NO)) { mostrar(false); return; }
+      const cabecalhos = [...document.querySelectorAll(CABECALHOS_DO_ALTO)].map((cabecalho) => cabecalho.getBoundingClientRect());
+      const lugar = lugarDoAviso(cabecalhoDoAlto(cabecalhos, innerHeight), innerWidth);
+      el.style.top = lugar.top;
+      el.style.left = lugar.left;
+      el.style.maxWidth = lugar.maxWidth;
     }
     posicionar();
     const mudanca = new MutationObserver(posicionar);
     mudanca.observe(document.body, { childList: true, subtree: true });
     window.addEventListener('resize', posicionar);
     window.addEventListener('scroll', posicionar, true);
+    // Um cabeçalho que ainda se mexe (entrada animada da placa da geração) muda de lugar sem mudar o DOM: o aviso confere de novo quando a animação acaba.
+    document.addEventListener('animationend', posicionar, true);
+    document.addEventListener('transitionend', posicionar, true);
     return () => {
       mudanca.disconnect();
-      tamanho.disconnect();
       window.removeEventListener('resize', posicionar);
       window.removeEventListener('scroll', posicionar, true);
+      document.removeEventListener('animationend', posicionar, true);
+      document.removeEventListener('transitionend', posicionar, true);
     };
   }, [visivel, caminho]);
   return <div ref={aviso} className="aviso-app aviso-musica" role="status" aria-live="polite">
