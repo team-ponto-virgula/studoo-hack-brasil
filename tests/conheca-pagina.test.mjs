@@ -187,6 +187,8 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
   assert.doesNotMatch(html, /stu-oi/, 'o Stu "oi" fica de fora');
   const alta = imagens.filter((img) => /fetchPriority="high"|fetchpriority="high"/i.test(img));
   assert.equal(alta.length, 1, 'só uma imagem com prioridade alta');
+  const baixa = imagens.filter((img) => /fetchPriority="low"|fetchpriority="low"/i.test(img) && /\/landing\//.test(img));
+  assert.equal(baixa.length, imagens.filter((img) => /\/landing\//.test(img)).length - 1, 'as outras capturas (herói 2 e 3, momentos e janela) com prioridade baixa: não disputam a banda com a primeira');
   assert.match(alta[0], new RegExp(CAPTURAS['heroi-1'].src1x.replace(/[.]/g, '\\.')), 'e é a primeira do herói');
   // A segunda e a terceira do herói só entram no carregamento quando o laço começa (hidden + lazy).
   for (const id of ['heroi-2', 'heroi-3']) {

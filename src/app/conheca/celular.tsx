@@ -20,7 +20,7 @@ export function Celular({ children, className = '', rotulo, plataforma = 'iphone
 export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '' }: {
   captura: CapturaOtimizada;
   alt: string;
-  /** A primeira do herói: carrega já e com prioridade. As outras só quando chegam perto da tela. */
+  /** A primeira do herói: carrega já e com prioridade. As outras só quando chegam perto da tela, e com prioridade baixa (não disputam a banda com a primeira, o texto e as fontes). */
   prioridade?: boolean;
   escondida?: boolean;
   className?: string;
@@ -28,7 +28,7 @@ export function CapturaDaTela({ captura, alt, prioridade = false, escondida = fa
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
-      alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'auto'} decoding="async" draggable={false} hidden={escondida || undefined} />
+      alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'low'} decoding="async" draggable={false} hidden={escondida || undefined} />
   );
 }
 
@@ -50,7 +50,7 @@ export function JanelaDoNavegador({ captura, alt, className = '' }: { captura: C
       <div className="cn-janela__tela">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="cn-captura" src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
-          alt={alt} loading="lazy" decoding="async" draggable={false} />
+          alt={alt} loading="lazy" fetchPriority="low" decoding="async" draggable={false} />
       </div>
     </div>
   );
