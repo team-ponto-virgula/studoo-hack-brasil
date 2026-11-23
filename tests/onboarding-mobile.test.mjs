@@ -101,3 +101,8 @@ test('mudança 1 (revisão 04fe621): a placa da geração sem frases; as frases 
   assert.equal(mensagens.geracao.escrevendoLicoes, 'Escrevendo suas lições…');
   assert.doesNotMatch(JSON.stringify(mensagens.geracao), /alguns segundos|Você confere a trilha/);
 });
+
+test('a pílula "Ver o fim da trilha" sai durante a criação (cobria o nome do nó 1; a web não a mostra nessa fase)', () => {
+  assert.match(estudo, /const pilula = !acompanhando && total > 0 && !\(pronta && trofeuAVista\) && !salvando && \(/);
+  assert.match(estudo, /const salvando = criacao === 'criando' \|\| criacao === 'criada';/);
+});

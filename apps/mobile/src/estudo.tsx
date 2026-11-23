@@ -1768,7 +1768,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     </Animated.View>
   );
 
-  const pilula = !acompanhando && total > 0 && !(pronta && trofeuAVista) && (
+  // Durante "Criando sua trilha…" (e na passagem), a pílula sai: ela cobria o nome do nó 1 e não serve ali (como na web).
+  const pilula = !acompanhando && total > 0 && !(pronta && trofeuAVista) && !salvando && (
     <Pressable testID="ver-licao-nova" accessibilityRole="button" onPress={verLicaoNova}
       style={({ pressed }) => [estudoEstilos.pilulaSeguir, pressed && estudoEstilos.pilulaSeguirApertada]}>
       <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={18} cor={cores.fundo} sistema /></View>
