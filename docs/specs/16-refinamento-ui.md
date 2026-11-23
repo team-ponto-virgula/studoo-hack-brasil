@@ -237,7 +237,7 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 **24. O rodapé do acerto ocupa a tela durante o "Explique com suas palavras"** (`c2` a `c5`, web e app)
 - **Hoje:** o painel verde "Isso aí!" com "Continuar" fica preso embaixo, com uns 150 px, e cobre o fim da explicação e do retorno.
 - **Regra:**
-  - enquanto o "Explique com suas palavras" está aberto, o rodapé do acerto encolhe para uma linha de 64 px: "✓ Isso aí!" à esquerda (16 800, `#1F7A5A`) e "Continuar" à direita, compacto, no mesmo fundo verde claro;
+  - enquanto o "Explique com suas palavras" está aberto, o rodapé do acerto encolhe para uma linha de 64 px: o visto e o mesmo título do acerto de sempre ("Isso aí!", "Mandou bem!"…) à esquerda (16 800, `#1F7A5A`) e "Continuar" à direita, compacto, no mesmo fundo verde claro;
   - o texto do retorno do exercício sai do rodapé, porque já foi lido antes;
   - ao fechar o "Explique", o rodapé volta ao normal;
   - a ação do "Explique" ("Enviar minha explicação") continua no fluxo da página.
@@ -253,9 +253,11 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 
 **26. O alto do mapa: "•••" na web e botões no app** (web `d2` e `51`; app `d2` e `51`)
 - **Regra:** nas três plataformas, como o app já faz:
-  - "Compartilhar" (secundário, com ícone) e a engrenagem de 44 px abaixo do título;
+  - "Compartilhar" (secundário, com ícone) e a engrenagem de 48 px abaixo do título, com os 48 px da decisão do dono de 19/11, como no app;
   - "Compartilhada" quando a trilha já tem link;
-  - o "•••" sozinho no alto do mapa da web sai, porque esconde as duas ações mais usadas.
+  - o "•••" sozinho no alto do mapa da web sai, porque esconde as duas ações mais usadas;
+  - "Postar no meu perfil" sai do alto do mapa e fica nos cartões de Minhas trilhas e na folha de Compartilhar; "Apagar" fica nas configurações (a engrenagem), como no app;
+  - com o texto a 150%, o botão e a engrenagem podem quebrar para duas linhas, e o cabeçalho cresce. Nada é cortado nem fica com reticências.
 - **Onde:** web, para igualar o app.
 
 **27. "De onde veio esta ideia" só no app, na ponte** (app `b3` e `b6`; web `b3` e `b6`)
@@ -333,3 +335,14 @@ Capturas antes e depois no Chromium, com servidor local e IA falsa (não é o si
 - **O item 22** não foi feito, e está certo: depende de a entrada levar o progresso do visitante (spec 17, mudança 3, adiada).
 - **Ainda falta:** o "•••" sozinho no alto do mapa. Ele é do item 26 (lote 3), que não estava neste lote.
 - **Nota da conferência:** na lateral, a lista de trilhas sob "Minhas trilhas" repete nomes iguais nas capturas. São dados sintéticos com trilhas duplicadas, não defeito da tela.
+
+## Conferência do lote 3 na web (Web & API, `54c8b76`, 23/11)
+
+Capturas antes e depois no Chromium, com servidor local e IA falsa (não é o site publicado), a 390, 320, 768, 1280 e 390 com 150%. Os itens 24 a 28 estão aprovados:
+- **24:** o rodapé do acerto fica numa linha de 64 px com o "Explique" aberto (era 157), e volta inteiro quando ele fecha;
+- **25:** "Passo 1 de 3 · Gravar ou escrever" numa linha, sem nada tocável;
+- **26:** no alto do mapa, "Em revisão" (o estado curto do item 31) e a engrenagem, sem o "•••";
+- **27:** "De onde veio esta ideia" fechado, antes de "Voltar ao exercício", e ausente na lição sem material;
+- **28:** botões secundários comuns até 767 px e a área tracejada a partir de 768.
+
+O item 29 (o texto do convite do "Explique", sem "o mascote do Studoo") ainda aparece com o texto antigo nas capturas. Ele é do contrato.
