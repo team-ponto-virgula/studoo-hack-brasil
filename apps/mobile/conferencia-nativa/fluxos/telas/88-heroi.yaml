@@ -2,7 +2,8 @@
 # "Fotografia com o celular". (1) O pedido com a ficha da ideia tocada: o toque só preenche o campo (estudo.tsx, sugerir),
 # com o texto exato da ficha; (2) a proposta pronta, sem o aviso de trilha repetida: o preparo deste ramo não cria a trilha
 # de fotografia; (3) a lição 1 com o acerto: verdadeiro ou falso "Foto embaçada é sempre culpa de um celular ruim." é
-# Falsa, porque "Lente suja e mão tremendo deixam qualquer foto borrada" (src/servidor/ia/demos.ts, fotografia).
+# Falsa, porque "Lente suja e mão tremendo deixam qualquer foto borrada" (src/servidor/ia/demos.ts, fotografia). A
+# justificativa é achada pelo texto: o testID opcao-justificativa-<id> é montado em tempo de execução.
 appId: host.exp.Exponent
 name: 88-heroi
 ---
@@ -117,12 +118,12 @@ name: 88-heroi
     id: vf-falso
 - scrollUntilVisible:
     element:
-      id: opcao-justificativa-lente
+      text: "Lente suja e mão tremendo deixam qualquer foto borrada"
     direction: DOWN
     timeout: 45000
 - tapOn:
     waitToSettleTimeoutMs: 1500
-    id: opcao-justificativa-lente
+    text: "Lente suja e mão tremendo deixam qualquer foto borrada"
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: enviar-resposta
