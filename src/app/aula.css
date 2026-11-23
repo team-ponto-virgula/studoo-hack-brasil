@@ -106,6 +106,14 @@
 .aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 
+/* Refino 4 (spec 16): etapa curta (cabe sem rolar e sobram 40% ou mais da área livre, medido em aula-folga.ts). O miolo vira uma coluna e o conjunto (Stu e cartão) fica centralizado na
+   vertical, no que sobra abaixo do título; no Exemplo o Stu (stu-feliz, 72, decorativo) entra acima do cartão. Sem folga, nada disto vale e tudo fica em cima, como sempre foi. */
+.aula-miolo[data-folga] { display: flex; flex-direction: column; }
+.aula-miolo[data-folga] .aula-explicacao { margin-block: auto; }
+.aula-miolo[data-folga] .aula-folga-stu { align-self: center; margin-top: auto; margin-bottom: -6px; }
+.aula-miolo[data-folga] .aula-folga-stu .stu { width: 72px; }
+.aula-miolo[data-folga] > .aula-quadro[data-etapa='exemplo'] { margin-bottom: auto; }
+
 /* Conceito: o Stu explica, num balão. */
 .aula-explicacao { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px; }
 .aula-explicacao .stu { width: 76px; margin-top: 6px; transform-origin: 50% 100%; animation: aula-stu 3400ms ease-in-out 700ms infinite; }
@@ -184,11 +192,13 @@
 :is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
 :is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
 
+/* Refino 6 (spec 16): o quadrinho da letra cresce com o texto, sempre quadrado: lado de 1,75 × a letra (`em` é o tamanho da própria letra), no mínimo 30 px. A letra fica
+   no centro, o raio é de 9 px, e o texto da opção ocupa o resto da largura e quebra em linhas, sem passar por baixo do quadrinho. */
 .opcao-tecla {
   display: grid;
   flex: none;
-  width: 30px;
-  height: 30px;
+  width: max(30px, 1.75em);
+  aspect-ratio: 1;
   place-items: center;
   border: 2px solid var(--gelo);
   border-radius: 9px;
@@ -196,6 +206,7 @@
   font-size: 0.875rem;
   font-weight: 900;
 }
+:is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label > :not(input, .opcao-tecla) { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
 
 :is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label:has(input:checked) .opcao-tecla { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
 :is(.aula-quadro, .estudio-desafio, .resolva) .opcoes label[data-retorno='certa'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; animation: aula-pular 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
@@ -262,6 +273,9 @@
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 .aula-rodape__nota { flex: 1 1 14rem; color: var(--texto2); font-weight: 700; }
+/* Refino 11 (spec 16): a frase sobre pular, embaixo da fileira de botões, em 13/18 regular #5E6A85 (a altura da linha é 18/13 da letra: com a letra ampliada ela não aperta), alinhada à direita, com "Pular por agora". */
+.aula-rodape__pular { flex: 0 0 100%; margin: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 400; line-height: 1.3846; text-align: end; }
+.aula-rodape[data-compacto] .aula-rodape__pular { display: none; }
 
 .aula-retorno {
   display: grid;
@@ -309,6 +323,7 @@
   .aula-rodape { padding-top: 10px; }
   .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 6px; }
   .aula-rodape__nota { flex: none; text-align: center; font-size: 0.8125rem; }
+  .aula-rodape__pular { flex: none; }
   .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
   .aula-rodape__acoes > .botao { width: 100%; min-height: 48px; }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {
@@ -735,7 +750,9 @@
 .campo--aberta textarea[data-retorno='errada'] { border-color: #e3a24a; background: #fff6ea; }
 .campo__dica { color: var(--texto2); font-size: 0.875rem; }
 .campo__contador { justify-self: end; color: var(--alerta); font-size: 0.8125rem; font-weight: 800; }
-.campo__contador[data-pronto] { color: var(--sucesso); }
+/* Refino 8 (spec 16): a contagem da resposta aberta é cinza (#5E6A85), sem o laranja; escondida (antes da 1ª letra e depois do mínimo) ela guarda o espaço. */
+.campo--aberta .campo__contador { color: var(--texto2); }
+.campo--aberta .campo__contador[data-oculto] { visibility: hidden; }
 
 .correcao-aberta { display: grid; gap: 12px; padding: 16px 18px; border-radius: 16px; background: var(--nevoa); }
 .correcao-aberta ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }

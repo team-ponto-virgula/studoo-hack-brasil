@@ -13,6 +13,7 @@ import {
   exerciciosDaLicao,
   linhasDePassos,
   motivoParaRever,
+  mostrarContagemDaAberta,
   respostaParaTentarDeNovo,
   tamanhoDaResposta,
   partesDaLacuna,
@@ -40,6 +41,7 @@ import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
 import { FiguraDoExercicio, VisuaisDaLicao, alturaDoDesenhoDaFigura, caixaDaFigura, descricaoDaFiguraRevelada } from './desenho';
 import { ApoioDaLicao } from './estudio';
+import { useFolgaDaEtapa } from './aula-folga';
 import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
@@ -311,6 +313,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
     licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo', titulo: tituloEtapa,
     aoTerminar: () => { posicoesDasEtapas.current[passo] = window.scrollY; setPasso((atual) => atual + 1); },
   });
+  // Refino 4 (spec 16): Conceito ou Exemplo curto (cabe sem rolar e sobram 40% ou mais da área livre): o conjunto (Stu e cartão) fica centralizado na vertical, e no Exemplo o Stu entra acima do cartão.
+  const { miolo: refDoMiolo, folga } = useFolgaDaEtapa(etapa.tipo === 'conceito' || (etapa.tipo === 'exemplo' && !resolva.ativo));
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
@@ -769,7 +773,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         <BotaoSom />
       </header>
       {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
-      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`}>
+      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`} ref={refDoMiolo} data-folga={folga || undefined}>
         {passo > 0 && !revisao && (
           <button type="button" className="aula-voltar-etapa" disabled={ocupado}
             onClick={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }}>
@@ -846,6 +850,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
+        {etapa.tipo === 'exemplo' && !resolva.ativo && folga && (
+          <div className="aula-folga-stu" data-folga-stu="" aria-hidden="true"><Stu expressao="stu-feliz" tamanho={72} /></div>
+        )}
         {etapa.tipo === 'exemplo' && (resolva.ativo ? resolva.corpo : <EtapaExemplo licao={licao} titulo={tituloEtapa} />)}
         {exercicio && (() => {
           return (
@@ -907,9 +914,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
-                {!avaliacao.correta && !revisao && pedidoPonte === 0 && (
-                  <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
-                )}
                 </div>
               </div>
               {/* A reação do Stu mora no painel (spec 13, emenda de 19/11): enfeite, um ciclo no acontecimento; no painel
@@ -936,6 +940,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             {avaliacao && !avaliacao.correta && acao}
             {!(avaliacao && !avaliacao.correta) && acao}
           </div>
+          {/* Refino 11 (spec 16): a frase sobre pular fica embaixo da fileira de botões, em 13/18 regular, alinhada com "Pular por agora" (antes ficava em negrito, antes dos botões, e disputava com o título). */}
+          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && (
+            <p className="aula-rodape__pular">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
+          )}
         </div>
       </footer>
     </article>
@@ -1714,20 +1722,25 @@ export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mu
           desativado={ocupado || respondido} retorno={retorno} certos={avaliacao?.certos} />
       );
       break;
-    case 'aberta':
+    case 'aberta': {
+      // Refino 8 (spec 16): antes da primeira letra só o texto do rodapé orienta ("Escreva sua resposta para verificar."); a contagem do cartão entra com a primeira letra, em cinza, e some
+      // quando o mínimo é atingido. O espaço dela fica reservado (escondida, o campo não pula) e o leitor de tela só a ouve enquanto ela aparece.
+      const usados = tamanhoDaResposta(resposta);
+      const contando = mostrarContagemDaAberta(usados, exercicio.minimo);
       campo = (
         <div className="campo campo--aberta">
           <label htmlFor="resposta">{t.aberta.rotulo}</label>
           <textarea id="resposta" name="resposta" rows={5} maxLength={1000} value={resposta} required disabled={ocupado}
-            readOnly={respondido} data-retorno={retorno} aria-describedby="aberta-dica aberta-contador"
+            readOnly={respondido} data-retorno={retorno} aria-describedby={contando ? 'aberta-dica aberta-contador' : 'aberta-dica'}
             onChange={(evento) => mudar(evento.target.value)} />
           <p id="aberta-dica" className="campo__dica">{t.aberta.dica}</p>
-          <p id="aberta-contador" className="campo__contador" data-pronto={tamanhoDaResposta(resposta) >= exercicio.minimo || undefined}>
-            {t.aberta.contador(tamanhoDaResposta(resposta), exercicio.minimo)}
+          <p id="aberta-contador" className="campo__contador" data-oculto={contando ? undefined : ''}>
+            {t.aberta.contador(usados, exercicio.minimo)}
           </p>
         </div>
       );
       break;
+    }
   }
 
   return (
