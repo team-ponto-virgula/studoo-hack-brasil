@@ -117,7 +117,40 @@ test("no enunciado o procurado fica só na legenda ('C = ?'), e na resposta vira
   assert.ok(desenhos["baricentro/enunciado"].primitivas.length < desenhos["baricentro/resposta"].primitivas.length, "o enunciado desenha menos (sem o procurado e o que o toca)");
   assert.ok(svgResposta.includes(PALETA_DO_DESENHO.resposta), "a resposta usa o verde");
   assert.equal(svgEnunciado.includes(PALETA_DO_DESENHO.resposta), false, "o enunciado não tem verde de resposta");
-  assert.ok(svgEnunciado.includes('stroke-dasharray="3 2.5"'), "a legenda mostra o círculo tracejado do procurado");
+  assert.ok(desenhos["baricentro/enunciado"].textos.includes("C = ?"), "a linha \"C = ?\" segue na legenda");
+});
+
+test("item 30: a legenda só lista o que está desenhado: no enunciado o procurado não tem item nem o círculo tracejado, só a linha 'C = ?' em texto (#9A5B00); no retorno entra 'resposta' com o ponto verde", () => {
+  const desenhos = desenhosDasFixtures();
+  const palavras = (desenho) => desenho.textos.filter((texto) => ["dados", "especial", "baricentro", "ponto médio", "média", "procurado", "resposta"].includes(texto));
+  const verdes = (desenho) => desenho.primitivas.filter((p) => p.preenchimento === "resposta").length;
+  const verdesDaLegenda = (desenho) => desenho.primitivas.filter((p) => p.preenchimento === "resposta" && !p.borda).length;
+  for (const nome of ["baricentro", "colinearidade"]) {
+    const enunciado = desenhos[`${nome}/enunciado`];
+    const resposta = desenhos[`${nome}/resposta`];
+    for (const [onde, desenho] of [["enunciado", enunciado], ["passo intermediário", desenhos[`${nome}/passo-intermediario`]]]) {
+      assert.equal(palavras(desenho).includes("procurado"), false, `${nome}, ${onde}: a legenda não tem o item "procurado"`);
+      assert.equal(simbolosDaLegenda(desenho).procurado, 0, `${nome}, ${onde}: nem o círculo tracejado dele`);
+      assert.equal(desenhoParaSvg(desenho, { fundo: "branco" }).includes('stroke-dasharray="3 2.5"'), false);
+      assert.ok(desenho.textos.includes("C = ?"), `${nome}, ${onde}: fica a linha "C = ?"`);
+      assert.equal(desenho.primitivas.filter((p) => p.preenchimento === "procuradoTexto").length, 1, `${nome}, ${onde}: a linha "C = ?" em texto, na cor do procurado (#9A5B00), uma só`);
+      assert.equal(verdes(desenho), 0, `${nome}, ${onde}: sem verde de resposta`);
+    }
+    // Cada categoria listada tem o símbolo desenhado na legenda e o ponto na figura.
+    const simbolos = simbolosDaLegenda(enunciado);
+    assert.equal(palavras(enunciado).includes("dados"), simbolos.dado > 0, `${nome}: "dados" só com a bolinha dos dados`);
+    assert.equal(palavras(enunciado).some((palavra) => ["especial", "baricentro"].includes(palavra)), simbolos.especial > 0, `${nome}: a categoria do especial só com o losango`);
+    assert.equal(palavras(resposta).includes("resposta"), true, `${nome}: no retorno entra "resposta"`);
+    assert.equal(palavras(resposta).includes("procurado"), false);
+    assert.equal(resposta.textos.includes("C = ?"), false, `${nome}: no retorno o "C = ?" sai`);
+    assert.equal(verdesDaLegenda(resposta), 1, `${nome}: o ponto verde da legenda`);
+    assert.ok(verdes(resposta) >= 2, `${nome}: e o ponto verde na figura`);
+  }
+  // A reta numérica já tinha só a linha "C = ?" em texto, sem símbolo: continua assim.
+  const reta = desenhos["abscissas/enunciado"];
+  assert.deepEqual(palavras(reta), []);
+  assert.ok(reta.textos.includes("C = ?"));
+  assert.equal(simbolosDaLegenda(reta).procurado, 0);
 });
 
 test("rótulos e números: sinal de menos de verdade, vírgula decimal e ponto e vírgula no par com decimal", () => {

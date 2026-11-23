@@ -6,210 +6,210 @@
   "primitivas": [
    {
     "tipo": "linha",
-    "x1": 99,
+    "x1": 92.89,
     "y1": 32,
-    "x2": 99,
-    "y2": 230,
+    "x2": 92.89,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 121,
+    "x1": 117.33,
     "y1": 32,
-    "x2": 121,
-    "y2": 230,
+    "x2": 117.33,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 143,
+    "x1": 141.78,
     "y1": 32,
-    "x2": 143,
-    "y2": 230,
+    "x2": 141.78,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 165,
+    "x1": 166.22,
     "y1": 32,
-    "x2": 165,
-    "y2": 230,
+    "x2": 166.22,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 187,
+    "x1": 190.67,
     "y1": 32,
-    "x2": 187,
-    "y2": 230,
+    "x2": 190.67,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 209,
+    "x1": 215.11,
     "y1": 32,
-    "x2": 209,
-    "y2": 230,
+    "x2": 215.11,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 230,
-    "x2": 209,
-    "y2": 230,
+    "x1": 92.89,
+    "y1": 252,
+    "x2": 215.11,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 208,
-    "x2": 209,
-    "y2": 208,
+    "x1": 92.89,
+    "y1": 227.56,
+    "x2": 215.11,
+    "y2": 227.56,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 186,
-    "x2": 209,
-    "y2": 186,
+    "x1": 92.89,
+    "y1": 203.11,
+    "x2": 215.11,
+    "y2": 203.11,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 164,
-    "x2": 209,
-    "y2": 164,
+    "x1": 92.89,
+    "y1": 178.67,
+    "x2": 215.11,
+    "y2": 178.67,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 142,
-    "x2": 209,
-    "y2": 142,
+    "x1": 92.89,
+    "y1": 154.22,
+    "x2": 215.11,
+    "y2": 154.22,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 120,
-    "x2": 209,
-    "y2": 120,
+    "x1": 92.89,
+    "y1": 129.78,
+    "x2": 215.11,
+    "y2": 129.78,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 98,
-    "x2": 209,
-    "y2": 98,
+    "x1": 92.89,
+    "y1": 105.33,
+    "x2": 215.11,
+    "y2": 105.33,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 76,
-    "x2": 209,
-    "y2": 76,
+    "x1": 92.89,
+    "y1": 80.89,
+    "x2": 215.11,
+    "y2": 80.89,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 54,
-    "x2": 209,
-    "y2": 54,
+    "x1": 92.89,
+    "y1": 56.44,
+    "x2": 215.11,
+    "y2": 56.44,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
+    "x1": 92.89,
     "y1": 32,
-    "x2": 209,
+    "x2": 215.11,
     "y2": 32,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 208,
-    "x2": 225,
-    "y2": 208,
+    "x1": 92.89,
+    "y1": 227.56,
+    "x2": 231.11,
+    "y2": 227.56,
     "cor": "eixo",
     "largura": 2
    },
    {
     "tipo": "linha",
-    "x1": 165,
-    "y1": 230,
-    "x2": 165,
+    "x1": 166.22,
+    "y1": 252,
+    "x2": 166.22,
     "y2": 16,
     "cor": "eixo",
     "largura": 2
    },
    {
     "tipo": "caminho",
-    "d": "M233 208L225 213L225 203Z",
+    "d": "M239.11 227.56L231.11 232.56L231.11 222.56Z",
     "preenchimento": "eixo"
    },
    {
     "tipo": "caminho",
-    "d": "M165 8L170 16L160 16Z",
+    "d": "M166.22 8L171.22 16L161.22 16Z",
     "preenchimento": "eixo"
    },
    {
     "tipo": "linha",
-    "x1": 187,
-    "y1": 164,
-    "x2": 121,
-    "y2": 54,
+    "x1": 190.67,
+    "y1": 178.67,
+    "x2": 117.33,
+    "y2": 56.44,
     "cor": "segmento",
     "largura": 3
    },
    {
     "tipo": "caminho",
-    "d": "#72b5bfcdf3:22412",
+    "d": "#0df902e052:25361",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#1481b39f5f:11280",
+    "d": "#12b56697f9:14129",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#d018f1e3bc:4383",
+    "d": "#2e8f3fab78:4415",
     "preenchimento": "especialTexto"
    },
    {
     "tipo": "caminho",
-    "d": "#ac6a60cb67:6749",
+    "d": "#e08d62cddb:6817",
     "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
-    "cx": 187,
-    "cy": 164,
+    "cx": 190.67,
+    "cy": 178.67,
     "raio": 6,
     "preenchimento": "dado",
     "borda": "branco",
@@ -217,8 +217,8 @@
    },
    {
     "tipo": "circulo",
-    "cx": 121,
-    "cy": 54,
+    "cx": 117.33,
+    "cy": 56.44,
     "raio": 6,
     "preenchimento": "dado",
     "borda": "branco",
@@ -226,7 +226,7 @@
    },
    {
     "tipo": "caminho",
-    "d": "M187 133.5L195.5 142L187 150.5L178.5 142Z",
+    "d": "M190.67 145.72L199.17 154.22L190.67 162.72L182.17 154.22Z",
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
@@ -234,46 +234,28 @@
    {
     "tipo": "circulo",
     "cx": 22,
-    "cy": 271,
+    "cy": 293,
     "raio": 5,
     "preenchimento": "dado"
    },
    {
     "tipo": "caminho",
-    "d": "#e57fc36af6:4335",
+    "d": "#c23898f0aa:4335",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "M94.35 264.5L100.85 271L94.35 277.5L87.85 271Z",
+    "d": "M94.35 286.5L100.85 293L94.35 299.5L87.85 293Z",
     "preenchimento": "especial"
    },
    {
     "tipo": "caminho",
-    "d": "#920c6b5cf4:7689",
-    "preenchimento": "suave"
-   },
-   {
-    "tipo": "circulo",
-    "cx": 193.78,
-    "cy": 271,
-    "raio": 5,
-    "preenchimento": "procuradoFundo",
-    "borda": "procurado",
-    "larguraDaBorda": 1.5,
-    "tracejado": [
-     3,
-     2.5
-    ]
-   },
-   {
-    "tipo": "caminho",
-    "d": "#1f631d4b6c:7049",
+    "d": "#acae493aee:7689",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#3f5849e1cf:2343",
+    "d": "#364828b4ab:2537",
     "preenchimento": "procuradoTexto"
    }
   ]
@@ -285,210 +267,210 @@
   "primitivas": [
    {
     "tipo": "linha",
-    "x1": 99,
+    "x1": 92.89,
     "y1": 32,
-    "x2": 99,
-    "y2": 230,
+    "x2": 92.89,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 121,
+    "x1": 117.33,
     "y1": 32,
-    "x2": 121,
-    "y2": 230,
+    "x2": 117.33,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 143,
+    "x1": 141.78,
     "y1": 32,
-    "x2": 143,
-    "y2": 230,
+    "x2": 141.78,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 165,
+    "x1": 166.22,
     "y1": 32,
-    "x2": 165,
-    "y2": 230,
+    "x2": 166.22,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 187,
+    "x1": 190.67,
     "y1": 32,
-    "x2": 187,
-    "y2": 230,
+    "x2": 190.67,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 209,
+    "x1": 215.11,
     "y1": 32,
-    "x2": 209,
-    "y2": 230,
+    "x2": 215.11,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 230,
-    "x2": 209,
-    "y2": 230,
+    "x1": 92.89,
+    "y1": 252,
+    "x2": 215.11,
+    "y2": 252,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 208,
-    "x2": 209,
-    "y2": 208,
+    "x1": 92.89,
+    "y1": 227.56,
+    "x2": 215.11,
+    "y2": 227.56,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 186,
-    "x2": 209,
-    "y2": 186,
+    "x1": 92.89,
+    "y1": 203.11,
+    "x2": 215.11,
+    "y2": 203.11,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 164,
-    "x2": 209,
-    "y2": 164,
+    "x1": 92.89,
+    "y1": 178.67,
+    "x2": 215.11,
+    "y2": 178.67,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 142,
-    "x2": 209,
-    "y2": 142,
+    "x1": 92.89,
+    "y1": 154.22,
+    "x2": 215.11,
+    "y2": 154.22,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 120,
-    "x2": 209,
-    "y2": 120,
+    "x1": 92.89,
+    "y1": 129.78,
+    "x2": 215.11,
+    "y2": 129.78,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 98,
-    "x2": 209,
-    "y2": 98,
+    "x1": 92.89,
+    "y1": 105.33,
+    "x2": 215.11,
+    "y2": 105.33,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 76,
-    "x2": 209,
-    "y2": 76,
+    "x1": 92.89,
+    "y1": 80.89,
+    "x2": 215.11,
+    "y2": 80.89,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 54,
-    "x2": 209,
-    "y2": 54,
+    "x1": 92.89,
+    "y1": 56.44,
+    "x2": 215.11,
+    "y2": 56.44,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
+    "x1": 92.89,
     "y1": 32,
-    "x2": 209,
+    "x2": 215.11,
     "y2": 32,
     "cor": "grade",
     "largura": 1
    },
    {
     "tipo": "linha",
-    "x1": 99,
-    "y1": 208,
-    "x2": 225,
-    "y2": 208,
+    "x1": 92.89,
+    "y1": 227.56,
+    "x2": 231.11,
+    "y2": 227.56,
     "cor": "eixo",
     "largura": 2
    },
    {
     "tipo": "linha",
-    "x1": 165,
-    "y1": 230,
-    "x2": 165,
+    "x1": 166.22,
+    "y1": 252,
+    "x2": 166.22,
     "y2": 16,
     "cor": "eixo",
     "largura": 2
    },
    {
     "tipo": "caminho",
-    "d": "M233 208L225 213L225 203Z",
+    "d": "M239.11 227.56L231.11 232.56L231.11 222.56Z",
     "preenchimento": "eixo"
    },
    {
     "tipo": "caminho",
-    "d": "M165 8L170 16L160 16Z",
+    "d": "M166.22 8L171.22 16L161.22 16Z",
     "preenchimento": "eixo"
    },
    {
     "tipo": "linha",
-    "x1": 187,
-    "y1": 164,
-    "x2": 121,
-    "y2": 54,
+    "x1": 190.67,
+    "y1": 178.67,
+    "x2": 117.33,
+    "y2": 56.44,
     "cor": "segmento",
     "largura": 3
    },
    {
     "tipo": "caminho",
-    "d": "#72b5bfcdf3:22412",
+    "d": "#0df902e052:25361",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#1481b39f5f:11280",
+    "d": "#12b56697f9:14129",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#d018f1e3bc:4383",
+    "d": "#2e8f3fab78:4415",
     "preenchimento": "especialTexto"
    },
    {
     "tipo": "caminho",
-    "d": "#ac6a60cb67:6749",
+    "d": "#e08d62cddb:6817",
     "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
-    "cx": 187,
-    "cy": 164,
+    "cx": 190.67,
+    "cy": 178.67,
     "raio": 6,
     "preenchimento": "dado",
     "borda": "branco",
@@ -496,8 +478,8 @@
    },
    {
     "tipo": "circulo",
-    "cx": 121,
-    "cy": 54,
+    "cx": 117.33,
+    "cy": 56.44,
     "raio": 6,
     "preenchimento": "dado",
     "borda": "branco",
@@ -505,7 +487,7 @@
    },
    {
     "tipo": "caminho",
-    "d": "M187 133.5L195.5 142L187 150.5L178.5 142Z",
+    "d": "M190.67 145.72L199.17 154.22L190.67 162.72L182.17 154.22Z",
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
@@ -513,46 +495,28 @@
    {
     "tipo": "circulo",
     "cx": 22,
-    "cy": 271,
+    "cy": 293,
     "raio": 5,
     "preenchimento": "dado"
    },
    {
     "tipo": "caminho",
-    "d": "#e57fc36af6:4335",
+    "d": "#c23898f0aa:4335",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "M94.35 264.5L100.85 271L94.35 277.5L87.85 271Z",
+    "d": "M94.35 286.5L100.85 293L94.35 299.5L87.85 293Z",
     "preenchimento": "especial"
    },
    {
     "tipo": "caminho",
-    "d": "#920c6b5cf4:7689",
-    "preenchimento": "suave"
-   },
-   {
-    "tipo": "circulo",
-    "cx": 193.78,
-    "cy": 271,
-    "raio": 5,
-    "preenchimento": "procuradoFundo",
-    "borda": "procurado",
-    "larguraDaBorda": 1.5,
-    "tracejado": [
-     3,
-     2.5
-    ]
-   },
-   {
-    "tipo": "caminho",
-    "d": "#1f631d4b6c:7049",
+    "d": "#acae493aee:7689",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#3f5849e1cf:2343",
+    "d": "#364828b4ab:2537",
     "preenchimento": "procuradoTexto"
    }
   ]
@@ -1745,26 +1709,8 @@
     "preenchimento": "suave"
    },
    {
-    "tipo": "circulo",
-    "cx": 94.35,
-    "cy": 293,
-    "raio": 5,
-    "preenchimento": "procuradoFundo",
-    "borda": "procurado",
-    "larguraDaBorda": 1.5,
-    "tracejado": [
-     3,
-     2.5
-    ]
-   },
-   {
     "tipo": "caminho",
-    "d": "#f89dd26b75:7039",
-    "preenchimento": "suave"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#69ab61a862:2546",
+    "d": "#fe7e55254f:2470",
     "preenchimento": "procuradoTexto"
    }
   ]
@@ -1993,26 +1939,8 @@
     "preenchimento": "suave"
    },
    {
-    "tipo": "circulo",
-    "cx": 94.35,
-    "cy": 293,
-    "raio": 5,
-    "preenchimento": "procuradoFundo",
-    "borda": "procurado",
-    "larguraDaBorda": 1.5,
-    "tracejado": [
-     3,
-     2.5
-    ]
-   },
-   {
     "tipo": "caminho",
-    "d": "#f89dd26b75:7039",
-    "preenchimento": "suave"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#69ab61a862:2546",
+    "d": "#fe7e55254f:2470",
     "preenchimento": "procuradoTexto"
    }
   ]

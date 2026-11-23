@@ -120,6 +120,32 @@ test("o exercício que pergunta o vértice: o enunciado SEM a curva (a fórmula,
   assert.equal(caminhosDaCurva(desenharVisual(exercicioDoVertice.guardado, { tipo: "enunciado" })).length, 0);
 });
 
+test("item 30: na função a legenda só lista o que está desenhado: no enunciado o procurado não tem item nem círculo tracejado, só a linha \"V = ?\"; no retorno entra \"resposta\" com o ponto verde", () => {
+  const palavras = (desenho) => desenho.textos.filter((texto) => ["dados", "especial", "procurado", "resposta"].includes(texto));
+  const tracejados = (desenho) => desenho.primitivas.filter((primitiva) => primitiva.tipo === "circulo" && primitiva.borda === "procurado").length;
+  const verdesDaLegenda = (desenho) => desenho.primitivas.filter((primitiva) => primitiva.tipo === "circulo" && primitiva.preenchimento === "resposta" && !primitiva.borda).length;
+  const { exercicioDoVertice } = fixture("parabola");
+  const enunciado = desenharVisual(visualParaEnunciado(exercicioDoVertice.guardado), { tipo: "enunciado" });
+  assert.deepEqual(palavras(enunciado), ["especial"], "só o que a figura desenha: os pontos de destaque (losangos); o procurado não tem categoria");
+  assert.equal(tracejados(enunciado), 0, "e nenhum círculo tracejado na legenda");
+  assert.ok(enunciado.textos.includes("V = ?"), "fica a linha \"V = ?\", em texto, sem símbolo antes");
+  assert.equal(enunciado.primitivas.filter((primitiva) => primitiva.preenchimento === "procuradoTexto").length, 1, "na cor do procurado (#9A5B00)");
+  const retorno = desenharVisual(visualRevelado(exercicioDoVertice.guardado), { tipo: "retorno" });
+  assert.deepEqual(palavras(retorno), ["especial", "resposta"], "no retorno entra \"resposta\"");
+  assert.equal(verdesDaLegenda(retorno), 1, "com o ponto verde na legenda");
+  assert.equal(retorno.textos.includes("V = ?"), false);
+  // "Em qual ponto a reta corta o eixo y?": o intercepto procurado (C), com a raiz (R) desenhada.
+  const reta = structuredClone(fixture("reta").guardado);
+  reta.pontos.find((ponto) => ponto.id === "C").papel = "procurado";
+  const enunciadoDaReta = desenharVisual(reta, { tipo: "enunciado" });
+  assert.deepEqual(palavras(enunciadoDaReta), ["especial"]);
+  assert.equal(tracejados(enunciadoDaReta), 0);
+  assert.ok(enunciadoDaReta.textos.includes("C = ?"));
+  const retornoDaReta = desenharVisual(reta, { tipo: "retorno" });
+  assert.deepEqual(palavras(retornoDaReta), ["especial", "resposta"]);
+  assert.equal(verdesDaLegenda(retornoDaReta), 1);
+});
+
 test("a reta: o nome g, o intercepto C (0, 1) e a raiz R (−0,5; 0); a escala é igual em x e em y", () => {
   const desenho = desenharVisual(caso("reta"), { tipo: "enunciado" });
   assert.ok(!desenho.naoCabe);
