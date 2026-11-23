@@ -34,9 +34,23 @@ name: 86-landing
     direction: DOWN
     timeout: 60000
     optional: true
-- tapOn:
-    waitToSettleTimeoutMs: 1500
-    text: "Experimentar com frações"
+# Na execução 45268376807 (Android) o toque não chegou a pedir o material (nenhum POST /estudio/materiais/demo no
+# proxy.log) e o botão continuou na tela: o toque se repete enquanto o botão estiver lá, com espera pelo cartão do material.
+- repeat:
+    times: 4
+    while:
+      visible:
+        text: "Experimentar com frações"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "Experimentar com frações"
+          retryTapIfNoChange: true
+      - extendedWaitUntil:
+          notVisible:
+            text: "Experimentar com frações"
+          timeout: 20000
+          optional: true
 - scrollUntilVisible:
     element:
       text: "Criar trilha deste material"
