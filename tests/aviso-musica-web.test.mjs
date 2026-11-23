@@ -48,7 +48,7 @@ test('os cabeçalhos que o aviso respeita são os das telas do app (entrada, app
 test('o componente: mede os cabeçalhos, fecha na hora com o balão aberto e não deixa sobrar posição no pé da tela', () => {
   const fonte = ler('src/app/ambiente-som.tsx');
   assert.match(fonte, /if \(document\.querySelector\(BALAO_DO_NO\)\) \{ mostrar\(false\); return; \}/, 'o balão aberto fecha o aviso, sem animação (o parágrafo some do DOM)');
-  assert.match(fonte, /lugarDoAviso\(cabecalhoDoAlto\(cabecalhos, innerHeight\), innerWidth\)/);
+  assert.match(fonte, /const ancora = cabecalhoDoAlto\(cabecalhos, innerHeight\);\s*const lugar = lugarDoAviso\(ancora, innerWidth\);/);
   assert.doesNotMatch(fonte, /style\.bottom|navegacao-mobile|previa-seguir|previa-rodape/, 'nada de ancorar embaixo, em cima da barra de abas ou dos botões da geração');
   assert.match(fonte, /\{visivel && <p>/, 'fechar é tirar o parágrafo: sem saída animada');
   assert.match(fonte, /window\.setTimeout\(\(\) => mostrar\(false\), 7000\)/, 'some sozinho');
