@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import ts from 'typescript';
 
 // Spec 17 (onboarding e primeira vez), no app: mudança 1 (a espera da geração ensina o produto), 2 (a faixa da proposta e o
 // tour com os textos do contrato) e 4 (o tour sem selo de demonstração). Os textos vêm do contrato; o app não os escreve.
@@ -64,14 +65,38 @@ test('defeito B3: o cartão de aceite cabe na tela, com o título no alto, as a�
   const interfaceApp = await ler('interface.tsx');
   const consentimento = await ler('consentimento-ia.tsx');
   const cartao = interfaceApp.slice(interfaceApp.indexOf('export function CartaoConfirmacao('), interfaceApp.indexOf('export function FolhaDeAcoes('));
-  assert.match(cartao, /const alturaMaxima = Math\.max\(280, height - margens\.top - margens\.bottom - 32\);/);
+  assert.match(cartao, /const alturaMaxima = alturaUtilDoCartao\(height, margens\.top, margens\.bottom, teclado\);/);
   assert.match(cartao, /style=\{\[estilos\.confirmacaoCartao, \{ maxHeight: alturaMaxima \}\]\}/);
-  assert.match(cartao, /\{extra && <View style=\{estilos\.confirmacaoMiolo\}>\{extra\}<\/View>\}/);
+  assert.match(cartao, /<ScrollView ref=\{miolo\} testID=\{`\$\{testID\}-miolo`\} style=\{estilos\.confirmacaoMiolo\}/);
   assert.match(cartao, /AccessibilityInfo\.sendAccessibilityEvent\(titulo\.current, 'focus'\)/);
   // O título vem antes do miolo, e as ações depois dele (presas embaixo).
-  assert.ok(cartao.indexOf('ref={titulo}') < cartao.indexOf('confirmacaoMiolo') && cartao.indexOf('confirmacaoMiolo') < cartao.indexOf('estilos.confirmacaoAcoes'));
-  assert.match(interfaceApp, /confirmacaoMiolo: \{ flexShrink: 1, minHeight: 0 \}/);
-  assert.match(consentimento, /testID="consentimento-itens" style=\{\{ maxHeight: Math\.round\(height \* 0\.42\), flexGrow: 0, flexShrink: 1 \}\}/);
+  assert.ok(cartao.indexOf('ref={titulo}') < cartao.indexOf('ref={miolo}') && cartao.indexOf('ref={miolo}') < cartao.indexOf('estilos.confirmacaoAcoes'));
+  assert.match(interfaceApp, /confirmacaoMiolo: \{ flexGrow: 0, flexShrink: 1, minHeight: 0 \}/);
+  // A lista de quem recebe rola junto com o texto no miolo (sem rolagem dentro de rolagem).
+  assert.match(consentimento, /<View testID="consentimento-itens" style=\{c\.itens\}>/);
+  assert.doesNotMatch(consentimento, /ScrollView/);
+});
+
+test('teclado no cartão (Android, "Excluir conta"): a altura útil desconta o teclado e o cartão sobe para cima dele', async () => {
+  const interfaceApp = await ler('interface.tsx');
+  const inicio = interfaceApp.indexOf('export function alturaUtilDoCartao(');
+  const js = ts.transpileModule(interfaceApp.slice(inicio, interfaceApp.indexOf('\n}\n', inicio) + 2).replace('export ', ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const alturaUtilDoCartao = new Function(`${js}; return alturaUtilDoCartao;`)();
+  // Sem teclado: a janela menos as áreas seguras e 32 de folga.
+  assert.equal(alturaUtilDoCartao(844, 47, 34, 0), 731);
+  // Com o teclado (maior que a área segura de baixo): ele é descontado no lugar dela.
+  assert.equal(alturaUtilDoCartao(640, 24, 0, 280), 304);
+  assert.equal(alturaUtilDoCartao(568, 20, 0, 260), 256);
+  assert.equal(alturaUtilDoCartao(500, 20, 0, 400), 200, 'nunca menos de 200');
+  const cartao = interfaceApp.slice(interfaceApp.indexOf('export function CartaoConfirmacao('), interfaceApp.indexOf('export function FolhaDeAcoes('));
+  assert.match(cartao, /const teclado = useAlturaDoTeclado\(\);/);
+  assert.match(cartao, /style=\{\[estilos\.modalFundo, teclado > 0 && \{ paddingBottom: 16 \+ teclado \}\]\}/);
+  assert.match(cartao, /miolo\.current\?\.scrollToEnd\(\{ animated: false \}\)/, 'o campo (no fim do miolo) fica à vista');
+  const ouvinte = interfaceApp.slice(interfaceApp.indexOf('export function useAlturaDoTeclado('), interfaceApp.indexOf('export function CartaoConfirmacao('));
+  assert.match(ouvinte, /Platform\.OS === 'ios' \? 'keyboardWillShow' : 'keyboardDidShow'/);
+  assert.match(ouvinte, /evento\.endCoordinates\?\.height/);
+  // O campo de EXCLUIR é o miolo do cartão de "Excluir conta".
+  assert.match(await ler('privacidade.tsx'), /extra=\{\n\s*<Campo testID="excluir-conta-campo"/);
 });
 
 test('defeito B4: depois de "Agora não", o aviso do pedido tem "Permitir o uso de IA", que reabre o mesmo cartão', () => {

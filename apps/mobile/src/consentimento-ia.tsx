@@ -1,7 +1,7 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { CAMINHO_POLITICA, consentimentoVigente, privacidadeDoErro, type EstadoPrivacidade } from '@studoo/contratos/privacidade';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
 import { CartaoConfirmacao } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
@@ -201,16 +201,17 @@ export function ListaProvedores({ estado, politica }: { estado: EstadoPrivacidad
   );
 }
 
-/** O miolo do cartão de aceite, como a folha da web: "Quem recebe e o quê", a lista e o que segue sem permitir. */
+/**
+ * O miolo do cartão de aceite, como a folha da web: "Quem recebe e o quê", a lista e o que segue sem permitir. Rola junto com o
+ * texto no miolo do cartão (com DeepSeek e OpenAI, a lista passa da tela de 360 × 800), com o título e as ações sempre à vista.
+ */
 function ItensDoPedido({ estado, politica }: { estado: EstadoPrivacidade | null; politica: string | null }) {
-  // Com DeepSeek e OpenAI a lista passa da tela de 360 × 800: rola dentro do cartão, com as ações sempre à vista.
-  const { height } = useWindowDimensions();
   return (
-    <ScrollView testID="consentimento-itens" style={{ maxHeight: Math.round(height * 0.42), flexGrow: 0, flexShrink: 1 }} contentContainerStyle={c.itens}>
+    <View testID="consentimento-itens" style={c.itens}>
       <Text accessibilityRole="header" style={c.subtitulo}>{k.aceiteQuem}</Text>
       {estado && <ListaProvedores estado={estado} politica={politica} />}
       <Text style={c.semIa}>{k.aceiteSemIa}</Text>
-    </ScrollView>
+    </View>
   );
 }
 

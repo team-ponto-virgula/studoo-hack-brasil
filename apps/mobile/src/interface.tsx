@@ -1028,13 +1028,44 @@ type PropsConfirmacao = {
 /** Largura média de um caractere em Nunito 800 de 16 px (para saber se o rótulo cabe na metade). */
 const LARGURA_MEDIA_DO_CARACTERE = 9.2;
 
+/**
+ * A altura útil do cartão de confirmação: a janela menos a área segura de cima e, embaixo, a maior entre a área segura e o
+ * teclado aberto, com 16 de folga de cada lado (nunca menos de 200).
+ */
+export function alturaUtilDoCartao(janela: number, margemDeCima: number, margemDeBaixo: number, teclado: number) {
+  return Math.max(200, Math.round(janela - margemDeCima - Math.max(margemDeBaixo, teclado > 0 ? teclado : 0) - 32));
+}
+
+/** A altura do teclado aberto (0 fechado): no iPhone antes de ele subir (Will), no Android quando já subiu (Did). */
+export function useAlturaDoTeclado() {
+  const [altura, setAltura] = useState(0);
+  useEffect(() => {
+    const abrir = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const fechar = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const abriu = Keyboard.addListener(abrir, (evento) => setAltura(Math.max(0, evento.endCoordinates?.height ?? 0)));
+    const fechou = Keyboard.addListener(fechar, () => setAltura(0));
+    return () => { abriu.remove(); fechou.remove(); };
+  }, []);
+  return altura;
+}
+
 export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
   confirmarDesativado = false, ocupado = false, erro, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const { width, height } = useWindowDimensions();
   const margens = useSafeAreaInsets();
   // Spec 17, defeito B3 (e spec 11): o cartão nunca passa da tela. O título fica no alto, as ações presas embaixo e só o
-  // miolo (`extra`, como a lista de quem recebe no aceite de IA) encolhe e rola; o foco do leitor de tela vai ao título.
-  const alturaMaxima = Math.max(280, height - margens.top - margens.bottom - 32);
+  // miolo (o texto, a lista de quem recebe no aceite de IA, o campo de "Excluir conta") encolhe e rola; o foco do leitor de
+  // tela vai ao título. Com o teclado aberto (o Modal do Android não encolhe com ele), o cartão sobe para cima do teclado e a
+  // altura útil desconta o teclado: título, campo e botões ficam à vista.
+  const teclado = useAlturaDoTeclado();
+  const alturaMaxima = alturaUtilDoCartao(height, margens.top, margens.bottom, teclado);
+  const miolo = useRef<ComponentRef<typeof ScrollView>>(null);
+  // O campo fica no fim do miolo: ao abrir o teclado, o miolo rola até ele.
+  useEffect(() => {
+    if (teclado <= 0) return;
+    const espera = setTimeout(() => miolo.current?.scrollToEnd({ animated: false }), 50);
+    return () => clearTimeout(espera);
+  }, [teclado]);
   const titulo = useRef<ComponentRef<typeof Text>>(null);
   useEffect(() => {
     const espera = setTimeout(() => { if (titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus'); }, 250);
@@ -1056,15 +1087,20 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
     acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
-      <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
+      <Pressable testID="confirmacao-fundo" accessible={false} style={[estilos.modalFundo, teclado > 0 && { paddingBottom: 16 + teclado }]} onPress={() => { if (!ocupado) aoCancelar(); }}>
         <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
           transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
           <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={[estilos.confirmacaoCartao, { maxHeight: alturaMaxima }]} onPress={() => {}}>
             <Text ref={titulo} testID={`${testID}-titulo`} accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
-            {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
-            {extra && <View style={estilos.confirmacaoMiolo}>{extra}</View>}
-            {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
-            {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
+            {(texto || extra || aviso || erro) && (
+              <ScrollView ref={miolo} testID={`${testID}-miolo`} style={estilos.confirmacaoMiolo} contentContainerStyle={estilos.confirmacaoMioloConteudo}
+                keyboardShouldPersistTaps="handled" bounces={false}>
+                {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
+                {extra}
+                {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
+                {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
+              </ScrollView>
+            )}
             {/* Lado a lado: "Cancelar" à esquerda e a ação à direita; uma por linha: a ação em cima. */}
             <View style={[estilos.confirmacaoAcoes, empilhar && estilos.confirmacaoAcoesEmpilhadas]}>
               {empilhar ? <>{confirmar}{cancelar}</> : <>{cancelar}{confirmar}</>}
@@ -1460,8 +1496,9 @@ export const estilos = StyleSheet.create({
   confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 48, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
-  // O miolo do cartão é o único que encolhe quando falta altura (as ações ficam presas embaixo, o título no alto).
-  confirmacaoMiolo: { flexShrink: 1, minHeight: 0 },
+  // O miolo do cartão é o único que encolhe e rola quando falta altura (as ações ficam presas embaixo, o título no alto).
+  confirmacaoMiolo: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
+  confirmacaoMioloConteudo: { gap: 12 },
   confirmacaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
   confirmacaoErro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   confirmacaoAcoes: { flexDirection: 'row', gap: 8, marginTop: 4 },
