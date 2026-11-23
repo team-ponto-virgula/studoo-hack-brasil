@@ -233,7 +233,7 @@ Nada de prévia web dentro de moldura de celular.
 | Herói 1 | `02-iphone-o-que-quer-aprender.png` (campo com o exemplo e as ideias; a `heroi-1-*`, com "Fracoes", fica de fora) | O pedido com "Fotografia com o celular" no campo, iPhone e Android |
 | Herói 2 (e versão parada) | `heroi-2-android-proposta-pronta.png` (a do iPhone tem a borda do aviso "Abrir a que já existe" e fica de fora) | A proposta pronta da mesma trilha, iPhone e Android |
 | Herói 3 | `heroi-3-iphone-licao-acerto.png` | O acerto numa lição da mesma trilha, iPhone e Android |
-| S2, momento 1 | Ainda falta (rodada 45268376807) | Lição com "[1] Fonte do seu material" aberta |
+| S2, momento 1 | `04-iphone-licao-fonte-do-material.png` (rodada 45272182836): "Baseado no seu material [1]" e o cartão com o trecho citado. É limpa, mas o cartão traz "material de demonstração" e o selo "Modo demonstração", porque o material é o de exemplo do app | Uma lição de um material comum (uma foto ou um PDF de verdade, lido com a IA real), sem o selo de demonstração. Ela depende de o Lead aceitar o custo de uma leitura de material com a IA real |
 | S2, momento 2 | `05b-iphone-ponte.png` (a faixa da ponte, com as três tábuas e o Stu, conta o momento num olhar) | — |
 | S2, momento 3 | `06-android-ensine-ao-stu.png` (abre em "O que fez sentido", com os vistos) | — |
 | S2, momento 4 | `03-iphone-mapa-da-trilha.png`, ao lado da mesma trilha no site | De preferência, um mapa com "Compartilhar" no lugar de "Em revisão", que pede explicação a quem não conhece o produto |
