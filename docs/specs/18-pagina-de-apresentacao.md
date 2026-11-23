@@ -225,3 +225,26 @@ Capturas nativas do build 4 (simulador do iPhone ou emulador do Android, com a o
 | S2, momento 4 | O mapa no app com "Progresso salvo agora", e a mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) |
 
 Nada de prévia web dentro de moldura de celular.
+
+**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`, partes 1 e 2: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4):
+
+| Lugar | Arquivo | Por quê |
+|---|---|---|
+| Herói 1 | `02-iphone-o-que-quer-aprender.png` | Campo com o exemplo e as ideias à vista. A `heroi-1-*` diz "Fracoes", sem cedilha, e fica de fora |
+| Herói 2 (e versão parada) | `heroi-2-android-proposta-pronta.png` | "Sua trilha está pronta: 6 lições curtas em 3 partes", o nó 1, o Stu e os dois botões. A do iPhone tem a borda do aviso "Abrir a que já existe" no alto, cortada |
+| Herói 3 | `heroi-3-iphone-licao-acerto.png` | "Isso aí!" com o Stu, limpa |
+| S2, momento 1 | Ainda falta (rodada 45268376807) | Lição com "[1] Fonte do seu material" aberta |
+| S2, momento 2 | `05b-iphone-ponte.png` | A faixa da ponte com as três tábuas e o Stu conta o momento num olhar |
+| S2, momento 3 | `06-android-ensine-ao-stu.png` | Abre em "O que fez sentido", com os vistos, antes de "O que revisar" |
+| S2, momento 4 | `03-iphone-mapa-da-trilha.png`, ao lado da mesma trilha no site | O mapa com o caminho. Se a rodada nova tiver um mapa com "Compartilhar" no lugar de "Em revisão", ele entra: "Em revisão" pede explicação a quem não conhece o produto |
+
+**Regras de uso:**
+- **A barra de status de cada sistema** (hora, sinal e bateria, os 59 pontos de cima do iPhone ou os 24 dp do Android) é cortada de todas as capturas. A moldura própria do Studoo não desenha relógio. Assim, capturas de iPhone e de Android ficam juntas sem horários diferentes nem ícones de outro sistema. O recorte só tira a barra do sistema e não muda o conteúdo da tela.
+- **Exportação:** WebP com a largura da moldura em 2× (680 px no herói do computador), até 120 KB cada.
+- **`alt`** de cada uma, com o que a tela mostra:
+  - "Tela do Studoo perguntando o que você quer aprender";
+  - "Tela do Studoo com a trilha pronta: 6 lições curtas em 3 partes";
+  - "Lição do Studoo com a resposta certa e o Stu comemorando";
+  - "A ponte do Studoo: outro jeito de entender, em 3 passos";
+  - "O retorno do Stu à sua explicação";
+  - "O mapa da trilha no app".
