@@ -235,6 +235,7 @@ function StuAcenando({ largura, esquerda, pausado }: { largura: number; esquerda
 function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: number; nivel: number; recolher: boolean; respiro: number }) {
   // A conta de hoje, com o teto de 76 da spec 13 (A2).
   const stu = Math.max(28, Math.min(76, Math.round((ilustracao - 14) / 1.1)));
+  const { width: largura } = useWindowDimensions();
   return (
     <View testID="entrada-topo" style={recolher ? entradaEstilos.recolhido : respiro > 0 ? { marginTop: respiro } : null}
       importantForAccessibility={recolher ? 'no-hide-descendants' : 'auto'}
@@ -256,7 +257,8 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
       ) : (
         <View style={entradaEstilos.tituloComStu}>
           <View style={entradaEstilos.tituloComStuTexto}>
-            <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+            {/* Como a web (item 10): 26/32 ao lado do Stu, 22/28 em 320, até 3 linhas. */}
+            <Titulo foco testID="titulo-entrada" estilo={estiloDoTituloComStu(largura)}>{mensagens.entrada.titulo}</Titulo>
           </View>
           <View testID="entrada-stu" style={entradaEstilos.stuDoTitulo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Stu nome="stu-acolhida" tamanho={STU_DO_TITULO} animado="laco" pausado={recolher} />
@@ -525,6 +527,14 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
 
 /** O Stu ao lado do título da entrada no celular (spec 16, item 10; spec 13). */
 const STU_DO_TITULO = 72;
+
+/** O título ao lado do Stu, como a web: 26/32 e, até 320 de largura, 22/28 (cabe em 3 linhas em 390, 360 e 320). */
+export function tamanhoDoTituloComStu(largura: number) {
+  return largura <= 320 ? { fontSize: 22, lineHeight: 28 } : { fontSize: 26, lineHeight: 32 };
+}
+function estiloDoTituloComStu(largura: number) {
+  return [entradaEstilos.tituloCompacto, tamanhoDoTituloComStu(largura)];
+}
 
 const entradaEstilos = StyleSheet.create({
   tituloComStu: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

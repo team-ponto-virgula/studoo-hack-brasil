@@ -26,6 +26,7 @@ import {
   type Pratica,
   type Recurso,
   type TipoTrecho,
+  mostrarContagemDaAberta,
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
@@ -1041,8 +1042,11 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
         )}
       </CaixaDoCampo>
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
-      {/* Spec 16, item 8: antes da primeira letra, só o rodapé orienta; depois, "Faltam N letras" em cinza, até o mínimo. */}
-      {usados > 0 && usados < minimo && <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>}
+      {/* Spec 16, item 8 (regra do contrato, a mesma da web): antes da primeira letra, só o rodapé orienta; depois, "Faltam N
+          letras" em cinza, até o mínimo. O lugar da linha fica guardado, para nada pular quando ela entra ou sai. */}
+      {mostrarContagemDaAberta(usados, minimo)
+        ? <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>
+        : <View style={formatos.contadorLugar} />}
     </View>
   );
 }
@@ -1400,6 +1404,7 @@ const formatos = StyleSheet.create({
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
+  contadorLugar: { height: 18 },
   contador: { alignSelf: 'flex-end', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   correcao: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   criterio: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },

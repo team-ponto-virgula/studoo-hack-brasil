@@ -20,6 +20,7 @@ import {
   type EtapaAula,
   type ExercicioPublico,
   type LicaoDetalhe,
+  etapaTemFolga,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -392,12 +393,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
    */
   const [stuDaEtapa, setStuDaEtapa] = useState<number | null>(null);
   const acrescimoDoStu = useRef(0);
-  acrescimoDoStu.current = stuDaEtapa === null ? 0 : stuDaEtapa + STU_DA_ETAPA + STU_DA_ETAPA_VAO;
+  const comStuNaEtapa = etapa.tipo === 'exemplo';
+  acrescimoDoStu.current = stuDaEtapa === null ? 0 : stuDaEtapa + (comStuNaEtapa ? STU_DA_ETAPA + STU_DA_ETAPA_VAO : 0);
   useEffect(() => { setStuDaEtapa(null); }, [passo]);
   function ajustarStuDaEtapa() {
     if (!alturaVisivel.current || !alturaConteudo.current) return;
     const leitura = (etapa.tipo === 'conceito' || (etapa.tipo === 'exemplo' && !resolva.ativo)) && !ponteAberta;
-    const espaco = leitura ? espacoDoStuDaEtapa(alturaConteudo.current - acrescimoDoStu.current, alturaVisivel.current) : null;
+    const espaco = leitura ? espacoDoStuDaEtapa(alturaConteudo.current - acrescimoDoStu.current, alturaVisivel.current, comStuNaEtapa) : null;
     setStuDaEtapa((antes) => (antes === espaco || (antes !== null && espaco !== null && Math.abs(antes - espaco) < 3) ? antes : espaco));
   }
 
@@ -838,7 +840,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={[licaoEstilos.avisoTexto, { color: '#7A4A00' }]}>{t.revisaoRapida}</Text>
           </View>
         )}
-        {stuDaEtapa !== null && (etapa.tipo === 'conceito' || etapa.tipo === 'exemplo') && <StuDaEtapa espaco={stuDaEtapa} />}
+        {stuDaEtapa !== null && (etapa.tipo === 'conceito' || etapa.tipo === 'exemplo') && <StuDaEtapa espaco={stuDaEtapa} comStu={comStuNaEtapa} />}
         {etapa.tipo === 'conceito' && (
           <>
             {licao.concluida && (
@@ -1301,22 +1303,22 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 /** O fundo do painel de retorno (o rodapé da aula depois da resposta) e o esmaecer do texto que rola. */
 const CORES_DO_PAINEL = { certa: '#E3F6EA', errada: '#FFF1E0' };
 
-/** O Stu de 72 acima do cartão curto do Conceito ou do Exemplo (spec 16, item 4), com 12 até o cartão. */
+/** O Stu de 72 acima do cartão curto do Exemplo (spec 16, item 4), com 12 até o cartão. */
 export const STU_DA_ETAPA = 72;
 export const STU_DA_ETAPA_VAO = 12;
 
 /**
- * O espaço acima do Stu que põe o conjunto (Stu e cartão) no meio da sobra, ou null quando não entra: o conteúdo (sem o
- * Stu) precisa caber com o Stu e deixar 40% ou mais da área visível livre.
+ * O espaço acima do conjunto que o põe no meio da sobra, ou null sem folga. A decisão é a do contrato (`etapaTemFolga`, a
+ * mesma da web: o conteúdo cabe e sobram 40% ou mais da área). No Exemplo, o stu-feliz entra acima do cartão e o espaço
+ * desconta o lugar dele; no Conceito, o Stu já está ao lado do balão, então o conjunto só é centralizado (como a web).
  */
-export function espacoDoStuDaEtapa(conteudo: number, visivel: number): number | null {
-  if (conteudo <= 0 || visivel <= 0) return null;
-  const sobra = visivel - conteudo;
-  if (sobra < visivel * 0.4 || sobra < STU_DA_ETAPA + STU_DA_ETAPA_VAO) return null;
-  return Math.floor((sobra - STU_DA_ETAPA - STU_DA_ETAPA_VAO) / 2);
+export function espacoDoStuDaEtapa(conteudo: number, visivel: number, comStu: boolean): number | null {
+  if (!etapaTemFolga({ livre: visivel, usado: conteudo })) return null;
+  return Math.max(0, Math.floor((visivel - conteudo - (comStu ? STU_DA_ETAPA + STU_DA_ETAPA_VAO : 0)) / 2));
 }
 
-function StuDaEtapa({ espaco }: { espaco: number }) {
+function StuDaEtapa({ espaco, comStu }: { espaco: number; comStu: boolean }) {
+  if (!comStu) return <View testID="folga-da-etapa" pointerEvents="none" style={{ height: espaco }} />;
   return (
     <View testID="stu-da-etapa" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={{ paddingTop: espaco, marginBottom: STU_DA_ETAPA_VAO, alignItems: 'center' }}>

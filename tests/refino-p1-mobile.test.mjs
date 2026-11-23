@@ -32,7 +32,7 @@ test('item 5: a dica "use as teclas de A a C" nunca aparece no app', async () =>
 test('item 6: o quadrinho da letra cresce com o texto (1,75 × a letra, mínimo 30, quadrado, raio 9) e o texto quebra ao lado', () => {
   const ladoDaLetra = funcao(opcao, 'ladoDaLetra', 'const LETRA_DA_OPCAO = 14;\n');
   assert.equal(ladoDaLetra(1), 30);
-  assert.equal(ladoDaLetra(1.3), 32);
+  assert.equal(ladoDaLetra(1.5), 36.75, 'sem arredondar, como a web (36,8)');
   assert.equal(ladoDaLetra(2), 49);
   assert.equal(ladoDaLetra(0), 30);
   assert.match(opcao, /style=\{\[opcaoEstilos\.letra, \{ width: lado, height: lado \}/);
@@ -43,7 +43,8 @@ test('item 6: o quadrinho da letra cresce com o texto (1,75 × a letra, mínimo 
 });
 
 test('item 8: sem contagem antes da primeira letra; depois, cinza #5E6A85 até o mínimo; nada de laranja', () => {
-  assert.match(formatos, /\{usados > 0 && usados < minimo && <Text testID="aberta-contador" style=\{formatos\.contador\}>\{t\.aberta\.contador\(usados, minimo\)\}<\/Text>\}/);
+  // A regra é a do contrato (mostrarContagemDaAberta: da primeira letra até o mínimo), a mesma da web.
+  assert.match(formatos, /\{mostrarContagemDaAberta\(usados, minimo\)\n\s*\? <Text testID="aberta-contador" style=\{formatos\.contador\}>\{t\.aberta\.contador\(usados, minimo\)\}<\/Text>/);
   assert.match(formatos, /contador: \{ alignSelf: 'flex-end', color: cores\.textoSecundario,/);
   assert.doesNotMatch(formatos, /formatos\.contador, usados >= minimo/);
 });
@@ -133,19 +134,13 @@ test('item 14: o aviso "Música de fundo ligada." fica no alto, 8 abaixo do que 
   assert.match(interfaceApp, /deCima \? \{ top: alto \} : \{ bottom: baixo \}/);
 });
 
-test('item 4: Conceito e Exemplo curtos ganham o stu-feliz de 72 acima do cartão, com o conjunto no meio da sobra', async () => {
+test('item 4: com folga (regra do contrato), o Exemplo ganha o stu-feliz de 72 acima do cartão; o Conceito só centraliza', async () => {
   const licao = await ler('licao.tsx');
-  const espacoDoStuDaEtapa = funcao(licao, 'espacoDoStuDaEtapa', 'const STU_DA_ETAPA = 72; const STU_DA_ETAPA_VAO = 12;\n');
-  // Visível 700: conteúdo de 300 sobra 400 (57%): o Stu entra e o espaço acima dele é (400 - 84) / 2.
-  assert.equal(espacoDoStuDaEtapa(300, 700), 158);
-  // Sobra de 39% não basta; conteúdo maior que a tela, também não.
-  assert.equal(espacoDoStuDaEtapa(428, 700), null);
-  assert.equal(espacoDoStuDaEtapa(420, 700), 98);
-  assert.equal(espacoDoStuDaEtapa(900, 700), null);
-  assert.equal(espacoDoStuDaEtapa(0, 700), null);
+  // A decisão (folga ou não) é etapaTemFolga do contrato; a conta do app está em tests/paridade-aula-mobile.test.mjs.
+  assert.match(licao, /if \(!etapaTemFolga\(\{ livre: visivel, usado: conteudo \}\)\) return null;/);
   // Só no Conceito e no Exemplo (não no "Resolva comigo" nem com a ponte aberta), decorativo e sem oscilar.
   assert.match(licao, /const leitura = \(etapa\.tipo === 'conceito' \|\| \(etapa\.tipo === 'exemplo' && !resolva\.ativo\)\) && !ponteAberta;/);
-  assert.match(licao, /espacoDoStuDaEtapa\(alturaConteudo\.current - acrescimoDoStu\.current, alturaVisivel\.current\)/);
+  assert.match(licao, /espacoDoStuDaEtapa\(alturaConteudo\.current - acrescimoDoStu\.current, alturaVisivel\.current, comStuNaEtapa\)/);
   assert.match(licao, /<View testID="stu-da-etapa" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden/);
   assert.match(licao, /<Stu nome="stu-feliz" tamanho=\{STU_DA_ETAPA\} \/>/);
 });

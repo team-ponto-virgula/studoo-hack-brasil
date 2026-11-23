@@ -66,10 +66,13 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   );
 }
 
-/** O tamanho da letra da opção (14) e o lado do quadrinho: 1,75 × a letra já ampliada pelo sistema, no mínimo 30. */
+/**
+ * O tamanho da letra da opção (14) e o lado do quadrinho: 1,75 × a letra já ampliada pelo sistema, no mínimo 30, sem
+ * arredondar, como a web (calc(1.75em), 30 / 36,75 / 49 a 100, 150 e 200% de texto).
+ */
 export const LETRA_DA_OPCAO = 14;
 export function ladoDaLetra(fontScale: number) {
-  return Math.max(30, Math.round(1.75 * LETRA_DA_OPCAO * (fontScale > 0 ? fontScale : 1)));
+  return Math.max(30, 1.75 * LETRA_DA_OPCAO * (fontScale > 0 ? fontScale : 1));
 }
 
 const opcaoEstilos = StyleSheet.create({
