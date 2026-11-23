@@ -62,7 +62,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
 
   return (
-    <div className="cn-pagina" data-na-raiz={naRaiz || undefined}>
+    <div className="cn-pagina" data-na-raiz={naRaiz || undefined} data-fundo-so-no-gesto="">
       <a className="pular" href="#conteudo">{textos.pular}</a>
       <header className="cn-cabecalho">
         <LogoDaPagina />

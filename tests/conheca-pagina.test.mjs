@@ -340,6 +340,18 @@ test('sem selos de loja, sem framer-motion, GSAP nem Lottie, e o cabeçalho entr
   assert.match(ler('src/proxy.ts'), /"\/conheca"/, 'a política de segurança vale para a página');
 });
 
+test('a música de fundo (cerca de 0,9 MB) não é baixada ao abrir a página: só no primeiro gesto; no resto do app continua preparada como antes', () => {
+  const html = desenhar({ aparelho: 'android' });
+  assert.match(html, /<div class="cn-pagina"[^>]* data-fundo-so-no-gesto=""/);
+  const som = ler('src/app/ambiente-som.tsx');
+  assert.match(som, /if \(!document\.querySelector\('\[data-fundo-so-no-gesto\]'\)\) tocaSons\.prepararFundo\(\);/);
+  assert.equal((som.match(/prepararFundo\(\)/g) ?? []).length, 1, 'uma única chamada, a protegida');
+  // O som já começa do frio no primeiro gesto (mostra "carregando" e toca quando chega): a rotina que o gesto dispara carrega o arquivo se faltar.
+  const sons = ler('src/app/sons.ts');
+  assert.match(sons, /if \(!this\.cacheBuffers\.has\(arquivoSonoro\('fundos', def\.arquivo\)\)\) \{\n      this\.estadoFundo = 'carregando';/);
+  assert.match(sons, /const buf = await this\.carregarBuffer\(arquivoSonoro\('fundos', def\.arquivo\), TIMEOUT_CARREGAMENTO_MS\);/);
+});
+
 test('o iPhone fora do Safari (outros navegadores e os de dentro de aplicativos) recebe o pedido para abrir no Safari', () => {
   const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
   assert.equal(foraDoSafariNoIphone(safari), false);

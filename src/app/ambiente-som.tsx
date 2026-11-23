@@ -39,7 +39,9 @@ export function AmbienteSom() {
   /** O espaço que o aviso abriu: fica depois que o aviso sai, até a pessoa trocar de tela. */
   const espaco = useRef(criarEspacoDoAviso<HTMLElement>({ marcar: marcarEspaco, soltar: soltarEspaco, vivo: (elemento) => elemento.isConnected })).current;
   useEffect(() => {
-    tocaSons.prepararFundo();
+    // A página de apresentação costuma ser a primeira visita, no celular e com dados móveis: nela a música (cerca de 0,9 MB) só é baixada no primeiro gesto, e não
+    // ao abrir a página. O som já sabe começar do frio: o estado vira "carregando" e a música toca quando chega.
+    if (!document.querySelector('[data-fundo-so-no-gesto]')) tocaSons.prepararFundo();
     return tocaSons.assinarEstado(estado => {
       if (estado.fundo === 'mudo') { mostrar(false); return; }
       if (estado.estadoFundo !== 'tocando' || jaMostrou.current) return;
