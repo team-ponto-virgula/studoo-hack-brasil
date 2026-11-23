@@ -64,3 +64,21 @@ test('item 20: "Excluir conta" é o botão secundário de 44 px, com borda e tex
   assert.doesNotMatch(css, /\.privacidade-excluir \{ color: var\(--erro\); \}/, 'o texto vermelho solto saiu');
 });
 
+test('item 21: a coluna do Perfil vai até 680 px, no celular e no computador largo (a chave não fica longe do rótulo)', () => {
+  assert.match(ler('src/app/compartilhar.css'), /\.painel--perfil \{ display: grid; gap: 20px; width: min\(100%, 680px\); \}/);
+  const perfil = ler('src/app/perfil.css');
+  assert.match(perfil, /\.painel--perfil:has\(\.perfil-topo\) > :not\(\.perfil-topo\) \{ max-width: 680px; \}/);
+  assert.match(perfil, /\.perfil-topo \{ grid-template-columns: minmax\(0, 680px\) minmax\(18rem, 1fr\); gap: 28px; \}/);
+  assert.doesNotMatch(perfil, /44rem/, 'a largura antiga (704 px) saiu');
+});
+
+test('item 22: o cartão do visitante continua sem "Entrar com uma conta", porque entrar ou criar conta não leva o progresso dele', () => {
+  // Condição da spec 16: a saída só entra se a entrada guardar o progresso do visitante. O visitante é uma conta à parte (visitante+…@visitante.studoo.local, 24 h):
+  // nenhum caminho de entrada ou de cadastro o aproveita, então um botão ali faria a pessoa perder o que fez.
+  const perfil = ler('src/app/perfil.tsx');
+  assert.match(perfil, /<div className="perfil-cartao"><p className="perfil-cartao__visitante">\{p\.visitante\}<\/p><\/div>/, 'o cartão segue só com o texto');
+  for (const arquivo of ['src/servidor/acesso/cadastro.ts', 'src/servidor/acesso/credenciais.ts', 'src/servidor/acesso/sessao.ts']) {
+    assert.doesNotMatch(ler(arquivo), /promov|migrar|mesclar|herdar.*visitante|visitante.*(?:herd|transfer)/i, `${arquivo}: nenhum caminho aproveita as trilhas do visitante`);
+  }
+  assert.doesNotMatch(mensagens.perfil.visitante, /Entrar com uma conta/);
+});
