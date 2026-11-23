@@ -82,3 +82,22 @@ test('item 3: o cabeçalho está "preso" quando a página rolou e o topo dele ch
   assert.match(gancho, /getComputedStyle\(cabecalho\)\.position === 'sticky'/, 'só o cabeçalho que está mesmo preso recebe o estado');
   assert.match(gancho, /\{ passive: true \}/, 'a rolagem não espera pelo gancho');
 });
+
+test('item 15: até 767 px a barra da marca sai do mapa, e o selo de sincronia vem para a linha do rótulo do cabeçalho da trilha', () => {
+  const estudo = ler('src/app/estudo.tsx');
+  // O mapa recebe o selo pronto (o mesmo da barra) e o põe ao lado do rótulo "Sua trilha"; só com a lista de trilhas carregada.
+  assert.match(estudo, /<Plano tela=\{tela\} ocupado=\{ocupado\} abrindo=\{abrindo\}\s*selo=\{inicio === 'pronto' \? <SeloSincronia sincronia=\{sincronia\} agora=\{agora\} temProgresso=\{planos\.length > 0\} \/> : null\}/);
+  assert.match(estudo, /<div className="trilha-topo__linha">\s*<p className="trilha-topo__rotulo">\{mensagens\.trilha\.suaTrilha\}<\/p>\s*\{selo && <div className="trilha-topo__selo">\{selo\}<\/div>\}\s*<\/div>/);
+  const css = ler('src/app/trilha.css');
+  // Fora do celular o selo do mapa fica escondido (ele segue na barra), para não haver dois avisos de sincronia.
+  assert.match(css, /\.trilha-topo__selo \{ display: none; \}/);
+  assert.match(css, /\.trilha-topo__linha \{ display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; \}/, 'em tela estreita o selo desce para baixo do rótulo em vez de apertar os dois');
+  assert.match(css, /\.trilha-topo__rotulo \{ white-space: nowrap; \}/);
+  const celular = css.slice(css.indexOf('@media (max-width: 767px) {\n  .trilha-topo {'));
+  assert.ok(celular.length > 0, 'o bloco do celular do cabeçalho do mapa');
+  const bloco = celular.slice(0, celular.indexOf('\n}'));
+  assert.match(bloco, /\.estudo:has\(\.painel--trilha\) \.estudo-cabecalho \{ display: none; \}/, 'a barra da marca não aparece no mapa até 767 px');
+  assert.match(bloco, /\.estudo-principal:has\(\.painel--trilha\) \{ padding-top: 8px; \}/, 'o cabeçalho da trilha começa no alto da página (sem o vão de 20 px que a barra deixava)');
+  assert.match(bloco, /\.trilha-topo__selo \{ display: block; min-width: 0; \}/, 'o selo do mapa aparece só no celular');
+  assert.match(bloco, /\.trilha-topo \{ padding-top: max\(10px, env\(safe-area-inset-top\)\); \}/, 'sem a barra, o cabeçalho respeita a área segura do alto');
+});

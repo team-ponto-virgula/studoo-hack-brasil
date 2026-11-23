@@ -355,7 +355,22 @@ button, input, textarea { font: inherit; }
 @media (hover: hover) { .navegacao .botao--texto:hover:not(:disabled) { background: var(--fundo); box-shadow: 0 2px 0 var(--gelo); } }
 .navegacao .botao--texto[aria-current] { color: var(--acao); }
 .navegacao-plano { color: var(--texto); font-weight: 700; }
-.navegacao-novo { margin-top: 12px; }
+/* Spec 16, item 18: os quatro itens da navegação lateral (Minhas trilhas, Nova trilha, Explorar e Perfil) são iguais: 48 px de altura, ícone de 20 (os da cápsula do app: livro, lâmpada,
+   bússola e pessoa), rótulo de 16 em 800 e raio de 14. Fora da seleção, sem fundo e com o texto em #0B1B5C; selecionado, fundo #E9E7FF e texto e ícone em #1D4ED8 (5,53:1, o azul da subcápsula da
+   barra de abas; o #2563FF da spec dá 4,03:1 sobre o lavanda, abaixo dos 4,5:1 que a paleta exige) (antes eram quatro estilos: link sem ícone, botão com borda, pílula branca com sombra e cartão com borda azul). O "Perfil" continua embaixo. */
+.barra-lateral .navegacao .navegacao-item, .barra-lateral .navegacao-rodape .navegacao-item {
+  display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: 48px; padding: 0 14px; border: 0; border-radius: 14px; background: transparent; box-shadow: none;
+  color: #0b1b5c; font: inherit; font-size: 1rem; font-weight: 800; text-align: left; cursor: pointer;
+}
+.barra-lateral .navegacao-item .icone { flex: none; width: 20px; height: 20px; }
+.barra-lateral .navegacao .navegacao-item[aria-current], .barra-lateral .navegacao-rodape .navegacao-item[aria-current],
+.barra-lateral .navegacao .navegacao-plano[aria-current] { background: var(--lavanda); box-shadow: none; color: var(--acao-escura); }
+.barra-lateral .navegacao-item[aria-current] .icone { fill: currentColor; }
+.barra-lateral .navegacao-item[aria-current] .icone__detalhe { fill: var(--lavanda); stroke: var(--lavanda); stroke-width: 1.5; }
+@media (hover: hover) {
+  .barra-lateral .navegacao .navegacao-item:hover:not(:disabled):not([aria-current]), .barra-lateral .navegacao-rodape .navegacao-item:hover:not(:disabled):not([aria-current]) { background: var(--nevoa); box-shadow: none; }
+}
+.barra-lateral .navegacao-item:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
 .navegacao-rodape { margin-top: auto; padding-top: 24px; }
 .navegacao-rodape .botao { width: 100%; justify-content: flex-start; color: var(--texto2); }
 .estudo-pagina { min-width: 0; }

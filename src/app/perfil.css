@@ -60,10 +60,11 @@
 
 /* Cartão e Novidades: um embaixo do outro; no computador largo, Novidades na coluna da direita. */
 .perfil-topo { display: grid; gap: 20px; align-items: start; }
+/* Spec 16, item 21: a coluna do Perfil (cartão e configurações) vai até 680 px, como a da aula, para a chave não ficar longe do rótulo (antes, 704 px). */
 @media (min-width: 1240px) {
   .painel--perfil:has(.perfil-topo) { width: min(100%, 70rem); }
-  .painel--perfil:has(.perfil-topo) > :not(.perfil-topo) { max-width: 44rem; }
-  .perfil-topo { grid-template-columns: minmax(0, 44rem) minmax(18rem, 1fr); gap: 28px; }
+  .painel--perfil:has(.perfil-topo) > :not(.perfil-topo) { max-width: 680px; }
+  .perfil-topo { grid-template-columns: minmax(0, 680px) minmax(18rem, 1fr); gap: 28px; }
 }
 .selo-so-voce { justify-self: start; padding: 2px 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; }
 .link-texto { padding: 0; border: 0; background: none; color: var(--acao); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
