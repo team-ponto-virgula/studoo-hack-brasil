@@ -1015,7 +1015,7 @@
 .aula-citacao__selo {
   padding: 3px 10px;
   border-radius: 999px;
-  color: var(--acao);
+  color: var(--acao-escura);
   background: #e5ebff;
   font-size: 0.75rem;
   font-weight: 900;
