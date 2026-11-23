@@ -738,7 +738,9 @@
 .campo--aberta textarea[data-retorno='errada'] { border-color: #e3a24a; background: #fff6ea; }
 .campo__dica { color: var(--texto2); font-size: 0.875rem; }
 .campo__contador { justify-self: end; color: var(--alerta); font-size: 0.8125rem; font-weight: 800; }
-.campo__contador[data-pronto] { color: var(--sucesso); }
+/* Refino 8 (spec 16): a contagem da resposta aberta é cinza (#5E6A85), sem o laranja; escondida (antes da 1ª letra e depois do mínimo) ela guarda o espaço. */
+.campo--aberta .campo__contador { color: var(--texto2); }
+.campo--aberta .campo__contador[data-oculto] { visibility: hidden; }
 
 .correcao-aberta { display: grid; gap: 12px; padding: 16px 18px; border-radius: 16px; background: var(--nevoa); }
 .correcao-aberta ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }

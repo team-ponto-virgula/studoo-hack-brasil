@@ -13,6 +13,7 @@ import {
   exerciciosDaLicao,
   linhasDePassos,
   motivoParaRever,
+  mostrarContagemDaAberta,
   respostaParaTentarDeNovo,
   tamanhoDaResposta,
   partesDaLacuna,
@@ -1714,20 +1715,25 @@ export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mu
           desativado={ocupado || respondido} retorno={retorno} certos={avaliacao?.certos} />
       );
       break;
-    case 'aberta':
+    case 'aberta': {
+      // Refino 8 (spec 16): antes da primeira letra só o texto do rodapé orienta ("Escreva sua resposta para verificar."); a contagem do cartão entra com a primeira letra, em cinza, e some
+      // quando o mínimo é atingido. O espaço dela fica reservado (escondida, o campo não pula) e o leitor de tela só a ouve enquanto ela aparece.
+      const usados = tamanhoDaResposta(resposta);
+      const contando = mostrarContagemDaAberta(usados, exercicio.minimo);
       campo = (
         <div className="campo campo--aberta">
           <label htmlFor="resposta">{t.aberta.rotulo}</label>
           <textarea id="resposta" name="resposta" rows={5} maxLength={1000} value={resposta} required disabled={ocupado}
-            readOnly={respondido} data-retorno={retorno} aria-describedby="aberta-dica aberta-contador"
+            readOnly={respondido} data-retorno={retorno} aria-describedby={contando ? 'aberta-dica aberta-contador' : 'aberta-dica'}
             onChange={(evento) => mudar(evento.target.value)} />
           <p id="aberta-dica" className="campo__dica">{t.aberta.dica}</p>
-          <p id="aberta-contador" className="campo__contador" data-pronto={tamanhoDaResposta(resposta) >= exercicio.minimo || undefined}>
-            {t.aberta.contador(tamanhoDaResposta(resposta), exercicio.minimo)}
+          <p id="aberta-contador" className="campo__contador" data-oculto={contando ? undefined : ''}>
+            {t.aberta.contador(usados, exercicio.minimo)}
           </p>
         </div>
       );
       break;
+    }
   }
 
   return (
