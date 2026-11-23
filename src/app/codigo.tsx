@@ -107,11 +107,11 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   ctx.textAlign = 'center';
   ctx.font = '700 64px Quicksand, sans-serif';
   const titulos = linhas(ctx, titulo, 920);
-  // Com o selo "Demonstração" sob o título, o título sobe um pouco.
+  // Com o selo "Exemplo" (`mensagens.comunidade.demonstracao`) sob o título, o título sobe um pouco.
   const topoTitulo = (titulos.length === 1 ? 166 : 118) - (demonstracao ? 24 : 0);
   titulos.forEach((linha, i) => ctx.fillText(linha, 540, topoTitulo + i * 76));
   if (demonstracao) {
-    // O mesmo selo creme de borda tracejada de "Perfil de demonstração".
+    // O mesmo selo creme de borda tracejada do "Exemplo" no Explorar e na apresentação (`.selo-demo`).
     ctx.font = '800 30px Nunito, sans-serif';
     const largura = ctx.measureText(mensagens.comunidade.demonstracao).width + 40;
     const y = topoTitulo + (titulos.length - 1) * 76 + 26;
@@ -175,7 +175,7 @@ export function ModoApresentacao({ svg, titulo, rotulo, demonstracao = false, ao
  * compartilhar imagem quando o aparelho deixa, e apresentar). `fotoToken` põe a foto no centro.
  */
 export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicial, nomeArquivo, comLink = true, demonstracao = false, mostra }: {
-  /** Trilha de demonstração: o selo vai também na imagem baixada e na apresentação. */
+  /** Trilha de exemplo (origem "Modo demonstração"): o selo "Exemplo" vai também na imagem baixada e na apresentação. */
   demonstracao?: boolean;
   /** Uma linha sob o código dizendo o que quem abrir vai ver (folha do perfil). */
   mostra?: string;
