@@ -53,6 +53,17 @@ name: 55-privacidade
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: 57-excluir-conta-digitado
+# No Android o cartão (um Modal) não sobe com o teclado: depois de digitar, "Cancelar" e "Excluir" ficam atrás dele e somem
+# da árvore (execução 45077874039: o cartão ia até y=1253 e o teclado começava em 962; "confirmacao-cancelar" não foi
+# achado). O teclado fecha antes (no Android, com o teclado aberto, o Voltar fecha só o teclado, não o cartão). O iPhone
+# não precisa: lá o botão fica à vista e o fluxo passa.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+      - waitForAnimationToEnd:
+          timeout: 1500
 - tapOn:
     waitToSettleTimeoutMs: 1000
     id: confirmacao-cancelar
