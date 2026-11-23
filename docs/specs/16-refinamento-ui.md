@@ -308,6 +308,11 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
   - o visitante tem a mesma navegação da conta: a cápsula de abas embaixo até 1023 px (Minhas trilhas, Nova trilha, Explorar quando a comunidade está ligada, Perfil) e a lateral a partir de 1024 px;
   - entre 768 e 1023 px, a web usa a cápsula embaixo, como no celular, e não os links no alto;
   - o Perfil do visitante é a versão de conta temporária, já existente.
+  - **Foco na primeira tela sem trilha** (decisão de 23/11, conferida em `90c7f79`):
+    - até 1023 px, o pedido não pega o foco sozinho, e o foco vai para o título, como nas outras telas. Assim a cápsula aparece, e a primeira tela fica igual ao app, que não tem autofoco;
+    - no celular, o foco automático nem abria o teclado (o navegador só abre com um toque), então não se perde nenhum passo;
+    - a partir de 1024 px, e com rascunho salvo, o foco continua no campo;
+  - **No tablet**, o cartão "Próxima lição" do mapa e a barra de salvar do Perfil ficam 12 px acima da cápsula, como no celular.
 - **Onde:** web, para igualar o app.
 
 **34. O cabeçalho da proposta da trilha** (P2-9; app `01-aprender-funcoes-trilha-pronta` × web; sobe para P1, porque é a tela do primeiro contato)
