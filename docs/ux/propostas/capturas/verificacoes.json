@@ -1,0 +1,564 @@
+{
+  "scope": "Propostas HTML locais; não valida produto web/app nem serviços reais",
+  "date": "2026-11-23T21:00:50.212Z",
+  "results": [
+    {
+      "direction": "a",
+      "state": "pedido",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Criar minha trilha",
+            "x": 24,
+            "y": 626.515625,
+            "width": 342,
+            "height": 52,
+            "bottom": 678.515625
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "geracao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": []
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar a primeira lição",
+            "x": 24,
+            "y": 590.171875,
+            "width": 342,
+            "height": 52,
+            "bottom": 642.171875
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver minha trilha",
+            "x": 24,
+            "y": 631.046875,
+            "width": 342,
+            "height": 52,
+            "bottom": 683.046875
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "pedido",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Criar minha trilha",
+            "x": 22,
+            "y": 585.234375,
+            "width": 316,
+            "height": 52,
+            "bottom": 637.234375
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "geracao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": []
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar a primeira lição",
+            "x": 22,
+            "y": 551.4375,
+            "width": 316,
+            "height": 52,
+            "bottom": 603.4375
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "a",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver minha trilha",
+            "x": 22,
+            "y": 579.765625,
+            "width": 316,
+            "height": 52,
+            "bottom": 631.765625
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "pedido",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Gerar minha trilha",
+            "x": 22,
+            "y": 720,
+            "width": 346,
+            "height": 50,
+            "bottom": 770
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "geracao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver proposta de exemplo",
+            "x": 22,
+            "y": 720,
+            "width": 346,
+            "height": 50,
+            "bottom": 770
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar primeira lição",
+            "x": 22,
+            "y": 696,
+            "width": 346,
+            "height": 50,
+            "bottom": 746
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Continuar para WHERE",
+            "x": 22,
+            "y": 730.578125,
+            "width": 346,
+            "height": 50,
+            "bottom": 780.578125
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "pedido",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Gerar minha trilha",
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 50,
+            "bottom": 728
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "geracao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver proposta de exemplo",
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 50,
+            "bottom": 728
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar primeira lição",
+            "x": 20,
+            "y": 654,
+            "width": 320,
+            "height": 50,
+            "bottom": 704
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "b",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Continuar para WHERE",
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 50,
+            "bottom": 728
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "pedido",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Gerar minha trilha →",
+            "x": 20,
+            "y": 782,
+            "width": 350,
+            "height": 50,
+            "bottom": 832
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "geracao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver plano de exemplo →",
+            "x": 20,
+            "y": 734,
+            "width": 350,
+            "height": 50,
+            "bottom": 784
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar primeira lição →",
+            "x": 20,
+            "y": 734,
+            "width": 350,
+            "height": 50,
+            "bottom": 784
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Continuar com WHERE →",
+            "x": 20,
+            "y": 734,
+            "width": 350,
+            "height": 50,
+            "bottom": 784
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "pedido",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "pedido",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Gerar minha trilha →",
+            "x": 18,
+            "y": 738,
+            "width": 324,
+            "height": 50,
+            "bottom": 788
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "geracao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "geracao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Ver plano de exemplo →",
+            "x": 18,
+            "y": 690,
+            "width": 324,
+            "height": 50,
+            "bottom": 740
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "proposta",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Começar primeira lição →",
+            "x": 18,
+            "y": 690,
+            "width": 324,
+            "height": 50,
+            "bottom": 740
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    },
+    {
+      "direction": "c",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "state": "conclusao",
+        "overflow": false,
+        "primaries": [
+          {
+            "label": "Continuar com WHERE →",
+            "x": 18,
+            "y": 690,
+            "width": 324,
+            "height": 50,
+            "bottom": 740
+          }
+        ]
+      },
+      "errors": [],
+      "passed": true
+    }
+  ]
+}
