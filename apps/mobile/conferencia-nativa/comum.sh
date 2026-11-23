@@ -306,8 +306,9 @@ resumir_proxy() {
       if (ms > 3000) lentos++
       if (ms > maximo) { maximo = ms; lento = $1 " " $2 (hora != "" ? " às " hora : "") }
     }
+    $1 == "conexão" && / fechada / && /sem TLS conclu/ { semtls++ }
     END {
-      printf "%d pedidos, %d com 5xx%s, %d desistidos pelo app (499), %d acima de 3 s (o mais lento: %d ms, %s)", total, cinco, horas != "" ? " (" horas ")" : "", desistiu, lentos, maximo, lento
+      printf "%d pedidos, %d com 5xx%s, %d desistidos pelo app (499), %d acima de 3 s (o mais lento: %d ms, %s), %d conexões fechadas sem TLS concluído", total, cinco, horas != "" ? " (" horas ")" : "", desistiu, lentos, maximo, lento, semtls
     }')"
   resumo "Servidor local durante os fluxos (proxy.log, depois do aquecimento): $linha. A carga de cada processo, a cada 10 s, está em carga-dos-processos.log."
 }
@@ -502,8 +503,37 @@ fluxo_entrada() {
   resumo "✅ Entrada: em repouso, e-mail em foco e senha em foco com o teclado."
 }
 
+# O login pendurado (Lead, 23/11; execuções 45081962231 e 45098802867, 2 em 7 rodadas do iPhone): o POST de
+# /api/mobile/sessao nunca chega ao proxy, o app desiste aos 15 s e mostra "Confira a conexão e tente novamente.". No
+# registro do simulador, a conexão TCP abre e o TLS para na avaliação de confiança do certificado ("asked to evaluate TLS
+# Trust" sem "TLS Trust result"), e nenhuma avaliação daquele processo do app volta, nem a de servidores de fora. A tela
+# com essa frase, na árvore que o Maestro guarda da falha, é o sinal.
+login_pendurou_na_rede() {
+  grep -rlqF "Confira a conexão e tente novamente" "$SAIDA_MAESTRO/entrar" 2> /dev/null
+}
+
 fluxo_entrar() {
-  rodar_com_abertura_repetida entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml" \
+  # Até 3 tentativas (a primeira e mais duas) quando o login pendura na rede: o serviço de confiança do aparelho é
+  # reiniciado se o sistema souber (ios.sh, reiniciar_confianca_do_aparelho), o app é parado e o fluxo 2 abre o app de
+  # novo, com conexões novas. Cada tentativa que falhou fica em maestro-entrar-tentativa-<n>.log e na tela correspondente.
+  local tentativa=1 passou=0
+  while :; do
+    if rodar_com_abertura_repetida entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml"; then passou=1; break; fi
+    if [ "$tentativa" -ge 3 ] || ! login_pendurou_na_rede; then break; fi
+    cp "$REGISTROS/maestro-entrar.log" "$REGISTROS/maestro-entrar-tentativa-$tentativa.log" 2> /dev/null || true
+    cp "$REGISTROS/tela-no-fim-de-entrar.png" "$REGISTROS/tela-no-fim-de-entrar-tentativa-$tentativa.png" 2> /dev/null || true
+    rm -rf "$SAIDA_MAESTRO/entrar-tentativa-$tentativa" && mv "$SAIDA_MAESTRO/entrar" "$SAIDA_MAESTRO/entrar-tentativa-$tentativa" 2> /dev/null || true
+    if declare -F reiniciar_confianca_do_aparelho > /dev/null; then reiniciar_confianca_do_aparelho || true; fi
+    if declare -F parar_app_do_aparelho > /dev/null; then parar_app_do_aparelho; fi
+    sleep 5
+    tentativa=$((tentativa + 1))
+  done
+  if [ "$tentativa" -gt 1 ]; then
+    resumo "⚠️ Login: tentativas $tentativa. O login pendurou na rede (\"Confira a conexão e tente novamente.\") e foi repetido com o app reaberto; as tentativas anteriores estão em maestro-entrar-tentativa-<n>.log e tela-no-fim-de-entrar-tentativa-<n>.png, nos registros."
+  else
+    resumo "Login: tentativas 1."
+  fi
+  [ "$passou" = 1 ] \
     || erro "O fluxo de entrar na conta falhou; sem sessão, as outras telas não são capturadas. A tela está em tela-no-fim-de-entrar.png, nos registros."
   # O fluxo 2 digita o e-mail de novo quando o campo ficou vazio (teclado frio depois de religar o simulador): sempre no
   # resumo, para a repetição não passar despercebida.

@@ -137,6 +137,20 @@ ligar() {
   echo "Simulador $id ligando em segundo plano."
 }
 
+# Reinicia o serviço de confiança (trustd) do simulador, se o launchctl dele deixar: o login pendurado parou na avaliação
+# de confiança do certificado (comum.sh, fluxo_entrar). O que o launchctl respondeu fica em confianca-reiniciada.log.
+reiniciar_confianca_do_aparelho() {
+  local id
+  id="$(udid)"
+  {
+    echo "$(date -u +%H:%M:%S) reiniciando o trustd do simulador $id"
+    xcrun simctl spawn "$id" launchctl kickstart -k system/com.apple.trustd 2>&1 \
+      || xcrun simctl spawn "$id" launchctl stop com.apple.trustd 2>&1 \
+      || echo "o launchctl do simulador não reiniciou o trustd"
+  } >> "$REGISTROS/confianca-reiniciada.log" 2>&1
+  return 0
+}
+
 # O simulador ainda está ligado? Usado antes de cada fluxo quando a conferência roda uma lista de telas
 # (CONFERENCIA_TELAS, comum.sh fluxo_telas_uma_por_vez). O iPhone não religa o simulador: se ele não estiver ligado, os
 # fluxos que faltam ficam como "não rodou".

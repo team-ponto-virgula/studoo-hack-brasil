@@ -37,13 +37,16 @@ if (destino.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].include
 }
 const porta = Number(values.porta);
 
-/** Cabeçalhos que valem só para uma conexão: não seguem adiante. */
-const DE_UM_SALTO = new Set(['connection', 'keep-alive', 'proxy-connection', 'te', 'trailer', 'upgrade']);
+/** Cabeçalhos que valem só para uma conexão: não seguem adiante. `alt-svc` também não volta: o proxy só fala HTTP/1.1
+ *  sobre TLS e não deve anunciar outro protocolo (HTTP/3) ao app. */
+const DE_UM_SALTO = new Set(['connection', 'keep-alive', 'proxy-connection', 'te', 'trailer', 'upgrade', 'alt-svc']);
+const hora = () => new Date().toISOString().slice(11, 23);
 
 const servidor = https.createServer({ cert: readFileSync(values.cert), key: readFileSync(values.chave) }, (pedido, resposta) => {
   const inicio = performance.now();
   const caminho = (pedido.url ?? '/').split('?')[0];
-  const registrar = (status) => console.log(`${new Date().toISOString().slice(11, 23)} ${pedido.method} ${caminho} ${status} ${Math.round(performance.now() - inicio)}ms`);
+  const registrar = (status) => console.log(`${hora()} ${pedido.method} ${caminho} ${status} ${Math.round(performance.now() - inicio)}ms`);
+  if (pedido.socket.studoo) pedido.socket.studoo.pedidos += 1;
   let desistiu = false;
 
   const cabecalhos = {};
@@ -85,6 +88,35 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
   resposta.once('close', () => { if (!resposta.writableEnded) { desistiu = true; adiante.destroy(); } });
   pedido.pipe(adiante);
 });
+
+// As conexões, para separar "o pedido não chegou" de "o servidor demorou" (Lead, 23/11; execuções 45081962231 e
+// 45098802867: o login do iPhone pendurou 15 s e o POST não apareceu aqui). Uma linha quando a conexão TCP chega, quando
+// o TLS fecha o aperto de mão e quando ela fecha, com a hora UTC: "conexão #7 fechada depois de 15.2 s, sem TLS concluído,
+// 0 pedidos" diz que o app parou antes de mandar o pedido (no caso acima, a avaliação de confiança do certificado no
+// simulador não voltou). O resumo da coleta conta as conexões sem TLS concluído.
+let conexoes = 0;
+servidor.on('connection', (socket) => {
+  conexoes += 1;
+  const dados = { n: conexoes, inicio: performance.now(), tls: false, pedidos: 0 };
+  socket.studooTcp = dados;
+  console.log(`${hora()} conexão #${dados.n} aberta (tcp)`);
+  socket.once('close', () => console.log(`${hora()} conexão #${dados.n} fechada depois de ${((performance.now() - dados.inicio) / 1000).toFixed(1)} s, ${dados.tls ? 'com TLS' : 'sem TLS concluído'}, ${dados.pedidos} pedido(s)`));
+});
+servidor.on('secureConnection', (tls) => {
+  const dados = tls._parent?.studooTcp ?? tls.studooTcp;
+  if (!dados) return;
+  dados.tls = true;
+  tls.studoo = dados;
+  console.log(`${hora()} conexão #${dados.n} com TLS em ${Math.round(performance.now() - dados.inicio)} ms (${tls.alpnProtocol || 'http/1.1'})`);
+});
+servidor.on('tlsClientError', (erro, tls) => {
+  const dados = tls?._parent?.studooTcp ?? tls?.studooTcp;
+  console.log(`${hora()} conexão #${dados?.n ?? '?'} com erro no TLS: ${erro.code ?? erro.message}`);
+});
+// Conexão ociosa aberta por mais tempo que o padrão do Node (5 s): o iOS reaproveita conexões paradas por mais tempo, e um
+// POST mandado numa conexão que o servidor acabou de fechar não é repetido pelo sistema.
+servidor.keepAliveTimeout = 75_000;
+servidor.headersTimeout = 80_000;
 
 servidor.once('error', (erro) => {
   console.error(`O proxy HTTPS não subiu na porta ${porta}: ${erro.code ?? erro.message}`);

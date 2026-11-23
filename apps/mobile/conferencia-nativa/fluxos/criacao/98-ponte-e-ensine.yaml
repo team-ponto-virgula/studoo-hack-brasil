@@ -220,6 +220,49 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: enviar-resposta
+# O convite do "Explique" só aparece no acerto do ÚLTIMO exercício da lição (licao.tsx: convite quando
+# indice === exercicios.length - 1). A lição 1 da demonstração de frações tem dois: a múltipla escolha (o do 95) e a
+# lacuna "2/___" (extras, src/servidor/ia/demos.ts, gabarito "5"). Na execução 45098802867 (Android) o fluxo parou
+# esperando o convite com o painel "Isso aí!" do 1º exercício na tela. Depois do acerto: se o convite não veio, segue
+# para o exercício seguinte, responde a lacuna e espera o convite.
+- extendedWaitUntil:
+    visible:
+      id: convite-explique|continuar-licao
+    timeout: 30000
+- runFlow:
+    when:
+      notVisible:
+        id: convite-explique
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: continuar-licao
+      - extendedWaitUntil:
+          visible:
+            id: resposta-licao
+          timeout: 60000
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          id: resposta-licao
+      - inputText: "5"
+      # No Android o teclado cobre o rodapé com o "Verificar"; com o teclado aberto, o Voltar fecha só o teclado.
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+            - waitForAnimationToEnd:
+                timeout: 1500
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: enviar-resposta
+# O convite fica no painel do acerto (rodapé); no Android, se a rolagem o deixou fora da tela, a lição desce até ele.
+- scrollUntilVisible:
+    element:
+      id: convite-explique
+    direction: DOWN
+    timeout: 60000
+    optional: true
 - extendedWaitUntil:
     visible:
       id: convite-explique
