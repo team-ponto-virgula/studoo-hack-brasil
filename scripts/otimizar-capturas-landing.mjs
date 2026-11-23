@@ -1,5 +1,5 @@
 // Otimiza as capturas nativas do app para a página de apresentação (spec 18, seção 9; Mobile & QA, build 4).
-// Uso: node scripts/otimizar-capturas-landing.mjs <pasta com os PNGs nativos> [configuração.json]
+// Uso: node scripts/otimizar-capturas-landing.mjs <pasta com os PNGs nativos> [configuração.json] [pasta com as capturas da web]
 // SEM RECORTE (regra do Lead): a captura nativa entra inteira, com a barra de status e tudo. O script só reduz para 1x e 2x e escreve WebP em
 // public/landing/, com um trecho do hash no nome (o arquivo nunca muda sob o mesmo nome, então pode ficar em cache para sempre). A proporção da
 // tela do celular da página é a da plataforma da captura (iPhone ou Android); uma captura de outra proporção (mais de 1% de diferença) é recusada,
@@ -13,7 +13,8 @@ import sharp from 'sharp';
 
 const raiz = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const entrada = process.argv[2];
-if (!entrada || !existsSync(entrada)) { console.error('Uso: node scripts/otimizar-capturas-landing.mjs <pasta com os PNGs nativos> [configuração.json]'); process.exit(2); }
+const entradaWeb = process.argv[4];
+if (!entrada || !existsSync(entrada)) { console.error('Uso: node scripts/otimizar-capturas-landing.mjs <pasta com os PNGs nativos> [configuração.json] [pasta com as capturas da web]'); process.exit(2); }
 const configuracao = JSON.parse(readFileSync(process.argv[3] ?? join(raiz, 'scripts/capturas-landing.json'), 'utf8'));
 const saida = join(raiz, 'public/landing');
 mkdirSync(saida, { recursive: true });
@@ -21,7 +22,10 @@ const LIMITE_2X = 120 * 1024; // spec 18, seção 5: até 120 KB cada, em 2x
 
 const geradas = {};
 for (const item of configuracao.capturas) {
-  const origem = join(entrada, item.arquivo);
+  // As capturas da web (a janela do navegador do momento 4) vêm de outra pasta: não são do aplicativo nativo.
+  const pasta = item.plataforma === 'web' ? entradaWeb : entrada;
+  if (!pasta || !existsSync(pasta)) { console.error(`${item.id}: falta a pasta das capturas ${item.plataforma === 'web' ? 'da web (4º argumento)' : 'nativas'}`); process.exit(2); }
+  const origem = join(pasta, item.arquivo);
   if (!existsSync(origem)) { console.error(`falta: ${origem}`); process.exit(3); }
   const meta = await sharp(origem).metadata();
   const aspecto = configuracao.aspectos[item.plataforma];
@@ -31,7 +35,8 @@ for (const item of configuracao.capturas) {
   const inteira = sharp(origem);
   const arquivos = {};
   let altura1x = 0;
-  for (const [densidade, largura] of Object.entries(configuracao.larguras)) {
+  const larguras = configuracao.larguras[item.plataforma === 'web' ? 'web' : 'celular'];
+  for (const [densidade, largura] of Object.entries(larguras)) {
     const altura = Math.round(largura / razao);
     const dados = await inteira.clone().resize({ width: largura, height: altura, fit: 'fill' }).webp({ quality: configuracao.qualidade, effort: 6 }).toBuffer();
     const hash = createHash('sha256').update(dados).digest('hex').slice(0, 8);
@@ -41,7 +46,7 @@ for (const item of configuracao.capturas) {
     if (densidade === '1x') altura1x = altura;
   }
   if (arquivos['2x'].bytes > LIMITE_2X) { console.error(`${item.id}: 2x com ${Math.round(arquivos['2x'].bytes / 1024)} KB, acima de 120 KB`); process.exit(4); }
-  geradas[item.id] = { plataforma: item.plataforma, provisoria: Boolean(item.provisoria), src1x: `/landing/${arquivos['1x'].nome}`, src2x: `/landing/${arquivos['2x'].nome}`, largura: configuracao.larguras['1x'], altura: altura1x, origem: item.origem, bytes1x: arquivos['1x'].bytes, bytes2x: arquivos['2x'].bytes };
+  geradas[item.id] = { plataforma: item.plataforma, provisoria: Boolean(item.provisoria), src1x: `/landing/${arquivos['1x'].nome}`, src2x: `/landing/${arquivos['2x'].nome}`, largura: larguras['1x'], altura: altura1x, origem: item.origem, bytes1x: arquivos['1x'].bytes, bytes2x: arquivos['2x'].bytes };
   console.log(`${item.id.padEnd(10)} ${meta.width}x${meta.height} → 1x ${arquivos['1x'].bytes} B | 2x ${arquivos['2x'].bytes} B`);
 }
 

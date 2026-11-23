@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { CapturaOtimizada, Plataforma } from './imagens';
+import { textos } from './textos';
 
 /**
  * A moldura própria do Studoo (spec 18, 1.4): retângulo de raio 44, borda de 10 px #0B1B5C e sombra suave. Segue a plataforma da captura: a
@@ -28,5 +29,29 @@ export function CapturaDaTela({ captura, alt, prioridade = false, escondida = fa
     // eslint-disable-next-line @next/next/no-img-element
     <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
       alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'auto'} decoding="async" draggable={false} hidden={escondida || undefined} />
+  );
+}
+
+/**
+ * Uma janela de navegador desenhada pelo Studoo (barra com três pontos e a aba "Studoo", sem endereço inventado) com uma captura REAL do site dentro
+ * (spec 18, seção 9, momento 4). A barra é só desenho (escondida do leitor de tela); quem descreve é o `alt` da captura.
+ */
+export function JanelaDoNavegador({ captura, alt, className = '' }: { captura: CapturaOtimizada; alt: string; className?: string }) {
+  return (
+    <div className={`cn-janela ${className}`.trim()}>
+      <div className="cn-janela__barra" aria-hidden="true">
+        <span className="cn-janela__pontos"><span /><span /><span /></span>
+        <span className="cn-janela__aba">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/marca/icone.svg" width={14} height={14} alt="" />
+          {textos.s2.janelaAba}
+        </span>
+      </div>
+      <div className="cn-janela__tela">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="cn-captura" src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
+          alt={alt} loading="lazy" decoding="async" draggable={false} />
+      </div>
+    </div>
   );
 }

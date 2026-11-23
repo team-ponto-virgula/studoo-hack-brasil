@@ -70,6 +70,10 @@ export const textos = {
       { titulo: 'No computador e no celular', linha: 'Com uma conta, a sua trilha é a mesma no site e no app. Você continua de onde parou.' },
     ],
     selo: 'Progresso salvo agora',
+    /** A aba da janela de navegador do momento 4: o nome do site, sem endereço inventado. */
+    janelaAba: 'Studoo',
+    /** O `alt` da captura da web (a lista da spec não traz este; é o mesmo tom dos outros). */
+    janelaAlt: 'A mesma trilha no site, aberta no navegador do computador',
   },
   s3: {
     titulo: 'Pode ser qualquer assunto',

@@ -1,14 +1,15 @@
 {
-  "aspectos": { "iphone": { "largura": 1206, "altura": 2622 }, "android": { "largura": 720, "altura": 1560 } },
-  "larguras": { "1x": 320, "2x": 640 },
+  "aspectos": {"iphone": {"largura": 1206, "altura": 2622}, "android": {"largura": 720, "altura": 1560}, "web": {"largura": 1024, "altura": 684}},
+  "larguras": {"celular": {"1x": 320, "2x": 640}, "web": {"1x": 440, "2x": 880}},
   "qualidade": 82,
   "capturas": [
-    { "id": "heroi-1", "plataforma": "iphone", "arquivo": "02-iphone-o-que-quer-aprender.png", "provisoria": true, "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45124218880 (teste/final-wk4)" },
-    { "id": "heroi-2", "plataforma": "android", "arquivo": "heroi-2-android-proposta-pronta.png", "provisoria": true, "origem": "Android, emulador Pixel 6 (Android 15), build de debug do projeto, rodada 45118526529 (teste/final-wk3)" },
-    { "id": "heroi-3", "plataforma": "iphone", "arquivo": "heroi-3-iphone-licao-acerto.png", "provisoria": true, "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45137054494 (teste/final-n2)" },
-    { "id": "momento-1", "plataforma": "iphone", "arquivo": "heroi-3-iphone-licao-acerto.png", "provisoria": true, "origem": "PROVISÓRIA (a lição com \"Fonte do seu material\" ainda não chegou do Mobile & QA): usa a lição com o acerto do iPhone, rodada 45137054494 (teste/final-n2)" },
-    { "id": "momento-2", "plataforma": "iphone", "arquivo": "05b-iphone-ponte.png", "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45137054494 (teste/final-n2)" },
-    { "id": "momento-3", "plataforma": "android", "arquivo": "06-android-ensine-ao-stu.png", "origem": "Android, emulador Pixel 6 (Android 15), build de debug do projeto, rodada 45137054494 (teste/final-n2)" },
-    { "id": "momento-4", "plataforma": "iphone", "arquivo": "03-iphone-mapa-da-trilha.png", "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45124218880 (teste/final-wk4)" }
+    {"id": "heroi-1", "plataforma": "iphone", "arquivo": "02-iphone-o-que-quer-aprender.png", "provisoria": true, "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45124218880 (teste/final-wk4)"},
+    {"id": "heroi-2", "plataforma": "android", "arquivo": "heroi-2-android-proposta-pronta.png", "provisoria": true, "origem": "Android, emulador Pixel 6 (Android 15), build de debug do projeto, rodada 45118526529 (teste/final-wk3)"},
+    {"id": "heroi-3", "plataforma": "iphone", "arquivo": "heroi-3-iphone-licao-acerto.png", "provisoria": true, "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45137054494 (teste/final-n2)"},
+    {"id": "momento-1", "plataforma": "iphone", "arquivo": "heroi-3-iphone-licao-acerto.png", "provisoria": true, "origem": "PROVISÓRIA (a lição com \"Fonte do seu material\" ainda não chegou do Mobile & QA): usa a lição com o acerto do iPhone, rodada 45137054494 (teste/final-n2)"},
+    {"id": "momento-2", "plataforma": "iphone", "arquivo": "05b-iphone-ponte.png", "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45137054494 (teste/final-n2)"},
+    {"id": "momento-3", "plataforma": "android", "arquivo": "06-android-ensine-ao-stu.png", "origem": "Android, emulador Pixel 6 (Android 15), build de debug do projeto, rodada 45137054494 (teste/final-n2)"},
+    {"id": "momento-4", "plataforma": "iphone", "arquivo": "03-iphone-mapa-da-trilha.png", "origem": "iPhone, simulador iPhone 17 Pro (iOS 26.5), Expo Go com o JS do build 4, rodada 45124218880 (teste/final-wk4)"},
+    {"id": "janela-4", "plataforma": "web", "arquivo": "mapa-1024x684.png", "origem": "Web, Chromium em 1024 × 684 a 2×, servidor de ensaio da worktree web-landing (IA falsa): a trilha \"Inglês para viagem\" (a mesma da captura do iPhone) com 2 de 7 lições feitas, conta de visitante nova, mapa no alto"}
   ]
 }

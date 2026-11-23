@@ -237,12 +237,26 @@
 }
 @keyframes cn-pulso { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
+/* S2, momento 4: o site (uma janela de navegador desenhada pelo Studoo, com a captura REAL da web) e o app, a mesma trilha. O celular sobe sobre o canto da janela. */
+.cn-composto { position: relative; display: grid; width: 100%; max-width: 440px; margin-inline: auto; }
+.cn-janela { width: 86%; border: 2px solid var(--cn-borda-cartao); border-radius: 14px; background: #fff; box-shadow: 0 16px 36px rgb(11 27 92 / 0.12); overflow: hidden; }
+.cn-janela__barra { display: flex; align-items: flex-end; gap: 14px; height: 34px; padding: 0 12px; background: #e9eefc; }
+.cn-janela__pontos { display: flex; align-items: center; align-self: center; gap: 6px; }
+.cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
+.cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
+.cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
+.cn-momento__visual .cn-composto .cn-celular { --celular: 44%; justify-self: end; margin-top: -22%; z-index: 2; box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
+.cn-momento__visual .cn-composto .cn-selo-sincronia { position: absolute; z-index: 3; left: 0; top: 49%; margin-top: 8px; }
+@media (max-width: 767px) { .cn-momento__visual .cn-composto .cn-selo-sincronia { padding: 6px 12px; font-size: 0.8125rem; } }
+
 /* No computador, com movimento: o celular fica preso à direita e a tela dentro dele troca (300 ms) conforme o texto que cruza o meio. */
 @media (min-width: 1024px) {
   .cn-s2__momentos { margin-top: 56px; gap: 0; }
   .cn-momento { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 96px; align-items: center; justify-items: stretch; padding-block: 48px; }
   .cn-momento__visual { justify-items: center; }
   .cn-momento__visual .cn-celular { --celular: 300px; }
+  .cn-momento__visual--composto { justify-items: end; }
+  .cn-composto { width: min(520px, calc(100% + 100px)); max-width: none; margin-inline: 0; }
 }
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .cn-s2__momentos { display: grid; grid-template-columns: minmax(0, 1fr) 420px; column-gap: 96px; align-items: start; }
@@ -251,7 +265,7 @@
   .cn-momento__visual {
     --celular: clamp(240px, calc((100svh - 120px) * 0.46), 320px);
     grid-column: 2;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 3;
     position: sticky;
     top: calc(50svh - (var(--celular) / 0.46 + 20px) / 2);
     align-self: start;
@@ -264,9 +278,14 @@
   .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__tela { opacity: 1; }
   .cn-momento .cn-celular { box-shadow: none; }
   .cn-momento:first-child .cn-celular { box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
-  .cn-momento__visual .cn-selo-sincronia { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); opacity: 0; transition: opacity 300ms linear; }
-  .cn-momento[data-momento='4'][data-ativo] .cn-selo-sincronia { opacity: 1; }
-  .cn-momento:not([data-momento='4']) .cn-selo-sincronia { display: none; }
+  /* O momento 4 não usa o celular preso (que no Chrome continua preso até o fim da grade, e então some): o site e o app aparecem juntos, numa linha comum
+     ao lado do texto, no mesmo instante (300 ms) em que o celular preso dos momentos 1 a 3 sai. */
+  .cn-momento__visual:not(.cn-momento__visual--composto) { transition: opacity 300ms linear; }
+  .cn-s2__momentos:has(.cn-momento[data-momento='4'][data-ativo]) .cn-momento__visual:not(.cn-momento__visual--composto) { opacity: 0; }
+  .cn-momento__visual--composto { grid-row: 4; position: relative; top: auto; align-self: center; pointer-events: auto; justify-items: end; opacity: 0; transition: opacity 300ms linear; }
+  .cn-momento[data-momento='4'][data-ativo] .cn-momento__visual--composto { opacity: 1; }
+  .cn-momento__visual--composto .cn-composto { width: min(560px, calc(100% + 80px + clamp(0px, (100vw - 1024px) * 0.25, 60px))); }
+  .cn-momento[data-momento='4'] .cn-celular__tela { opacity: 1; }
 }
 
 /* ---------- S3: as fichas de ideias ---------- */

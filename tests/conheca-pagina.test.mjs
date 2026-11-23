@@ -198,6 +198,49 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
   }
 });
 
+test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura real da web) ao lado do app, e nenhuma prévia web dentro de moldura de celular', () => {
+  const html = desenhar({ aparelho: 'android' });
+  const momentos = [...html.matchAll(/<article class="cn-momento"[^>]*data-momento="(\d)"[\s\S]*?<\/article>/g)].map((m) => [m[1], m[0]]);
+  assert.equal(momentos.length, 4);
+  for (const [numero, bloco] of momentos) {
+    if (numero !== '4') assert.doesNotMatch(bloco, /cn-composto|cn-janela/, `só o momento 4 tem a janela (${numero})`);
+  }
+  const quatro = momentos[3][1];
+  assert.match(quatro, /<div class="cn-momento__visual cn-momento__visual--composto"><div class="cn-composto">/);
+  const janela = quatro.match(/<div class="cn-janela">[\s\S]*?<div class="cn-janela__tela">([\s\S]*?)<\/div><\/div>/);
+  assert.ok(janela, 'a janela e a tela dela');
+  assert.ok(janela[1].includes(CAPTURAS['janela-4'].src1x) && janela[1].includes(CAPTURAS['janela-4'].src2x), 'a captura da web, em 1x e 2x');
+  assert.ok(janela[1].includes(`alt="${textos.s2.janelaAlt}"`));
+  assert.equal(CAPTURAS['janela-4'].plataforma, 'web');
+  assert.match(janela[1], /loading="lazy"/);
+  // A barra é só desenho (escondida do leitor de tela) e não inventa endereço: tem a aba "Studoo" e nada com cara de URL.
+  const barra = quatro.match(/<div class="cn-janela__barra" aria-hidden="true">([\s\S]*?)<\/div>/)[1];
+  assert.ok(texto(barra).includes('Studoo'));
+  assert.doesNotMatch(texto(barra), /https?:|www\.|\.com|\.app|\.br|sslip/i);
+  // A captura da web nunca está dentro de uma moldura de celular, e a do app nunca dentro da janela.
+  const celulares = [...html.matchAll(/<div class="cn-celular[^"]*"[\s\S]*?<\/div><\/div>/g)].map((m) => m[0]);
+  assert.ok(celulares.length >= 5);
+  for (const celular of celulares) assert.ok(!celular.includes('janela-4-'), 'a web fora do celular');
+  assert.ok(!janela[1].includes(CAPTURAS['momento-4'].src1x), 'o app fora da janela');
+  // O selo "Progresso salvo agora" fica no composto e o celular dele (o do app) mostra o mapa.
+  assert.match(quatro, /<p class="cn-selo-sincronia">[\s\S]*Progresso salvo agora<\/p>/);
+  assert.ok(quatro.includes(CAPTURAS['momento-4'].src1x));
+  // Frases do texto do momento: "com uma conta" (o progresso do visitante fica só no aparelho dele).
+  assert.match(texto(quatro), /Com uma conta, a sua trilha é a mesma no site e no app\./);
+});
+
+test('o CSS do momento 4: o celular preso cobre só os momentos 1 a 3, o composto é uma linha comum, e tudo respeita o movimento reduzido', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  const preso = css.slice(css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
+  assert.match(preso, /grid-row: 1 \/ span 3;\n    position: sticky;/, 'o celular preso termina no momento 3');
+  assert.match(preso, /\.cn-momento__visual--composto \{ grid-row: 4; position: relative;/);
+  assert.match(preso, /\.cn-s2__momentos:has\(\.cn-momento\[data-momento='4'\]\[data-ativo\]\) \.cn-momento__visual:not\(\.cn-momento__visual--composto\) \{ opacity: 0; \}/, 'no momento 4 o celular preso sai, em 300 ms');
+  assert.match(preso, /\.cn-momento\[data-momento='4'\]\[data-ativo\] \.cn-momento__visual--composto \{ opacity: 1; \}/);
+  // Fora do movimento permitido (reduzido ou sem JavaScript) nada fica escondido: o composto só some dentro do bloco de movimento.
+  const fora = css.slice(0, css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
+  assert.doesNotMatch(fora, /cn-momento__visual--composto[^}]*opacity: 0/);
+});
+
 test('o celular do herói é um grupo com um rótulo só e cada captura tem o seu alt da spec', () => {
   const html = desenhar({ aparelho: 'android' });
   assert.match(html, /role="group" aria-label="Telas do Studoo: escolher o que aprender, a trilha pronta e uma lição com o acerto"/);
