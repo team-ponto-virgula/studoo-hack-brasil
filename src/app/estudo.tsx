@@ -672,7 +672,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
-            {mensagens.planos.titulo}
+            <Icone nome="livro" />{mensagens.planos.titulo}
           </Botao>
           {planos.length > 0 && <ul className="navegacao-planos">
             {planos.slice(0, 5).map((plano) => (
@@ -683,8 +683,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </li>
             ))}
           </ul>}
-          <Botao variante="secundario" className="navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
-            <span aria-hidden="true">+</span> {mensagens.planos.novo}
+          <Botao variante="texto" className="navegacao-item navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
+            <Icone nome="lampada" />{mensagens.planos.novo}
           </Botao>
           {comunidade && (
             <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => navegar({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
@@ -696,10 +696,10 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
             {mensagens.pedido.comoFunciona}
           </Botao>
-          <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+          <button type="button" className="navegacao-item navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}>
-            {compartilhar && perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
-            <span>{(compartilhar && perfil?.nome) || mensagens.perfil.navegacao}</span>
+            <Icone nome="pessoa" />
+            <span>{mensagens.perfil.navegacao}</span>
           </button>
         </div>
       </aside>

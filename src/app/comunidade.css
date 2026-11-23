@@ -182,8 +182,6 @@
 
 
 /* Explorar na navegação lateral. */
-.navegacao-explorar { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; }
-.navegacao-explorar .icone { width: 18px; height: 18px; }
 .por-link__abrir + .por-link__abrir, .por-link + .por-link__abrir { margin-top: 8px; }
 
 /* Seguir (etapa C2). */
