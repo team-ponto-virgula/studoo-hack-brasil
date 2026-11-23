@@ -270,27 +270,8 @@
 .ensino-stu[data-gravando='true'] .stu { animation: pedido-stu 1200ms ease-in-out infinite; }
 .ensino-stu__balao { margin: 0 !important; font-weight: 800; color: var(--texto); }
 
-.ensino-passos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
-}
-.ensino-passos li {
-  padding: 4px 12px;
-  border: 1.5px solid var(--gelo);
-  border-radius: 999px;
-  color: var(--texto2);
-  font-size: 0.8125rem;
-  font-weight: 800;
-}
-.ensino-passos li[data-ativo='true'] {
-  border-color: var(--acao);
-  color: var(--acao-escura);
-  background: var(--ceu);
-}
+/* Spec 16, item 25: os passos do "Explique" são uma linha só de indicador, como a da ponte ("Passo 1 de 3 · Gravar ou escrever"): 14/20, 800, #5E6A85, sem borda e sem nada tocável. */
+.estudio-card .ensino-indicador { margin: 0 0 12px; color: #5e6a85; font-size: 0.875rem; font-weight: 800; line-height: 1.4286; }
 
 .ensino-gravando {
   display: flex;

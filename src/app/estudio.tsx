@@ -26,6 +26,7 @@ import {
 } from './voz-ao-vivo';
 import { tocaSons } from './sons';
 import { PonteReforco } from './ponte-reforco';
+import { linhaDoPassoDoEnsino, passoAtivoDoEnsino } from './ensino-passos';
 import { TextoComFormulas } from './texto-com-formulas';
 import './estudio.css';
 const m = mensagens.estudio;
@@ -682,6 +683,12 @@ export function ApoioDaLicao({
             </blockquote>
           ))}
         </details>
+  // Spec 16, item 25: o indicador de passos do "Explique" (a mesma conta do app).
+  const passoDoEnsino = linhaDoPassoDoEnsino(
+    passoAtivoDoEnsino({ gravando, vozAtiva: etapaVoz === 'ativa', temRetorno: Boolean(ensino), temTexto: Boolean(texto.trim()) }),
+    [vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0], m.ensinoEtapas[1], m.ensinoEtapas[2]],
+    m.ponteIndicador,
+  );
       )}
       {ultimo && <details
         className="estudio-card estudio-ensino"
@@ -720,13 +727,11 @@ export function ApoioDaLicao({
                   : m.ensinoStuAluno}
           </p>
         </div>
-        <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
-          <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>
-            {vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0]}
-          </li>
-          <li data-ativo={(Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
-          <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
-        </ol>
+        {/* Spec 16, item 25: os três passos viram uma linha só de indicador, como a da ponte (não tocável); o leitor de tela ouve "Passo 1 de 3: Gravar ou escrever". */}
+        <p className="ensino-indicador">
+          <span aria-hidden="true">{passoDoEnsino.visivel}</span>
+          <span className="somente-leitor">{passoDoEnsino.leitor}</span>
+        </p>
         <p>{m.ensinoDica}</p>
         <TextoComFormulas como="p" className="estudio-legenda" texto={m.ensinoIdeia(licao.objetivo)} />
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
