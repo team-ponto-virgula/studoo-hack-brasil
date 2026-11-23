@@ -1,12 +1,13 @@
 'use client';
 
 /*
- * "Privacidade e dados" no Perfil (revisão Apple): a política do Studoo, o aceite de IA de terceiros (ver quem recebe,
- * parar ou permitir) e "Excluir conta" (5.1.1(v)), que apaga no ato depois de a pessoa digitar EXCLUIR numa folha do
- * Studoo. O app tem a mesma seção, com os mesmos textos (`mensagens.privacidade`).
+ * "Privacidade e dados" no Perfil (revisão Apple): o aceite de IA de terceiros (ver quem recebe, parar ou permitir) e, na seção
+ * "Conta", depois de "Sair", "Excluir conta" (5.1.1(v)), que apaga no ato depois de a pessoa digitar EXCLUIR numa folha do
+ * Studoo. A política de privacidade do Studoo mora só em "Ajuda" (spec 16, item 19). O app tem o mesmo, com os mesmos textos
+ * (`mensagens.privacidade`).
  */
 import { useEffect, useId, useRef, useState } from 'react';
-import { CAMINHO_POLITICA, CONFIRMACAO_EXCLUSAO, confirmacaoExclusaoValida, type EstadoPrivacidade } from '@studoo/contratos/privacidade';
+import { CONFIRMACAO_EXCLUSAO, confirmacaoExclusaoValida, type EstadoPrivacidade } from '@studoo/contratos/privacidade';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao } from '../ui';
@@ -78,7 +79,6 @@ function FolhaExcluir({ visitante, aoCancelar }: { visitante: boolean; aoCancela
 export function SecaoPrivacidade({ visitante }: { visitante: boolean }) {
   const [estado, setEstado] = useState<EstadoPrivacidade | null>(null);
   const [verQuem, setVerQuem] = useState(false);
-  const [excluindo, setExcluindo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
 
@@ -112,7 +112,7 @@ export function SecaoPrivacidade({ visitante }: { visitante: boolean }) {
           {!ia.necessario ? t.iaSimulada : ia.aceitoEm ? t.iaPermitida(dataCurta(ia.aceitoEm)) : t.iaNaoPermitida}
         </p>
       )}
-      {estado && ia?.necessario && verQuem && <ListaProvedores estado={estado} />}
+      {estado && ia?.necessario && verQuem && <ListaProvedores estado={estado} semPoliticaDoStudoo />}
       <div className="privacidade-acoes">
         {ia?.necessario && (
           <Botao variante="secundario" aria-expanded={verQuem} onClick={() => setVerQuem((v) => !v)}>{t.verQuem}</Botao>
@@ -120,11 +120,22 @@ export function SecaoPrivacidade({ visitante }: { visitante: boolean }) {
         {ia?.necessario && (ia.aceitoEm
           ? <Botao variante="secundario" disabled={ocupado} onClick={() => void mudarAceite(false)}>{t.revogar}</Botao>
           : <Botao variante="secundario" disabled={ocupado} onClick={() => void mudarAceite(true)}>{t.permitirAgora}</Botao>)}
-        <a className="botao botao--secundario" href={estado?.politica ?? CAMINHO_POLITICA} target="_blank" rel="noopener">{t.politica}</a>
       </div>
       <p className="folha-status" role="status" aria-live="polite">{aviso}</p>
-      <Botao variante="texto" className="privacidade-excluir" onClick={() => setExcluindo(true)}>{t.excluir}</Botao>
-      {excluindo && <FolhaExcluir visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
     </section>
+  );
+}
+
+/**
+ * "Excluir conta" (spec 16, item 20): o botão secundário de 44 px, com borda e texto #C23B4E (ação destrutiva de baixa ênfase), logo depois de "Sair" na seção "Conta" do Perfil. A folha
+ * que pede a confirmação ("EXCLUIR") abre por cima. Antes era um texto vermelho solto no fim de "Privacidade e dados".
+ */
+export function BotaoExcluirConta({ visitante }: { visitante: boolean }) {
+  const [excluindo, setExcluindo] = useState(false);
+  return (
+    <>
+      <Botao variante="secundario" className="privacidade-excluir" onClick={() => setExcluindo(true)}>{t.excluir}</Botao>
+      {excluindo && <FolhaExcluir visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
+    </>
   );
 }
