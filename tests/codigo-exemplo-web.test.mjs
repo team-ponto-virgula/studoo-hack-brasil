@@ -62,7 +62,7 @@ test('a folha da trilha diz ao painel se a trilha é de exemplo; o código do pe
   const compartilhar = ler('src/app/compartilhar.tsx');
   assert.match(compartilhar, /<PainelCodigo [^>]*\n?[^>]*demonstracao=\{Boolean\(previa\.demonstracao\)\}/);
   const perfil = funcao(codigo, 'export function FolhaCompartilharPerfil(');
-  assert.doesNotMatch(perfil, /demonstracao/, 'o perfil tem o seu selo ("Perfil de demonstração") na página, não no código');
+  assert.doesNotMatch(perfil, /demonstracao/, 'o perfil tem o seu selo ("Perfil de exemplo") na página, não no código');
 });
 
 test('a apresentação mostra "Exemplo" entre o título e o código quando é de exemplo, e nada quando não é', () => {

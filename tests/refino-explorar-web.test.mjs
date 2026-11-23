@@ -29,10 +29,27 @@ const visivel = (html) => html.replace(/<span class="somente-leitor">[^<]*<\/spa
 test('item 9: o contrato diz "Exemplo", com o nome inteiro para o leitor de tela, e a honestidade do aviso continua', () => {
   assert.equal(c.demonstracao, 'Exemplo');
   assert.equal(c.demonstracaoRotulo, 'Exemplo criado pelo Studoo para mostrar o app');
-  assert.match(c.demonstracaoAviso, /rótulo “Exemplo”\.$/, 'a folha de compartilhar promete o mesmo selo');
   assert.match(c.demonstracaoExplica, /^“Exemplo” marca conteúdo criado pelo Studoo para mostrar o app\.$/, 'o app ainda usa esta chave até tirar o parágrafo; ela fica coerente');
-  // O perfil fictício segue com o nome dele (é outro selo, de outro assunto).
-  assert.equal(c.perfilDemo, 'Perfil de demonstração');
+});
+
+test('spec 17 (textos sem palavras de dentro): o aviso da folha de publicar, a dica da trilha e o selo do perfil fictício dizem "exemplo", não "demonstração"', () => {
+  // A folha de publicar (web e app) promete o mesmo selo que o Explorar mostra.
+  assert.equal(c.demonstracaoAviso, 'Esta trilha é um exemplo do Studoo e aparece no Explorar com o rótulo “Exemplo”.');
+  assert.equal(c.demonstracaoDica, 'Trilha de exemplo do Studoo.');
+  // O selo do perfil fictício (página do perfil, trilha vista de fora, cartão de prévia e app).
+  assert.equal(c.perfilDemo, 'Perfil de exemplo');
+  for (const chave of ['demonstracao', 'demonstracaoRotulo', 'demonstracaoDica', 'demonstracaoExplica', 'demonstracaoAviso', 'perfilDemo']) {
+    assert.doesNotMatch(c[chave], /demonstra/i, `comunidade.${chave}`);
+  }
+});
+
+test('spec 17: o que ainda diz "demonstração" é de propósito (decisão do Designer): o selo do material lido sem IA, o aviso do ramo sem IA real e o nome da etapa em que o Stu mostra como se faz', () => {
+  // Só aparecem sem IA real (aviso honesto); o nome pedagógico da etapa não é o modo de demonstração.
+  assert.equal(mensagens.estudio.simulado, 'Modo demonstração');
+  assert.match(mensagens.estudio.privacidadePorProvedor('falsa'), /^No modo demonstração, o material não é enviado para nenhum provedor externo de IA\./);
+  assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor('openai'), /demonstra/i);
+  assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor('deepseek'), /demonstra/i);
+  assert.equal(mensagens.licao.demonstracao, 'Demonstração');
 });
 
 test('item 9: o cartão de conteúdo sintético leva o selo "Exemplo" (escondido do leitor, que ouve o nome inteiro); o de verdade não leva selo nenhum', () => {
