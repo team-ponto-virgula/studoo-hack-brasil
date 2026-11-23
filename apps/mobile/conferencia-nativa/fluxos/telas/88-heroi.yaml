@@ -20,27 +20,58 @@ name: 88-heroi
     visible:
       id: titulo-objetivo
     timeout: 30000
-# A ficha é a 6ª de "Populares" (sugestao-5): a fileira rola para o lado até ela aparecer inteira.
+# A ficha é a 6ª de "Populares" (sugestao-5): a fileira rola para o lado até ela aparecer. Na execução 45270489695, seis
+# arrastos de 500 ms só levaram a fileira até a 4ª ficha nos dois aparelhos: agora são arrastos rápidos (com embalo) e
+# mais voltas. Se ainda assim ela não aparecer, o campo recebe o texto exato da ficha: a tela fica igual (a ficha com
+# o mesmo texto do campo aparece marcada, estudo.tsx: escolhida={texto === exemplo}).
 - repeat:
-    times: 6
+    times: 12
     while:
       notVisible:
         id: sugestao-5
     commands:
       - swipe:
-          waitToSettleTimeoutMs: 1000
+          waitToSettleTimeoutMs: 800
           from:
             id: ideias-pedido
           direction: LEFT
-          duration: 500
-- tapOn:
-    waitToSettleTimeoutMs: 1500
-    id: sugestao-5
+          duration: 250
+- runFlow:
+    when:
+      visible:
+        id: sugestao-5
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: sugestao-5
+- runFlow:
+    when:
+      notVisible:
+        id: sugestao-5
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          id: objetivo-estudo
+      - inputText: "Fotografia com o celular"
+      # Fecha o teclado: no Android, o recolher do sistema; no iPhone, um toque no título (a rolagem do pedido tem
+      # keyboardShouldPersistTaps="handled": o toque fora de um botão recolhe o teclado).
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1000
+                id: titulo-objetivo
 - assertVisible:
     text: "Fotografia com o celular"
 # A fileira volta ao começo para a captura mostrar as primeiras fichas, com o campo já preenchido.
 - repeat:
-    times: 6
+    times: 12
     while:
       notVisible:
         id: sugestao-0
@@ -50,7 +81,7 @@ name: 88-heroi
           from:
             id: ideias-pedido
           direction: RIGHT
-          duration: 500
+          duration: 250
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 88-heroi-1-pedido
