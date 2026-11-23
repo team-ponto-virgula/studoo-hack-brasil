@@ -101,6 +101,57 @@ async function rodape(texto: string) {
 /** Sem cache: o proxy põe `no-store` nas rotas de /t e /p, inclusive aqui (conferido no site pelo Lead). */
 const resposta = async (conteudo: React.ReactElement) => new ImageResponse(conteudo, { ...TAMANHO_OG, fonts: await carregarFontes() });
 
+/** Uma captura do app (WebP do site) em PNG e na largura pedida, como data URL: o cartão do link não lê WebP. */
+async function telaEmPng(arquivo: string, largura: number): Promise<string | null> {
+  try {
+    const png = await sharp(await readFile(join(raiz, "public", arquivo))).resize({ width: largura }).png({ compressionLevel: 9 }).toBuffer();
+    return `data:image/png;base64,${png.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A prévia do link da página de apresentação (`/conheca` e a raiz de quem não entrou, spec 18): o herói da página, com a marca, o título, uma frase do
+ * subtítulo, o celular com a trilha pronta e o Stu. O texto e a captura vêm de quem chama (os mesmos da página); aqui só o desenho. Sem número nem
+ * promessa que a página não faça. Não lê o banco, então não conta no limitador: é a mesma imagem para todo mundo, gerada uma vez no build. O PNG sai
+ * com paleta (256 cores, a melhor qualidade): o desenho é chapado, e o arquivo fica pequeno para o WhatsApp e os outros aplicativos mostrarem a prévia.
+ */
+export async function imagemDaApresentacao(d: { linhasDoTitulo: readonly string[]; linha: string; telaDoCelular: string; plataforma: "iphone" | "android"; alturaDaTela: number; larguraDaTela: number }) {
+  const [marca, desenho, tela] = await Promise.all([carregarLogo(), carregarStu(), telaEmPng(d.telaDoCelular, 560)]);
+  const moldura = 10;
+  const larguraDoCelular = 320;
+  const larguraInterna = larguraDoCelular - 2 * moldura;
+  const alturaInterna = Math.round((larguraInterna * d.alturaDaTela) / d.larguraDaTela);
+  const imagem = await resposta(
+    <div style={{ display: "flex", position: "relative", width: "100%", height: "100%", background: "linear-gradient(180deg, #eaf0ff 0%, #ffffff 100%)", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 730, padding: "64px 0 0 72px" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {marca ? <img src={marca} width={213} height={70} alt="" /> : <span style={{ fontFamily: "Quicksand", fontSize: 48, color: "#0b1b5c" }}>studoo</span>}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: 52 }}>
+          {d.linhasDoTitulo.map((linhaDoTitulo) => (
+            <span key={linhaDoTitulo} style={{ fontFamily: "Quicksand", fontSize: 58, lineHeight: 1.14, letterSpacing: -1.4, color: "#0b1b5c" }}>{linhaDoTitulo}</span>
+          ))}
+        </div>
+        <span style={{ marginTop: 30, fontFamily: "Nunito", fontWeight: 700, fontSize: 29, lineHeight: 1.34, color: "#42507a", maxWidth: 610 }}>{d.linha}</span>
+      </div>
+      <div style={{ display: "flex", position: "absolute", right: 96, top: 60, width: larguraDoCelular, transform: "rotate(-4deg)", borderRadius: 52, background: "#0b1b5c", padding: moldura, boxShadow: "0 24px 48px rgba(11, 27, 92, 0.22)" }}>
+        <div style={{ display: "flex", position: "relative", width: larguraInterna, height: alturaInterna, borderRadius: 42, overflow: "hidden", background: "#ffffff" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {tela && <img src={tela} width={larguraInterna} height={alturaInterna} alt="" />}
+          {d.plataforma === "iphone"
+            ? <div style={{ display: "flex", position: "absolute", top: 10, left: "50%", marginLeft: -43, width: 86, height: 22, borderRadius: 12, background: "#0b1b5c" }} />
+            : <div style={{ display: "flex", position: "absolute", top: 8, left: "50%", marginLeft: -6, width: 12, height: 12, borderRadius: 12, background: "#0b1b5c" }} />}
+        </div>
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {desenho && <img src={desenho} width={184} height={179} style={{ position: "absolute", right: 424, bottom: 10 }} alt="" />}
+    </div>,
+  );
+  const png = await sharp(Buffer.from(await imagem.arrayBuffer())).png({ palette: true, quality: 100, effort: 10, compressionLevel: 9 }).toBuffer();
+  return new Response(new Uint8Array(png), { headers: { "content-type": "image/png" } });
+}
+
 /** A imagem genérica (link encerrado, perfil indisponível ou limite estourado): só a marca e o convite. */
 export async function imagemGenerica() {
   const desenho = await carregarStu();
