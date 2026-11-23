@@ -27,8 +27,12 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo }: { aoFechar: ()
   fechar.current = aoFechar;
   const [foraDoSafari] = useState(() => foraDoSafariNoIphone(window.navigator.userAgent));
 
+  // O botão que abriu a folha (guardado uma vez) e a devolução do foco (adiada: um novo desenho no desenvolvimento a cancela).
+  const origemDoFoco = useRef<HTMLElement | null | undefined>(undefined);
+  const devolucao = useRef(0);
   useEffect(() => {
-    const origem = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    window.cancelAnimationFrame(devolucao.current);
+    if (origemDoFoco.current === undefined) origemDoFoco.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const rolagem = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     titulo.current?.focus();
@@ -46,7 +50,7 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo }: { aoFechar: ()
     return () => {
       window.removeEventListener('keydown', aoTeclar);
       document.body.style.overflow = rolagem;
-      window.requestAnimationFrame(() => { if (origem?.isConnected) origem.focus(); });
+      devolucao.current = window.requestAnimationFrame(() => { const origem = origemDoFoco.current; if (origem?.isConnected) origem.focus(); });
     };
   }, []);
 

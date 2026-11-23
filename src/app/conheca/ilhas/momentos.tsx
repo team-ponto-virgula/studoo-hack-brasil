@@ -19,12 +19,16 @@ export function Momentos({ children }: { children: ReactNode }) {
       for (const momento of momentos) momento.toggleAttribute('data-ativo', momento === alvo);
       if (alvo.dataset.momento === '4') alvo.setAttribute('data-sincronizou', 'true');
     };
+    // Observa o texto de cada momento: no computador o artigo é `display: contents` (sem caixa), e só o que tem caixa cruza o meio.
     const observador = new IntersectionObserver((entradas) => {
-      for (const entrada of entradas) if (entrada.isIntersecting) marcar(entrada.target as HTMLElement);
+      for (const entrada of entradas) {
+        const momento = (entrada.target as HTMLElement).closest<HTMLElement>('[data-momento]');
+        if (entrada.isIntersecting && momento) marcar(momento);
+      }
     }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
-    // O primeiro começa ativo; os outros assumem quando cruzam o meio.
+    // O primeiro começa ativo; os outros assumem quando o texto cruza o meio.
     momentos[0].setAttribute('data-ativo', '');
-    for (const momento of momentos) observador.observe(momento);
+    for (const momento of momentos) { const texto = momento.querySelector('.cn-momento__texto'); if (texto) observador.observe(texto); }
     return () => observador.disconnect();
   }, []);
   return <div ref={raiz} className="cn-s2__momentos">{children}</div>;

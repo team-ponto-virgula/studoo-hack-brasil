@@ -292,9 +292,13 @@
 }
 .cn-ficha .mundo-desenho { width: 28px; height: 28px; flex: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .cn-fichas[data-correndo] { overflow: hidden; margin-inline: calc(-1 * var(--cn-margem)); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
-  .cn-fichas[data-correndo] .cn-fichas__pista { display: flex; width: max-content; animation: cn-correr 40s linear infinite; padding-block: 6px; }
-  .cn-fichas[data-correndo] .cn-fichas__lista { flex-wrap: nowrap; justify-content: flex-start; padding-right: 12px; }
+  /* Com movimento permitido, a fileira já nasce numa linha só, do servidor (sem salto de altura quando o laço começa); sem JavaScript ela rola de lado com o dedo. */
+  .cn-fichas { margin-inline: calc(-1 * var(--cn-margem)); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
+  .cn-fichas__pista { display: flex; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px var(--cn-margem); }
+  .cn-fichas__pista::-webkit-scrollbar { display: none; }
+  .cn-fichas__lista { flex-wrap: nowrap; justify-content: flex-start; padding-right: 12px; flex: none; }
+  .cn-fichas[data-correndo] { overflow: hidden; }
+  .cn-fichas[data-correndo] .cn-fichas__pista { width: max-content; overflow: visible; padding-inline: 0; animation: cn-correr 40s linear infinite; }
   .cn-fichas[data-correndo]:hover .cn-fichas__pista,
   .cn-fichas[data-correndo]:focus-within .cn-fichas__pista,
   .cn-fichas[data-correndo]:active .cn-fichas__pista { animation-play-state: paused; }

@@ -137,12 +137,19 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
   const abas: Aba[] = ['android', 'iphone'];
   const botoes = useRef<Record<Aba, HTMLButtonElement | null>>({ android: null, iphone: null });
 
+  const rolarParaIphone = useRef(false);
+  useEffect(() => {
+    if (aba === 'iphone' && rolarParaIphone.current) {
+      rolarParaIphone.current = false;
+      document.getElementById('iphone')?.scrollIntoView({ block: 'start' });
+    }
+  }, [aba]);
   useEffect(() => {
     const ler = () => {
       const alvo = window.location.hash === '#iphone' ? 'iphone' : window.location.hash === '#baixar' || window.location.hash === '#android' ? 'android' : null;
       if (!alvo) return false;
+      if (alvo === 'iphone') rolarParaIphone.current = true;
       setAba(alvo);
-      if (alvo === 'iphone') window.requestAnimationFrame(() => document.getElementById('iphone')?.scrollIntoView({ block: 'start' }));
       return true;
     };
     const temHash = ler();
