@@ -245,7 +245,15 @@ name: 98-ponte-e-ensine
           waitToSettleTimeoutMs: 1000
           id: resposta-licao
       - inputText: "5"
-      # No Android o teclado cobre o rodapé com o "Verificar"; com o teclado aberto, o Voltar fecha só o teclado.
+      # iPhone: com o teclado aberto, o rodapé com o "Verificar" fica atrás do teclado (execução 45105021514: com o
+      # teclado aberto, enviar-resposta em y 812–864 de 874, sem a área segura; o toque caiu no teclado e a resposta não
+      # foi). O envio vai pela tecla do teclado ("Enviar", returnKeyType="send" com onSubmitEditing no campo), como a
+      # pessoa faria. Android: fecha o teclado (o Voltar fecha só ele) e toca em Verificar.
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - pressKey: Enter
       - runFlow:
           when:
             platform: Android
@@ -253,9 +261,29 @@ name: 98-ponte-e-ensine
             - hideKeyboard
             - waitForAnimationToEnd:
                 timeout: 1500
-      - tapOn:
-          waitToSettleTimeoutMs: 1500
-          id: enviar-resposta
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: enviar-resposta
+      # Pelo estado: sem o retorno (convite ou o painel do acerto), fecha o teclado tocando no enunciado (a Tela usa
+      # keyboardShouldPersistTaps="handled": um toque fora de um botão fecha o teclado) e toca em Verificar.
+      - extendedWaitUntil:
+          visible:
+            id: convite-explique|continuar-licao|tentar-de-novo
+          timeout: 20000
+          optional: true
+      - runFlow:
+          when:
+            notVisible:
+              id: convite-explique|continuar-licao|tentar-de-novo
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1000
+                id: pergunta-exercicio
+            - waitForAnimationToEnd:
+                timeout: 1500
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: enviar-resposta
 # O convite fica no painel do acerto (rodapé); no Android, se a rolagem o deixou fora da tela, a lição desce até ele.
 - scrollUntilVisible:
     element:

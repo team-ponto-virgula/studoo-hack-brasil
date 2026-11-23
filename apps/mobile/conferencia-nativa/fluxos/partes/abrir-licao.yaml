@@ -77,6 +77,43 @@ appId: host.exp.Exponent
       - tapOn:
           waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar): .*"
+# A lição pode não abrir com o servidor lento: na execução 45105021514 (iPhone, fluxo 33, carga ~470), o pedido da lição
+# foi largado pelo app aos 15 s (499 no proxy) e o mapa mostrou "Confira a conexão e tente novamente." (tentar-planos).
+# Pelo estado: com esse cartão, "Tentar novamente", o mapa de novo e a lição aberta outra vez (o cartão "Começar lição"
+# ou o nó atual), uma vez.
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: tentar-planos
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-planos
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano
+          timeout: 60000
+      - runFlow:
+          when:
+            visible:
+              id: comecar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: comecar-licao
+      - runFlow:
+          when:
+            notVisible:
+              id: comecar-licao
+            visible: "(Começar|Continuar): .*"
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                text: "(Começar|Continuar): .*"
 - extendedWaitUntil:
     visible: 'Etapa 1 de \d+'
     timeout: 30000
