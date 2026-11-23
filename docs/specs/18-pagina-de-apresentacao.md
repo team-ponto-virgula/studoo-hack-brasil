@@ -60,13 +60,15 @@ O aparelho é detectado pelo navegador (agente do usuário e `navigator.userAgen
 
 | Aparelho | Botão principal | Linha de apoio | Leva a |
 |---|---|---|---|
-| Android | "Baixar para Android", com o ícone de download | "Versão de teste para Android 7 ou mais novo. O arquivo instala direto, sem loja." | O APK do build 4, pelo link configurado |
+| Android | "Baixar para Android", com o ícone de download | "Versão de teste para Android 7 ou mais novo, com {tamanho}. O arquivo instala direto, sem loja." Sem tamanho conhecido: "Versão de teste para Android 7 ou mais novo. O arquivo instala direto, sem loja." | O APK do build 4, pelo link configurado |
 | iPhone, antes da aprovação da Apple | "Usar no iPhone agora", com o ícone de celular | "O app para iPhone chega em breve pelo TestFlight." | A folha "Studoo na Tela de Início" (1.5) |
 | iPhone, depois da aprovação | "Instalar no iPhone", com o ícone de download | "Versão de teste pelo TestFlight, o app de testes da Apple." | O link público do TestFlight |
-| Computador | Dois botões lado a lado, de 52 px: "Baixar para Android" (primário) e "Usar no iPhone" (secundário, no mesmo estado do iPhone), e à direita o cartão do QR (1.6) | "Aponte a câmera do celular para o código, ou toque no botão do seu aparelho." | O APK, e a folha do iPhone ou o TestFlight |
+| Computador | "Experimentar sem conta" vira o botão principal, de 56 px, e ao lado fica o cartão do QR "Instale no celular" (1.6). Nenhum botão principal baixa o arquivo do app | "Para instalar no celular, aponte a câmera para o código." | A sessão de visitante; o QR leva a `/baixar` |
 
 - **A troca do iPhone para o TestFlight** é só de configuração: quando o link público existir no servidor (a variável configurável do Web & API), o estado muda sozinho, sem mexer na página. Sem o link, vale o estado "em breve".
 - **Estados de toque e foco do botão:** os do primário do Studoo (afunda 3 px ao tocar, anel de foco de 3 px `#2563FF` com 2 px de distância).
+- **O tamanho do arquivo** é medido uma vez pelo Web & API, no arquivo real do link padrão, e fixado: em MB, com uma casa decimal e vírgula ("114,8 MB"), cortando a segunda casa e nunca arredondando para cima. Se o link mudar pela variável e o tamanho do arquivo novo não for conhecido, a linha sai sem o número.
+- **No computador**, o "Experimentar sem conta" é o botão principal, e não o botão de texto. Assim ele fica à vista na primeira dobra em 1280, onde os avaliadores costumam abrir a página, e o botão de texto "Experimentar sem conta" embaixo some.
 - **Ao tocar em "Baixar para Android":** o download começa, e o botão mostra por 4 s o visto e "Baixando…". Embaixo entra a linha "Abra o arquivo baixado para instalar. Se o Android pedir, permita instalar apps deste navegador.", que fica até a pessoa sair da página.
 - **Rótulo para leitor de tela:** "Baixar o Studoo para Android, versão de teste" e "Usar o Studoo no iPhone agora". O ícone é decorativo.
 
@@ -91,8 +93,12 @@ O aparelho é detectado pelo navegador (agente do usuário e `navigator.userAgen
 - **Fora do Safari no iPhone:** a folha diz antes dos passos "Abra esta página no Safari para adicionar à Tela de Início."
 
 ### 1.6 Cartão do QR (computador)
-- Um cartão branco de 176 × 208, com borda de 2 px `#E1E7FA` e raio 20.
-- Dentro, o QR para `/baixar` (`/baixar` redireciona conforme o aparelho), desenhado com os pontos arredondados do Código Studoo, e embaixo "Aponte a câmera do celular", em 14/20.
+- Um cartão branco de 196 × 248, com borda de 2 px `#E1E7FA` e raio 20, ao lado do botão principal, com o topo alinhado a ele.
+- Dentro, de cima para baixo:
+  - o título "Instale no celular", em 15/20 800;
+  - o QR para `/baixar` (`/baixar` redireciona conforme o aparelho), desenhado com os pontos arredondados do Código Studoo, com 136 px;
+  - "Aponte a câmera do celular", em 14/20;
+  - o link pequeno "Baixar o arquivo para Android ({tamanho})", em 13/18, para quem passa o arquivo por cabo, com área de toque de 44 px de altura. Sem tamanho conhecido, "Baixar o arquivo para Android".
 - O QR tem o `alt` "Código QR para baixar o Studoo no celular".
 
 ## 2. Ordem das seções
@@ -131,7 +137,7 @@ O momento 4 diz "com uma conta", porque o progresso do visitante fica só no apa
   1. "Toque em “Baixar para Android”."
   2. "Abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador."
   3. "Abra o Studoo e entre com a sua conta, ou experimente sem conta."
-  Embaixo, o botão "Baixar para Android".
+  Embaixo, o botão "Baixar para Android". No computador, no lugar do botão, fica o cartão do QR (1.6), com o link pequeno do arquivo.
 - **iPhone, antes do TestFlight:** os três passos da folha da seção 1.5, com a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta".
 - **iPhone, com o TestFlight:**
   1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
@@ -143,7 +149,7 @@ O momento 4 diz "com uma conta", porque o progresso do visitante fica só no apa
 **S5:**
 - `stu-celebrando` de 160;
 - título "Qual vai ser a sua primeira lição?";
-- o botão principal do aparelho (1.3) e "Experimentar sem conta".
+- o botão principal do aparelho (1.3) e "Experimentar sem conta". No computador, "Experimentar sem conta" é o principal, e o botão de texto "Instalar no celular" leva ao S4.
 
 **S6:**
 - o logo;
