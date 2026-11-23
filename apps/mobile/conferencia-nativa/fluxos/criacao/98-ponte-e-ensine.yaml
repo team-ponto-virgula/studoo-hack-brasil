@@ -368,11 +368,14 @@ name: 98-ponte-e-ensine
 - assertVisible:
     text: "medir-explique"
     optional: true
-# No Android, com o teclado aberto, a parte que rola fica entre o cabeçalho e o painel do acerto, acima do teclado (y
-# 207–748 de 1560 na execução 45105021514), e a rolagem do Maestro arrasta pelo centro da tela (y ~780), que cai no
-# painel: sete arrastos não moveram nada e "Enviar minha explicação", embaixo do campo, ficou fora da tela. O teclado
-# fecha antes (com ele aberto, o Voltar fecha só o teclado). No iPhone o toque já passava com o teclado aberto
-# (keyboardShouldPersistTaps="handled" na Tela).
+# Fechar o teclado antes de procurar "Enviar minha explicação", nas duas plataformas, sempre depois da captura e da
+# medição acima (que precisam do teclado aberto):
+# - Android: com o teclado aberto, a parte que rola fica entre o cabeçalho e o painel do acerto (y 207–748 de 1560 na
+#   execução 45105021514) e a rolagem do Maestro, pelo centro da tela, caía no painel; hideKeyboard (com o teclado
+#   aberto, o Voltar fecha só ele).
+# - iPhone: a árvore traz o que está fora da tela, então o Maestro "acha" o botão embaixo do campo, atrás do teclado, e
+#   toca no centro dele, que cai no teclado (execução 45114094513: o envio não aconteceu e o proxy não teve a chamada de
+#   ensino). Um arrasto curto no alto da lição fecha o teclado (keyboardDismissMode="on-drag" na Tela).
 - runFlow:
     when:
       platform: Android
@@ -380,13 +383,26 @@ name: 98-ponte-e-ensine
       - hideKeyboard
       - waitForAnimationToEnd:
           timeout: 1500
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 25%
+          end: 50%, 32%
+          duration: 600
+      - waitForAnimationToEnd:
+          timeout: 1500
+# Com o teclado fechado, a lição desce até o botão e o centraliza (acima do rodapé do acerto); se faltar, "Ver mais
+# abaixo" até três vezes.
 - scrollUntilVisible:
     element:
       text: "Enviar minha explicação"
     direction: DOWN
     timeout: 120000
+    centerElement: true
     optional: true
-# Se a rolagem não chegou, "Ver mais abaixo" (mais-abaixo, a pílula do rodapé) desce a lição até o fim.
 - repeat:
     times: 3
     while:
@@ -404,6 +420,46 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     text: "Enviar minha explicação"
+# Pelo estado: o envio vale quando o retorno do Stu chega, e ele entra abaixo do campo (no Android, fora da tela não
+# está na árvore): a lição desce até ele primeiro. Se mesmo assim não aparecer e o botão seguir na tela, fecha o teclado
+# de novo (pode ter voltado) e toca outra vez, uma vez; descer antes evita um segundo envio quando o retorno só estava
+# fora da tela.
+- scrollUntilVisible:
+    element:
+      id: caderno-do-stu
+    direction: DOWN
+    timeout: 120000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: caderno-do-stu
+      visible: "Enviar minha explicação"
+    commands:
+      - runFlow:
+          when:
+            platform: Android
+          commands:
+            - hideKeyboard
+      - runFlow:
+          when:
+            platform: iOS
+          commands:
+            - swipe:
+                waitToSettleTimeoutMs: 1000
+                start: 50%, 25%
+                end: 50%, 32%
+                duration: 600
+      - scrollUntilVisible:
+          element:
+            text: "Enviar minha explicação"
+          direction: DOWN
+          timeout: 60000
+          centerElement: true
+          optional: true
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "Enviar minha explicação"
 # O retorno do Stu (caderno-do-stu) entra abaixo do campo: no Android, fora da tela não está na árvore, então a lição
 # desce até ele (pelo mesmo prazo do emulador lento) antes de exigir que esteja à vista.
 - scrollUntilVisible:
