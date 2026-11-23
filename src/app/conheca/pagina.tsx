@@ -24,9 +24,9 @@ import { svgDoQr } from './qr';
 import { textos } from './textos';
 import './conheca.css';
 
-/** Os `alt` da spec 18 (seção 9). O do momento 1 ainda não veio do Designer: este é provisório, como a captura. */
+/** Os `alt` da spec 18 (seção 9). O do momento 1 e o da janela do momento 4 não vêm na lista da spec: são meus, no mesmo tom. */
 const MOMENTOS_DO_S2 = [
-  { captura: CAPTURAS['momento-1'], alt: 'Lição do Studoo com o cartão do trecho do seu material' },
+  { captura: CAPTURAS['momento-1'], alt: 'Lição do Studoo com o cartão da fonte, que mostra o trecho do seu material' },
   { captura: CAPTURAS['momento-2'], alt: 'A ponte do Studoo: outro jeito de entender, em 3 passos' },
   { captura: CAPTURAS['momento-3'], alt: 'O retorno do Stu à sua explicação' },
   { captura: CAPTURAS['momento-4'], alt: 'O mapa da trilha no app' },
