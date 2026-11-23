@@ -1,0 +1,894 @@
+{
+  "tipo": "modelo",
+  "versaoMetodo": "1.0",
+  "metodo": "docs/ux/METODO-AVALIACAO.md",
+  "estado": "nao_avaliado",
+  "meta": {
+    "notaMinima": 9.5,
+    "notaMinimaPorCriterio": 9,
+    "pesosTotais": 100,
+    "permiteArredondamentoParaAtingirMeta": false
+  },
+  "fluxo": {
+    "id": "F01",
+    "nome": "Assinatura de abertura da marca no boot",
+    "objetivoDaPessoa": "Abrir o Studoo e alcançar a tela de destino sem espera artificial ou interferência em callbacks, foco e ações.",
+    "entrada": "Novo boot elegível; callbacks e links diretos fazem bypass.",
+    "saidaEsperada": "Tela de destino utilizável, assinatura encerrada e sem repetição em navegação ou foreground.",
+    "escopoDaRodada": "Somente assinatura de abertura no boot (startup/splash), conforme @studoo/contratos/abertura. Não é o tutorial Apresentacao.",
+    "foraDoEscopo": [
+      "Redesenhar o onboarding/tutorial existente de cinco cenas",
+      "Repaginação da UI e propostas visuais dos demais fluxos"
+    ]
+  },
+  "candidata": {
+    "branch": null,
+    "commit": null,
+    "avaliadaEm": null,
+    "ambiente": null,
+    "dadosSinteticos": null,
+    "ia": null,
+    "email": null,
+    "flagsPublicas": {}
+  },
+  "superficiesObrigatorias": [
+    "web",
+    "ios_nativo",
+    "android_nativo"
+  ],
+  "superficiesComplementares": [
+    "app_previa_web"
+  ],
+  "variantesPlanejadas": [
+    "Boot frio e quente, com cache local identificado",
+    "Prontidão local imediata e tardia: fontes, imagem e primeiro frame",
+    "Fonte ou imagem indisponível; API lenta e offline",
+    "Movimento permitido confirmado, desconhecido, reduzido e falha da preferência",
+    "Interação por toque ou tecla antes/depois de ready",
+    "Segundo plano e retorno; navegação entre rotas sem repetição",
+    "Callbacks OAuth, links diretos, consultas/fragmentos e preservação do destino",
+    "Web sem JavaScript, foco e conteúdo da próxima tela",
+    "Paridade em 390x844 e 360x800; nativo somente quando executado"
+  ],
+  "orcamentosPlanejados": [
+    {
+      "id": "G3-abertura-ciclo",
+      "superficie": null,
+      "eventoInicial": "Assinatura local visível",
+      "eventoFinal": "Assinatura concluída/removida",
+      "unidade": "ms",
+      "limite": 900,
+      "regra": "Teto de cada execução; não compensar estouro com média ou p95.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-acomodacao",
+      "superficie": null,
+      "tipo": "duracao_configurada",
+      "unidade": "ms",
+      "limite": 320,
+      "regra": "Acomodação única opcional, somente com movimento permitido confirmado; não aguardar terminar para liberar.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-dissolve",
+      "superficie": null,
+      "tipo": "duracao_configurada",
+      "unidade": "ms",
+      "alvo": 120,
+      "regra": "Dissolve apenas na saída apropriada por prontidão; interrupção e movimento reduzido encerram sem espera.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-ready",
+      "superficie": null,
+      "eventoInicial": "Fontes, imagem e primeiro frame locais prontos",
+      "eventoFinal": "Início da saída",
+      "unidade": "ms",
+      "limite": null,
+      "regra": "Assim que pronto, sem atraso intencional, sem tempo mínimo e sem aguardar API. Registrar tempo observado separado da configuração.",
+      "metodo": null
+    }
+  ],
+  "evidencias": [],
+  "casosExecutados": [],
+  "revisoes": [],
+  "testesComPessoas": {
+    "status": "nao_executado",
+    "sessoesExecutadas": 0,
+    "objetivo": null,
+    "criteriosDeRecrutamento": null,
+    "denominadores": {
+      "tentativas": null,
+      "conclusoesSemAjuda": null,
+      "compreensaoDoValor": null
+    },
+    "sessoes": [],
+    "limites": [
+      "Amostra exploratória não representa uma estimativa estatística de todos os usuários."
+    ],
+    "sessoesPlanejadas": null,
+    "necessidadeDoEstudo": null,
+    "exigidoParaAceiteInterno": false
+  },
+  "consolidacao": {
+    "responsavel": null,
+    "consolidadaEm": null,
+    "commit": null,
+    "estado": "nao_avaliado",
+    "gates": [
+      {
+        "id": "G1",
+        "nome": "Acesso",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G2",
+        "nome": "Movimento",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G3",
+        "nome": "Latência",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G4",
+        "nome": "Foco e acesso assistivo",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G5",
+        "nome": "Erros e integridade",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G6",
+        "nome": "Paridade",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      }
+    ],
+    "porSuperficie": [
+      {
+        "superficie": "web",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
+        "entraNaNotaRevisaoInterna": true,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ]
+      },
+      {
+        "superficie": "app_previa_web",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": false,
+        "entraNaNotaRevisaoInterna": true,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ]
+      },
+      {
+        "superficie": "ios_nativo",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
+        "entraNaNotaRevisaoInterna": false,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ]
+      },
+      {
+        "superficie": "android_nativo",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
+        "entraNaNotaRevisaoInterna": false,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ]
+      }
+    ],
+    "criteriosAbaixoDe9": [],
+    "divergencias": [],
+    "defeitosAbertos": [],
+    "lacunas": [],
+    "resumoDoQueFoiExecutado": null,
+    "proximoPasso": null,
+    "escopo": "entrega_multiplataforma",
+    "revisaoInterna": {
+      "superficiesAvaliadas": [],
+      "variantesAvaliadas": [],
+      "estado": "nao_avaliado",
+      "nota": null,
+      "metaAtingida": false,
+      "limites": [],
+      "validacaoEmpirica": "nao_realizada",
+      "gates": [
+        {
+          "id": "G1",
+          "nome": "Acesso",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G2",
+          "nome": "Movimento",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G3",
+          "nome": "Latência",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G4",
+          "nome": "Foco e acesso assistivo",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G5",
+          "nome": "Erros e integridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G6",
+          "nome": "Paridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        }
+      ]
+    },
+    "notaEntregaMultiplataforma": null,
+    "metaEntregaMultiplataformaAtingida": false
+  },
+  "modelos": {
+    "evidencia": {
+      "id": null,
+      "tipo": null,
+      "origem": null,
+      "artefato": null,
+      "commit": null,
+      "coletadaEm": null,
+      "superficie": null,
+      "dispositivoOuEmulador": null,
+      "sistemaEVersao": null,
+      "navegadorEVersao": null,
+      "viewport": null,
+      "escalaDoTexto": null,
+      "movimentoReduzido": null,
+      "som": null,
+      "estadoDoApp": null,
+      "conexao": null,
+      "flagsPublicas": {},
+      "passos": [],
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "limites": [],
+      "sanitizada": false
+    },
+    "metrica": {
+      "id": null,
+      "nome": null,
+      "superficie": null,
+      "orcamentoId": null,
+      "unidade": null,
+      "amostras": [],
+      "quantidadeDeAmostras": null,
+      "metodo": null,
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "evidencias": [],
+      "limites": []
+    },
+    "caso": {
+      "id": null,
+      "cenario": null,
+      "superficie": null,
+      "variantes": [],
+      "passos": [],
+      "esperado": null,
+      "observado": null,
+      "status": "nao_executado",
+      "evidencias": [],
+      "achados": []
+    },
+    "revisao": {
+      "id": null,
+      "papel": null,
+      "revisor": null,
+      "autorDaImplementacao": false,
+      "independente": null,
+      "superficie": null,
+      "origemNativa": null,
+      "commit": null,
+      "revisadaEm": null,
+      "parecerFechadoEm": null,
+      "leuOutrasNotasAntesDeFechar": null,
+      "gates": [
+        {
+          "id": "G1",
+          "nome": "Acesso",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G2",
+          "nome": "Movimento",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G3",
+          "nome": "Latência",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G4",
+          "nome": "Foco e acesso assistivo",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G5",
+          "nome": "Erros e integridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G6",
+          "nome": "Paridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        }
+      ],
+      "criterios": [
+        {
+          "id": "C1",
+          "nome": "Clareza do valor e dos textos",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C2",
+          "nome": "Ação principal e autonomia",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C3",
+          "nome": "Hierarquia, leitura e adaptação",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C4",
+          "nome": "Identidade e acabamento visual",
+          "peso": 8,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C5",
+          "nome": "Movimento e som com controle",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C6",
+          "nome": "Acessibilidade e foco",
+          "peso": 14,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C7",
+          "nome": "Resposta e espera",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C8",
+          "nome": "Feedback, erros e recuperação",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C9",
+          "nome": "Continuidade e confiança",
+          "peso": 6,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C10",
+          "nome": "Paridade e integração de plataforma",
+          "peso": 6,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        }
+      ],
+      "tresAchadosPrioritarios": [],
+      "limites": [],
+      "conclusao": null
+    },
+    "achado": {
+      "id": null,
+      "criterio": null,
+      "gate": null,
+      "gravidade": null,
+      "superficie": null,
+      "estado": null,
+      "reproducao": [],
+      "evidencias": [],
+      "efeitoNaTarefa": null,
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "correcaoNecessaria": null,
+      "status": "aberto",
+      "confirmacaoAposCorrecao": null
+    },
+    "divergencia": {
+      "criterio": null,
+      "superficie": null,
+      "notasOriginais": [],
+      "menorNotaSustentada": null,
+      "evidenciaDaReproducao": [],
+      "decisao": null,
+      "responsavel": null,
+      "notaAposDecisao": null
+    },
+    "criterioConsolidado": {
+      "id": null,
+      "pesoOriginal": null,
+      "aplicabilidade": "aplicavel",
+      "motivoNaoAplicavel": null,
+      "notasIndependentes": [],
+      "menorNotaSustentada": null,
+      "nota": null,
+      "evidencias": [],
+      "confirmacaoIndependenteParaNotaAlta": null,
+      "achadosAbertos": [],
+      "limites": []
+    },
+    "sessaoComPessoa": {
+      "idAnonimo": null,
+      "perfilDeUso": null,
+      "necessidadeDeAcesso": null,
+      "superficie": null,
+      "objetivoInformado": null,
+      "concluiuSemAjuda": null,
+      "entendeuValor": null,
+      "desvios": null,
+      "hesitacoes": null,
+      "erros": null,
+      "evidenciasSanitizadas": [],
+      "observacoes": null
+    }
+  },
+  "preenchimento": {
+    "instrucoes": "Copiar os objetos de modelos para as listas reais, preencher o contexto e manter modelos como referência; objetos em modelos não contam como revisão ou execução. Não preencher notas sem evidência. Registrar só dados e flags públicos permitidos.",
+    "papel": [
+      "visual",
+      "fluxo_acessibilidade",
+      "engenharia_qa"
+    ],
+    "superficie": [
+      "web",
+      "app_previa_web",
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "origemNativa": [
+      "aparelho",
+      "simulador",
+      "emulador"
+    ],
+    "tipoEvidencia": [
+      "codigo_teste",
+      "captura",
+      "interacao_gravada",
+      "medicao",
+      "observacao_com_pessoa"
+    ],
+    "estadoGate": [
+      "aprovado",
+      "reprovado",
+      "pendente",
+      "nao_aplicavel"
+    ],
+    "aplicabilidade": [
+      "aplicavel",
+      "nao_aplicavel",
+      "nao_exposto"
+    ],
+    "gravidade": [
+      "critico",
+      "alto",
+      "medio",
+      "baixo"
+    ],
+    "estadoConsolidacao": [
+      "nao_avaliado",
+      "em_revisao",
+      "bloqueado",
+      "provisorio",
+      "fora_da_meta",
+      "aprovado_no_escopo"
+    ],
+    "lembretes": [
+      "Meta 9,5 depende dos gates e da cobertura no escopo declarado, não apenas da soma ponderada.",
+      "Revisão especializada interna e validação empírica com pessoas/produção têm estados separados.",
+      "Não há recrutamento ou tamanho de amostra universal obrigatório para aceitar a revisão interna.",
+      "Prévia React Native Web não substitui execução nativa.",
+      "Critério aplicável sem prova permanece nota null; não excluir seu peso para elevar a nota.",
+      "Nota interna é o mínimo entre superfícies do seu escopo completo; a nota da entrega usa apenas web/iOS/Android aplicáveis e permanece null quando faltar prova.",
+      "Nativo aplicável sem prova mantém a entrega completa Provisória; publicar notas web/prévia somente com esses nomes.",
+      "Sem observação com pessoas, declarar validação empírica não realizada; não alegar comportamento universal.",
+      "Não incluir chaves, tokens, sessões, senhas ou dados pessoais em evidências compartilhadas."
+    ],
+    "estadoCriterioNaRevisao": [
+      "pendente",
+      "nao_examinado_pelo_revisor",
+      "examinado"
+    ]
+  },
+  "escopoRevisaoInterna": {
+    "superficies": [
+      "web",
+      "app_previa_web"
+    ],
+    "variantes": [],
+    "limitesDeclarados": [
+      "Preencher antes da revisão; não transferir nota da prévia para execução nativa."
+    ]
+  },
+  "contratoAbertura": {
+    "fonte": "packages/contratos/src/abertura.ts",
+    "marca": {
+      "largura": 180,
+      "altura": 59.142857142857146,
+      "fundo": "#FFFFFF",
+      "estaticaPorPadrao": true
+    },
+    "acomodacaoMsMaxima": 320,
+    "dissolveMs": 120,
+    "cicloMsMaximo": 900,
+    "escalaMaxima": 1.015,
+    "deslocamentoMaximo": 2,
+    "movimentoSomenteQuandoPermitidoConfirmado": true,
+    "aguardaApi": false,
+    "tempoMinimoDeExposicaoMs": 0,
+    "naoRepeteEm": [
+      "rota",
+      "foreground"
+    ],
+    "bypass": [
+      "callback OAuth",
+      "link direto",
+      "consulta ou fragmento",
+      "rota não elegível"
+    ],
+    "encerramentosSemEspera": [
+      "movimento reduzido",
+      "falha",
+      "interação",
+      "segundo plano"
+    ],
+    "aplicacaoDosCriterios": {
+      "C1": "Reconhecimento da identidade; não exigir slogan, valor do produto ou loading fictício.",
+      "C2": "Passagem sem bloqueio; não exigir CTA, botão Pular ou novo gesto para sair.",
+      "C3": "Marca em 180 por aproximadamente 59,14, proporção correta, fundo branco e sem cortes.",
+      "C4": "Assinatura da marca consistente; nenhuma obrigação de acrescentar mascote ou cenas.",
+      "C5": "Uma acomodação opcional somente com movimento permitido confirmado; reduções/interrupções encerram.",
+      "C6": "Marca decorativa não cria etapa de foco ou anúncio indevido; tela seguinte permanece acessível.",
+      "C7": "Ready local libera sem mínimo de exposição/API; durações configuradas e teto de 900 ms conferidos.",
+      "C8": "Falhas de fonte/imagem/preferência não retêm; callbacks/links e interações preservados.",
+      "C9": "Não repetir em navegação ou foreground; não criar dado de estudo ou preferência de onboarding.",
+      "C10": "Comparar web/prévia no mesmo estado e medir nativo apenas se realmente executado."
+    }
+  },
+  "regressoesAdjacentesPlanejadas": [
+    "Smoke do onboarding Apresentacao existente: abrir pelo caminho atual e sair/continuar sem alterar cenas, interesses, ações ou preferência de visto."
+  ]
+}
