@@ -79,7 +79,7 @@ test('erro e proposta expirada: o botão volta, a linha diz o motivo e o novo to
 });
 
 test('sair durante "Criando sua trilha…": sem cancelar no servidor, a resposta não abre a aula e a trilha entra na lista', () => {
-  assert.match(estudo, /if \(criacaoAtual\.current === 'criando'\) \{\n\s*sairDaCriacao\(\);\n\s*return true;\n\s*\}\n\s*if \(emCurso\.current\) return true;/);
+  assert.match(estudo, /if \(criacaoAtual\.current === 'criando'\) \{\n\s*sairDaCriacao\(\);\n\s*return true;\n\s*\}\n\s*\/\/[^\n]*\n\s*if \(emCurso\.current && !\(etapa\.tipo === 'licao' && abandonarCorrecao\(\)\)\) return true;/);
   assert.match(estudo, /desativado=\{ocupado && criacao !== 'criando'\} acao=\{criacao === 'criando' \? sairDaCriacao : tocarMinhasTrilhas\}/);
   const depois = comecar.slice(comecar.indexOf('// A trilha existe no servidor'));
   assert.match(depois, /atualizarPlano\(plano\);\n\s*if \(aceiteAtual\.current !== vez \|\| etapaAtual\.current\.tipo !== 'geracao'\) return;\n\s*setObjetivo\(''\);/,

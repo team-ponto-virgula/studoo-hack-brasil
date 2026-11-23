@@ -145,6 +145,9 @@ export function Estudo({ cliente, sair, expirar }: {
   const [sincronia, setSincronia] = useState<Sincronia>({ estado: 'atualizando', em: null });
   const ultimaBusca = useRef(0);
   const emCurso = useRef(false);
+  // A vez de cada pedido de executar() e o que está em andamento: um pedido abandonado não mexe mais na tela quando volta.
+  const acaoAtual = useRef(0);
+  const pendenteAgora = useRef<Acao | null>(null);
   const saidaDaLicao = useRef<(() => void) | null>(null);
   const geracaoAtiva = useRef<AbortController | null>(null);
   /** Criar a trilha: a fase do toque, a passagem para a aula e o aceite em andamento (de quem é a resposta que chegar). */
@@ -275,7 +278,8 @@ export function Estudo({ cliente, sair, expirar }: {
         sairDaCriacao();
         return true;
       }
-      if (emCurso.current) return true;
+      // Com um pedido em andamento, o voltar espera; na lição, a correção de uma resposta pode ser abandonada (rede lenta).
+      if (emCurso.current && !(etapa.tipo === 'licao' && abandonarCorrecao())) return true;
       if (etapa.tipo === 'planos') return false;
       if (etapa.tipo === 'apresentacao') {
         void concluirApresentacao();
@@ -369,19 +373,40 @@ export function Estudo({ cliente, sair, expirar }: {
   async function executar<T>(acao: Acao, operacao: () => Promise<T>): Promise<Resultado<T>> {
     if (emCurso.current) return { ok: false, codigo: 'falha' };
     emCurso.current = true;
+    const vez = ++acaoAtual.current;
+    pendenteAgora.current = acao;
     Keyboard.dismiss();
     setPendente(acao);
     setErro(null);
     try {
       return { ok: true, dados: await operacao() };
     } catch (falha) {
+      // Pedido abandonado (a pessoa saiu da lição durante a correção): a falha que chega depois não vira erro em outra tela.
+      if (vez !== acaoAtual.current) return { ok: false, codigo: codigoDaFalha(falha) };
       if (sessaoInvalida(falha)) await expirarGuardando();
       else mostrarErro(falha);
       return { ok: false, codigo: codigoDaFalha(falha) };
     } finally {
-      emCurso.current = false;
-      setPendente(null);
+      if (vez === acaoAtual.current) {
+        emCurso.current = false;
+        pendenteAgora.current = null;
+        setPendente(null);
+      }
     }
+  }
+
+  /**
+   * Rede lenta: sair da lição durante a correção de uma resposta (até ~30 s parada em "Etapa 3 de 4"). Só a correção
+   * (`avaliar`) pode ser abandonada: a resposta continua no andamento guardado e é corrigida de novo na volta. A conclusão
+   * não: ela grava o progresso e leva à festa, e sair no meio dela deixaria o mapa e a tela da conclusão brigando.
+   */
+  function abandonarCorrecao() {
+    if (pendenteAgora.current !== 'avaliar') return false;
+    acaoAtual.current += 1;
+    pendenteAgora.current = null;
+    emCurso.current = false;
+    setPendente(null);
+    return true;
   }
 
   function atualizarObjetivo(texto: string) {
@@ -750,7 +775,7 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'licao') {
       return <Licao cliente={cliente} key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
-        voltar={() => void abrirPlano(etapa.plano.id, etapa.licao.id)} saida={saidaDaLicao}
+        voltar={() => { abandonarCorrecao(); void abrirPlano(etapa.plano.id, etapa.licao.id); }} saida={saidaDaLicao}
         avaliar={async (resposta, indice) => {
           const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta, indice));
           return resultado.ok ? resultado.dados : null;

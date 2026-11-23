@@ -635,7 +635,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const topo = (
     <View style={licaoEstilos.topo}>
       {/* .aula-fechar .icone: 26 px com traço 3. */}
-      <BotaoIcone icone="fechar" tamanho={26} traco={3} rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
+      {/* Rede lenta: durante a correção de uma resposta, dá para sair (a resposta fica no andamento); só a conclusão trava. */}
+      <BotaoIcone icone="fechar" tamanho={26} traco={3} rotulo={t.voltar} testID="voltar-plano" desativado={ocupado && pendente !== 'avaliar'} acao={sair} />
       <View style={licaoEstilos.topoColuna}>
         <View style={licaoEstilos.andamento} accessible accessibilityRole="progressbar" accessibilityLabel={andamento}
           accessibilityValue={{ min: 0, max: total, now: revisao ? total : passo + 1 }}>

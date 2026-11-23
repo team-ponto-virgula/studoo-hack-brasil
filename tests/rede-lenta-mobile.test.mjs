@@ -26,3 +26,22 @@ test('2: com um pedido em andamento, a barra de baixo continua à vista e só de
   const spec = await readFile(new URL('../docs/specs/05-navegacao-mobile-movimento.md', import.meta.url), 'utf8');
   assert.match(spec, /Com uma ação em andamento \(`ocupado`\), as abas ficam desligadas\./);
 });
+
+test('3: durante a correção de uma resposta, dá para sair da lição; a resposta atrasada não mexe mais na tela; a conclusão trava', async () => {
+  const licao = await readFile(new URL('../apps/mobile/src/licao.tsx', import.meta.url), 'utf8');
+  assert.match(licao, /testID="voltar-plano" desativado=\{ocupado && pendente !== 'avaliar'\} acao=\{sair\}/);
+  // Só a correção (avaliar) pode ser abandonada; a conclusão continua travando o voltar.
+  const abandonar = estudo.slice(estudo.indexOf('function abandonarCorrecao()'), estudo.indexOf('function atualizarObjetivo('));
+  assert.match(abandonar, /if \(pendenteAgora\.current !== 'avaliar'\) return false;\n\s*acaoAtual\.current \+= 1;/);
+  // Cada pedido tem a sua vez: o abandonado não limpa o "ocupado" do pedido novo nem mostra erro em outra tela.
+  const executar = estudo.slice(estudo.indexOf('async function executar<T>('), estudo.indexOf('function abandonarCorrecao()'));
+  assert.match(executar, /const vez = \+\+acaoAtual\.current;/);
+  assert.match(executar, /if \(vez !== acaoAtual\.current\) return \{ ok: false, codigo: codigoDaFalha\(falha\) \};/);
+  assert.match(executar, /finally \{\n\s*if \(vez === acaoAtual\.current\) \{/);
+  // O X da lição e o voltar do sistema (Android) usam o mesmo caminho.
+  assert.match(estudo, /voltar=\{\(\) => \{ abandonarCorrecao\(\); void abrirPlano\(etapa\.plano\.id, etapa\.licao\.id\); \}\}/);
+  assert.match(estudo, /if \(emCurso\.current && !\(etapa\.tipo === 'licao' && abandonarCorrecao\(\)\)\) return true;/);
+  // Ao abrir o mapa, a lição sai da tela (o esqueleto entra), e a resposta digitada fica no andamento guardado.
+  assert.match(estudo, /if \(pendente === 'plano'\) return <Tela pagina="carregando-trilha"/);
+  assert.match(licao, /andamentos\.set\(licao\.id, \{\n\s*passo, respostas,/);
+});
