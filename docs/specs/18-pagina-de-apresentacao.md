@@ -212,60 +212,32 @@ A página só existe na web: o app já abre na entrada e no conteúdo. Ela foi r
 
 ## 9. Capturas do app que a página usa
 
-Capturas nativas do build 4 (simulador do iPhone ou emulador do Android, com a origem de cada uma), sem barra de status de outro horário ou de bateria fraca. O Designer escolhe no conjunto do Mobile & QA:
+Capturas nativas do build 4 (simulador do iPhone ou emulador do Android, com a origem de cada uma), escolhidas pelo Designer no conjunto do Mobile & QA (`evidencias/landing-capturas`). Nada de prévia web dentro de moldura de celular.
 
-| Lugar | Tela |
-|---|---|
-| Herói 1 | "O que você quer aprender?" com uma ideia escolhida no campo |
-| Herói 2 | A proposta pronta com o mapa e "Começar a lição 1" (também é a versão parada) |
-| Herói 3 | Uma lição com o acerto: o painel verde e o Stu |
-| S2, momento 1 | Uma lição de material com o cartão "[1] Fonte do seu material" aberto |
-| S2, momento 2 | A ponte "Outro jeito de entender", no passo 1 |
-| S2, momento 3 | O retorno do "Explique com suas palavras" com os cartões |
-| S2, momento 4 | O mapa no app com "Progresso salvo agora", e a mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) |
-
-Nada de prévia web dentro de moldura de celular.
-
-**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4). O herói final chegou (rodada 45277267126): as três telas da mesma trilha, "Fotografia com o celular", nas duas plataformas.
-
-| Lugar | Provisória | Final, da rodada limpa |
+| Lugar | Arquivo | Estado |
 |---|---|---|
-| Herói 1 | final: `heroi-1-iphone-pedido-fotografia.png` e `heroi-1-android-pedido-fotografia.png` (rodada 45277267126) | "Fotografia com o celular" no campo, sem teclado |
-| Herói 2 (e versão parada) | final: `heroi-2-iphone-proposta-pronta.png` e `heroi-2-android-proposta-pronta.png` | A trilha pronta da mesma trilha, sem o aviso de trilha repetida. A do iPhone traz no alto a linha pequena "Trilha pronta do Studoo, a mais próxima do seu pedido…", do servidor sem IA real. Ela é aceita; se houver uma rodada com IA real, a troca é só de arquivo, e não bloqueia |
-| Herói 3 | final: `heroi-3-iphone-licao-acerto.png` e `heroi-3-android-licao-acerto.png` | "Lente limpa e mãos firmes", com "Mandou bem!" |
-| S2, momento 1 | Uma lição de material com o cartão "[1] Fonte do seu material" aberto |
-| S2, momento 2 | A ponte "Outro jeito de entender", no passo 1 |
-| S2, momento 3 | O retorno do "Explique com suas palavras" com os cartões |
-| S2, momento 4 | O mapa no app com "Progresso salvo agora", e a mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) |
-
-Nada de prévia web dentro de moldura de celular.
-
-**Escolha das capturas** (23/11, do conjunto do Mobile & QA em `evidencias/landing-capturas`: simulador iPhone 17 Pro com iOS 26.5 e emulador Pixel 6 com Android 15, código do build 4). O herói final chegou (rodada 45277267126): as três telas da mesma trilha, "Fotografia com o celular", nas duas plataformas.
-
-| Lugar | Provisória | Final, da rodada limpa |
-|---|---|---|
-| Herói 1 | `02-iphone-o-que-quer-aprender.png` (campo com o exemplo e as ideias; a `heroi-1-*`, com "Fracoes", fica de fora) | O pedido com "Fotografia com o celular" no campo, iPhone e Android |
-| Herói 2 (e versão parada) | `heroi-2-android-proposta-pronta.png` (a do iPhone tem a borda do aviso "Abrir a que já existe" e fica de fora) | A proposta pronta da mesma trilha, iPhone e Android |
-| Herói 3 | `heroi-3-iphone-licao-acerto.png` | O acerto numa lição da mesma trilha, iPhone e Android |
-| S2, momento 1 | `04-iphone-licao-fonte-do-material.png` (rodada 45272182836): "Baseado no seu material [1]" e o cartão com o trecho citado. É limpa, mas o cartão traz "material de demonstração" e o selo "Modo demonstração", porque o material é o de exemplo do app | Decisão do Lead (23/11): uma captura nativa no Android, com o APK do build 4 contra o site publicado (IA real), como visitante. Parte de um PDF de uma página com texto da equipe ("Regra dos terços na fotografia", para combinar com o herói). Mostra a lição com o cartão "[1] Fonte do seu material" aberto, sem o selo. Se não sair em duas tentativas, a provisória fica de vez |
-| S2, momento 2 | `05b-iphone-ponte.png` (a faixa da ponte, com as três tábuas e o Stu, conta o momento num olhar) | — |
-| S2, momento 3 | `06-android-ensine-ao-stu.png` (abre em "O que fez sentido", com os vistos) | — |
-| S2, momento 4 | `03-iphone-mapa-da-trilha.png`, ao lado da mesma trilha no site | De preferência, um mapa com "Compartilhar" no lugar de "Em revisão", que pede explicação a quem não conhece o produto |
+| Herói 1 | `heroi-1-iphone-pedido-fotografia.png` e `heroi-1-android-pedido-fotografia.png` (rodada 45277267126) | Final: "Fotografia com o celular" no campo, sem teclado |
+| Herói 2 (e versão parada) | `heroi-2-iphone-proposta-pronta.png` e `heroi-2-android-proposta-pronta.png` | Final: a trilha pronta da mesma trilha, sem o aviso de trilha repetida. A do iPhone traz no alto a linha pequena "Trilha pronta do Studoo, a mais próxima do seu pedido…", do servidor sem IA real. Ela é aceita; uma rodada com IA real seria só troca de arquivo e não bloqueia |
+| Herói 3 | `heroi-3-iphone-licao-acerto.png` e `heroi-3-android-licao-acerto.png` | Final: "Lente limpa e mãos firmes", com "Mandou bem!" |
+| S2, momento 1 | `04-iphone-licao-fonte-do-material.png` (rodada 45272182836) | Provisória: o cartão traz "material de demonstração" e o selo "Modo demonstração". A final, por decisão do Lead, é uma captura nativa no Android com o APK do build 4 contra o site publicado (IA real), como visitante, a partir de um PDF de uma página ("Regra dos terços na fotografia"), com o cartão "[1] Fonte do seu material" aberto e sem o selo. Se não sair em duas tentativas, a provisória fica de vez |
+| S2, momento 2 | `05b-iphone-ponte.png` | Final: a faixa da ponte, com as três tábuas e o Stu, conta o momento num olhar |
+| S2, momento 3 | `06-android-ensine-ao-stu.png` | Final: abre em "O que fez sentido", com os vistos |
+| S2, momento 4 | `03-iphone-mapa-da-trilha.png`, ao lado da mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) | Aceita. Um mapa com "Compartilhar" no lugar de "Em revisão" seria melhor, mas não bloqueia |
 
 **Regras de uso:**
 - **As capturas nativas não são recortadas** (decisão do Lead). A barra de status de cada sistema fica.
-- **Cada celular mostra capturas de uma plataforma só.** O laço do herói não mistura iPhone e Android, para a hora e os ícones não mudarem entre uma tela e outra.
-- **No herói,** quem abre no Android vê as três do Android, e os outros veem as três do iPhone.
-- **A moldura própria do Studoo** segue a plataforma da captura: a ilha no alto para o iPhone, e um ponto de câmera de 10 px, centralizado, para o Android. Ela não desenha relógio; o que aparece é o da captura.
+- **Cada celular mostra capturas de uma plataforma só.** No herói, quem abre no Android vê as três do Android, e os outros veem as três do iPhone.
+- **A moldura própria do Studoo** segue a plataforma da captura: a ilha no alto para o iPhone, e um ponto de câmera de 10 px, centralizado, para o Android. Ela não desenha relógio.
 - **Nos momentos do S2,** cada celular tem a sua moldura, e as plataformas podem ser diferentes entre um momento e outro.
 - **Exportação:** WebP com a largura da moldura em 2× (680 px no herói do computador), até 120 KB cada, sem recorte.
-- **`alt`** de cada uma, com o que a tela mostra:
+- **`alt`:**
   - "Tela do Studoo perguntando o que você quer aprender";
   - "Tela do Studoo com a trilha pronta";
   - "Lição do Studoo com a resposta certa e o Stu comemorando";
+  - "Lição do Studoo com o cartão da fonte, que mostra o trecho do seu material";
   - "A ponte do Studoo: outro jeito de entender, em 3 passos";
   - "O retorno do Stu à sua explicação";
-  - "O mapa da trilha no app".
+  - "O mapa da trilha no app" e "A mesma trilha no site, aberta no navegador do computador".
 
 ## 10. Conferência da primeira versão (Web & API, ramo `feat/web-landing`, 23/11)
 
