@@ -1,0 +1,58 @@
+/* A camada não mede a página nem governa a sessão: a aplicação monta por baixo dela. */
+.abertura-raiz { min-height: 100dvh; }
+.abertura-conteudo {
+  visibility: hidden;
+  animation: abertura-liberar-conteudo 0s step-end var(--abertura-limite, 900ms) forwards;
+}
+.abertura-raiz:not([data-abertura-fase='visivel']) > .abertura-conteudo {
+  visibility: visible;
+  animation: none;
+}
+.abertura-camada {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--abertura-fundo, #fff);
+  opacity: 1;
+  touch-action: none;
+  user-select: none;
+  animation: abertura-liberar-camada 0s step-end var(--abertura-limite, 900ms) forwards;
+}
+.abertura-raiz[data-abertura-fase='saindo'] > .abertura-camada {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--abertura-saida, 120ms) var(--abertura-curva, ease-out);
+}
+.abertura-marca {
+  display: block;
+  width: min(var(--abertura-largura, 180px), calc(100vw - 48px));
+  height: auto;
+  aspect-ratio: 560 / 184;
+  object-fit: contain;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .abertura-marca[data-pronta='true'] {
+    animation: abertura-acomodar var(--abertura-acomodacao, 320ms) var(--abertura-curva, ease-out) 1;
+  }
+  .abertura-raiz[data-abertura-fase='saindo'] .abertura-marca { animation-play-state: paused; }
+}
+@keyframes abertura-acomodar {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(var(--abertura-subida, -2px)) scale(var(--abertura-escala, 1.015)); }
+}
+/* Este limite funciona mesmo se a hidratação não chegar. Não depende de animationend nem mantém inert na página. */
+@keyframes abertura-liberar-conteudo { to { visibility: visible; } }
+@keyframes abertura-liberar-camada { to { visibility: hidden; pointer-events: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .abertura-conteudo { visibility: visible !important; animation: none !important; }
+  .abertura-camada { display: none !important; }
+}
+html[data-pausado='true'] .abertura-conteudo { visibility: visible !important; animation: none !important; }
+html[data-pausado='true'] .abertura-camada { display: none !important; }
+/* A decisão de fragmento/retorno na mesma aba acontece no head, antes da hidratação. */
+html[data-abertura-dispensada='true'] .abertura-conteudo { visibility: visible !important; animation: none !important; }
+html[data-abertura-dispensada='true'] .abertura-camada { display: none !important; }
