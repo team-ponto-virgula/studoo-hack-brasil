@@ -265,6 +265,9 @@
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 .aula-rodape__nota { flex: 1 1 14rem; color: var(--texto2); font-weight: 700; }
+/* Refino 11 (spec 16): a frase sobre pular, embaixo da fileira de botões, em 13/18 regular #5E6A85 (a altura da linha é 18/13 da letra: com a letra ampliada ela não aperta), alinhada à direita, com "Pular por agora". */
+.aula-rodape__pular { flex: 0 0 100%; margin: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 400; line-height: 1.3846; text-align: end; }
+.aula-rodape[data-compacto] .aula-rodape__pular { display: none; }
 
 .aula-retorno {
   display: grid;
@@ -312,6 +315,7 @@
   .aula-rodape { padding-top: 10px; }
   .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 6px; }
   .aula-rodape__nota { flex: none; text-align: center; font-size: 0.8125rem; }
+  .aula-rodape__pular { flex: none; }
   .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
   .aula-rodape__acoes > .botao { width: 100%; min-height: 48px; }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {

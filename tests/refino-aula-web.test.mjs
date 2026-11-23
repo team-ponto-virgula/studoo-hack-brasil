@@ -46,3 +46,19 @@ test('item 8: o contador é cinza #5E6A85 (sem laranja), guarda o espaço quando
   assert.doesNotMatch(css, /\.campo__contador\[data-pronto\]/);
 });
 
+test('item 11: a frase sobre pular fica embaixo da fileira de botões, em 13/18 regular #5E6A85, alinhada à direita com "Pular por agora"', () => {
+  // Fora do corpo do retorno, depois da fileira de botões.
+  const acoes = aula.indexOf('<div className="aula-rodape__acoes">');
+  const frase = aula.indexOf('<p className="aula-rodape__pular">');
+  const fimDoRodape = aula.indexOf('</footer>', frase);
+  assert.ok(acoes > 0 && frase > acoes && fimDoRodape > frase, 'a frase vem depois dos botões, ainda dentro do rodapé');
+  assert.match(aula, /\{avaliacao && !avaliacao\.correta && !revisao && pedidoPonte === 0 && \(\s*<p className="aula-rodape__pular">\{soEsteFalta \? t\.pularAvisoUltimo : t\.pularAviso\}<\/p>/);
+  assert.doesNotMatch(aula, /<p className="aula-rodape__nota">\{soEsteFalta/, 'a frase não fica mais antes dos botões, em negrito');
+  const pular = regra(css, '.aula-rodape__pular');
+  assert.match(pular, /font-size: 0\.8125rem;/, '13 px');
+  assert.match(pular, /line-height: 1\.3846;/, '18 px na letra de 13 px, e a proporção segue com a letra ampliada (sem apertar as linhas)');
+  assert.match(pular, /font-weight: 400;/, 'regular');
+  assert.match(pular, /color: var\(--texto2\);/, '#5E6A85');
+  assert.match(pular, /text-align: end;/, 'à direita, com "Pular por agora"');
+  assert.match(css, /\.aula-rodape\[data-compacto\] \.aula-rodape__pular \{ display: none; \}/, 'com o Explique ou o reforço abertos, sai como a nota de sempre');
+});

@@ -908,9 +908,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
-                {!avaliacao.correta && !revisao && pedidoPonte === 0 && (
-                  <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
-                )}
                 </div>
               </div>
               {/* A reação do Stu mora no painel (spec 13, emenda de 19/11): enfeite, um ciclo no acontecimento; no painel
@@ -937,6 +934,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             {avaliacao && !avaliacao.correta && acao}
             {!(avaliacao && !avaliacao.correta) && acao}
           </div>
+          {/* Refino 11 (spec 16): a frase sobre pular fica embaixo da fileira de botões, em 13/18 regular, alinhada com "Pular por agora" (antes ficava em negrito, antes dos botões, e disputava com o título). */}
+          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && (
+            <p className="aula-rodape__pular">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
+          )}
         </div>
       </footer>
     </article>
