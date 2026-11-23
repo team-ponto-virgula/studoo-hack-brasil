@@ -40,6 +40,9 @@
 .cn-cabecalho .logo-quadro { display: block; }
 .cn-cabecalho .logo { width: 124px; height: auto; }
 .cn-entrar { min-height: 44px; padding-inline: 16px; }
+/* O azul da ação (#2563FF) dá 5,17:1 no branco, mas só 4,27:1 sobre o céu do cabeçalho (#EAF0FF) e 4,47:1 no ponto mais escuro do degradê do herói: os botões de texto da página
+   usam o azul escuro do app (#1D4ED8, --acao-escura: 5,87:1 sobre o céu). */
+.cn-pagina .cn-entrar, .cn-pagina .cn-visitante-texto, .cn-pagina .cn-instalar-celular { color: var(--acao-escura); }
 
 /* ---------- Botões da página ---------- */
 .cn-botao-principal { width: 100%; min-height: 56px; padding-inline: 24px; font-size: 1.0625rem; text-decoration: none; }

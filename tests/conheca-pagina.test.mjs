@@ -96,7 +96,10 @@ test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o p
   assert.ok(principais.length >= 2, 'o herói e a chamada final');
   for (const botao of principais) assert.doesNotMatch(botao.atributos, /\.apk|href="https:\/\/expo\.dev/, 'nenhum botão principal leva ao arquivo');
   assert.equal(principais.filter((b) => b.texto === 'Experimentar sem conta').length >= 2, true);
-  assert.match(html, /<section class="cn-qr[^"]*" aria-labelledby="cn-qr-heroi-titulo">/);
+  // O cartão é um grupo (aparece duas vezes: duas regiões com o mesmo nome confundem os leitores de tela), e o título dele não é um título de seção.
+  assert.match(html, /<div class="cn-qr[^"]*" role="group" aria-labelledby="cn-qr-heroi-titulo"><p id="cn-qr-heroi-titulo" class="cn-qr__titulo">Instale no celular<\/p>/);
+  assert.doesNotMatch(html, /<section[^>]*cn-qr/, 'sem região duplicada');
+  assert.doesNotMatch(html, /<h2[^>]*cn-qr__titulo/);
   assert.ok(texto(html).includes('Instale no celular'));
   assert.ok(texto(html).includes('Aponte a câmera do celular'));
   assert.ok(texto(html).includes('Para instalar no celular, aponte a câmera para o código.'));
@@ -227,6 +230,18 @@ test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura 
   assert.ok(quatro.includes(CAPTURAS['momento-4'].src1x));
   // Frases do texto do momento: "com uma conta" (o progresso do visitante fica só no aparelho dele).
   assert.match(texto(quatro), /Com uma conta, a sua trilha é a mesma no site e no app\./);
+});
+
+test('contraste: os botões de texto da página usam o azul escuro do app (o azul da ação não chega a 4,5:1 sobre o céu do herói)', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-pagina \.cn-entrar, \.cn-pagina \.cn-visitante-texto, \.cn-pagina \.cn-instalar-celular \{ color: var\(--acao-escura\); \}/);
+  assert.match(ler('src/app/globals.css'), /--acao-escura: #1d4ed8;/);
+  // A conta: #1D4ED8 sobre #EAF0FF (o céu do cabeçalho) e sobre o branco.
+  const luz = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const razao = (a, b) => { const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  assert.ok(razao('#1d4ed8', '#eaf0ff') >= 4.5, 'sobre o céu');
+  assert.ok(razao('#1d4ed8', '#ffffff') >= 4.5, 'sobre o branco');
+  assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'e é por isso que o azul da ação não serve ali');
 });
 
 test('o CSS do momento 4: o celular preso cobre só os momentos 1 a 3, o composto é uma linha comum, e tudo respeita o movimento reduzido', () => {
