@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-23T14:29:57.814Z",
+  "organization": {
+    "id": "006e5145-dd10-4fca-b745-147fc7cf53ef",
+    "name": "studoo",
+    "displayName": "Studoo",
+    "personal": false,
+    "viewerRole": "OWNER",
+    "projectCount": 0,
+    "credentialsProtectionEnabled": false,
+    "environmentVariableProtectionEnabled": false
+  },
+  "julio": {
+    "role": "DEVELOPER",
+    "permissions": [
+      "PUBLISH",
+      "RUN",
+      "VIEW"
+    ],
+    "invitationSent": true,
+    "acceptancePending": true,
+    "member": false,
+    "expiresAt": "2026-12-03T14:27:06.889Z"
+  },
+  "project": {
+    "id": "81f67b49-67e1-4807-bf88-16f187169dfd",
+    "slug": "studoo-mobile",
+    "fullName": "@miguelvzs/studoo-mobile",
+    "currentOwner": "miguelvzs",
+    "transferComplete": false,
+    "transferBlockedBy": "EXPO_SUDO_MODE_REQUIRED",
+    "projectIdPreserved": true,
+    "protectedChannels": [],
+    "environmentVariableCount": 0,
+    "iosSigningPreserved": true
+  },
+  "localOwner": "miguelvzs",
+  "limits": "Confirma organização e convite Developer. A transferência e a atualização do owner local aguardam a reautenticação do titular no painel Expo; aceite do convite de Julio ainda depende dele."
+}

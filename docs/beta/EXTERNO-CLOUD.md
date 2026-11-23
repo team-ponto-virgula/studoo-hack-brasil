@@ -1,5 +1,9 @@
 # Beta externo — estado de entrega
 
+## Organização Expo — 23/11/2026
+
+Organização **@studoo** criada, com Miguel como Owner e convite Developer enviado a Julio. A transferência do projeto existente foi recusada pela Expo por exigir reautenticação em **sudo mode**; o projeto continua em `@miguelvzs/studoo-mobile`. A [operação da organização](EXPO-ORGANIZACAO.md) registra o passo no painel e o patch de owner preparado, ainda não aplicado. [Estado sanitizado](conferencia-cloud/expo-organizacao.json). Os registros de Apple/TestFlight abaixo são das conferências datadas de 21/11.
+
 ## Estado atual — 21/11/2026, 03:14 UTC (21/11, 00:14 em São Paulo)
 
 O **Studoo 0.1.0 (3) está compilado, assinado, enviado e processado pela Apple**. O build está `VALID`, com estado externo `READY_FOR_BETA_SUBMISSION`. **Ainda não foi enviado à Beta App Review e não está disponível para testadores externos.**
