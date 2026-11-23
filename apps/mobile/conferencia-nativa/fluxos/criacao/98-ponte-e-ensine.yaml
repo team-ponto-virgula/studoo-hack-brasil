@@ -14,10 +14,43 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: voltar-plano
+# Na execução 45084470018 o toque em voltar-plano "passou", mas a lição continuou na tela por 30 s: o botão fica desligado
+# enquanto o app espera um pedido (desativado={ocupado}), e o servidor estava lento (até 23 s, com 502). A espera é pelo
+# estado: o mapa; com o erro, "Tentar novamente"; ainda na lição, outro toque em voltar-plano (até três voltas).
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: titulo-plano
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano|tentar-planos|tentar-sessao
+          timeout: 30000
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: tentar-sessao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: tentar-sessao
+      - runFlow: ../partes/tentar-de-novo.yaml
+      - runFlow:
+          when:
+            visible:
+              id: voltar-plano
+            notVisible:
+              id: titulo-plano
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: voltar-plano
 - extendedWaitUntil:
     visible:
       id: titulo-plano
-    timeout: 30000
+    timeout: 60000
 - evalScript: ${output.abriuPeloNo = false}
 - runFlow:
     when:
@@ -35,18 +68,78 @@ name: 98-ponte-e-ensine
       - tapOn:
           waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar): .*"
+# O toque no nó atual abre a lição direto (caminho.tsx, tocar). Na execução 45077874039 o toque caiu no centro do nó
+# (habilitado), o app não fez nenhum pedido e o mapa ficou na tela: a lição não abriu. A espera é pelo estado (a etapa da
+# lição); sem ela, um segundo toque, no que ainda estiver à vista (o nó ou "Começar" do cartão), e a espera de novo.
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 20000
+    optional: true
+- runFlow:
+    when:
+      notVisible: 'Etapa \d+ de \d+'
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: comecar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: comecar-licao
+      - runFlow:
+          when:
+            visible: "(Começar|Continuar): .*"
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                text: "(Começar|Continuar): .*"
 - extendedWaitUntil:
     visible: 'Etapa \d+ de \d+'
     timeout: 30000
-# "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco).
+# "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco, licao.tsx). A lição reabre
+# rolada até o exercício respondido, e o aviso fica sob o cabeçalho preso (execução 45053145066: recomecar-licao em
+# y 74–117 e o titulo-topo em y 97–113; o toque caiu no cabeçalho e a confirmação nunca apareceu). Antes do toque, a lição
+# volta ao topo; se a confirmação não vier, o toque se repete uma vez.
+# No Android a árvore só tem o que está na tela: com a lição rolada até o exercício já acertado no 95, o aviso ficava
+# acima, a condição abaixo não o via, o recomeço não acontecia e o fluxo tocava numa opção travada, sem "Enviar"
+# (execuções 45087664838 e 45089424008: "Isso aí!" com Continuar, enviar-resposta não achado). Antes, a lição sobe até o
+# aviso; sem aviso (lição do começo), a rolagem só não acha nada.
+- scrollUntilVisible:
+    element:
+      id: recomecar-licao
+    direction: UP
+    timeout: 15000
+    optional: true
 - runFlow:
     when:
       visible:
         id: recomecar-licao
     commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 35%
+          end: 50%, 85%
+      - swipe:
+          waitToSettleTimeoutMs: 1500
+          start: 50%, 35%
+          end: 50%, 85%
       - tapOn:
           waitToSettleTimeoutMs: 1000
           id: recomecar-licao
+      - extendedWaitUntil:
+          visible:
+            id: confirmar-recomeco
+          timeout: 5000
+          optional: true
+      - runFlow:
+          when:
+            notVisible:
+              id: confirmar-recomeco
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: recomecar-licao
       - tapOn:
           waitToSettleTimeoutMs: 1500
           id: confirmar-recomeco
