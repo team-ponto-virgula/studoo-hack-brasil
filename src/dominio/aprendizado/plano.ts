@@ -600,6 +600,44 @@ function estaEntreAspas(texto: string, resposta: string): boolean {
   return alvo !== "" && new RegExp(`[“"‘'«\`]\\s*${alvo}\\s*[”"’'»\`]`, "u").test(semAcentoEmMinusculas(texto));
 }
 
+/** O texto sem a pontuação das pontas: "Lá," e "(Lá)" viram "Lá". */
+function semPontuacaoNasPontas(texto: string): string {
+  return texto.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").trim();
+}
+
+/**
+ * A resposta de uma ou duas letras ("Lá", "Mi", "de") aparece solta, de um jeito que só pode ser a resposta e não a palavra de ligação da frase? Dois jeitos (prova com a IA real, 23/11: a dica
+ * "Use a sequência Mi, Lá, Ré, Sol, Si, Mi: a 5ª corda é a segunda dessa lista" entregava o "Lá" numa lista, e só as aspas eram vistas):
+ * 1) numa lista: itens de uma palavra só, separados por vírgula, ponto e vírgula, dois-pontos, "e" ou "ou", em fila de dois ou mais; vale o item da fila, o que termina o item de antes dela e o que
+ *    começa o item de depois ("Use a sequência Mi, Lá, Ré, Sol": o "Mi" também);
+ * 2) com a inicial maiúscula no meio da frase ("A nota depois do Mi é Lá"): é o nome de algo (uma nota), não a palavra de ligação, que vem em minúscula.
+ * Uma palavra de ligação solta numa frase comum ("a palavra que mostra de quem é a coisa") não conta, como antes.
+ */
+function curtaSoltaNoTexto(texto: string, resposta: string): boolean {
+  const alvo = semAcentoEmMinusculas(resposta).trim();
+  if (!/^\p{L}{1,2}$/u.test(alvo)) return false;
+  const igual = (palavra: string) => semAcentoEmMinusculas(palavra) === alvo;
+  for (const frase of frasesDoConceito(texto)) {
+    const itens = frase.split(/\s*[,;:]\s*|\s+(?:e|ou)\s+/iu).map(semPontuacaoNasPontas);
+    const umaPalavra = itens.map((item) => /^\p{L}+$/u.test(item));
+    for (let inicio = 0; inicio < itens.length; inicio += 1) {
+      if (!umaPalavra[inicio]) continue;
+      let fim = inicio;
+      while (fim + 1 < itens.length && umaPalavra[fim + 1]) fim += 1;
+      if (fim > inicio) {
+        if (itens.slice(inicio, fim + 1).some(igual)) return true;
+        const antes = itens[inicio - 1]?.match(/\p{L}+$/u)?.[0];
+        const depois = itens[fim + 1]?.match(/^\p{L}+/u)?.[0];
+        if ((antes && igual(antes)) || (depois && igual(depois))) return true;
+      }
+      inicio = fim;
+    }
+    const palavras = [...frase.matchAll(/\p{L}+/gu)].map((achado) => achado[0]);
+    if (palavras.slice(1).some((palavra) => igual(palavra) && palavra[0] !== palavra[0].toLocaleLowerCase("pt-BR"))) return true;
+  }
+  return false;
+}
+
 /** A resposta feita só de símbolos (>=, +, %) aparece no texto, sem outros símbolos de operação colados a ela (">" não está em ">=")? */
 function aparecemOsSimbolos(texto: string, simbolos: string): boolean {
   const alvo = simbolos.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -608,7 +646,7 @@ function aparecemOsSimbolos(texto: string, simbolos: string): boolean {
 
 /**
  * O texto diz alguma das respostas aceitas da lacuna? As respostas de uma ou duas letras (“a”, “de”, “to”) são palavras de ligação que a dica usa por outros motivos: só contam entre
- * aspas. A resposta só de números (6/10) também vale quando os números aparecem na ordem, com palavras no meio ("6 sobre 10"). A resposta só de símbolos (>=) vale quando o símbolo
+ * aspas, soltas numa lista ou com a inicial maiúscula no meio da frase (ver `curtaSoltaNoTexto`). A resposta só de números (6/10) também vale quando os números aparecem na ordem, com palavras no meio ("6 sobre 10"). A resposta só de símbolos (>=) vale quando o símbolo
  * aparece inteiro, sem outro símbolo de operação colado a ele.
  */
 export function textoDizARespostaDaLacuna(texto: string, gabarito: readonly string[]): boolean {
@@ -617,7 +655,7 @@ export function textoDizARespostaDaLacuna(texto: string, gabarito: readonly stri
     const alvo = pedacosDoTexto(resposta);
     if (alvo.length === 0) return aparecemOsSimbolos(texto, resposta);
     if (pedacos.length === 0) return false;
-    if (alvo.length === 1 && /^\p{L}{1,2}$/u.test(alvo[0])) return estaEntreAspas(texto, resposta);
+    if (alvo.length === 1 && /^\p{L}{1,2}$/u.test(alvo[0])) return estaEntreAspas(texto, resposta) || curtaSoltaNoTexto(texto, resposta);
     return apareceSeguido(pedacos, alvo) || (alvo.length > 1 && alvo.every((pedaco) => /^\d/.test(pedaco)) && apareceNaOrdem(pedacos, alvo));
   });
 }

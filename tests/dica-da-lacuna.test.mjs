@@ -64,6 +64,47 @@ test('a conta: as respostas de uma ou duas letras (a, de, to) só contam entre a
   assert.equal(diz('Escolha o 7 ou o 9.', ['7']), true, 'número de um dígito conta sempre: não é palavra de ligação');
 });
 
+// Prova com a IA real (Lead, 23/11, servidor 22e585f, "Violão do zero: primeiros acordes"): numa lacuna da lição 2, aceitas ["la","la","la","la"], a dica abaixo ENTREGAVA a resposta "Lá" dentro de uma lista
+// ("Mi, Lá, Ré, Sol, Si, Mi") e passava, porque a regra das respostas de uma ou duas letras (só entre aspas) não via a palavra solta na lista.
+const DICA_QUE_ENTREGAVA = 'Use a sequência Mi, Lá, Ré, Sol, Si, Mi: a 5ª corda é a segunda dessa lista. Qual nota vem logo depois do Mi?';
+
+test('a conta: a resposta de duas letras solta numa lista ("Mi, Lá, Ré, Sol") ou com inicial maiúscula no meio da frase conta como dita (o caso da prova com a IA real)', () => {
+  assert.equal(diz(DICA_QUE_ENTREGAVA, ['la', 'la', 'la', 'la']), true, 'o caso exato: as aceitas são as quatro grafias já normalizadas');
+  assert.equal(diz(DICA_QUE_ENTREGAVA, ['Lá', 'lá', 'la', 'LÁ']), true, 'com as grafias de verdade (acento e caixa diferentes)');
+  assert.equal(diz('Pense em mi, lá, ré e sol.', ['la']), true, 'a lista em minúsculas, com "e" no fim');
+  assert.equal(diz('A nota depois do Mi é Lá.', ['la']), true, 'inicial maiúscula no meio da frase é o nome da nota');
+  assert.equal(diz('Qual nota vem depois: LÁ ou SI?', ['la']), true, 'em caixa alta');
+  assert.equal(diz('Use a sequência Mi, Lá, Ré, Sol, Si: o primeiro é o Mi.', ['mi']), true, 'o primeiro e o último itens da lista também contam');
+  // O que segue como antes: palavra de ligação solta numa frase comum não conta (a dica a usa por outros motivos).
+  assert.equal(diz('A palavra que mostra de quem é a coisa.', ['de']), false);
+  assert.equal(diz('Em casa, de manhã, eu estudo.', ['de']), false, 'um "de" dentro de um trecho com mais palavras entre as vírgulas não é item de lista');
+  assert.equal(diz('Lá em cima fica a cabeça do violão.', ['la']), false, '"Lá" no começo da frase, como advérbio, não conta');
+  assert.equal(diz('A 5ª corda fica lá embaixo, perto do corpo.', ['la']), false, '"lá" minúsculo numa frase comum não conta');
+  assert.equal(diz('Use “de” para mostrar posse.', ['de']), true, 'entre aspas continua contando');
+});
+
+test('a dica: o caso da prova com a IA real perde a frase com a lista e fica com a pergunta; sem nada que sirva, entra a dica padrão; a dica que só aponta o caminho volta igual', () => {
+  assert.equal(dicaDaLacunaSemAResposta(DICA_QUE_ENTREGAVA, ['la', 'la', 'la', 'la']), 'Qual nota vem logo depois do Mi?');
+  assert.equal(dicaDaLacunaSemAResposta('Use a sequência Mi, Lá, Ré, Sol, Si, Mi.', ['la']), DICA_PADRAO_DA_LACUNA);
+  const boa = 'Conte as cordas a partir da mais fina: qual nota fica na 5ª?';
+  assert.equal(dicaDaLacunaSemAResposta(boa, ['la']), boa);
+});
+
+test('o gerador: a lacuna do violão com a dica que entregava "Lá" numa lista guarda a dica aparada e a lição segue válida', () => {
+  const ia = licaoDaIa({
+    gabarito: ['Lá', 'lá', 'la', 'LÁ'], trecho: 'A 5ª corda solta do violão é a nota ___.', enunciado: 'Complete a frase.',
+    feedbackCorreto: 'Isso! A 5ª corda solta é Lá.', feedbackIncorreto: DICA_QUE_ENTREGAVA,
+  });
+  const lida = normalizarLicao(ia, 'IA de teste');
+  assert.ok(lida.conteudo, 'a lição não cai por causa da dica');
+  assert.equal(lida.conteudo.exercicio.feedbackIncorreto, 'Qual nota vem logo depois do Mi?');
+  assert.equal(lida.dicaDaLacunaAparada, true);
+  assert.equal(textoDizARespostaDaLacuna(lida.conteudo.exercicio.feedbackIncorreto, lida.conteudo.exercicio.gabarito), false);
+  assert.equal(conteudoValido(lida.conteudo), true);
+  // O retorno do acerto não muda: ali a resposta pode (e deve) aparecer.
+  assert.match(lida.conteudo.exercicio.feedbackCorreto, /Lá/);
+});
+
 test('a dica: sai a frase que diz a resposta, as outras ficam na ordem; sem nenhuma que sirva, entra a dica padrão; a dica boa volta igual', () => {
   const gabarito = ['6'];
   assert.equal(dicaDaLacunaSemAResposta('Multiplique o numerador e o denominador pelo mesmo número. Assim 3/5 = 6/10.', gabarito), 'Multiplique o numerador e o denominador pelo mesmo número.');
