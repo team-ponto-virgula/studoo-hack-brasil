@@ -279,8 +279,13 @@
   .cn-momento .cn-celular__tela { opacity: 0; transition: opacity 300ms linear; }
   .cn-momento[data-ativo] .cn-celular__tela { opacity: 1; }
   .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__tela { opacity: 1; }
-  .cn-momento .cn-celular { box-shadow: none; }
-  .cn-momento:first-child .cn-celular { box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
+  /* As molduras dos momentos 1 a 3 se sobrepõem no mesmo lugar (a moldura não se mexe): só a do primeiro desenha o fundo e a borda; as outras ficam transparentes, para a
+     moldura de um momento de trás não cobrir a tela do momento que está à vista. A ilha (ou o ponto da câmera) é a da plataforma da captura que aparece. */
+  .cn-momento .cn-celular { box-shadow: none; background: transparent; border-color: transparent; }
+  .cn-momento:first-child .cn-celular { background: var(--cn-marinho); border-color: var(--cn-marinho); box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
+  .cn-momento .cn-celular__ilha { opacity: 0; transition: opacity 300ms linear; }
+  .cn-momento[data-ativo] .cn-celular__ilha,
+  .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__ilha { opacity: 1; }
   /* O momento 4 não usa o celular preso (que no Chrome continua preso até o fim da grade, e então some): o site e o app aparecem juntos, numa linha comum
      ao lado do texto, no mesmo instante (300 ms) em que o celular preso dos momentos 1 a 3 sai. */
   .cn-momento__visual:not(.cn-momento__visual--composto) { transition: opacity 300ms linear; }
@@ -289,6 +294,8 @@
   .cn-momento[data-momento='4'][data-ativo] .cn-momento__visual--composto { opacity: 1; }
   .cn-momento__visual--composto .cn-composto { width: min(560px, calc(100% + 80px + clamp(0px, (100vw - 1024px) * 0.25, 60px))); }
   .cn-momento[data-momento='4'] .cn-celular__tela { opacity: 1; }
+  .cn-momento[data-momento='4'] .cn-celular { background: var(--cn-marinho); border-color: var(--cn-marinho); }
+  .cn-momento[data-momento='4'] .cn-celular__ilha { opacity: 1; }
 }
 
 /* ---------- S3: as fichas de ideias ---------- */

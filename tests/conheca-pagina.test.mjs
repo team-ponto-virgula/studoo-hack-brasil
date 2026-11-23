@@ -244,6 +244,17 @@ test('contraste: os botões de texto da página usam o azul escuro do app (o azu
   assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'e é por isso que o azul da ação não serve ali');
 });
 
+test('o celular preso: as molduras dos momentos 1 a 3 se sobrepõem, e só a do primeiro tem fundo e borda (as outras cobririam a tela que está à vista); a ilha é a da captura à vista', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  const preso = css.slice(css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
+  assert.match(preso, /\.cn-momento \.cn-celular \{ box-shadow: none; background: transparent; border-color: transparent; \}/);
+  assert.match(preso, /\.cn-momento:first-child \.cn-celular \{ background: var\(--cn-marinho\); border-color: var\(--cn-marinho\); box-shadow: 0 24px 48px/);
+  assert.match(preso, /\.cn-momento \.cn-celular__ilha \{ opacity: 0; transition: opacity 300ms linear; \}/);
+  assert.match(preso, /\.cn-momento\[data-ativo\] \.cn-celular__ilha,\n  \.cn-s2__momentos:not\(:has\(\[data-ativo\]\)\) \.cn-momento:first-child \.cn-celular__ilha \{ opacity: 1; \}/);
+  // O momento 4 leva a moldura inteira com ele (o celular dele não está na pilha).
+  assert.match(preso, /\.cn-momento\[data-momento='4'\] \.cn-celular \{ background: var\(--cn-marinho\); border-color: var\(--cn-marinho\); \}/);
+});
+
 test('o CSS do momento 4: o celular preso cobre só os momentos 1 a 3, o composto é uma linha comum, e tudo respeita o movimento reduzido', () => {
   const css = ler('src/app/conheca/conheca.css');
   const preso = css.slice(css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
