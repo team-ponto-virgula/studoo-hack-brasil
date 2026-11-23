@@ -29,3 +29,5 @@ executionOrder:
     - 63-ajuda
     - 61-bloquear
     - 62-denunciar
+    # Página de apresentação (ramo teste/landing-capturas): trilha de material com a fonte e a conclusão da lição 1.
+    - 86-landing

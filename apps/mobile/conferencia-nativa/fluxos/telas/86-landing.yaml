@@ -1,0 +1,162 @@
+# Telas para a página de apresentação (Lead, 23/11; só no ramo teste/landing-capturas): a trilha feita de material, com o
+# cartão "Fonte do seu material" na lição 1, e a conclusão dessa lição. Usa o material de demonstração ("Experimentar com
+# frações"), que a API com IA simulada transforma numa trilha de 3 lições com citação. A lição 1 tem conceito, exemplo e
+# um exercício de múltipla escolha (em 3/8, o total de partes é o 8: src/servidor/estudio/materiais.ts, licoesFalsas).
+# A opção é achada pelo texto ("8", o nome acessível dela) abaixo da pergunta: o testID (opcao-<id>) não é previsível.
+appId: host.exp.Exponent
+name: 86-landing
+---
+- runFlow: ../partes/reabrir.yaml
+- extendedWaitUntil:
+    visible:
+      id: nav-objetivo
+    timeout: 90000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-objetivo
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: alternar-modo
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: alternar-modo
+- scrollUntilVisible:
+    element:
+      text: "Experimentar com frações"
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: "Experimentar com frações"
+- scrollUntilVisible:
+    element:
+      text: "Criar trilha deste material"
+    direction: DOWN
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 86-material-lido
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: "Criar trilha deste material"
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha
+    timeout: 180000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 86-material-proposta
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: comecar-trilha
+- extendedWaitUntil:
+    visible:
+      id: titulo-licao
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 86-material-licao
+# O cartão da fonte fica abaixo do balão do Stu: a lição desce até ele.
+- scrollUntilVisible:
+    element:
+      id: cartao-fonte
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 86-material-fonte
+# Até a conclusão: lê, avança, responde o exercício (o "8") e continua. Cada volta faz o que o rodapé pede.
+- repeat:
+    times: 14
+    while:
+      notVisible:
+        id: titulo-conclusao
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: pergunta-exercicio
+            notVisible:
+              id: continuar-licao
+          commands:
+            - scrollUntilVisible:
+                element:
+                  text: "8"
+                  below:
+                    id: pergunta-exercicio
+                direction: DOWN
+                timeout: 30000
+                optional: true
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                text: "8"
+                below:
+                  id: pergunta-exercicio
+                optional: true
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: enviar-resposta
+                optional: true
+            - extendedWaitUntil:
+                visible:
+                  id: continuar-licao
+                timeout: 30000
+                optional: true
+            - waitForAnimationToEnd:
+                timeout: 2000
+            - takeScreenshot: 87-licao-acerto
+      - runFlow:
+          when:
+            visible:
+              id: continuar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: continuar-licao
+            - extendedWaitUntil:
+                visible:
+                  id: titulo-conclusao
+                timeout: 30000
+                optional: true
+      - runFlow:
+          when:
+            visible:
+              id: ler-mais
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: ler-mais
+      - runFlow:
+          when:
+            visible:
+              id: avancar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: avancar-licao
+- extendedWaitUntil:
+    visible:
+      id: titulo-conclusao
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 87-conclusao
+- scrollUntilVisible:
+    element:
+      id: conclusao-historia
+    direction: DOWN
+    timeout: 45000
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 87-conclusao-abaixo

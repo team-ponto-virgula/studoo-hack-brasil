@@ -44,6 +44,7 @@ CAPTURAS_ESPERADAS="
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
 95-resposta-exercicio 96-resposta-errada 97-resposta-certa
 98-ponte-passo-1 98-ponte-desafio 98-lacuna-teclado-aberto 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
+86-material-lido 86-material-proposta 86-material-licao 86-material-fonte 87-licao-acerto 87-conclusao 87-conclusao-abaixo
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
