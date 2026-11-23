@@ -9,6 +9,7 @@ import { detectarAparelho, type Aparelho } from './aparelho';
 import { CartaoQr } from './cartao-qr';
 import { Celular, CapturaDaTela, JanelaDoNavegador } from './celular';
 import { CAPTURAS } from './imagens.gerado';
+import { telasDoHeroi } from './heroi';
 import { LogoDaPagina } from './ilhas/logo';
 import { AcoesDeInstalar, SecaoInstalar } from './ilhas/instalar';
 import { CelularDoHeroi } from './ilhas/celular-heroi';
@@ -31,12 +32,6 @@ const MOMENTOS_DO_S2 = [
   { captura: CAPTURAS['momento-4'], alt: 'O mapa da trilha no app' },
 ] as const;
 
-const TELAS_DO_HEROI = [
-  { captura: CAPTURAS['heroi-1'], alt: 'Tela do Studoo perguntando o que você quer aprender' },
-  { captura: CAPTURAS['heroi-2'], alt: 'Tela do Studoo com a trilha pronta' },
-  { captura: CAPTURAS['heroi-3'], alt: 'Lição do Studoo com a resposta certa e o Stu comemorando' },
-] as const;
-
 export interface ContextoDaPagina {
   /** O aparelho que o servidor viu pelo agente do usuário. */
   aparelho: Aparelho;
@@ -57,6 +52,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
   const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
   const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: '/' } : { rotulo: textos.cabecalho.entrar, href: '/login' };
+  const telasDoCelular = telasDoHeroi(aparelho);
   const qrDoHeroi = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-heroi" /> : null;
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
 
@@ -84,7 +80,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
             <AcoesDeInstalar {...dados} qr={qrDoHeroi} lugar="heroi" />
           </div>
           <div className="cn-heroi__palco">
-            <CelularDoHeroi telas={TELAS_DO_HEROI} rotulo={textos.heroi.celularRotulo} plataforma={TELAS_DO_HEROI[0].captura.plataforma} />
+            <CelularDoHeroi telas={telasDoCelular} rotulo={textos.heroi.celularRotulo} plataforma={telasDoCelular[0].captura.plataforma} />
             <div className="cn-heroi__stu" aria-hidden="true">
               <Mascote expressao="stu-acolhida" tamanho={160} decorativo animado="acontecimento" acontecimento={1} ciclos={3} />
             </div>

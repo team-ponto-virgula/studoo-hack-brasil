@@ -50,7 +50,7 @@ test('a imagem de compartilhar: 1200 × 630, PNG, a mesma para todo mundo, e o t
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.titulo/);
   assert.match(fonte, /textos\.heroi\.subtitulo/);
-  assert.match(fonte, /CAPTURAS\['heroi-2'\]/, 'o celular mostra a captura do herói (a troca das capturas vale para a imagem)');
+  assert.match(fonte, /telasDoHeroi\('computador'\)\[1\]\.captura/, 'o celular mostra a trilha pronta do herói (a troca das capturas vale para a imagem)');
   for (const arquivo of ['src/servidor/og/base.tsx', 'src/servidor/og/apresentacao.tsx', 'src/servidor/og/cartao.tsx']) assert.ok(!/stu-oi/.test(ler(arquivo)), `nunca o stu-oi (${arquivo})`);
   // Não lê o banco nem conta no limitador, e por isso nem o teste nem o build precisam do cliente do banco (DATABASE_URL): a imagem, a base dela e a página não o importam.
   for (const arquivo of ['src/app/conheca/opengraph-image.tsx', 'src/servidor/og/base.tsx', 'src/servidor/og/apresentacao.tsx']) {

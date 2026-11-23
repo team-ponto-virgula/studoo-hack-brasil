@@ -29,6 +29,7 @@ const { iconesDosTemas } = await import('../src/app/pedido.tsx');
 const { mensagens } = await import('../src/mensagens/pt-BR.ts');
 const { foraDoSafariNoIphone } = await import('../src/app/conheca/ilhas/folha-iphone.tsx');
 const { CAPTURAS } = await import('../src/app/conheca/imagens.gerado.ts');
+const { telasDoHeroi, escolherTelasDoHeroi, ALTS_DO_HEROI } = await import('../src/app/conheca/heroi.ts');
 
 const ORIGEM = 'https://studoo.exemplo.test';
 const base = { aparelho: 'computador', links: { apk: APK_PADRAO, testflight: null }, origem: ORIGEM, comSessao: false, visitante: true };
@@ -189,12 +190,13 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
   assert.equal(alta.length, 1, 'só uma imagem com prioridade alta');
   const baixa = imagens.filter((img) => /fetchPriority="low"|fetchpriority="low"/i.test(img) && /\/landing\//.test(img));
   assert.equal(baixa.length, imagens.filter((img) => /\/landing\//.test(img)).length - 1, 'as outras capturas (herói 2 e 3, momentos e janela) com prioridade baixa: não disputam a banda com a primeira');
-  assert.match(alta[0], new RegExp(CAPTURAS['heroi-1'].src1x.replace(/[.]/g, '\\.')), 'e é a primeira do herói');
+  const [primeira, segunda, terceira] = telasDoHeroi('android').map((t) => t.captura);
+  assert.match(alta[0], new RegExp(primeira.src1x.replace(/[.]/g, '\\.')), 'e é a primeira do herói');
   // A segunda e a terceira do herói só entram no carregamento quando o laço começa (hidden + lazy).
-  for (const id of ['heroi-2', 'heroi-3']) {
-    const img = imagens.find((i) => i.includes(CAPTURAS[id].src1x));
-    assert.match(img, /loading="lazy"/, id);
-    assert.match(img, /\bhidden=""/, id);
+  for (const captura of [segunda, terceira]) {
+    const img = imagens.find((i) => i.includes(captura.src1x));
+    assert.match(img, /loading="lazy"/, captura.src1x);
+    assert.match(img, /\bhidden=""/, captura.src1x);
   }
   // Nenhuma captura passa de 120 KB em 2x (spec 18, seção 5).
   for (const id of Object.keys(CAPTURAS)) {
@@ -267,6 +269,28 @@ test('o CSS do momento 4: o celular preso cobre só os momentos 1 a 3, o compost
   // Fora do movimento permitido (reduzido ou sem JavaScript) nada fica escondido: o composto só some dentro do bloco de movimento.
   const fora = css.slice(0, css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
   assert.doesNotMatch(fora, /cn-momento__visual--composto[^}]*opacity: 0/);
+});
+
+test('o herói escolhe as três telas pela plataforma do aparelho: Android vê as do Android, os outros as do iPhone, e sem as da rodada limpa vale o conjunto provisório', () => {
+  const fabrica = (id, plataforma) => ({ plataforma, provisoria: false, src1x: `/landing/${id}-1x.webp`, src2x: `/landing/${id}-2x.webp`, largura: 320, altura: 696, origem: 'teste' });
+  const provisorio = { 'heroi-1': fabrica('heroi-1', 'iphone'), 'heroi-2': fabrica('heroi-2', 'android'), 'heroi-3': fabrica('heroi-3', 'iphone') };
+  // Só o conjunto provisório: o mesmo para todos (ele mistura as plataformas, e por isso é provisório).
+  for (const aparelho of ['android', 'iphone', 'ipad', 'computador']) assert.deepEqual(escolherTelasDoHeroi(provisorio, aparelho).map((t) => t.captura.src1x), ['/landing/heroi-1-1x.webp', '/landing/heroi-2-1x.webp', '/landing/heroi-3-1x.webp']);
+  // Com a rodada limpa: cada plataforma com as suas três, sem misturar.
+  const limpo = { ...provisorio };
+  for (const n of [1, 2, 3]) { limpo[`heroi-${n}-iphone`] = fabrica(`heroi-${n}-iphone`, 'iphone'); limpo[`heroi-${n}-android`] = fabrica(`heroi-${n}-android`, 'android'); }
+  const doAndroid = escolherTelasDoHeroi(limpo, 'android');
+  assert.deepEqual(doAndroid.map((t) => t.captura.plataforma), ['android', 'android', 'android']);
+  for (const aparelho of ['iphone', 'ipad', 'computador']) assert.deepEqual(escolherTelasDoHeroi(limpo, aparelho).map((t) => t.captura.plataforma), ['iphone', 'iphone', 'iphone'], aparelho);
+  assert.deepEqual(doAndroid.map((t) => t.alt), [...ALTS_DO_HEROI]);
+  // Captura da web nunca entra numa moldura de celular, e a falta de uma é um erro alto (não uma tela vazia).
+  assert.throws(() => escolherTelasDoHeroi({ ...provisorio, 'heroi-2': fabrica('heroi-2', 'web') }, 'android'), /Falta a captura 2 do herói/);
+  assert.throws(() => escolherTelasDoHeroi({ 'heroi-1': provisorio['heroi-1'] }, 'iphone'), /Falta a captura 2 do herói/);
+  // A página usa a escolha: o conjunto do aparelho vira o do HTML.
+  for (const aparelho of ['android', 'iphone']) {
+    const html = desenhar({ aparelho });
+    for (const tela of telasDoHeroi(aparelho)) assert.ok(html.includes(tela.captura.src1x), `${aparelho}: ${tela.captura.src1x}`);
+  }
 });
 
 test('o celular do herói é um grupo com um rótulo só e cada captura tem o seu alt da spec', () => {
