@@ -14,10 +14,43 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: voltar-plano
+# Na execução 45084470018 o toque em voltar-plano "passou", mas a lição continuou na tela por 30 s: o botão fica desligado
+# enquanto o app espera um pedido (desativado={ocupado}), e o servidor estava lento (até 23 s, com 502). A espera é pelo
+# estado: o mapa; com o erro, "Tentar novamente"; ainda na lição, outro toque em voltar-plano (até três voltas).
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: titulo-plano
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano|tentar-planos|tentar-sessao
+          timeout: 30000
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: tentar-sessao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: tentar-sessao
+      - runFlow: ../partes/tentar-de-novo.yaml
+      - runFlow:
+          when:
+            visible:
+              id: voltar-plano
+            notVisible:
+              id: titulo-plano
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: voltar-plano
 - extendedWaitUntil:
     visible:
       id: titulo-plano
-    timeout: 30000
+    timeout: 60000
 - evalScript: ${output.abriuPeloNo = false}
 - runFlow:
     when:

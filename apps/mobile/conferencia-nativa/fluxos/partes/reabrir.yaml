@@ -43,8 +43,41 @@ appId: host.exp.Exponent
           waitToSettleTimeoutMs: 1500
           id: tentar-sessao
 - runFlow: tentar-de-novo.yaml
+# Com o servidor lento ou com um 502, o app abre a lista e não o mapa: ele busca a lista e depois o detalhe da trilha em
+# andamento, e, se o detalhe falha, fica em Minhas trilhas sem erro (estudo.tsx, carregarPlanos). Na execução 45084470018
+# (fluxo 55) a espera acima acabou com "Minhas trilhas" na tela. Aí o mapa abre pelo destaque ("Continuar: …").
+- runFlow:
+    when:
+      visible:
+        id: titulo-planos
+      notVisible:
+        id: titulo-plano
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: abrir-destaque
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano|tentar-sessao|tentar-planos
+          timeout: 60000
+      - runFlow:
+          when:
+            visible:
+              id: tentar-sessao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: tentar-sessao
+      - runFlow: tentar-de-novo.yaml
 - evalScript: ${output.esperaDoMapaDepois = true}
 - extendedWaitUntil:
     visible:
       id: titulo-plano
-    timeout: 45000
+    timeout: 60000
+# A barra de baixo some enquanto o app espera um pedido (estudo.tsx: comNavegacaoAgora pede !pendente). Na execução
+# 45084470018 (fluxo 40), com pedidos de 3 a 23 s, o mapa estava na tela sem a barra, e o toque em nav-explorar não achou
+# nada. Os fluxos tocam na barra logo depois daqui: ela precisa estar de volta.
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 90000
