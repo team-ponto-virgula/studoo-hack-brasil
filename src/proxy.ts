@@ -1,12 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { lerCookieSessao, origemStudoo } from "@/servidor/acesso/origem";
+import { CABECALHO_NA_RAIZ } from "@/servidor/acesso/raiz";
 
 export function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === "/" && !lerCookieSessao(request)) {
-    const redirect = NextResponse.redirect(new URL("/login", request.url));
-    redirect.headers.set("Cache-Control", "no-store");
-    return redirect;
-  }
+  // A raiz: quem não tem sessão vê a página de apresentação (a de /conheca, servida em "/"); quem tem, o app (visitante incluído). A escolha é
+  // daqui, pelo cookie, antes de qualquer desenho: o app não aparece nem pisca para quem chega sem entrar, e o app de quem entrou nem carrega a página.
+  const apresentacaoNaRaiz = request.nextUrl.pathname === "/" && !lerCookieSessao(request);
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const desenvolvimento = process.env.NODE_ENV === "development";
@@ -33,7 +32,17 @@ export function proxy(request: NextRequest) {
 
   const headers = new Headers(request.headers);
   headers.set("Content-Security-Policy", politica);
-  const resposta = NextResponse.next({ request: { headers } });
+  // Quem manda neste cabeçalho é o servidor: o que vier de fora é descartado.
+  if (apresentacaoNaRaiz) headers.set(CABECALHO_NA_RAIZ, "1");
+  else headers.delete(CABECALHO_NA_RAIZ);
+  let resposta: NextResponse;
+  if (apresentacaoNaRaiz) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = "/conheca";
+    resposta = NextResponse.rewrite(destino, { request: { headers } });
+  } else {
+    resposta = NextResponse.next({ request: { headers } });
+  }
   resposta.headers.set("Content-Security-Policy", politica);
   resposta.headers.set("Cache-Control", "no-store");
   resposta.headers.set("Permissions-Policy", "camera=(), microphone=(self), geolocation=()");

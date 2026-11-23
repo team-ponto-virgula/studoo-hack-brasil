@@ -1,6 +1,7 @@
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
+import { CABECALHO_NA_RAIZ } from '@/servidor/acesso/raiz';
 import { visitanteAtivo } from '@/servidor/acesso/visitante';
 import { Desenho } from '../../ui/mundo';
 import { Mascote } from '../../ui/mascote';
@@ -15,6 +16,7 @@ import { CelularDoHeroi } from './ilhas/celular-heroi';
 import { Momentos } from './ilhas/momentos';
 import { Fichas } from './ilhas/fichas';
 import { Revelar } from './ilhas/revelar';
+import { SaidaDoApp } from './ilhas/saida-do-app';
 import { escolherInicio } from './inicio';
 import { linksDoSite, tamanhoDoApk, type LinksDoSite } from './links';
 import { origemPublica } from './origem-publica';
@@ -46,10 +48,12 @@ export interface ContextoDaPagina {
   comSessao: boolean;
   /** O servidor liga o modo visitante. */
   visitante: boolean;
+  /** A página está sendo servida em "/" (a raiz de quem não entrou); o app instalado na tela de início segue dela direto para o login. */
+  naRaiz?: boolean;
 }
 
 /** A página já com tudo decidido: pura, sem ler o pedido (por isso se testa com `renderToStaticMarkup`). */
-export function PaginaVista({ aparelho, links, origem, comSessao, visitante }: ContextoDaPagina) {
+export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naRaiz = false }: ContextoDaPagina) {
   const tamanho = tamanhoDoApk(links);
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
   const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
@@ -58,7 +62,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante }: C
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
 
   return (
-    <div className="cn-pagina">
+    <div className="cn-pagina" data-na-raiz={naRaiz || undefined}>
       <a className="pular" href="#conteudo">{textos.pular}</a>
       <header className="cn-cabecalho">
         <LogoDaPagina />
@@ -143,6 +147,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante }: C
         </nav>
       </footer>
       <Revelar />
+      {naRaiz && <SaidaDoApp />}
     </div>
   );
 }
@@ -161,6 +166,7 @@ export async function PaginaDeApresentacao() {
       origem={origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
       comSessao={escolherInicio(biscoitos.get(nomeCookieSessao())?.value) === 'app'}
       visitante={visitanteAtivo()}
+      naRaiz={cabecalhos.get(CABECALHO_NA_RAIZ) === '1'}
     />
   );
 }
