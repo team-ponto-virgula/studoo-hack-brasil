@@ -1141,4 +1141,17 @@ button { touch-action: manipulation; }
 }
 @media (max-width: 767px) and (max-height: 860px) { .entrada-banner { display: none; } }
 
+/* Refino 10 (spec 16): até 767 px, em qualquer altura de tela, o stu-acolhida de 72 (acenando; parado com movimento reduzido) fica à direita do título, alinhado ao topo dele, e a faixa de
+   paisagem sai. O título encolhe para dar lugar a ele e não passa de 3 linhas em 360 px. De 768 px em diante o Stu continua na paisagem. */
+.entrada-titulo-faixa { display: contents; }
+.entrada-stu-celular { display: none; }
+@media (max-width: 767px) {
+  .entrada-banner { display: none; }
+  .entrada-titulo-faixa { display: grid; grid-template-columns: minmax(0, 1fr) 72px; align-items: start; column-gap: 12px; }
+  .entrada-titulo-faixa h1 { font-size: 26px; line-height: 32px; letter-spacing: -0.5px; }
+  .entrada-stu-celular { display: block; width: 72px; margin-top: -2px; }
+}
+/* Em 320 px a coluna do título sobra com 196 px: a letra desce mais um pouco para o título seguir em 3 linhas. */
+@media (max-width: 340px) { .entrada-titulo-faixa h1 { font-size: 22px; line-height: 28px; } }
+
 .recuperar-acoes { display: flex; align-items: center; gap: 8px; }

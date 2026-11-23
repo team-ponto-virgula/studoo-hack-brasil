@@ -63,3 +63,28 @@ test('item 2: a entrada continua com o título e o texto na mensagem da ilustra�
   // Até 1023 px a ilustração larga some (a faixa do celular tem o Stu dela): o sticky não pesa nas telas estreitas.
   assert.match(css, /@media \(max-width: 1023px\) \{[^@]*\.entrada-arte \{ display: none; \}/);
 });
+
+test('item 10: até 767 px o stu-acolhida de 72, acenando, fica à direita do título, alinhado ao topo; a faixa de paisagem sai em qualquer altura', () => {
+  const tela = ler('src/app/login/entrada.tsx');
+  assert.match(tela, /<div className="entrada-titulo-faixa">\s*<h1>\{mensagens\.login\.titulo\}<\/h1>\s*<Mascote expressao="stu-acolhida" tamanho=\{72\} prioridade animado="laco" className="entrada-stu-celular" \/>\s*<\/div>/);
+  // De 768 px em diante a faixa some e o Stu do celular também: o Stu da ilustração larga (≥1024) e o da faixa de 768 a 1023 seguem como eram.
+  assert.match(css, /\.entrada-titulo-faixa \{ display: contents; \}\s*\.entrada-stu-celular \{ display: none; \}/);
+  const celular = css.slice(css.indexOf('.entrada-titulo-faixa { display: contents; }'));
+  assert.match(celular, /@media \(max-width: 767px\) \{\s*\.entrada-banner \{ display: none; \}/, 'a faixa de paisagem sai em qualquer altura (antes só até 860 px)');
+  assert.match(celular, /\.entrada-titulo-faixa \{ display: grid; grid-template-columns: minmax\(0, 1fr\) 72px; align-items: start; column-gap: 12px; \}/, 'o título e o Stu lado a lado, o Stu alinhado ao topo do título');
+  assert.match(celular, /\.entrada-stu-celular \{ display: block; width: 72px;/);
+});
+
+test('item 10: o título encolhe para dar lugar ao Stu e não passa de 3 linhas em 360 px (e em 320 px a letra desce mais um pouco)', () => {
+  const celular = css.slice(css.indexOf('.entrada-titulo-faixa { display: contents; }'));
+  assert.match(celular, /\.entrada-titulo-faixa h1 \{ font-size: 26px; line-height: 32px; letter-spacing: -0\.5px; \}/);
+  assert.match(celular, /@media \(max-width: 340px\) \{ \.entrada-titulo-faixa h1 \{ font-size: 22px; line-height: 28px; \} \}/);
+  // As regras antigas de 28/34 seguem para as outras telas do cabeçalho (o título da entrada é o único com o Stu ao lado).
+  assert.match(css, /\.entrada-cabecalho h1 \{ font-size: 28px; line-height: 34px; letter-spacing: -0\.5px; \}/);
+});
+
+test('item 10: com movimento reduzido o Stu fica parado (o Mascote nem pede a animação)', () => {
+  const mascote = ler('src/ui/mascote.tsx');
+  assert.match(mascote, /movimento reduzido ou economia de dados \(o arquivo nem é pedido\)/);
+  assert.match(mascote, /prefers-reduced-motion: reduce/);
+});
