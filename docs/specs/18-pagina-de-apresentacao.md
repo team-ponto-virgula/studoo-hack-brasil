@@ -94,3 +94,128 @@ O aparelho é detectado pelo navegador (agente do usuário e `navigator.userAgen
 - Um cartão branco de 176 × 208, com borda de 2 px `#E1E7FA` e raio 20.
 - Dentro, o QR para `/baixar` (`/baixar` redireciona conforme o aparelho), desenhado com os pontos arredondados do Código Studoo, e embaixo "Aponte a câmera do celular", em 14/20.
 - O QR tem o `alt` "Código QR para baixar o Studoo no celular".
+
+## 2. Ordem das seções
+
+| # | Seção | 390 e 768 | 1280 |
+|---|---|---|---|
+| S1 | Herói (seção 1) | Texto, botões e o celular embaixo | Duas colunas |
+| S2 | Como o Studoo ensina: os quatro momentos | Quatro blocos empilhados, cada um com o seu celular | O celular preso à direita, e a tela dentro dele troca enquanto os quatro textos passam à esquerda |
+| S3 | Pode ser qualquer assunto | O Stu e uma fileira de ideias que corre devagar | O mesmo, mais largo |
+| S4 | Instale em 3 passos | Seletor Android e iPhone, com três passos | Seletor e os três passos em linha |
+| S5 | Chamada final | O Stu comemorando e os botões | O mesmo, centralizado |
+| S6 | Rodapé | Links empilhados | Links numa linha |
+
+Entre as seções, 72 px de respiro no celular e 120 px no computador. Os títulos de seção são Quicksand 700, 28/34 no celular e 40/48 no computador, em `#0B1B5C`.
+
+## 3. Textos das seções
+
+**S2. Título:** "Como o Studoo ensina". Os quatro momentos, cada um com título (20/26 800) e uma linha (17/26, `#5E6A85`):
+1. **"Seu material vira lição"**: "Mande uma foto, um PDF ou um documento. Cada lição mostra de onde tirou a ideia, com o trecho do seu material."
+2. **"Errou? Tem outro jeito"**: "O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo."
+3. **"Explique do seu jeito"**: "Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que vale revisar."
+4. **"No computador e no celular"**: "Com uma conta, a sua trilha é a mesma no site e no app. Você continua de onde parou."
+
+O momento 4 diz "com uma conta", porque o progresso do visitante fica só no aparelho dele.
+
+**S3:**
+- título "Pode ser qualquer assunto";
+- linha "Comece com uma ideia pronta ou escreva a sua.";
+- as seis ideias da tela inicial, em fichas com o ícone de cada uma: "Violão do zero: primeiros acordes", "Inglês para conversar em viagens", "Culinária: receitas básicas", "História do Brasil para a prova", "Frações" e "Fotografia com o celular";
+- tocar numa ficha começa a sessão de visitante já com aquela ideia no campo. Se isso pedir rota nova, a ficha só abre o visitante, sem preencher (o Web & API decide).
+
+**S4:**
+- título "Instale em 3 passos";
+- seletor de duas opções, "Android" e "iPhone", que abre no aparelho de quem está vendo (no computador, em Android).
+- **Android:**
+  1. "Toque em “Baixar para Android”."
+  2. "Abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador."
+  3. "Abra o Studoo e entre com a sua conta, ou experimente sem conta."
+  Embaixo, o botão "Baixar para Android".
+- **iPhone, antes do TestFlight:** os três passos da folha da seção 1.5, com a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta".
+- **iPhone, com o TestFlight:**
+  1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
+  2. "Toque em “Instalar no iPhone”, nesta página."
+  3. "No TestFlight, toque em Instalar e abra o Studoo."
+  Embaixo, o botão "Instalar no iPhone".
+- Cada passo tem o número num círculo de 32 px `#E9E7FF`, com o número em `#1D4ED8`, e o texto em 17/26.
+
+**S5:**
+- `stu-celebrando` de 160;
+- título "Qual vai ser a sua primeira lição?";
+- o botão principal do aparelho (1.3) e "Experimentar sem conta".
+
+**S6:**
+- o logo;
+- a linha "Feito para o HackBrasil 2026.";
+- os links "Política de privacidade" (`/privacidade`), "Suporte" (`/suporte`) e "Entrar", em 15/20, com área de toque de 44 px.
+
+**Na `/conheca` com a pessoa já dentro da conta:** a página aparece igual, mas "Entrar" (cabeçalho e rodapé) vira "Abrir o Studoo", que leva a Minhas trilhas.
+
+**Página no navegador:**
+- título "Studoo: aprenda qualquer coisa, uma lição por vez";
+- descrição "O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.";
+- imagem de compartilhar com o herói (o gerador de imagens que o servidor já tem).
+
+## 4. Animações
+
+O critério de todas: com função, leves, só CSS e IntersectionObserver, e a versão parada mostra tudo inteiro. "Movimento reduzido" é `prefers-reduced-motion` ou a preferência de movimento do Studoo (`src/ui/movimento.tsx`).
+
+| Onde | Gatilho | Duração e curva | O que mostra | Versão parada |
+|---|---|---|---|---|
+| Logo do cabeçalho | Ao abrir a página, uma vez | A do `logo-animado.svg` | O Studoo "acorda" | O logo parado |
+| Celular do herói | O herói na tela | 3,5 s por tela; troca em 400 ms, `cubic-bezier(.2,.8,.2,1)`, subindo 12 px | Pedido, trilha pronta e acerto: o produto em 10 s | Só a trilha pronta |
+| Stu do herói (1280) | Ao abrir | O laço do `stu-acolhida` animado, por 3 ciclos, e depois parado | O Stu dá oi | `stu-acolhida` parado |
+| Entrada de cada seção | 20% da seção na tela, uma vez | 400 ms, sumir e aparecer, subindo 16 px, saída suave | Ritmo de leitura | Tudo já à vista |
+| Celular preso do S2 (1280) | O texto de um momento cruza o meio da tela | Troca de tela em 300 ms, sumir e aparecer; a moldura não se mexe | A tela do momento que se lê ("voar em vez de teletransportar") | Cada momento com a sua captura ao lado, como no celular |
+| Selo "Progresso salvo agora" (momento 4) | O momento 4 na tela, uma vez | Escala de 1 a 1,06 e de volta, em 320 ms, e o ponto verde acende | A sincronia acontecendo | O selo parado |
+| Fichas do S3 | A seção na tela | Fileira correndo para a esquerda, 40 s por volta, linear, em laço; para com o ponteiro em cima, com foco ou com toque | Muitos assuntos possíveis | As fichas em grade, quebrando linha |
+| Stu do S5 | A seção na tela, uma vez | Um ciclo do `stu-celebrando` animado | Fechar com alegria | Parado |
+
+Nenhuma animação muda o lugar de botão ou de texto já à vista. O laço do herói e o das fichas param com a aba escondida.
+
+## 5. Acessibilidade e metas de conferência
+- Contraste AA em todo texto, inclusive sobre o céu e sobre as fichas.
+- Foco visível em tudo que se toca (anel de 3 px `#2563FF`, como no resto do Studoo). A ordem do Tab segue a ordem da tela, e um link "Pular para o conteúdo" leva ao S1.
+- Alvos de toque de 44 px ou mais; os botões principais, 52 a 56.
+- O axe sem violações em 390, 768 e 1280, com o visitante e com a pessoa já dentro da conta.
+- O texto ampliado a 200% não corta nem sobrepõe nada.
+- Imagens:
+  - as capturas em WebP, com até 120 KB cada em 2×;
+  - a primeira do herói carregada já (`fetchpriority="high"`) e as outras só quando chegam perto da tela;
+  - o Stu nos tamanhos do kit;
+  - a página inteira com até 1 MB na primeira carga, sem contar o APK.
+- O seletor do S4 é um grupo de abas acessível (`tablist`), e as fichas que correm podem ser paradas e lidas pelo leitor de tela (a lista inteira fica no código uma vez, sem cópias para o laço lidas duas vezes).
+
+## 6. Som
+
+A página usa o ambiente de som que já está no layout (`AmbienteSom`). Não há player novo nem outra música.
+- Como em todas as telas, o Lo-fi começa no primeiro gesto (toque, clique ou tecla; rolar não conta), e o aviso "Música de fundo ligada." da primeira vez segue a spec 16, item 14 (no alto, com o espaço reservado).
+- O cabeçalho da página entra na lista de cabeçalhos do alto, para o aviso saber onde ficar.
+- O botão de som do cabeçalho é o mesmo da entrada e abre a mesma folha de som.
+- Tocar em "Baixar para Android" conta como o primeiro gesto. A música começar junto do download é aceito, porque é a mesma regra da entrada.
+
+## 7. Paridade
+
+A página só existe na web: o app já abre na entrada e no conteúdo. Ela foi registrada na spec 07, linha P34.
+
+## 8. Quem faz o quê
+- **Web & API:** a página, as rotas `/`, `/conheca` e `/baixar`, os links configuráveis (APK e TestFlight), o QR, a detecção do aparelho, as animações e as metas da seção 5.
+- **Mobile & QA:** o conjunto de capturas nativas do build 4 (seção 9), com a origem.
+- **Designer:** escolher as capturas e conferir a página em 390, 768 e 1280.
+
+## 9. Capturas do app que a página usa
+
+Capturas nativas do build 4 (simulador do iPhone ou emulador do Android, com a origem de cada uma), sem barra de status de outro horário ou de bateria fraca. O Designer escolhe no conjunto do Mobile & QA:
+
+| Lugar | Tela |
+|---|---|
+| Herói 1 | "O que você quer aprender?" com uma ideia escolhida no campo |
+| Herói 2 | A proposta pronta com o mapa e "Começar a lição 1" (também é a versão parada) |
+| Herói 3 | Uma lição com o acerto: o painel verde e o Stu |
+| S2, momento 1 | Uma lição de material com o cartão "[1] Fonte do seu material" aberto |
+| S2, momento 2 | A ponte "Outro jeito de entender", no passo 1 |
+| S2, momento 3 | O retorno do "Explique com suas palavras" com os cartões |
+| S2, momento 4 | O mapa no app com "Progresso salvo agora", e a mesma trilha no site, numa janela de navegador desenhada pelo Studoo (a captura da web é real) |
+
+Nada de prévia web dentro de moldura de celular.
