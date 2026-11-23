@@ -95,4 +95,9 @@ test('mudança 1 (revisão 04fe621): a placa da geração sem frases; as frases 
   assert.equal(dicaDaEspera(13000, 3), 2);
   assert.equal(dicaDaEspera(18000, 3), 0);
   assert.equal(faltaParaTrocarADica(1000), 2000);
+  // Os textos do contrato (032347c): três frases (sem "Você confere a trilha…") e a linha sem prometer "alguns segundos".
+  assert.deepEqual([...mensagens.geracao.dicas], ['Lições curtas, com exercício e retorno na hora.', 'Errou? O Stu explica de outro jeito.',
+    'Cada lição concluída fica marcada no mapa.']);
+  assert.equal(mensagens.geracao.escrevendoLicoes, 'Escrevendo suas lições…');
+  assert.doesNotMatch(JSON.stringify(mensagens.geracao), /alguns segundos|Você confere a trilha/);
 });
