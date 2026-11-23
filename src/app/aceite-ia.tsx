@@ -77,14 +77,22 @@ export function ListaProvedores({ estado }: { estado: EstadoPrivacidade }) {
   );
 }
 
-function FolhaAceite({ estado, aoResponder }: { estado: EstadoPrivacidade; aoResponder: (aceito: boolean) => void }) {
+/**
+ * O cartão do aceite. Abre no topo, com o foco no título (spec 17, defeito B3: antes o foco ia para o botão e, com o cartão mais alto que a janela em 390, ele abria rolado até o fim,
+ * com o título cortado). O título e os botões ficam fixos, e só o texto do meio rola.
+ */
+export function FolhaAceite({ estado, aoResponder }: { estado: EstadoPrivacidade; aoResponder: (aceito: boolean) => void }) {
   const caixa = useRef<HTMLDivElement>(null);
+  const corpo = useRef<HTMLDivElement>(null);
   const tituloId = useId();
   const textoId = useId();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   useDialogo(caixa, () => { if (!ocupado) aoResponder(false); });
-  useEffect(() => { caixa.current?.querySelector<HTMLButtonElement>('.folha-acoes button')?.focus(); }, []);
+  useEffect(() => {
+    corpo.current?.scrollTo({ top: 0 });
+    caixa.current?.querySelector<HTMLElement>('.folha-titulo')?.focus({ preventScroll: true });
+  }, []);
 
   async function permitir() {
     setOcupado(true);
@@ -100,16 +108,20 @@ function FolhaAceite({ estado, aoResponder }: { estado: EstadoPrivacidade; aoRes
 
   return (
     <div className="folha-fundo folha-fundo--centro" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoResponder(false); }}>
-      <div className="folha folha--confirmar" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
-        <h2 id={tituloId} className="folha-titulo">{t.aceiteTitulo}</h2>
-        <p id={textoId} className="folha-texto">{t.aceiteTexto}</p>
-        <h3 className="privacidade-subtitulo">{t.aceiteQuem}</h3>
-        <ListaProvedores estado={estado} />
-        <p className="folha-texto folha-texto--miudo">{t.aceiteSemIa}</p>
-        {erro && <p className="campo-erro" role="alert">{erro}</p>}
-        <div className="folha-acoes folha-acoes--par">
-          <Botao variante="secundario" disabled={ocupado} onClick={() => aoResponder(false)}>{t.agoraNao}</Botao>
-          <Botao disabled={ocupado} onClick={() => void permitir()}>{ocupado ? t.permitindo : t.permitir}</Botao>
+      <div className="folha folha--confirmar folha--aceite" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
+        <h2 id={tituloId} className="folha-titulo" tabIndex={-1}>{t.aceiteTitulo}</h2>
+        <div className="folha-aceite__corpo" ref={corpo}>
+          <p id={textoId} className="folha-texto">{t.aceiteTexto}</p>
+          <h3 className="privacidade-subtitulo">{t.aceiteQuem}</h3>
+          <ListaProvedores estado={estado} />
+          <p className="folha-texto folha-texto--miudo">{t.aceiteSemIa}</p>
+        </div>
+        <div className="folha-aceite__rodape">
+          {erro && <p className="campo-erro" role="alert">{erro}</p>}
+          <div className="folha-acoes folha-acoes--par">
+            <Botao variante="secundario" disabled={ocupado} onClick={() => aoResponder(false)}>{t.agoraNao}</Botao>
+            <Botao disabled={ocupado} onClick={() => void permitir()}>{ocupado ? t.permitindo : t.permitir}</Botao>
+          </div>
         </div>
       </div>
     </div>
