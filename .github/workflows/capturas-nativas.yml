@@ -21,6 +21,10 @@ on:
         description: "Android: só estas telas (ex.: 70-exemplo-curto,10-mapa), sem a prova da criação; vazio roda tudo"
         default: ""
         required: false
+      telas_ios:
+        description: "iPhone: só estas telas (ex.: 61-bloquear,40-explorar) ou criacao (só a prova da criação); vazio roda tudo"
+        default: ""
+        required: false
       so_android:
         description: Rodar só o Android (o iPhone não roda)
         type: boolean
@@ -63,6 +67,7 @@ jobs:
       LC_ALL: en_US.UTF-8
       CONFERENCIA_APARELHO: ${{ inputs.aparelho || 'iPhone 17 Pro' }}
       CONFERENCIA_IOS: ${{ inputs.ios || '26.5' }}
+      CONFERENCIA_TELAS: ${{ inputs.telas_ios || '' }}
       # Expo Go de simulador para o SDK 58 (a versão que https://api.expo.dev/v2/versions/latest indica). Ao subir o SDK
       # do app, troque o endereço e o sha256 juntos.
       EXPO_GO_IOS_URL: https://github.com/expo/expo-go-releases/releases/download/Expo-Go-58.0.7/Expo-Go-58.0.7.tar.gz
@@ -262,7 +267,7 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: false
           disable-spellchecker: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: bash apps/mobile/conferencia-nativa/android.sh no-emulador
 
       - name: Juntar as capturas e dizer o que faltou

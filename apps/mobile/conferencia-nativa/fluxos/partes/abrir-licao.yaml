@@ -20,15 +20,70 @@ appId: host.exp.Exponent
     timeout: 240000
     speed: 50
     waitToSettleTimeoutMs: 500
-# No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
-- swipe:
-    waitToSettleTimeoutMs: 1000
-    start: 50%, 55%
-    end: 50%, 40%
-    duration: 800
+# Centralizar em um passo à parte, curto e opcional. Na execução 45124630286 (Android, fluxo 30) o cartão era o ÚLTIMO da
+# lista ("Culinária: receitas básicas"): achado em y 1272, a centralização o trouxe a 1116 e a lista acabou ali; o Maestro
+# continuou tentando centralizar com o cartão parado até estourar os 240 s e terminou em "No visible element found", com
+# o cartão à vista. No fim da lista o cartão já fica acima da barra de baixo (a folga do fim da rolagem), então a
+# centralização que não anda só gasta os 45 s e segue (no emulador cada arrasto leva de 13 a 20 s).
+- scrollUntilVisible:
+    element:
+      text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+    direction: DOWN
+    timeout: 45000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+    optional: true
+# A barra de baixo flutua por cima do conteúdo (iOS 26 e Android): a rolagem acima centraliza o botão, que fica longe
+# da barra e da barra de status. Sem arrasto fixo depois: na execução 45113443824 (iPhone) a centralização já tinha
+# levado o botão de y 678 a 138, e o arrasto de 15% o subiu até y 18–70, sob a barra de status; o toque ali rolou a lista
+# de volta ao topo (o toque na barra de status faz isso no iOS) e o cartão sumiu de vista. Na execução 45098808095
+# (Android), sem centralizar, o botão parou sob a barra de baixo.
 - tapOn:
     waitToSettleTimeoutMs: 1500
     text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+# Pelo estado: se a lista continuar na tela, sem o mapa, o botão é procurado de novo (para baixo e, se ele tiver subido
+# demais, para cima), centralizado num passo curto e opcional, e tocado mais uma vez.
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: titulo-planos
+      notVisible:
+        id: titulo-plano
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+          waitToSettleTimeoutMs: 500
+          optional: true
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: UP
+          timeout: 60000
+          speed: 50
+          waitToSettleTimeoutMs: 500
+          optional: true
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: DOWN
+          timeout: 45000
+          speed: 50
+          centerElement: true
+          waitToSettleTimeoutMs: 500
+          optional: true
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
 - extendedWaitUntil:
     visible:
       id: titulo-plano
@@ -53,6 +108,43 @@ appId: host.exp.Exponent
       - tapOn:
           waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar): .*"
+# A lição pode não abrir com o servidor lento: na execução 45105021514 (iPhone, fluxo 33, carga ~470), o pedido da lição
+# foi largado pelo app aos 15 s (499 no proxy) e o mapa mostrou "Confira a conexão e tente novamente." (tentar-planos).
+# Pelo estado: com esse cartão, "Tentar novamente", o mapa de novo e a lição aberta outra vez (o cartão "Começar lição"
+# ou o nó atual), uma vez.
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 30000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: tentar-planos
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-planos
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano
+          timeout: 60000
+      - runFlow:
+          when:
+            visible:
+              id: comecar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: comecar-licao
+      - runFlow:
+          when:
+            notVisible:
+              id: comecar-licao
+            visible: "(Começar|Continuar): .*"
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                text: "(Começar|Continuar): .*"
 - extendedWaitUntil:
     visible: 'Etapa 1 de \d+'
     timeout: 30000

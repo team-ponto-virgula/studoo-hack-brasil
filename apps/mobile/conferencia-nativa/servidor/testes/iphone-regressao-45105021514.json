@@ -1,0 +1,247 @@
+{
+ "attributes": {
+  "accessibilityText": "Expo Go",
+  "resource-id": "",
+  "bounds": "[0,0][402,874]"
+ },
+ "children": [
+  {
+   "attributes": {
+    "accessibilityText": "Verificar",
+    "resource-id": "enviar-resposta",
+    "bounds": "[16,812][386,864]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "",
+    "resource-id": "inputView",
+    "bounds": "[0,566][402,874]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "",
+    "resource-id": "UIKeyboardLayoutStar Preview",
+    "bounds": "[0,583][402,816]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Q",
+    "resource-id": "",
+    "bounds": "[4,590][44,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "W",
+    "resource-id": "",
+    "bounds": "[44,590][83,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "E",
+    "resource-id": "",
+    "bounds": "[83,590][123,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "R",
+    "resource-id": "",
+    "bounds": "[123,590][162,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "T",
+    "resource-id": "",
+    "bounds": "[162,590][202,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Y",
+    "resource-id": "",
+    "bounds": "[202,590][241,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "U",
+    "resource-id": "",
+    "bounds": "[241,590][281,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "I",
+    "resource-id": "",
+    "bounds": "[281,590][320,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "O",
+    "resource-id": "",
+    "bounds": "[320,590][360,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "P",
+    "resource-id": "",
+    "bounds": "[360,590][399,644]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "A",
+    "resource-id": "",
+    "bounds": "[24,644][63,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "S",
+    "resource-id": "",
+    "bounds": "[63,644][103,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "D",
+    "resource-id": "",
+    "bounds": "[103,644][142,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "F",
+    "resource-id": "",
+    "bounds": "[142,644][182,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "G",
+    "resource-id": "",
+    "bounds": "[182,644][221,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "H",
+    "resource-id": "",
+    "bounds": "[221,644][261,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "J",
+    "resource-id": "",
+    "bounds": "[261,644][300,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "K",
+    "resource-id": "",
+    "bounds": "[300,644][340,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "L",
+    "resource-id": "",
+    "bounds": "[340,644][379,698]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "shift",
+    "resource-id": "shift",
+    "bounds": "[4,698][56,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Z",
+    "resource-id": "",
+    "bounds": "[63,698][103,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "X",
+    "resource-id": "",
+    "bounds": "[103,698][142,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "C",
+    "resource-id": "",
+    "bounds": "[142,698][182,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "V",
+    "resource-id": "",
+    "bounds": "[182,698][221,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "B",
+    "resource-id": "",
+    "bounds": "[221,698][261,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "N",
+    "resource-id": "",
+    "bounds": "[261,698][300,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "M",
+    "resource-id": "",
+    "bounds": "[300,698][340,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "delete",
+    "resource-id": "delete",
+    "bounds": "[348,698][399,752]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "numbers",
+    "resource-id": "more",
+    "bounds": "[4,752][103,806]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": " ",
+    "resource-id": "space",
+    "bounds": "[103,752][300,806]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "done",
+    "resource-id": "Done",
+    "bounds": "[300,752][399,806]"
+   }
+  }
+ ]
+}

@@ -11,11 +11,14 @@ name: 61-bloquear
     visible:
       id: titulo-explorar
     timeout: 30000
+# No emulador do Android (GPU por software), cada passo da rolagem leva de 18 a 26 s: na execução 45097385589 o Maestro
+# achou privacidade-estado aos 111 s e o prazo de 120 s acabou na rolagem extra que centraliza o elemento. As rolagens do
+# Perfil e do Explorar têm 300 s (no iPhone elas acabam em segundos; o prazo só pesa quando a máquina está lenta).
 - scrollUntilVisible:
     element:
       text: "Mais opções de .*"
     direction: DOWN
-    timeout: 60000
+    timeout: 300000
     speed: 50
     centerElement: true
 - tapOn:
@@ -29,14 +32,17 @@ name: 61-bloquear
       id: confirmacao-confirmar
     timeout: 10000
 - takeScreenshot: 61-bloquear-confirmacao
+# O aviso "Pessoa bloqueada." com "Desfazer" fica 7 s (DURACAO_DO_AVISO_COM_ACAO_MS, interface.tsx). Na execução
+# 45053145066, a espera pelo texto leu a árvore uma vez só: o driver levou 11,3 s para devolver a hierarquia do Explorar
+# recarregado (getHierarchyWithFallback, 19:13:37,36 a 19:13:48,66), e o aviso saiu nesse meio. A captura da tela é rápida
+# (~0,2 s): ela vem logo depois do toque, e a leitura do texto fica depois, opcional (no registro, WARNED se não o leu).
 - tapOn:
-    waitToSettleTimeoutMs: 1000
+    waitToSettleTimeoutMs: 500
     id: confirmacao-confirmar
-- extendedWaitUntil:
-    visible:
-      text: "Pessoa bloqueada."
-    timeout: 15000
 - takeScreenshot: 61-bloquear-aviso
+- assertVisible:
+    text: "Pessoa bloqueada."
+    optional: true
 # Desfaz: a conta sintética volta a ver a pessoa, para os fluxos seguintes. O aviso some sozinho em poucos segundos e, com a
 # máquina carregada, já tinha saído quando a captura acima terminou (execução 44809026116: "Element not found: Desfazer").
 # Então: "Desfazer" se o aviso ainda estiver na tela; depois, sempre, a lista "Pessoas bloqueadas" do Perfil (S10), que
@@ -60,18 +66,29 @@ name: 61-bloquear
     element:
       id: bloqueadas|bloqueadas-vazia
     direction: DOWN
-    timeout: 120000
+    timeout: 300000
     speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
-- runFlow:
-    when:
-      visible:
-        id: bloqueadas
+# O botão de cada linha tem o nome acessível "Desbloquear <nome>" (desbloquearRotulo), e a regex de texto do Maestro casa o
+# texto inteiro: "Desbloquear" sozinho não achava nada (execução 45077874039, com a lista na tela). O toque vai por
+# "Desbloquear .*" (o nome inteiro, no iPhone e na descrição do Android) e se repete enquanto a lista não fica vazia (uma
+# pessoa por toque).
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: bloqueadas-vazia
     commands:
       - tapOn:
           waitToSettleTimeoutMs: 1000
-          text: "Desbloquear"
+          text: "Desbloquear .*"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: bloqueadas-vazia
+          timeout: 8000
+          optional: true
 - extendedWaitUntil:
     visible:
       id: bloqueadas-vazia

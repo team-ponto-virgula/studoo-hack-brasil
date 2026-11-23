@@ -1,0 +1,289 @@
+{
+ "attributes": {
+  "accessibilityText": "",
+  "resource-id": "",
+  "bounds": "[0,0][720,1560]"
+ },
+ "children": [
+  {
+   "attributes": {
+    "accessibilityText": "",
+    "resource-id": "rodape",
+    "bounds": "[0,748][720,962]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "",
+    "resource-id": "painel-retorno",
+    "bounds": "[32,838][688,934]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Continuar",
+    "resource-id": "continuar-licao",
+    "bounds": "[510,838][688,934]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "",
+    "resource-id": "com.google.android.inputmethod.latin:id/keyboard_holder",
+    "bounds": "[0,962][720,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Open features menu",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_header_access_points_menu",
+    "bounds": "[4,962][88,1050]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Use voice typing",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_header_power_key",
+    "bounds": "[632,962][716,1050]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "q",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_0",
+    "bounds": "[4,1066][75,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "w",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_1",
+    "bounds": "[75,1066][146,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "e",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_2",
+    "bounds": "[146,1066][217,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "r",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_3",
+    "bounds": "[217,1066][288,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "t",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_4",
+    "bounds": "[288,1066][359,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "y",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_5",
+    "bounds": "[359,1066][430,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "u",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_6",
+    "bounds": "[430,1066][501,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "i",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_7",
+    "bounds": "[501,1066][572,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "o",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_8",
+    "bounds": "[572,1066][644,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "p",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_0_9",
+    "bounds": "[644,1066][716,1167]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "a",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_0",
+    "bounds": "[4,1167][110,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "s",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_1",
+    "bounds": "[110,1167][181,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "d",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_2",
+    "bounds": "[181,1167][252,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "f",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_3",
+    "bounds": "[252,1167][323,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "g",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_4",
+    "bounds": "[323,1167][394,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "h",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_5",
+    "bounds": "[394,1167][465,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "j",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_6",
+    "bounds": "[465,1167][536,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "k",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_7",
+    "bounds": "[536,1167][608,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "l",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_1_8",
+    "bounds": "[608,1167][716,1268]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Shift",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_shift",
+    "bounds": "[4,1268][110,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "z",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_1",
+    "bounds": "[110,1268][181,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "x",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_2",
+    "bounds": "[181,1268][252,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "c",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_3",
+    "bounds": "[252,1268][323,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "v",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_4",
+    "bounds": "[323,1268][394,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "b",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_5",
+    "bounds": "[394,1268][465,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "n",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_6",
+    "bounds": "[465,1268][536,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "m",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_2_7",
+    "bounds": "[536,1268][608,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Delete",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_del",
+    "bounds": "[608,1268][716,1369]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Symbol keyboard",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_switch_to_symbol",
+    "bounds": "[4,1369][110,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": ",",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_bottom_symbol_1",
+    "bounds": "[110,1369][181,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Emoji button",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_switch_to_next_language",
+    "bounds": "[181,1369][252,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Space",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_space",
+    "bounds": "[252,1369][537,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": ".",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_bottom_symbol_2",
+    "bounds": "[537,1369][608,1464]"
+   }
+  },
+  {
+   "attributes": {
+    "accessibilityText": "Enter",
+    "resource-id": "com.google.android.inputmethod.latin:id/key_pos_ime_action",
+    "bounds": "[608,1369][716,1464]"
+   }
+  }
+ ]
+}
