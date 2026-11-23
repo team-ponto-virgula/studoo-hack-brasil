@@ -50,7 +50,7 @@ test('item 9: o parágrafo que explicava o selo saiu do alto do Explorar, e o se
   assert.doesNotMatch(css, /explorar__demo/);
   const regraDoSelo = css.split('\n').filter((linha) => /^\.cartao-trilha__demo\s*\{/.test(linha));
   assert.equal(regraDoSelo.length, 1);
-  assert.match(regraDoSelo[0], /background: var\(--nevoa\); color: var\(--texto\);/, 'o selo "Exemplo" é neutro: fundo névoa e o texto do tema, na linha de informações (item 17)');
+  assert.match(regraDoSelo[0], /padding: 0 10px;[^}]*background: var\(--nevoa\); color: var\(--texto2\); font-size: 0\.8125rem; font-weight: 800; line-height: 20px;/, 'o selo "Exemplo" é o neutro da spec 10 (spec 14, linha 63), igual ao do app: fundo #F1F4FD, texto #5E6A85, 13 px 800, 20 de altura, 10 de respiro');
   assert.doesNotMatch(regraDoSelo[0], /#fff1cc|#fff6ea|#704700|amarel/i, 'nada de amarelo');
 });
 
@@ -80,7 +80,7 @@ test('item 16: a posição no Em alta é uma pílula pequena no alto à direita 
   assert.match(pilula, /color: #0b1b5c;/);
   assert.match(pilula, /background: #fff;/, 'sobre branco');
   assert.doesNotMatch(pilula, /(?<![\d.])5rem|text-stroke|bottom:/, 'o numeral gigante (5rem) com contorno saiu');
-  assert.match(css, /\.cartao-trilha__capa:has\(\.cartao-trilha__posicao\) \.cartao-trilha__tema \{ max-width: calc\(100% - 20px - 52px\); \}/, 'o selo do tema deixa a vez da pílula');
+  assert.match(css, /\.cartao-trilha__capa:has\(\.cartao-trilha__posicao\) \.cartao-trilha__tema \{ max-width: 72%; \}/, 'o selo do tema deixa a vez da pílula: até 72% da largura da capa, como no app');
 });
 
 test('item 17: a capa leva só o selo do tema; o "Exemplo" vai para a linha de informações ("6 lições · 3 partes · Exemplo"), com o nome inteiro para o leitor de tela', () => {
