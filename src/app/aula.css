@@ -379,6 +379,18 @@
   .aula-rodape[data-compacto] .aula-retorno { display: flex; align-items: center; gap: 10px; }
   .aula-rodape[data-compacto] .aula-retorno__icone { float: none; flex: none; margin-right: 0; }
 }
+/* Spec 16, item 24: um acerto com o "Explique com suas palavras" aberto vira UMA linha de 64 px: o visto e o título à esquerda (16/800, #1F7A5A) e "Continuar" à direita, compacto, no mesmo verde claro;
+   o texto do retorno já saiu (já foi lido). Ao fechar o "Explique", o rodapé volta ao normal. 64 = 48 do botão + 8 de cada lado (a área segura do iPhone entra por fora). */
+.aula-rodape[data-retorno='certa'][data-compacto] { padding-block: 8px calc(8px + env(safe-area-inset-bottom)); }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__conteudo { flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno { display: flex; flex: 1 1 0; align-items: center; gap: 8px; min-width: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno__icone { float: none; flex: none; width: 32px; height: 32px; margin-right: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno__texto { min-width: 0; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno h2 { overflow: hidden; padding-right: 0; font-size: 1rem; font-weight: 800; line-height: 1.375; text-overflow: ellipsis; white-space: nowrap; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes { flex: none; width: auto; margin-left: 0; flex-direction: row; }
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes > .botao { width: auto; min-width: auto; min-height: 48px; padding-inline: 18px; white-space: nowrap; }
+/* O "Ver mais abaixo" flutua sobre o conteúdo, logo acima da linha (como no app), em vez de somar uns 35 px ao rodapé: a linha do acerto mede os 64 px. */
+.aula-rodape[data-retorno='certa'][data-compacto] .aula-mais-abaixo { position: absolute; inset: auto auto calc(100% + 8px) 50%; margin: 0; translate: -50% 0; }
 .sem-quebra { white-space: nowrap; }
 .aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
 .como-foi__sem-cronometro { margin: -4px 0 10px; padding: 4px 0; border: 0; background: none; color: var(--acao); font: inherit;
