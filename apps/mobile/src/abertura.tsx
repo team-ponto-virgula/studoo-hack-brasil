@@ -177,13 +177,13 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
   return <View style={estilos.raiz} onLayout={() => setLayoutPronto(true)}>
     <View ref={conteudo} style={[estilos.conteudo, ocultaConteudo && estilos.conteudoOculto,
       Platform.OS === 'web' && ocultaConteudo && ({ visibility: 'hidden' } as ViewStyle)]}
-      pointerEvents={ocultaConteudo ? 'none' : 'auto'} accessibilityElementsHidden={ocultaConteudo}
+      pointerEvents={ocultaConteudo ? 'none' : 'auto'} accessibilityElementsHidden={ocultaConteudo} aria-hidden={ocultaConteudo}
       importantForAccessibility={ocultaConteudo ? 'no-hide-descendants' : 'auto'}>
       {children}
     </View>
     {ativa && <Animated.View testID="abertura-studoo" style={[estilos.camada, { opacity: opacidade }]}
       pointerEvents={ocultaConteudo ? 'auto' : 'none'}
-      accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+      accessible={false} accessibilityElementsHidden aria-hidden importantForAccessibility="no-hide-descendants"
       onStartShouldSetResponder={() => ocultaConteudo} onResponderGrant={dispensarToque}>
       <Animated.View style={{ transform: [
         { translateY: progresso.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -abertura.deslocamentoMaximo, 0] }) },
