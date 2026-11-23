@@ -79,7 +79,7 @@ test('erro e proposta expirada: o botão volta, a linha diz o motivo e o novo to
 });
 
 test('sair durante "Criando sua trilha…": sem cancelar no servidor, a resposta não abre a aula e a trilha entra na lista', () => {
-  assert.match(estudo, /if \(criacaoAtual\.current === 'criando'\) \{\n\s*sairDaCriacao\(\);\n\s*return true;\n\s*\}\n\s*if \(emCurso\.current\) return true;/);
+  assert.match(estudo, /if \(criacaoAtual\.current === 'criando'\) \{\n\s*sairDaCriacao\(\);\n\s*return true;\n\s*\}\n\s*\/\/[^\n]*\n\s*if \(emCurso\.current && !\(etapa\.tipo === 'licao' && abandonarCorrecao\(\)\)\) return true;/);
   assert.match(estudo, /desativado=\{ocupado && criacao !== 'criando'\} acao=\{criacao === 'criando' \? sairDaCriacao : tocarMinhasTrilhas\}/);
   const depois = comecar.slice(comecar.indexOf('// A trilha existe no servidor'));
   assert.match(depois, /atualizarPlano\(plano\);\n\s*if \(aceiteAtual\.current !== vez \|\| etapaAtual\.current\.tipo !== 'geracao'\) return;\n\s*setObjetivo\(''\);/,
@@ -116,8 +116,10 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
   assert.match(caminho, /rascunho=\{rascunho && no\.estado === 'previa' && !firmar\}/);
   assert.doesNotMatch(caminho, /maisUma|estrelinha|comMaisUma/);
   const placa = trecho(estudo, 'function PlacaDaGeracao(', '\n}\n');
-  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao : mensagens\.geracao\.montandoTitulo/);
-  assert.doesNotMatch(placa, /dicas|placaProntaTexto|setInterval/);
+  // Spec 17, mudança 1: depois de 3 s, a placa revê as frases do contrato (geracao.dicas, verdadeiras, sem número); a espera
+  // longa e a proposta continuam como antes. Sem relógio fixo (setInterval): ela acorda só na próxima troca.
+  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao\n\s*: indice === null \? mensagens\.geracao\.montandoTitulo : dicas\[indice\]/);
+  assert.doesNotMatch(placa, /placaProntaTexto|setInterval/);
   const semComentarios = geracao.replace(/\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(semComentarios, /contagem|contados|faixaGerando|dicas=|anuncioFim/);
   assert.match(geracao, /festaPermitida=\{false\} trofeuDoZero rascunho/);
@@ -128,7 +130,8 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
 
 test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodapé), com o centro a 40% dela', () => {
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
-  assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
+  // A faixa do alto cresce com o nome em duas linhas (spec 16, item 34): a placa começa 10 abaixo da faixa medida (52 com uma linha).
+  assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : alturaFaixaGeracao \+ 10 \+ alturaPlaca;/);
   assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
   assert.match(efeito, /rolarAteNo1\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
   // A rolagem tem 240 ms, quadro a quadro, com saída suave.

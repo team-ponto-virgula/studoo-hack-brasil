@@ -235,6 +235,7 @@ function StuAcenando({ largura, esquerda, pausado }: { largura: number; esquerda
 function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: number; nivel: number; recolher: boolean; respiro: number }) {
   // A conta de hoje, com o teto de 76 da spec 13 (A2).
   const stu = Math.max(28, Math.min(76, Math.round((ilustracao - 14) / 1.1)));
+  const { width: largura } = useWindowDimensions();
   return (
     <View testID="entrada-topo" style={recolher ? entradaEstilos.recolhido : respiro > 0 ? { marginTop: respiro } : null}
       importantForAccessibility={recolher ? 'no-hide-descendants' : 'auto'}
@@ -249,7 +250,21 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
           </View>
         </View>
       )}
-      <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+      {/* Spec 16, item 10: sem a paisagem (o celular comum), o stu-acolhida de 72 acena à direita do título, alinhado ao topo
+          dele; o título encolhe para dar lugar (até 3 linhas em 360). Com movimento reduzido, o Stu fica parado. */}
+      {ilustracao > 0 ? (
+        <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+      ) : (
+        <View style={entradaEstilos.tituloComStu}>
+          <View style={entradaEstilos.tituloComStuTexto}>
+            {/* Como a web (item 10): 26/32 ao lado do Stu, 22/28 em 320, até 3 linhas. */}
+            <Titulo foco testID="titulo-entrada" estilo={estiloDoTituloComStu(largura)}>{mensagens.entrada.titulo}</Titulo>
+          </View>
+          <View testID="entrada-stu" style={entradaEstilos.stuDoTitulo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <Stu nome="stu-acolhida" tamanho={STU_DO_TITULO} animado="laco" pausado={recolher} />
+          </View>
+        </View>
+      )}
       {/* Nível 3 (só em tela muito baixa): a descrição é a última a ceder e sai; o título e "Ver como funciona" ficam. */}
       {nivel < 3 && <Text testID="entrada-descricao" style={[estilos.introducao, nivel >= 2 && entradaEstilos.textoCompacto]}>{mensagens.entrada.texto}</Text>}
     </View>
@@ -510,7 +525,21 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
   );
 }
 
+/** O Stu ao lado do título da entrada no celular (spec 16, item 10; spec 13). */
+const STU_DO_TITULO = 72;
+
+/** O título ao lado do Stu, como a web: 26/32 e, até 320 de largura, 22/28 (cabe em 3 linhas em 390, 360 e 320). */
+export function tamanhoDoTituloComStu(largura: number) {
+  return largura <= 320 ? { fontSize: 22, lineHeight: 28 } : { fontSize: 26, lineHeight: 32 };
+}
+function estiloDoTituloComStu(largura: number) {
+  return [entradaEstilos.tituloCompacto, tamanhoDoTituloComStu(largura)];
+}
+
 const entradaEstilos = StyleSheet.create({
+  tituloComStu: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  tituloComStuTexto: { flex: 1, minWidth: 0 },
+  stuDoTitulo: { width: STU_DO_TITULO, flexShrink: 0 },
   divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   // A ilustração recortada: a caixa tem a altura que sobra e mostra a parte de baixo da paisagem de 140.
