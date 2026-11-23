@@ -1449,14 +1449,20 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     for (const relogio of somDasLicoes.current) clearTimeout(relogio);
     somDasLicoes.current.clear();
     AccessibilityInfo.announceForAccessibility(`${mensagens.geracao.propostaPronta(total, partes)} ${mensagens.geracao.comecarLicao1}.`);
-    const noAlto = rolado.current <= 4;
+    // Com o aviso de trilha repetida (spec 16, item 1, revisão 25c75c2), a tela NÃO rola até o nó 1: abre no topo, com o
+    // cartão do título e o aviso inteiros à vista (antes só o botão "Abrir a que já existe" aparecia, cortado no alto).
+    const comAviso = deveAbrirNoTopo(Boolean(existente));
+    const noAlto = comAviso || rolado.current <= 4;
     if (noAlto) setCartaoDeVolta(true);
     // A tela deixa de seguir o fim: em vez de parar no troféu, ela rola até o nó 1, no meio da área livre (spec 16, item 1).
     // O troféu fica a uma rolagem, com a pílula "Ver o fim da trilha". Espera um quadro: o troféu e, no alto, o cartão do
     // título entram agora e mudam a página.
     mudarAcompanhar(false);
-    centrarNo1NaPronta.current = true;
-    const irAoNo1 = setTimeout(() => centrarNo1(noAlto, RITMO_DA_GERACAO.prontaAteNo1Ms), 50);
+    centrarNo1NaPronta.current = !comAviso;
+    const irAoNo1 = setTimeout(() => {
+      if (comAviso) rolagem.current?.scrollTo({ y: 0, animated: false });
+      else centrarNo1(noAlto, RITMO_DA_GERACAO.prontaAteNo1Ms);
+    }, 50);
     // Depois da rolagem, a pessoa que sobe ao alto por conta própria não é puxada de volta ao nó 1.
     const fimDoCentro = setTimeout(() => { centrarNo1NaPronta.current = false; }, 50 + RITMO_DA_GERACAO.prontaAteNo1Ms + 600);
     const focar = setTimeout(() => focarSemRolar(botaoComecar.current), RITMO_DA_GERACAO.rodapeMs + 60);
@@ -1859,6 +1865,11 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
       <Text style={estudoEstilos.placaGeracaoTexto}>{texto}</Text>
     </Animated.View>
   );
+}
+
+/** A proposta pronta abre no topo (sem rolar até o nó 1) quando há o aviso de trilha repetida, para ele ficar inteiro à vista. */
+export function deveAbrirNoTopo(temTrilhaRepetida: boolean) {
+  return temTrilhaRepetida;
 }
 
 /**
