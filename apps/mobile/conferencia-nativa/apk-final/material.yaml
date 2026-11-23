@@ -87,11 +87,30 @@ appId: com.studoo.mobile.dev
       - tapOn:
           waitToSettleTimeoutMs: 2000
           text: "Permitir e continuar"
+- extendedWaitUntil:
+    visible:
+      text: "regra-dos-tercos.pdf"
+    timeout: 180000
+# Na execução 45284121423, "Criar trilha deste material" estava na árvore, mas atrás da barra de baixo flutuante: o toque
+# caiu na barra e a proposta nunca foi pedida. A tela rola até o fim (onde o conteúdo termina acima da barra) e o botão
+# vem para o meio antes do toque.
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 75%
+    end: 50%, 30%
+    duration: 600
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 75%
+    end: 50%, 30%
+    duration: 600
 - scrollUntilVisible:
     element:
       text: "Criar trilha deste material"
-    direction: DOWN
-    timeout: 180000
+    direction: UP
+    timeout: 20000
+    centerElement: true
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: m1-material-lido
