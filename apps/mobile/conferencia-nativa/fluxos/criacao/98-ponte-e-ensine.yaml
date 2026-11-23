@@ -308,9 +308,38 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: convite-explique
-# O campo não tem testID: o rótulo dele ("Sua explicação") é também o nome acessível do campo no iPhone, onde há dois
-# elementos com o texto (o rótulo em cima, index 0, e o campo, index 1). Onde só o rótulo aparece (no Android o campo usa
-# accessibilityLabelledBy), o toque vai no primeiro elemento abaixo dele, que é o campo.
+# O Explique abre embaixo do exercício: a linha "Passo 1 de 3 · Gravar ou escrever" (ensino-passo) diz que ele abriu.
+- extendedWaitUntil:
+    visible:
+      id: ensino-passo
+    timeout: 30000
+# O campo e o botão de enviar não têm testID (estudio-adaptativo.tsx): vão pelo texto. Na execução 45110010931 (Android)
+# o rótulo "Sua explicação" e o campo ficaram abaixo do rodapé do acerto (ensino-passo em y 1232, rodapé a partir de
+# 1298), fora da árvore, e o toque "abaixo de Sua explicação" não achou nada. Com o teclado ainda fechado, a lição desce
+# até o rótulo e o centraliza, deixando o campo à vista acima do rodapé; se a rolagem não chegar, "Ver mais abaixo".
+- scrollUntilVisible:
+    element:
+      text: "Sua explicação"
+    direction: DOWN
+    timeout: 120000
+    centerElement: true
+    optional: true
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        text: "Sua explicação"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: mais-abaixo
+          optional: true
+- extendedWaitUntil:
+    visible:
+      text: "Sua explicação"
+    timeout: 15000
+# O rótulo ("Sua explicação") é também o nome acessível do campo, no iPhone e no Android: com os dois à vista, o campo é
+# o segundo elemento com o texto (index 1). Se só o rótulo aparece, o toque vai no primeiro elemento abaixo dele.
 - evalScript: ${output.tocouNoCampo = false}
 - runFlow:
     when:
