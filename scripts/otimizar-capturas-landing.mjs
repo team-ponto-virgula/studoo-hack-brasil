@@ -4,6 +4,8 @@
 // public/landing/, com um trecho do hash no nome (o arquivo nunca muda sob o mesmo nome, então pode ficar em cache para sempre). A proporção da
 // tela do celular da página é a da plataforma da captura (iPhone ou Android); uma captura de outra proporção (mais de 1% de diferença) é recusada,
 // em vez de cortada.
+// Os ids do herói: `heroi-1`, `heroi-2` e `heroi-3` são o conjunto provisório (mistura plataformas); a rodada limpa do Mobile & QA entra como `heroi-N-iphone` e
+// `heroi-N-android` (a página escolhe pela plataforma do aparelho: src/app/conheca/heroi.ts), e então o provisório pode sair daqui. O `momento-N` é um por momento do S2.
 // Depois escreve src/app/conheca/imagens.gerado.ts com o endereço, a largura e a altura (1x) de cada uma.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
