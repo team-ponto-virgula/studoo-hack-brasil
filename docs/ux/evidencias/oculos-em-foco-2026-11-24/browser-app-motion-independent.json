@@ -1,0 +1,378 @@
+{
+  "date": "2026-11-24T15:59:09.220Z",
+  "surface": "app_previa_web",
+  "base": "http://localhost:8090",
+  "sourceCommit": "worktree-after-adaptive-duration",
+  "productionInstrumented": false,
+  "cacheScope": "Fresh browser context then two reloads in the same context. Expo dev can transfer assets again; this does not assert cache hits",
+  "environment": "Headless Chromium; local Expo development server; no CPU/network throttle; 390x844",
+  "observation": "MutationObserver DOM phases; external font/image/two-RAF estimates are not exact React pronta callbacks",
+  "results": [
+    {
+      "name": "cold-browser-cache-boot",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 21.5,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 1154
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 1190.300000000745
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 1193.699999999255,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 1211.800000000745,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 1211.9000000022352,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 1230.1000000014901
+          },
+          {
+            "name": "saindo",
+            "atMs": 1619.4000000022352
+          },
+          {
+            "name": "concluida",
+            "atMs": 1730.9000000022352
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 1140.800000000745,
+            "endAtMs": 1180.1000000014901,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1141.6000000014901,
+            "endAtMs": 1180.4000000022352,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1153.300000000745,
+            "endAtMs": 1156.6000000014901,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1153.5,
+            "endAtMs": 1156.9000000022352,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1176,
+            "endAtMs": 1180.4000000022352,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795535942854.8,
+        "measured": {
+          "visibleToExitMs": 465.4000000022352,
+          "exitToRemovedMs": 111.5,
+          "visibleToRemovedMs": 576.9000000022352
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-1",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 26.399999998509884,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 571.6000000014901
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 603.3000000007451
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 605.6000000014901,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 646.3000000007451,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 646.3999999985099,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 653.3999999985099
+          },
+          {
+            "name": "saindo",
+            "atMs": 1181.199999999255
+          },
+          {
+            "name": "concluida",
+            "atMs": 1297.6000000014901
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 556.3999999985099,
+            "endAtMs": 559.3000000007451,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 559.8000000007451,
+            "endAtMs": 561.8999999985099,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 560.6999999992549,
+            "endAtMs": 598.8999999985099,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 591.6999999992549,
+            "endAtMs": 594.6000000014901,
+            "transferSize": 2770
+          },
+          {
+            "name": "assets",
+            "startAtMs": 562.1999999992549,
+            "endAtMs": 606.8999999985099,
+            "transferSize": 277232
+          }
+        ],
+        "timeOrigin": 1795535944724.1,
+        "measured": {
+          "visibleToExitMs": 609.5999999977648,
+          "exitToRemovedMs": 116.40000000223517,
+          "visibleToRemovedMs": 726
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-2",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 27.799999997019768,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 573.3999999985099
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 589.7999999970198
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 594,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 617.0999999977648,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 617.1999999992549,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 636.5
+          },
+          {
+            "name": "saindo",
+            "atMs": 1190.3999999985099
+          },
+          {
+            "name": "concluida",
+            "atMs": 1307.5999999977648
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 561.8999999985099,
+            "endAtMs": 563.8999999985099,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 564.8999999985099,
+            "endAtMs": 566.3999999985099,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 587.5999999977648,
+            "endAtMs": 592.2999999970198,
+            "transferSize": 2770
+          },
+          {
+            "name": "assets",
+            "startAtMs": 565.7999999970198,
+            "endAtMs": 594,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 566.3999999985099,
+            "endAtMs": 594.6999999992549,
+            "transferSize": 277232
+          }
+        ],
+        "timeOrigin": 1795535946143.7,
+        "measured": {
+          "visibleToExitMs": 617,
+          "exitToRemovedMs": 117.19999999925494,
+          "visibleToRemovedMs": 734.1999999992549
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-document-query-return-no-replay",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "timeOrigin": 1795535946143.7,
+          "eventCount": 1
+        },
+        "after": {
+          "timeOrigin": 1795535946143.7,
+          "eventCount": 1,
+          "overlayCount": 0
+        },
+        "scope": "Synthetic History API + popstate query change/return in same document, not real native navigation"
+      }
+    },
+    {
+      "name": "background-return-interrupts-without-replay",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 29.300000000745058,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 941.4000000022352
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 973.6999999992549
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 978.8000000007451,
+            "complete": true
+          },
+          {
+            "name": "simulated-background",
+            "atMs": 1001.6999999992549
+          },
+          {
+            "name": "concluida",
+            "atMs": 1011.6000000014901
+          },
+          {
+            "name": "simulated-foreground",
+            "atMs": 1017.1000000014901
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 940.6000000014901,
+            "endAtMs": 953.6000000014901,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 940.8000000007451,
+            "endAtMs": 953.6999999992549,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 965.6999999992549,
+            "endAtMs": 969.6000000014901,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795535947982.8,
+        "overlayCount": 0,
+        "backgroundToRemovalMs": 9.900000002235174,
+        "scope": "Synthetic document.hidden/visibilityState and visibilitychange; does not prove real native AppState"
+      }
+    }
+  ]
+}

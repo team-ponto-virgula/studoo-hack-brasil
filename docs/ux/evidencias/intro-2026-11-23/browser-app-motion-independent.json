@@ -1,0 +1,354 @@
+{
+  "date": "2026-11-23T20:45:36.836Z",
+  "surface": "app_previa_web",
+  "base": "http://localhost:8082",
+  "sourceCommit": "048ae114622c73bd1ea138c597efc528cfac11c8",
+  "productionInstrumented": false,
+  "cacheScope": "Fresh browser context then two reloads in the same context. Expo dev can transfer assets again; this does not assert cache hits",
+  "environment": "Headless Chromium; local Expo development server; no CPU/network throttle; 390x844",
+  "observation": "MutationObserver DOM phases; external font/image/two-RAF estimates are not exact React pronta callbacks",
+  "results": [
+    {
+      "name": "cold-browser-cache-boot",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 32.100000001490116,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 1515.699999999255
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 1563.1000000014901
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 1566.4000000022352,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 1587.300000000745,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 1587.5,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 1601.9000000022352
+          },
+          {
+            "name": "saindo",
+            "atMs": 1636.699999999255
+          },
+          {
+            "name": "concluida",
+            "atMs": 1747.6000000014901
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 1501.1000000014901,
+            "endAtMs": 1547.6000000014901,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1501.800000000745,
+            "endAtMs": 1547.9000000022352,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1515.1000000014901,
+            "endAtMs": 1520.6000000014901,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1532.9000000022352,
+            "endAtMs": 1546.6000000014901,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795466730803.5,
+        "measured": {
+          "visibleToExitMs": 121,
+          "exitToRemovedMs": 110.90000000223517,
+          "visibleToRemovedMs": 231.90000000223517
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-1",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 46.19999999925494,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 627.5
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 642.6000000014901
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 644.1000000014901,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 662,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 662,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 687.9000000022352
+          },
+          {
+            "name": "saindo",
+            "atMs": 693.1000000014901
+          },
+          {
+            "name": "concluida",
+            "atMs": 809.1000000014901
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 619.1000000014901,
+            "endAtMs": 622.4000000022352,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 621.6000000014901,
+            "endAtMs": 642.5,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 622.4000000022352,
+            "endAtMs": 642.6999999992549,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 638.6000000014901,
+            "endAtMs": 642,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795466732723.1,
+        "measured": {
+          "visibleToExitMs": 65.60000000149012,
+          "exitToRemovedMs": 116,
+          "visibleToRemovedMs": 181.60000000149012
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-2",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 21.100000001490116,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 559.9000000022352
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 576.5
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 581.3000000007451,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 608.4000000022352,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 608.5,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 634
+          },
+          {
+            "name": "saindo",
+            "atMs": 643.4000000022352
+          },
+          {
+            "name": "concluida",
+            "atMs": 771.3000000007451
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 550.3000000007451,
+            "endAtMs": 556.2000000029802,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 552.8000000007451,
+            "endAtMs": 587.9000000022352,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 553.2000000029802,
+            "endAtMs": 588.1000000014901,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 574.6000000014901,
+            "endAtMs": 588.2000000029802,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795466733671.2,
+        "measured": {
+          "visibleToExitMs": 83.5,
+          "exitToRemovedMs": 127.89999999850988,
+          "visibleToRemovedMs": 211.39999999850988
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-document-query-return-no-replay",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "timeOrigin": 1795466733671.2,
+          "eventCount": 1
+        },
+        "after": {
+          "timeOrigin": 1795466733671.2,
+          "eventCount": 1,
+          "overlayCount": 0
+        },
+        "scope": "Synthetic History API + popstate query change/return in same document, not real native navigation"
+      }
+    },
+    {
+      "name": "background-return-interrupts-without-replay",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 30.800000000745058,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 1389.7000000029802
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 1425.800000000745
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 1432.1000000014901,
+            "complete": true
+          },
+          {
+            "name": "simulated-background",
+            "atMs": 1451
+          },
+          {
+            "name": "concluida",
+            "atMs": 1470.2000000029802
+          },
+          {
+            "name": "simulated-foreground",
+            "atMs": 1482.800000000745
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 1389.2000000029802,
+            "endAtMs": 1413,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1414.300000000745,
+            "endAtMs": 1427.6000000014901,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795466735135.2,
+        "overlayCount": 0,
+        "backgroundToRemovalMs": 19.200000002980232,
+        "scope": "Synthetic document.hidden/visibilityState and visibilitychange; does not prove real native AppState"
+      }
+    }
+  ]
+}

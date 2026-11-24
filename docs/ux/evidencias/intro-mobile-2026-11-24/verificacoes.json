@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-24T10:44:42.729Z",
+  "scope": "Intro exclusiva do app iOS/Android; site sem intro",
+  "mobileSourceUnchanged": true,
+  "webRestoredToBase": true,
+  "checks": {
+    "test:abertura": 9,
+    "test:estudio:interface": 595,
+    "test:paridade": 5,
+    "test:movimento": 4,
+    "mobileTypecheck": "passed",
+    "productionWebBuild": "passed"
+  },
+  "nativeRecording": false,
+  "notes": "GIF/MP4 são prévia controlada do componente mobile, renderizado em RNWeb com fontes deliberadamente atrasadas600ms. Não medem latência nativa."
+}

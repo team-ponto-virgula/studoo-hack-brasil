@@ -38,7 +38,16 @@
         }
       ],
       "expo-image",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/marca/logo-com-sorriso.png",
+          "imageWidth": 210,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ]
     ],
     "android": {
       "package": "com.studoo.mobile.dev"

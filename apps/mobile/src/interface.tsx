@@ -572,7 +572,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
   const titulo = useRef<ComponentRef<typeof Text>>(null);
 
   useEffect(() => {
-    if (foco && titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
+    if (foco && titulo.current && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') {
+      AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
+    }
   }, [foco]);
 
   return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" numberOfLines={linhas} textBreakStrategy={equilibrado ? 'balanced' : undefined}
@@ -904,7 +906,9 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
   const fundo = tipo === 'correto' ? '#E9F7EE' : tipo === 'ajuste' ? '#FFF3DE' : '#FFF5F6';
 
   useEffect(() => {
-    if (foco && area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+    if (foco && area.current && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') {
+      AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+    }
   }, [foco]);
 
   return (
@@ -938,7 +942,10 @@ export function EstadoErro({ mensagem, acao, testID, foco = false, estilo }: {
   const area = useRef<ComponentRef<typeof View>>(null);
 
   useEffect(() => {
-    if (foco && area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+    // React Native Web mantém role="alert", mas não implementa o anúncio de foco nativo.
+    if (foco && area.current && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') {
+      AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+    }
   }, [foco]);
 
   return (
@@ -1074,6 +1081,7 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
   }, [teclado]);
   const titulo = useRef<ComponentRef<typeof Text>>(null);
   useEffect(() => {
+    if (typeof AccessibilityInfo.sendAccessibilityEvent !== 'function') return;
     const espera = setTimeout(() => { if (titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus'); }, 250);
     return () => clearTimeout(espera);
   }, []);

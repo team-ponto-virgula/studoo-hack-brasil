@@ -1,0 +1,56 @@
+{
+  "scope": "Prévia complementar React Native Web do componente mobile; não é captura de iOS/Android; fontes retidas e relógio controlado; bundle sem shims ou métricas injetadas",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "base": "http://localhost:8090",
+  "sourceHashes": {
+    "abertura": "d45aa1b53f4db6ae117443abfb4c20c483c33d4380e9872bf72b0765b5648ed4",
+    "motion": "1bdf6b883a830f00f7dd3b178cd15dec06c7f0a343cc2f4fb3f4811780cafb67",
+    "tema": "fa9a9115777c015e7ba444b00cfbda0f319cb32ba78415c893ef33d6507c399a"
+  },
+  "frames": [
+    {
+      "file": "inicio.png",
+      "at": 5,
+      "full": "opacity: 1;",
+      "word": "opacity: 1; transform: translateX(0px);",
+      "glasses": "transform: translateX(0px) translateY(0px) rotate(0deg) scale(1);",
+      "smile": "opacity: 1; transform: scaleX(1);"
+    },
+    {
+      "file": "pico.png",
+      "at": 144,
+      "full": "opacity: 0;",
+      "word": "opacity: 0; transform: translateX(-16px);",
+      "glasses": "transform: translateX(-65.25px) translateY(-12px) rotate(-8deg) scale(2.15);",
+      "smile": "opacity: 0; transform: scaleX(0.3);"
+    },
+    {
+      "file": "reflexo.png",
+      "at": 240,
+      "full": "opacity: 0;",
+      "word": "opacity: 0; transform: translateX(-16px);",
+      "glasses": "transform: translateX(-65.25px) translateY(-12px) rotate(3deg) scale(2.15);",
+      "smile": "opacity: 0; transform: scaleX(0.3);"
+    },
+    {
+      "file": "movimento.png",
+      "at": 375,
+      "full": "opacity: 0;",
+      "word": "opacity: 0.554649; transform: translateX(-7.12561px);",
+      "glasses": "transform: translateX(-29.0591px) translateY(-5.34421px) rotate(0deg) scale(1.51215);",
+      "smile": "opacity: 0.554649; transform: scaleX(0.688255);"
+    },
+    {
+      "file": "final.png",
+      "at": 736,
+      "full": "opacity: 1;",
+      "word": "opacity: 1; transform: translateX(0px);",
+      "glasses": "transform: translateX(0px) translateY(0px) rotate(0deg) scale(1);",
+      "smile": "opacity: 1; transform: scaleX(1);"
+    }
+  ],
+  "errors": []
+}

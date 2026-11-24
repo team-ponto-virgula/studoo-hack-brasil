@@ -1,0 +1,1109 @@
+{
+  "tipo": "modelo",
+  "versaoMetodo": "1.2",
+  "metodo": "docs/ux/METODO-AVALIACAO.md",
+  "estado": "nao_avaliado",
+  "meta": {
+    "notaMinima": 9.5,
+    "notaMinimaPorCriterio": 9,
+    "pesosTotais": 100,
+    "permiteArredondamentoParaAtingirMeta": false
+  },
+  "fluxo": {
+    "id": "F01",
+    "nome": "Assinatura mobile v2 — Óculos em foco",
+    "objetivoDaPessoa": "Abrir o app Studoo em iOS/Android, reconhecer a marca com os óculos em foco e alcançar o destino, podendo dispensar a coreografia sem interferência em callbacks, foco ou ações.",
+    "entrada": "Novo boot elegível do app; callbacks e links diretos fazem bypass.",
+    "saidaEsperada": "Com movimento permitido confirmado, após coreografia de 360–560 ms escolhida antes do início e recursos locais prontos, dissolve de 120 ms. Preferência pendente mantém PNG estático; ready antes da resposta encerra por pronto(false), sem aguardar 560 ms. Dispensa interrompe a qualquer momento; deadline único módulo JS + 900 ms compartilhado pelo splash e React não reinicia. Tela de destino utilizável, sem repetição em rota/foreground. Sem orçamento para o mínimo de 360 ms, dispensar por limite com PNG integral antes de mover.",
+    "escopoDaRodada": "F01 v2 Óculos em foco, brief registrado em 24/11/2026 antes da avaliação. Somente iOS/Android; RN Web complementar; site não aplicável. Não é o tutorial Apresentacao.",
+    "foraDoEscopo": [
+      "Intro no site e notas da implementação web histórica",
+      "Redesenhar o onboarding/tutorial existente de cinco cenas",
+      "Repaginação da UI e propostas visuais dos demais fluxos"
+    ]
+  },
+  "candidata": {
+    "branch": null,
+    "commit": null,
+    "avaliadaEm": null,
+    "ambiente": null,
+    "dadosSinteticos": null,
+    "ia": null,
+    "email": null,
+    "flagsPublicas": {},
+    "versaoAbertura": 2
+  },
+  "superficiesObrigatorias": [
+    "ios_nativo",
+    "android_nativo"
+  ],
+  "superficiesComplementares": [
+    "app_previa_web"
+  ],
+  "variantesPlanejadas": [
+    "Boot frio/quente em iOS/Android; registrar início do módulo JS, deadline absoluto, montagem React e prazo restante recebido",
+    "Launch screen estática de 210x69 igual aos quadros inicial/final da marca React; boot anterior do sistema medido separadamente",
+    "Caminho permitido: coreografia padrão 560 ms ou adaptada 360–560, duração decidida antes de iniciar; recursos prontos antes, depois ou simultaneamente ao fim dela",
+    "Prontidão e conclusão da sequência repetidas; não reiniciar coreografia, dissolve nem prazo",
+    "Montagem tardia ou após expiração e condições perto do deadline módulo JS + 900 ms; nenhuma nova contagem de 900 ms ou extensão para concluir animação",
+    "Nominal padrão 680 ms com orçamento suficiente e recursos prontos; compressão 360–560 por min(560, restante − 120 − 32); sem mínimo de 360 ms, dispensar estaticamente antes de mover; nenhuma espera de API",
+    "Marcos visuais do JSON: óculos, palavra, sorriso, lentes e reflexo; participação preservando a composição inicial/final",
+    "Preferência pendente (null): PNG estático, sem coreografia; ready antes da resposta encerra por pronto(false), falta de resposta e de ready termina no deadline",
+    "Consulta de movimento que falha usa fallback reduzido; reduced conhecido/tecnologia assistiva/interação/falha/contexto/retornos dispensam sem aguardar os 560 ms",
+    "Callbacks OAuth, links diretos e retornos preservam destino/sessão/parâmetros e não esperam a coreografia",
+    "VoiceOver no iOS, TalkBack e Voltar no Android; foco e conteúdo da próxima tela",
+    "Segundo plano/foreground, navegação e remontagem sem repetição no processo",
+    "Paridade iOS/Android em medidas lógicas 390x844 e 360x800; RN Web apenas complementar",
+    "Filme de conceito Python rotulado separadamente da prévia React Native Web e da gravação nativa"
+  ],
+  "orcamentosPlanejados": [
+    {
+      "id": "G3-abertura-ciclo",
+      "superficie": null,
+      "eventoInicial": "Início do módulo JS da abertura; registrar timestamp e deadline absoluto = início + 900 ms",
+      "eventoFinal": "Assinatura concluída/removida",
+      "unidade": "ms",
+      "limite": 900,
+      "regra": "Um único deadline compartilhado pelo splash e React. Montagem recebe max(0, deadline − agora), sem novos 900 ms; montagem após expiração encerra. Ready, sequência, re-render e dissolve não reiniciam. Pode cortar animação tardia. Boot anterior ao módulo é medição separada.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-sequencia",
+      "superficie": null,
+      "tipo": "duracao_adaptativa_antes_do_inicio",
+      "unidade": "ms",
+      "alvo": 560,
+      "regra": "Somente movimento permitido confirmado. Escolher uma única duração antes de iniciar, entre 360 e 560 ms, preservando forma/marcos. Se o cálculo não comportar 360 ms, dispensar por limite com PNG integral antes de mover. Não modificar duração durante a execução. Dispensa a qualquer momento.",
+      "metodo": null,
+      "minimo": 360,
+      "maximo": 560,
+      "reservaFramesMs": 32,
+      "formula": "min(560, restante − 120 − 32)"
+    },
+    {
+      "id": "G3-abertura-dissolve",
+      "superficie": null,
+      "tipo": "duracao_configurada",
+      "unidade": "ms",
+      "alvo": 120,
+      "regra": "Começa após sequência e recursos locais prontos, em qualquer ordem; interrupções dispensam e cap pode truncar sem estender prazo.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-barreira-dupla",
+      "superficie": null,
+      "eventoInicial": "Última das condições sequência concluída e fontes/imagem/primeiro frame locais prontos",
+      "eventoFinal": "Início da saída",
+      "unidade": "ms",
+      "limite": null,
+      "regra": "No caminho permitido, ready isolado não antecipa a duração já escolhida de 360–560 ms e sequência concluída não ignora os recursos. Com preferência ainda pendente, ready chama pronto(false) e encerra sem sequência. Sem API await ou reinício por sinal repetido.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-nominal",
+      "superficie": null,
+      "tipo": "duracao_nominal_planejada",
+      "unidade": "ms",
+      "alvo": 680,
+      "condicao": "Orçamento suficiente para sequência padrão de 560 ms, recursos locais prontos desde cedo e início sem atraso; 560 + 120.",
+      "regra": "Nominal padrão não é tempo já medido nem mínimo dos caminhos adaptados/de dispensa. Coreografia adaptada 360–560 mais dissolve de 120 ms, sem ampliar deadline de 900 ms.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-dispensas",
+      "superficie": null,
+      "eventoInicial": "Interação, movimento reduzido conhecido, tecnologia assistiva, falha de consulta com fallback reduzido, falha, contexto ou retorno",
+      "eventoFinal": "Assinatura removida/bypass",
+      "unidade": "ms",
+      "limite": null,
+      "regra": "Encerrar sem aguardar os 560 ms ou o dissolve. Preferência pendente isolada não integra esta dispensa: mantém PNG estático até ready ou deadline. Medir a resposta efetiva; não inventar zero ms observado.",
+      "metodo": null
+    },
+    {
+      "id": "G3-abertura-preferencia-pendente",
+      "superficie": null,
+      "eventoInicial": "Consulta de preferência iniciada, resultado ainda null",
+      "eventoFinal": "Ready antes da resposta, resposta conhecida, falha de consulta ou deadline",
+      "unidade": "ms",
+      "limite": null,
+      "regra": "Exibir PNG estático sem iniciar coreografia. Ready antes da resposta encerra por pronto(false), sem aguardar 560 ms. Sem ready ou resposta, respeitar deadline módulo JS + 900 ms; null não provoca dispensa imediata. Falha da consulta usa fallback reduzido e encerra.",
+      "metodo": null
+    }
+  ],
+  "evidencias": [],
+  "casosExecutados": [],
+  "revisoes": [],
+  "testesComPessoas": {
+    "status": "nao_executado",
+    "sessoesExecutadas": 0,
+    "objetivo": null,
+    "criteriosDeRecrutamento": null,
+    "denominadores": {
+      "tentativas": null,
+      "conclusoesSemAjuda": null,
+      "compreensaoDoValor": null
+    },
+    "sessoes": [],
+    "limites": [
+      "Amostra exploratória não representa uma estimativa estatística de todos os usuários."
+    ],
+    "sessoesPlanejadas": null,
+    "necessidadeDoEstudo": null,
+    "exigidoParaAceiteInterno": false
+  },
+  "consolidacao": {
+    "responsavel": null,
+    "consolidadaEm": null,
+    "commit": null,
+    "estado": "nao_avaliado",
+    "gates": [
+      {
+        "id": "G1",
+        "nome": "Acesso",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G2",
+        "nome": "Movimento",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G3",
+        "nome": "Latência",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G4",
+        "nome": "Foco e acesso assistivo",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G5",
+        "nome": "Erros e integridade",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      },
+      {
+        "id": "G6",
+        "nome": "Paridade",
+        "estado": "pendente",
+        "evidencias": [],
+        "justificativa": null
+      }
+    ],
+    "porSuperficie": [
+      {
+        "superficie": "web",
+        "estado": "nao_aplicavel",
+        "nota": null,
+        "pesoAplicavel": 0,
+        "pesoNaoAplicavel": 100,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": false,
+        "entraNaNotaRevisaoInterna": false,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "nao_aplicavel",
+            "evidencias": [],
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+          }
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "nao_aplicavel",
+        "motivoNaoAplicavel": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+      },
+      {
+        "superficie": "app_previa_web",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": false,
+        "entraNaNotaRevisaoInterna": false,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ],
+        "evidenciaComplementar": true,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
+      },
+      {
+        "superficie": "ios_nativo",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
+        "entraNaNotaRevisaoInterna": true,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
+      },
+      {
+        "superficie": "android_nativo",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
+        "entraNaNotaRevisaoInterna": true,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
+      }
+    ],
+    "criteriosAbaixoDe9": [],
+    "divergencias": [],
+    "defeitosAbertos": [],
+    "lacunas": [],
+    "resumoDoQueFoiExecutado": null,
+    "proximoPasso": null,
+    "escopo": "entrega_mobile_F01",
+    "revisaoInterna": {
+      "superficiesAvaliadas": [],
+      "variantesAvaliadas": [],
+      "estado": "nao_avaliado",
+      "nota": null,
+      "metaAtingida": false,
+      "limites": [
+        "Aceite mobile de F01 depende das duas superfícies nativas obrigatórias; sem prova, notas permanecem null.",
+        "Não usar notas web históricas ou revisão complementar RN Web para completar iOS/Android."
+      ],
+      "validacaoEmpirica": "nao_realizada",
+      "gates": [
+        {
+          "id": "G1",
+          "nome": "Acesso",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G2",
+          "nome": "Movimento",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G3",
+          "nome": "Latência",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G4",
+          "nome": "Foco e acesso assistivo",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G5",
+          "nome": "Erros e integridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G6",
+          "nome": "Paridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        }
+      ]
+    },
+    "notaEntregaMultiplataforma": null,
+    "metaEntregaMultiplataformaAtingida": false,
+    "revisaoComplementar": {
+      "superficies": [
+        "app_previa_web"
+      ],
+      "estado": "nao_avaliado",
+      "nota": null,
+      "evidencias": [],
+      "limites": [
+        "Não integra a nota de entrega nem o aceite mobile de F01."
+      ]
+    }
+  },
+  "modelos": {
+    "evidencia": {
+      "id": null,
+      "tipo": null,
+      "origem": null,
+      "artefato": null,
+      "commit": null,
+      "coletadaEm": null,
+      "superficie": null,
+      "dispositivoOuEmulador": null,
+      "sistemaEVersao": null,
+      "navegadorEVersao": null,
+      "viewport": null,
+      "escalaDoTexto": null,
+      "movimentoReduzido": null,
+      "som": null,
+      "estadoDoApp": null,
+      "conexao": null,
+      "flagsPublicas": {},
+      "passos": [],
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "limites": [],
+      "sanitizada": false,
+      "versaoAbertura": null,
+      "hashContratoMotion": null,
+      "origemDaMidia": null
+    },
+    "metrica": {
+      "id": null,
+      "nome": null,
+      "superficie": null,
+      "orcamentoId": null,
+      "unidade": null,
+      "amostras": [],
+      "quantidadeDeAmostras": null,
+      "metodo": null,
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "evidencias": [],
+      "limites": []
+    },
+    "caso": {
+      "id": null,
+      "cenario": null,
+      "superficie": null,
+      "variantes": [],
+      "passos": [],
+      "esperado": null,
+      "observado": null,
+      "status": "nao_executado",
+      "evidencias": [],
+      "achados": []
+    },
+    "revisao": {
+      "id": null,
+      "papel": null,
+      "revisor": null,
+      "autorDaImplementacao": false,
+      "independente": null,
+      "superficie": null,
+      "origemNativa": null,
+      "commit": null,
+      "revisadaEm": null,
+      "parecerFechadoEm": null,
+      "leuOutrasNotasAntesDeFechar": null,
+      "gates": [
+        {
+          "id": "G1",
+          "nome": "Acesso",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G2",
+          "nome": "Movimento",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G3",
+          "nome": "Latência",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G4",
+          "nome": "Foco e acesso assistivo",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G5",
+          "nome": "Erros e integridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        },
+        {
+          "id": "G6",
+          "nome": "Paridade",
+          "estado": "pendente",
+          "evidencias": [],
+          "justificativa": null
+        }
+      ],
+      "criterios": [
+        {
+          "id": "C1",
+          "nome": "Clareza do valor e dos textos",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C2",
+          "nome": "Ação principal e autonomia",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C3",
+          "nome": "Hierarquia, leitura e adaptação",
+          "peso": 12,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C4",
+          "nome": "Identidade e acabamento visual",
+          "peso": 8,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C5",
+          "nome": "Movimento e som com controle",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C6",
+          "nome": "Acessibilidade e foco",
+          "peso": 14,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C7",
+          "nome": "Resposta e espera",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C8",
+          "nome": "Feedback, erros e recuperação",
+          "peso": 10,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C9",
+          "nome": "Continuidade e confiança",
+          "peso": 6,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        },
+        {
+          "id": "C10",
+          "nome": "Paridade e integração de plataforma",
+          "peso": 6,
+          "aplicabilidade": "aplicavel",
+          "motivoNaoAplicavel": null,
+          "estado": "pendente",
+          "nota": null,
+          "ancora": null,
+          "justificativa": null,
+          "evidencias": [],
+          "metricas": [],
+          "achados": [],
+          "limites": []
+        }
+      ],
+      "tresAchadosPrioritarios": [],
+      "limites": [],
+      "conclusao": null,
+      "versaoAbertura": null,
+      "hashContratoMotion": null
+    },
+    "achado": {
+      "id": null,
+      "criterio": null,
+      "gate": null,
+      "gravidade": null,
+      "superficie": null,
+      "estado": null,
+      "reproducao": [],
+      "evidencias": [],
+      "efeitoNaTarefa": null,
+      "resultadoEsperado": null,
+      "resultadoObservado": null,
+      "correcaoNecessaria": null,
+      "status": "aberto",
+      "confirmacaoAposCorrecao": null
+    },
+    "divergencia": {
+      "criterio": null,
+      "superficie": null,
+      "notasOriginais": [],
+      "menorNotaSustentada": null,
+      "evidenciaDaReproducao": [],
+      "decisao": null,
+      "responsavel": null,
+      "notaAposDecisao": null
+    },
+    "criterioConsolidado": {
+      "id": null,
+      "pesoOriginal": null,
+      "aplicabilidade": "aplicavel",
+      "motivoNaoAplicavel": null,
+      "notasIndependentes": [],
+      "menorNotaSustentada": null,
+      "nota": null,
+      "evidencias": [],
+      "confirmacaoIndependenteParaNotaAlta": null,
+      "achadosAbertos": [],
+      "limites": []
+    },
+    "sessaoComPessoa": {
+      "idAnonimo": null,
+      "perfilDeUso": null,
+      "necessidadeDeAcesso": null,
+      "superficie": null,
+      "objetivoInformado": null,
+      "concluiuSemAjuda": null,
+      "entendeuValor": null,
+      "desvios": null,
+      "hesitacoes": null,
+      "erros": null,
+      "evidenciasSanitizadas": [],
+      "observacoes": null
+    }
+  },
+  "preenchimento": {
+    "instrucoes": "Copiar os objetos de modelos para as listas reais e preencher o contexto; modelos não contam como execução. Este modelo está preparado para F01 mobile-only por ordem de 24/11/2026. Para outro fluxo, definir suas superfícies aplicáveis antes da avaliação. Não preencher notas sem evidência nem copiar notas web históricas para o app. Registrar só dados e flags públicos permitidos.",
+    "papel": [
+      "visual",
+      "fluxo_acessibilidade",
+      "engenharia_qa"
+    ],
+    "superficie": [
+      "web",
+      "app_previa_web",
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "origemNativa": [
+      "aparelho",
+      "simulador",
+      "emulador"
+    ],
+    "tipoEvidencia": [
+      "codigo_teste",
+      "captura",
+      "interacao_gravada",
+      "medicao",
+      "observacao_com_pessoa"
+    ],
+    "estadoGate": [
+      "aprovado",
+      "reprovado",
+      "pendente",
+      "nao_aplicavel"
+    ],
+    "aplicabilidade": [
+      "aplicavel",
+      "nao_aplicavel",
+      "nao_exposto"
+    ],
+    "gravidade": [
+      "critico",
+      "alto",
+      "medio",
+      "baixo"
+    ],
+    "estadoConsolidacao": [
+      "nao_avaliado",
+      "em_revisao",
+      "bloqueado",
+      "provisorio",
+      "fora_da_meta",
+      "aprovado_no_escopo"
+    ],
+    "lembretes": [
+      "Meta 9,5 depende dos gates e da cobertura no escopo declarado, não apenas da soma ponderada.",
+      "F01 é somente iOS/Android por ordem expressa de 24/11/2026; web é não aplicável à intro.",
+      "O método geral e o enum web continuam disponíveis para os outros fluxos web/app.",
+      "RN Web é evidência complementar do código mobile, não uma intro do site e não prova nativa.",
+      "Notas e medições da implementação web histórica não migram para o mobile.",
+      "Revisão especializada interna e validação empírica com pessoas/produção têm estados separados.",
+      "Não há recrutamento ou tamanho de amostra universal obrigatório para aceitar a revisão interna.",
+      "Critério aplicável sem prova permanece nota null; não excluir seu peso para elevar a nota.",
+      "A nota de F01 considera somente iOS/Android obrigatórios; se faltar prova de um deles, permanece null e a entrega mobile Provisória.",
+      "A revisão complementar RN Web tem nota própria quando sustentada e não completa o aceite mobile.",
+      "Sem observação com pessoas, declarar validação empírica não realizada; não alegar comportamento universal.",
+      "Não incluir chaves, tokens, sessões, senhas ou dados pessoais em evidências compartilhadas.",
+      "Brief v2 Óculos em foco registrado antes da avaliação; pesos e meta permanecem iguais.",
+      "A regra v1 sem exposição mínima foi substituída por coreografia de até 560 ms intencional e dispensável, com duração adaptativa decidida antes de iniciar no caminho permitido; nenhum resultado v1 aprova a v2.",
+      "Dissolve de 120 ms requer coreografia e recursos locais prontos no caminho permitido; deadline absoluto módulo JS + 900 ms é compartilhado pelo splash e React, que recebe só o restante na montagem.",
+      "Filme Python é conceito visual; RNWeb é execução complementar; nenhum deles comprova a gravação ou desempenho nativos.",
+      "Registrar versão e hash do contrato em cada evidência; não reaproveitar a origem de uma mídia para rotular outra.",
+      "Preferência null não dispensa imediatamente e não inicia os 560 ms: mostra PNG estático até ready, resposta ou deadline; ready antes da resposta encerra por pronto(false).",
+      "Antes do movimento, calcular min(560, restante − 120 − 32): duração entre 360 e 560 ms; se não couber 360 ms, dispensar por limite com PNG integral. Registrar duração/restante; não começar meio gesto nem elevar o cap."
+    ],
+    "estadoCriterioNaRevisao": [
+      "pendente",
+      "nao_examinado_pelo_revisor",
+      "examinado"
+    ],
+    "estadoPorSuperficie": [
+      "nao_avaliado",
+      "em_revisao",
+      "bloqueado",
+      "provisorio",
+      "fora_da_meta",
+      "aprovado_no_escopo",
+      "nao_aplicavel"
+    ],
+    "origemDaMidia": [
+      "conceito_python",
+      "previa_react_native_web",
+      "gravacao_nativa"
+    ]
+  },
+  "escopoRevisaoInterna": {
+    "superficies": [
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "superficiesComplementares": [
+      "app_previa_web"
+    ],
+    "variantes": [],
+    "limitesDeclarados": [
+      "Preencher antes da revisão; F01 exige prova de iOS/Android para aceite mobile.",
+      "RN Web pode ter revisão complementar própria, sem substituir notas/gates nativos.",
+      "Web é não aplicável a F01; notas web históricas não são herdadas pelo app."
+    ]
+  },
+  "contratoAbertura": {
+    "fonte": "packages/contratos/src/abertura-motion.json",
+    "marca": {
+      "largura": 210,
+      "altura": 69.0,
+      "fundo": "#FFFFFF",
+      "estaticaNaLaunchScreen": true,
+      "frameInicialIgualAoFinal": true
+    },
+    "dissolveMs": 120,
+    "cicloMsMaximo": 900,
+    "movimentoSomenteQuandoPermitidoConfirmado": true,
+    "aguardaApi": false,
+    "naoRepeteEm": [
+      "rota",
+      "foreground"
+    ],
+    "bypass": [
+      "callback OAuth",
+      "link direto",
+      "consulta ou fragmento",
+      "rota não elegível"
+    ],
+    "encerramentosSemEspera": [
+      "movimento reduzido conhecido",
+      "consulta de preferência que falha, com fallback reduzido",
+      "tecnologia assistiva",
+      "falha",
+      "interação",
+      "contexto/segundo plano",
+      "retornos/callbacks/links"
+    ],
+    "aplicacaoDosCriterios": {
+      "C1": "Reconhecimento da identidade; não exigir slogan, valor do produto ou loading fictício.",
+      "C2": "Dispensa a qualquer momento, sem ação oculta. A coreografia de 360–560 ms escolhida antes de iniciar no caminho permitido é intencional no brief v2, sem exigir botão novo.",
+      "C3": "Marca em 210x69, fundo branco, recortes e transformações dos óculos sem cortes indevidos; início/fim iguais ao splash estático.",
+      "C4": "Óculos participam do gesto de foco/reflexo conforme o JSON, preservando a composição oficial inicial/final; nenhuma obrigação de acrescentar mascote ou tutorial.",
+      "C5": "Sequência de até 560 ms, duração 360–560 ms escolhida antes do início por min(560, restante − 120 − 32), só com movimento permitido confirmado. Preferência null mostra PNG estático; ready antes da resposta encerra sem sequência. Reduced conhecido/tecnologia assistiva/falha/contexto/interação/retornos dispensam imediatamente; falha de consulta usa fallback reduzido. Se não couber o mínimo de 360 ms, dispensa estática antes do movimento; forma/marcos preservados.",
+      "C6": "Marca decorativa não cria etapa de foco ou anúncio indevido; conferir VoiceOver/TalkBack e tela seguinte no nativo.",
+      "C7": "No caminho permitido, saída de 120 ms após sequência e recursos locais prontos em qualquer ordem, nominal padrão 680 ms; duração 360–560 ms decidida antes do movimento com reserva de 120 + 32 ms e dispensa estática quando faltar o mínimo de 360 ms. Deadline absoluto módulo JS + 900 ms compartilhado por splash/React; montagem recebe só o restante e não reinicia. Nunca aguarda API. Preferência pendente não inicia sequência e ready encerra por pronto(false).",
+      "C8": "Falhas e sinais tardios/repetidos não retêm, reiniciam ou estendem o prazo; dispensas e callbacks preservam destino.",
+      "C9": "Não repetir em navegação ou foreground; não criar dado de estudo ou preferência de onboarding.",
+      "C10": "Comparar iOS/Android realmente executados; RN Web apenas complementa. Não exigir intro no site nem herdar sua nota histórica."
+    },
+    "superficiesAlvo": [
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "consumo": "Processo do app; não repetir em rota ou foreground.",
+    "launchScreenDoSistema": "Estática em 210x69, igual aos frames inicial e final da marca React. Medir boot anterior ao JS separadamente.",
+    "versao": 2,
+    "direcao": "Óculos em foco",
+    "fonteCiclo": "packages/contratos/src/abertura.ts",
+    "sequenciaMs": 560,
+    "duracaoNominalPlanejadaMs": 680,
+    "origemDoPrazo": "Início do módulo JS da abertura; deadline absoluto = início + 900 ms compartilhado pelo splash nativo e controlador React. Boot anterior ao módulo é medição separada.",
+    "reiniciaPrazo": false,
+    "saidaRequer": [
+      "coreografiaConcluida",
+      "recursosLocaisProntos"
+    ],
+    "ordemDasCondicoes": "qualquer",
+    "permiteDispensaEmQualquerMomento": true,
+    "capPodeInterromperSequenciaOuDissolve": true,
+    "parametrosVisuais": "Ler marcos e vetores do JSON versionado da candidata; não reaproveitar escala/deslocamento da acomodação v1.",
+    "assetOculos": {
+      "caminho": "apps/mobile/assets/marca/abertura-oculos-hd.png",
+      "origem": "Derivado do ícone oficial de 1024 px, conforme geração da candidata.",
+      "objetivo": "Reduzir aliasing na ampliação 2,15x dos óculos; conferir no renderer.",
+      "marcaCompletaEmRepouso": "Original de 210 px preservada nos quadros inicial/final.",
+      "aprovacaoVisualOuNativa": null
+    },
+    "prazoNaMontagem": "max(0, deadline − agora); apenas o restante, nunca outros 900 ms. Montagem após a expiração encerra sem timer extra.",
+    "preferenciaPendente": {
+      "estado": null,
+      "apresentacao": "PNG estático, sem coreografia",
+      "readyAntesDaResposta": "pronto(false) encerra sem aguardar 560 ms",
+      "semReadyOuResposta": "Termina no mesmo deadline absoluto",
+      "falhaDaConsulta": "Hook usa estado reduzido true e encerra",
+      "dispensaImediataApenasPorNull": false
+    },
+    "adaptacaoAntesDoInicio": {
+      "sequenciaPadraoMs": 560,
+      "sequenciaMinimaMs": 360,
+      "sequenciaMaximaMs": 560,
+      "formula": "min(560, restante − 120 − 32)",
+      "dissolveReservadoMs": 120,
+      "reservaFramesMs": 32,
+      "momentoDaDecisao": "Antes de iniciar o movimento; não mudar a duração durante o gesto.",
+      "semOrcamentoMinimo": "Dispensar por limite com PNG integral antes do movimento.",
+      "preservaFormaEMarcos": true,
+      "estendeDeadline": false
+    },
+    "execucaoDoMovimento": "Um único timing com curva por trechos amostrada preserva forma/marcos, sem callbacks JS entre eles; driver nativo no app e driver JS apenas na prévia RN Web."
+  },
+  "regressoesAdjacentesPlanejadas": [
+    "Smoke do onboarding Apresentacao mobile existente: abrir pelo caminho atual e sair/continuar sem alterar cenas, interesses, ações ou preferência de visto.",
+    "Ausência de intro no site pode ser conferida separadamente como regressão da remoção; não compõe a nota mobile de F01."
+  ],
+  "decisaoDeEscopo": {
+    "data": "2026-11-24",
+    "origem": "Instrução expressa do dono nesta tarefa; exceção P33 da spec 07",
+    "regra": "F01 é somente mobile iOS/Android. O site não tem intro. React Native Web é evidência complementar do app.",
+    "notasWebHistoricasTransferiveisAoMobile": false,
+    "versaoAtualDaAbertura": 2,
+    "notasDeVersoesAnterioresTransferiveis": false
+  },
+  "superficiesNaoAplicaveis": [
+    {
+      "superficie": "web",
+      "motivo": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+    }
+  ],
+  "briefAntesDaAvaliacao": {
+    "registradoEm": "2026-11-24",
+    "versaoAbertura": 2,
+    "direcao": "Óculos em foco",
+    "origem": "Novo pedido explícito do dono: movimento inovador com participação dos óculos.",
+    "regraSubstituida": "A v1 não exigia exposição mínima e liberava ao ficar pronta.",
+    "regraAtual": "Com movimento permitido confirmado, coreografia intencional de até 560 ms, com duração 360–560 ms decidida antes de iniciar por min(560, restante − 120 − 32), ou dispensa estática por limite se não couber o mínimo de 360 ms; saída após sequência e recursos locais prontos, em qualquer ordem. Preferência pendente mantém PNG estático e ready sem resposta encerra por pronto(false). Dispensa a qualquer momento; deadline absoluto módulo JS + 900 ms compartilhado pelo splash e React, com somente restante na montagem.",
+    "alteraPesosOuMeta": false,
+    "resultadosAnterioresAprovamEstaVersao": false,
+    "refinamentoDeLatencia": {
+      "registradoEm": "2026-11-24",
+      "sequenciaInicialMs": 640,
+      "sequenciaAtualMs": 560,
+      "nominalAtualMs": 680,
+      "capMantidoMs": 900,
+      "motivo": "Medição exploratória do renderer relatada pela coordenação atingiu o cap em boot frio e truncou o dissolve em 77 ms. Redução da sequência reserva margem para assets e frames sem estender o cap.",
+      "alteraMarcosHistoriaOuCurva": false,
+      "alteraPesosOuMeta": false,
+      "evidenciaNativa": false
+    },
+    "precisaoDeImplementacao": {
+      "registradoEm": "2026-11-24",
+      "deadlineAbsolutoCompartilhado": "Módulo JS + 900 ms; montagem passa somente o tempo restante, sem outra contagem de 900 ms.",
+      "preferenciaPendente": "Não é dispensa imediata: PNG estático, sem sequência; ready antes da resposta encerra por pronto(false). Falha da consulta usa fallback reduzido.",
+      "alteraPesosOuMeta": false,
+      "execucaoNativaComprovada": false
+    },
+    "adaptacaoDeOrcamento": {
+      "registradoEm": "2026-11-24",
+      "motivo": "Diagnóstico de boot frio relatado pela coordenação encontrou 542 ms restantes no início; sequência fixa de 560 ms mais dissolve de 120 ms não cabia.",
+      "sequenciaPadraoMs": 560,
+      "sequenciaMinimaMs": 360,
+      "sequenciaMaximaMs": 560,
+      "reservaDissolveMs": 120,
+      "reservaFramesMs": 32,
+      "formula": "min(560, restante − 120 − 32)",
+      "semMinimo": "Dispensa por limite antes do movimento, com PNG integral.",
+      "exemploRelatado": {
+        "restanteMs": 542,
+        "sequenciaMs": 390,
+        "dissolveMs": 120,
+        "reservaFramesMs": 32
+      },
+      "capMantidoMs": 900,
+      "alteraFormaOuMarcos": false,
+      "alteraPesosOuMeta": false,
+      "evidenciaNativa": false,
+      "rodadaNaturalIntermediaria": "4/5 relatada; não aprovada e não substituída por testes unitários."
+    }
+  }
+}
