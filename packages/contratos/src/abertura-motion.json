@@ -1,0 +1,30 @@
+{
+  "versao": 2,
+  "direcao": "Óculos em foco",
+  "largura": 210,
+  "fundo": "#FFFFFF",
+  "corLente": "#2563FF",
+  "sequenciaMs": 560,
+  "sequenciaMinimaMs": 360,
+  "margemQuadroMs": 32,
+  "saidaMs": 120,
+  "limiteMs": 900,
+  "curva": [0.22, 1, 0.36, 1],
+  "fonte": { "largura": 560, "altura": 184, "divisao": 348, "linhaSorriso": 134 },
+  "marcos": [0, 0.18, 0.34, 0.5, 0.88, 1],
+  "oculosX": [0, -1, -1, -1, 0, 0],
+  "oculosY": [0, -12, -12, -12, 0, 0],
+  "oculosEscala": [1, 2.15, 2.15, 2.15, 1, 1],
+  "oculosRotacao": [0, -8, 3, 0, 0, 0],
+  "palavraOpacidade": [1, 0, 0, 0, 1, 1],
+  "palavraX": [0, -16, -16, -16, 0, 0],
+  "sorrisoOpacidade": [1, 0, 0, 0, 1, 1],
+  "sorrisoEscala": [1, 0.3, 0.3, 0.3, 1, 1],
+  "lenteOpacidade": [0, 0.1, 0.1, 0.05, 0, 0],
+  "reflexoOpacidade": [0, 0, 0.95, 0, 0, 0],
+  "reflexoX": [-18, -18, 0, 18, 18, 18],
+  "lentes": [
+    { "x": 400.5, "y": 84, "diametro": 52 },
+    { "x": 505.5, "y": 84, "diametro": 52 }
+  ]
+}

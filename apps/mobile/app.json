@@ -43,7 +43,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/marca/logo-com-sorriso.png",
-          "imageWidth": 180,
+          "imageWidth": 210,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF"
         }
