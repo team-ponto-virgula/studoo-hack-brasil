@@ -34,15 +34,16 @@ state.exploreOrder ||= 'alta';state.explorePage ||= 1;
 state.correctPairs ||= {};
 if(q.get('s')==='ponte-vale-rever'&&state.activeTrack){state.tracks[state.activeTrack].bridgesDone=[0];state.reviewNeeded=[...new Set([...state.reviewNeeded,0])];}
 let renderedURL=location.href,renderedState=null,recording=false,recordStarted=0,recordInterval=null,recordDraft='';
-if(scenario==='proxima')state.lessonIndex=1;if(page==='exercicio')state.exerciseFormat=format;
+if(scenario==='proxima')state.lessonIndex=1;if(page==='exercicio'&&scenario!=='parcial')state.exerciseFormat=format;
 if(scenario==='novas')state.exploreOrder='novas';if(scenario==='paginada')state.explorePage=2;
-if(scenario==='parcial'&&format==='associar'&&Object.keys(state.pairs).length===0){state.pairs={gt:'>',gte:'>',lte:'<='};state.correctPairs={gt:'>',lte:'<='};}
-if(scenario==='parcial'&&format==='aberta'&&!state.openAnswer)state.openAnswer='Eu usaria o operador >=.';
 state.attempts ||= {};
 let currentAttemptKey=state.activeTrack?state.activeTrack+':'+Math.min(4,Math.max(0,Number(state.lessonIndex)||0)):null;
 const attemptFields=['selected','order','pairs','correctPairs','reason','openAnswer','explanation','reinforce','originalAnswer','exerciseFormat'];
 function stashAttempt(){if(!currentAttemptKey)return;state.attempts||={};state.attempts[currentAttemptKey]=Object.fromEntries(attemptFields.filter(k=>state[k]!==undefined).map(k=>[k,structuredClone(state[k])]));}
 function loadAttempt(index){stashAttempt();state.lessonIndex=Math.min(4,Math.max(0,Number(index)||0));const key=state.activeTrack?state.activeTrack+':'+state.lessonIndex:null;if(key===currentAttemptKey)return;currentAttemptKey=key;const draft=key&&state.attempts?.[key];const empty={selected:null,order:initial().order,pairs:{},correctPairs:{},reason:'',openAnswer:'',explanation:'',reinforce:0,exerciseFormat:'lacuna'};for(const k of attemptFields){if(draft&&Object.hasOwn(draft,k))state[k]=structuredClone(draft[k]);else if(Object.hasOwn(empty,k))state[k]=structuredClone(empty[k]);else delete state[k];}}
+
+// A bancada só oferece parcial nos formatos com critérios ou vários itens.
+if(page==='exercicio'&&scenario==='parcial'){loadAttempt(0);if(!['associar','aberta'].includes(format))format='associar';state.exerciseFormat=format;if(format==='associar'){state.pairs={gt:'>',gte:'>',lte:'<='};state.correctPairs={gt:'>',lte:'<='};}else state.openAnswer='Eu usaria o operador >=.';}
 
 if(page==='entrar'&&['expirada','sessao-expirada'].includes(scenario)&&!state.isGuest){try{localStorage.setItem(accountSnapshotKey,JSON.stringify(state));}catch{}state.sessionActive=false;}
 const root=document.getElementById('app');
