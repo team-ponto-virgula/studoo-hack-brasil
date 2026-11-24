@@ -108,15 +108,10 @@ function resumoDosTrechos(nos: readonly NoCaminho[]) {
   return resumo;
 }
 
-/** Um trecho está vencido quando todas as suas lições estão concluídas: o marco que o fecha fica dourado. */
-function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
-  return nos.every((no) => no.trecho !== trecho || no.estado === 'concluida');
-}
-
 /**
  * Caminho único e contínuo de lições, na ordem de aprendizado, sobre o mundo ilustrado.
  * Não agrupa por assunto: entre um trecho e outro aparece só o marco, sem nome, sobre a fronteira das regiões.
- * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho; o cenário fica de fora.
+ * O leitor de tela ouve "Parte 1" antes das primeiras lições e cada nova parte depois do último nó do trecho anterior.
  * O nó atual abre a lição; concluído ou bloqueado abre a folha que explica o estado.
  * Com `rolarPara`, avisa por `aoRolar` o topo e a base da lente desse nó na rolagem da tela (o caminho deve ser filho direto dela).
  * Com `montando`, a trilha ainda está sendo gerada: cada nó novo entra com um movimento curto e o cenário brota junto,
@@ -447,7 +442,6 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto) depois += (seguinte?.estado === 'atual' ? 12 : 22) * selosDoNo(no).length;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
-          const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
           const recem = no.id === recemConcluida;
           const guia = guiaNoCaminho && no.estado === 'atual';
           const atrasoEntrada = surgir ? 0 : 100 + indice * 70;
@@ -497,7 +491,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
               {indice === 0 && (criacao !== null || stuNoNo1) && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao ?? 'pronta'} reduzir={reduzir} />}
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
+                <Marco topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
                   queda={montando}>
                   <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
@@ -1488,15 +1482,11 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgi
 }
 
 /**
- * Marco entre um trecho e outro: o sinal com relevo sobre a fronteira das regiões, sem nome de assunto; dourado quando
- * o trecho foi vencido. Vem depois do nó na árvore, então o leitor de tela lê "Marco 1", "Marco 2"… logo depois do
- * último nó do trecho.
+ * Faixa da parte seguinte, inserida depois do último nó da parte anterior.
  */
-function Marco({ numero, vencido, topo, noAlto = false, queda = false, children }: {
+function Marco({ topo, noAlto = false, queda = false, children }: {
   /** Geração: o marco de um trecho novo cai 12 px em 260 ms, antes da lição (com movimento reduzido, já aparece). */
   queda?: boolean;
-  numero: number;
-  vencido: boolean;
   topo: number;
   /** Com o balão "Começar" logo abaixo, a pílula fica no alto do vão, sem dividir espaço com ele. */
   noAlto?: boolean;
@@ -1518,8 +1508,7 @@ function Marco({ numero, vencido, topo, noAlto = false, queda = false, children 
   }, [reduzir]);
   return (
     <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }, noAlto && caminhoEstilos.marcoNoAlto]}>
-      <Animated.View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}
-        style={{ opacity: chegada, transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [-RITMO_DA_GERACAO.marcoQueda, 0] }) }] }}>
+      <Animated.View style={{ opacity: chegada, transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [-RITMO_DA_GERACAO.marcoQueda, 0] }) }] }}>
         {children}
       </Animated.View>
     </View>
@@ -1534,14 +1523,16 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
   let texto: string | null = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
   if (resumo.previa) texto = null;
   else if (vencida) texto = mensagens.trilha.parteVencida;
+  const titulo = mensagens.trilha.parte(numero);
   return (
-    <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+    <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]}
+      accessible accessibilityRole="header" accessibilityLabel={texto ? `${titulo}. ${texto}` : titulo}>
       <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida]}>
         <Icone nome={vencida ? 'trofeu' : 'bandeira'} tamanho={16} cor={vencida ? cores.ouroTexto : cores.fundo} />
       </View>
       <View style={caminhoEstilos.parteCorpo}>
         <View style={caminhoEstilos.parteTopo}>
-          <Text style={caminhoEstilos.parteNumero}>{mensagens.trilha.parte(numero)}</Text>
+          <Text style={caminhoEstilos.parteNumero}>{titulo}</Text>
           {texto !== null && <Text style={[caminhoEstilos.parteAndamento, vencida && { color: cores.alerta }]}>{texto}</Text>}
         </View>
       </View>

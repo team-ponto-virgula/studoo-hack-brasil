@@ -60,6 +60,8 @@ export const RolagemDaTela = createContext<{
   travar: (ativo: boolean) => void;
   /** Rola a tela `delta` pontos sem animação (perto da borda, durante um arrasto) e devolve quanto rolou de fato. */
   rolarPor: (delta: number) => number;
+  /** Onde um elemento está dentro da rolagem (topo e altura), para a tela saber se ele já está à vista (spec 16, item 35). */
+  medir: (no: ComponentRef<typeof View> | null, aoMedir: (y: number, altura: number) => void) => void;
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
@@ -295,6 +297,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   // A barra da marca e a faixa entram na conta assim que são medidas.
   useEffect(informarNatural, [alturaCabecalho, alturaFaixa, acima]);
   /** Leva o elemento para a parte visível, se ele não estiver inteiro lá (sem mexer quando já está). */
+  const medir = (no: ComponentRef<typeof View> | null, aoMedir: (y: number, altura: number) => void) => {
+    const conteudo = rolagemInterna.current?.getInnerViewRef?.();
+    if (!conteudo || !no) return;
+    no.measureLayout(conteudo as never, (_x, y, _largura, altura) => aoMedir(y, altura), () => undefined);
+  };
   const mostrar = (no: ComponentRef<typeof View> | null, margem = 16) => {
     const tela = rolagemInterna.current;
     const conteudo = tela?.getInnerViewRef?.();
@@ -411,7 +418,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) || (comAcima && !alturaAcima) ? null
               : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
-                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor }}>
+                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor, medir }}>
                   <TecladoAberto.Provider value={teclado}>
                     <BaixoOcupado.Provider value={baixoDoAviso - 16}>
                       <EspacoDaBarra.Provider value={zonaDaBarra}>
@@ -960,6 +967,9 @@ type PropsConfirmacao = {
   ocupado?: boolean;
   /** O erro do envio, acima das ações (o cartão continua aberto). */
   erro?: string | null;
+  /** Para manter a janela montada até o iOS avisar que acabou de fechar. */
+  visivel?: boolean;
+  aoFechar?: () => void;
   aoCancelar: () => void;
   aoConfirmar: () => void;
 };
@@ -968,15 +978,17 @@ type PropsConfirmacao = {
 const LARGURA_MEDIA_DO_CARACTERE = 9.2;
 
 export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
-  confirmarDesativado = false, ocupado = false, erro, aoCancelar, aoConfirmar }: PropsConfirmacao) {
+  confirmarDesativado = false, ocupado = false, erro, visivel = true, aoFechar, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const { width } = useWindowDimensions();
   const reduzir = useMovimentoReduzido();
   const [entrada] = useState(() => new Animated.Value(0));
   useEffect(() => {
+    if (!visivel) return;
+    entrada.setValue(0);
     const animacao = Animated.timing(entrada, { toValue: 1, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true });
     animacao.start();
     return () => animacao.stop();
-  }, [entrada]);
+  }, [entrada, visivel]);
   // Cartão de min(100% − 32, 400) com respiro de 24: cada ação fica com metade do miolo, menos os 8 entre elas.
   const metade = (Math.min(width - 32, 400) - 48 - 8) / 2;
   const cabe = (rotulo: string) => rotulo.length * LARGURA_MEDIA_DO_CARACTERE + 36 + 4 <= metade;
@@ -985,7 +997,7 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
   const confirmar = <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado || confirmarDesativado} carregando={ocupado}
     acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
-    <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
+    <Modal transparent visible={visivel} animationType="fade" statusBarTranslucent onDismiss={aoFechar} onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
         <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
           transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>

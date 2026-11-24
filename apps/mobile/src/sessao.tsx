@@ -13,7 +13,7 @@ import { RecuperarAcesso } from './recuperar';
 import { CriarConta, enderecoDaPoliticaPublica } from './cadastro';
 import { BotaoPrecisaDeAjuda } from './seguranca';
 import { abrirNoNavegador } from './social';
-import { Estudo } from './estudo';
+import { Estudo, type DestinoPublico } from './estudo';
 import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useAvisoDoAppRaiz, useMovimentoReduzido } from './interface';
 import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
 import { SkeletonTrilha } from './caminho';
@@ -36,9 +36,9 @@ type Sessao =
   | { tipo: 'recuperar'; email: string }
   | { tipo: 'cadastro'; email: string }
   | { tipo: 'falha'; erro: string }
-  | { tipo: 'ativa'; cliente: ClienteNativo };
+  | { tipo: 'ativa'; cliente: ClienteNativo; visitante?: boolean };
 
-export function AppMobile() {
+export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
   const [sessao, setSessao] = useState<Sessao>({ tipo: 'verificando' });
   const [tentativa, setTentativa] = useState(0);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
@@ -67,8 +67,8 @@ export function AppMobile() {
         }
 
         const cliente = criarClienteNativo(token);
-        await cliente.sessao();
-        if (ativo) setSessao({ tipo: 'ativa', cliente });
+        const dados = await cliente.sessao();
+        if (ativo) setSessao({ tipo: 'ativa', cliente, visitante: dados.visitante });
       } catch (erro) {
         if (!ativo) return;
         if (sessaoInvalida(erro)) {
@@ -155,7 +155,7 @@ export function AppMobile() {
     case 'ativa':
       return (
         <ConsentimentoIa cliente={sessao.cliente} aoExcluida={aoExcluida}>
-          {(cliente) => <Estudo cliente={cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />}
+          {(cliente) => <Estudo cliente={cliente} visitante={sessao.visitante === true} destino={destino} sair={() => sair(sessao.cliente)} expirar={expirar} />}
         </ConsentimentoIa>
       );
     case 'entrada':
@@ -166,7 +166,7 @@ export function AppMobile() {
         visitante={async () => {
           const token = await entrarComoVisitante();
           void tocaSons.tocarEfeito('entrar');
-          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token), visitante: true });
         }}
         recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':

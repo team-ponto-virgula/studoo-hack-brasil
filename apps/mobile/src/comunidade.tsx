@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
+  AccessibilityInfo, Animated, Easing, Image, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
 } from 'react-native';
 import Svg, { Defs, FeDropShadow, Filter, G, LinearGradient, Rect, Stop, SvgXml, Text as SvgTexto } from 'react-native-svg';
 import {
@@ -10,7 +10,7 @@ import {
 } from '@studoo/contratos';
 import type { ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
-import { AvisoDoApp, Botao, CartaoConfirmacao, MenuDeAcoes, Tela, Titulo, degrauFora, estilos, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, Botao, Campo, CartaoConfirmacao, MenuDeAcoes, Tela, Titulo, degrauFora, estilos, useMovimentoReduzido } from './interface';
 import { gestoJaExplicado, marcarGestoExplicado } from './preferencias';
 import { mensagens } from './mensagens';
 import {
@@ -90,9 +90,10 @@ export type AcoesCartao = {
   bloquear: (cartao: CartaoTrilha) => void;
   compartilhar: (cartao: CartaoTrilha) => void;
   /** Título: a prévia da trilha (a página /t da web) dentro do app. */
-  abrirPrevia: (codigo: string) => void;
+  abrirPrevia: (codigo: string, origem?: string) => void;
   /** Foto e nome de quem fez: o perfil dela dentro do app. */
-  abrirPerfil: (perfilId: string) => void;
+  abrirPerfil: (perfilId: string, origem?: string) => void;
+  guardarAlvo?: (origem: string, no: ComponentRef<typeof Pressable> | null) => void;
   /** O código do cartão em andamento ("Adicionando…", valeu indo). */
   ocupado: string | null;
 };
@@ -245,14 +246,16 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
         </View>
         <View style={comunidadeEstilos.corpo}>
           {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{c.posicao(posicao)}</Text>}
-          <Pressable accessibilityRole="link" testID={`${id}-titulo`} onPress={() => acoes.abrirPrevia(cartao.codigo)}
+          <Pressable accessibilityRole="link" testID={`${id}-titulo`} ref={(no) => acoes.guardarAlvo?.(`${id}-titulo`, no)}
+            onPress={() => acoes.abrirPrevia(cartao.codigo, `${id}-titulo`)}
             style={[comunidadeEstilos.tituloToque, duasLinhas && comunidadeEstilos.tituloDuasLinhas]}>
             <Text accessibilityRole="header" style={comunidadeEstilos.titulo}>{cartao.titulo}</Text>
           </Pressable>
           {/* Quem fez: a foto e o nome num link só, que leva ao perfil dela; "por" em cinza, só o nome sublinhado. */}
           {cartao.dono.perfilId ? (
             <Pressable accessibilityRole="link" accessibilityLabel={c.perfilDe(cartao.dono.nome)} testID={`${id}-dono`}
-              onPress={() => acoes.abrirPerfil(cartao.dono.perfilId!)} style={[comunidadeEstilos.dono, comunidadeEstilos.donoLink]}>
+              ref={(no) => acoes.guardarAlvo?.(`${id}-dono`, no)}
+              onPress={() => acoes.abrirPerfil(cartao.dono.perfilId!, `${id}-dono`)} style={[comunidadeEstilos.dono, comunidadeEstilos.donoLink]}>
               <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
               <Text style={comunidadeEstilos.donoLinha}>
                 <Text style={comunidadeEstilos.donoPor}>{por}</Text>
@@ -478,8 +481,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, removerCartao, aoBloquea
   aoBloquear?: () => void;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
-  abrirPrevia: (codigo: string) => void;
-  abrirPerfil: (perfilId: string) => void;
+  abrirPrevia: AcoesCartao['abrirPrevia'];
+  abrirPerfil: AcoesCartao['abrirPerfil'];
   aoAnunciar?: (texto: string) => void;
 }) {
   const [ocupado, setOcupado] = useState<string | null>(null);
@@ -612,21 +615,34 @@ function Esmaecer({ lado }: { lado: 'esquerda' | 'direita' }) {
  * Fileira rolável que vai até as bordas da tela no celular (as fichas de tema e o Em alta, como a web na rodada de banca):
  * o conteúdo começa no respiro da página e some sob a borda, com o esmaecimento de 24 na borda que ainda tem o que rolar.
  */
-function Fileira({ children, estiloConteudo, testID, papel, rotulo, encaixe }: {
+function Fileira({ children, estiloConteudo, testID, papel, rotulo, encaixe, xInicial = 0, aoRolar }: {
   children: ReactNode; estiloConteudo?: StyleProp<ViewStyle>; testID?: string; papel?: 'list' | 'radiogroup'; rotulo?: string;
+  xInicial?: number; aoRolar?: (x: number) => void;
   /** Passo do encaixe ao rolar (o Em alta encaixa um cartão por vez). */
   encaixe?: number;
 }) {
-  const [medidas, setMedidas] = useState({ largura: 0, conteudo: 0, x: 0 });
+  const [medidas, setMedidas] = useState({ largura: 0, conteudo: 0, x: xInicial });
+  const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
+  const xParaRestaurar = useRef(xInicial);
   const rola = medidas.conteudo > medidas.largura + 2;
   return (
     <View style={comunidadeEstilos.fileira}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} testID={testID} accessibilityRole={papel} accessibilityLabel={rotulo}
+      <ScrollView ref={rolagem} horizontal showsHorizontalScrollIndicator={false} testID={testID} accessibilityRole={papel} accessibilityLabel={rotulo}
         snapToInterval={encaixe} snapToAlignment={encaixe ? 'start' : undefined} decelerationRate={encaixe ? 'fast' : undefined} disableIntervalMomentum={Boolean(encaixe)}
         scrollEventThrottle={32}
         onLayout={(evento) => { const largura = evento.nativeEvent.layout.width; setMedidas((atual) => (atual.largura === largura ? atual : { ...atual, largura })); }}
-        onContentSizeChange={(conteudo) => setMedidas((atual) => (atual.conteudo === conteudo ? atual : { ...atual, conteudo }))}
-        onScroll={(evento) => { const x = evento.nativeEvent.contentOffset.x; setMedidas((atual) => (Math.abs(atual.x - x) < 1 ? atual : { ...atual, x })); }}
+        onContentSizeChange={(conteudo) => {
+          setMedidas((atual) => (atual.conteudo === conteudo ? atual : { ...atual, conteudo }));
+          if (xParaRestaurar.current > 0 && conteudo > xParaRestaurar.current) {
+            rolagem.current?.scrollTo({ x: xParaRestaurar.current, animated: false });
+            xParaRestaurar.current = 0;
+          }
+        }}
+        onScroll={(evento) => {
+          const x = evento.nativeEvent.contentOffset.x;
+          setMedidas((atual) => (Math.abs(atual.x - x) < 1 ? atual : { ...atual, x }));
+          aoRolar?.(x);
+        }}
         contentContainerStyle={[comunidadeEstilos.fileiraConteudo, estiloConteudo]}>
         {children}
       </ScrollView>
@@ -640,7 +656,9 @@ function Fileira({ children, estiloConteudo, testID, papel, rotulo, encaixe }: {
  * Lista horizontal do "Em alta", como a web: cada cartão com 86 % da largura (até 21 rem), encaixe ao rolar e o numeral no
  * canto da capa. As setas da web só existem com ponteiro fino a partir de 768 px: no celular, não.
  */
-function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
+function EmAlta({ cartoes, acoes, titulo, xInicial, aoRolar }: {
+  cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string; xInicial?: number; aoRolar?: (x: number) => void;
+}) {
   const [largura, setLargura] = useState(0);
   // 86 % da largura do conteúdo da página (a lista vai até as bordas, com o respiro da página dentro), até 21 rem.
   const item = largura ? Math.min(largura * 0.86, 336) : 0;
@@ -652,7 +670,7 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
       </View>
       <View onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
         {item > 0 && (
-          <Fileira testID="em-alta" papel="list" encaixe={item + 8} estiloConteudo={comunidadeEstilos.emAltaLista}>
+          <Fileira testID="em-alta" papel="list" encaixe={item + 8} estiloConteudo={comunidadeEstilos.emAltaLista} xInicial={xInicial} aoRolar={aoRolar}>
             {cartoes.map((cartao, indice) => (
               <View key={cartao.codigo} style={{ width: item }}>
                 <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} testID={`em-alta-${indice + 1}`} alturaCapa={ALTURA_CAPA_EM_ALTA} duasLinhas />
@@ -719,15 +737,26 @@ export function IrAoExplorar({ ocupado, acao }: { ocupado: boolean; acao: () => 
 }
 
 /** O que o Explorar guarda quando a pessoa abre um perfil ou uma trilha dele: ao voltar, a mesma aba, tema, lista e rolagem. */
-export type MemoriaExplorar = { tema: Tema | null; aba: 'todos' | 'seguindo'; pagina: PaginaExplorar; y: number };
+export type MemoriaExplorar = {
+  tema: Tema | null;
+  aba: 'todos' | 'seguindo';
+  busca: string;
+  pagina: PaginaExplorar | null;
+  y: number;
+  temasX: number;
+  altaX: number;
+  foco: string | null;
+};
 
 /**
  * Tela Explorar, como `Explorar` da web dentro do app: título, abas "Todos" e "Seguindo", fichas de tema, "Em alta esta
  * semana" (top 10), "Novas" (20 por página, "Ver mais trilhas") e os vazios com o Stu. Pela barra de baixo, abre do zero
  * (como a web); voltando de um perfil ou de uma trilha, volta como estava (`memoria`).
  */
-export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, irParaTrilhas, memoria, guardar }: {
+export function TelaExplorar({ cliente, visitante, entradaDaConta, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, irParaTrilhas, memoria, guardar }: {
   cliente: ClienteNativo;
+  visitante: boolean;
+  entradaDaConta: () => void;
   acoesTela?: ReactNode;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
@@ -739,64 +768,123 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
 }) {
   const [tema, setTema] = useState<Tema | null>(memoria?.tema ?? null);
   const [aba, setAba] = useState<'todos' | 'seguindo'>(memoria?.aba ?? 'todos');
+  const [busca, setBusca] = useState(memoria?.busca ?? '');
+  const [rascunhoBusca, setRascunhoBusca] = useState(busca);
   const [pagina, setPagina] = useState<PaginaExplorar | null>(memoria?.pagina ?? null);
-  const [carregando, setCarregando] = useState(!memoria);
+  const [carregando, setCarregando] = useState(!memoria?.pagina);
   const [maisCarregando, setMaisCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const primeira = useRef(Boolean(memoria));
+  const primeira = useRef(Boolean(memoria?.pagina));
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
-  const rolado = useRef(0);
+  const posicao = useRef({ y: memoria?.y ?? 0, temasX: memoria?.temasX ?? 0, altaX: memoria?.altaX ?? 0 });
   const restaurar = useRef(memoria?.y ?? 0);
+  const focoAoVoltar = useRef(memoria?.foco);
+  const origemAtual = useRef<string | null>(null);
+  const alvos = useRef(new Map<string, ComponentRef<typeof Pressable>>());
+  const visitanteSeguindo = visitante && aba === 'seguindo';
   const atual = useRef<MemoriaExplorar | null>(null);
-  atual.current = pagina ? { tema, aba, pagina, y: 0 } : null;
-  useEffect(() => () => { if (atual.current) guardar?.({ ...atual.current, y: rolado.current }); }, [guardar]);
+  atual.current = { tema, aba, busca, pagina: carregando ? null : pagina, ...posicao.current, foco: origemAtual.current };
+  useEffect(() => () => {
+    if (atual.current) guardar?.({ ...atual.current, ...posicao.current, foco: origemAtual.current });
+  }, [guardar]);
+
+  const retomarFoco = useCallback(() => {
+    const id = focoAoVoltar.current;
+    if (!id || restaurar.current > 0 || !alvos.current.has(id)) return;
+    focoAoVoltar.current = null;
+    requestAnimationFrame(() => focarSemRolar(alvos.current.get(id)));
+  }, []);
+  const guardarAlvo = useCallback((id: string, no: ComponentRef<typeof Pressable> | null) => {
+    if (no) {
+      alvos.current.set(id, no);
+      retomarFoco();
+    } else alvos.current.delete(id);
+  }, [retomarFoco]);
 
   // Depois de bloquear ou desbloquear alguém (spec 14), o Explorar recarrega do zero.
   const [recarga, setRecarga] = useState(0);
+  const filtro = useMemo(() => ({ tema, seguindo: aba === 'seguindo', busca: busca || null }), [tema, aba, busca]);
+  const consulta = useMemo(() => ({ filtro, recarga }), [filtro, recarga]);
+  const consultaAtual = useRef(consulta);
+  consultaAtual.current = consulta;
+  const paginando = useRef<typeof consulta | null>(null);
   useEffect(() => {
     if (primeira.current) { primeira.current = false; return; }
-    let ativo = true;
-    setCarregando(true);
+    setMaisCarregando(false);
     setErro(null);
-    cliente.explorar({ tema, seguindo: aba === 'seguindo' }).then((dados) => { if (ativo) setPagina(dados); })
+    if (visitanteSeguindo) {
+      setPagina(null);
+      setCarregando(false);
+      return;
+    }
+    let ativo = true;
+    posicao.current.altaX = 0;
+    setCarregando(true);
+    setPagina(null);
+    cliente.explorar(filtro).then((dados) => { if (ativo) setPagina(dados); })
       .catch((falha) => { if (ativo) setErro(textoDoErro(codigoDoErro(falha))); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [cliente, tema, aba, recarga]);
+  }, [cliente, consulta, filtro, visitanteSeguindo]);
 
   async function verMais() {
-    if (!pagina?.cursor) return;
+    if (!pagina?.cursor || carregando || paginando.current === consulta) return;
+    paginando.current = consulta;
     setMaisCarregando(true);
     try {
-      const proxima = await cliente.explorar({ tema, cursor: pagina.cursor, seguindo: aba === 'seguindo' });
-      setPagina((atual) => atual && { ...atual, novas: [...atual.novas, ...proxima.novas], cursor: proxima.cursor });
+      const parametros = { ...filtro, cursor: pagina.cursor };
+      const proxima = await cliente.explorar(parametros);
+      if (consultaAtual.current === consulta) {
+        setPagina((anterior) => anterior && { ...anterior, novas: [...anterior.novas, ...proxima.novas], cursor: proxima.cursor });
+      }
     } catch (falha) {
-      anunciar(textoDoErro(codigoDoErro(falha)));
+      if (consultaAtual.current === consulta) anunciar(textoDoErro(codigoDoErro(falha)));
     } finally {
-      setMaisCarregando(false);
+      if (paginando.current === consulta) paginando.current = null;
+      if (consultaAtual.current === consulta) setMaisCarregando(false);
     }
+  }
+
+  function buscar(termo: string) {
+    setRascunhoBusca(termo);
+    setBusca(termo.trim());
+    Keyboard.dismiss();
   }
 
   const setCartoes = (mudar: (cartao: CartaoTrilha) => CartaoTrilha) =>
     setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.map(mudar), novas: atual.novas.map(mudar) });
   const removerCartao = (codigo: string) =>
     setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.filter((cartao) => cartao.codigo !== codigo), novas: atual.novas.filter((cartao) => cartao.codigo !== codigo) });
-  const { acoes, dialogo } = useAcoesDeCartao({ cliente, setCartoes, removerCartao, aoBloquear: () => setRecarga((n) => n + 1), aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil });
+  const { acoes, dialogo } = useAcoesDeCartao({
+    cliente, setCartoes, removerCartao, aoBloquear: () => setRecarga((n) => n + 1), aoAdicionado, aoAbrir,
+    abrirPrevia: (codigo, origem) => { origemAtual.current = origem ?? null; abrirPrevia(codigo); },
+    abrirPerfil: (perfilId, origem) => { origemAtual.current = origem ?? null; abrirPerfil(perfilId); },
+  });
+  const acoesComFoco = { ...acoes, guardarAlvo };
+  const codigosMostrados = new Set(pagina?.emAlta.map(({ codigo }) => codigo));
+  const novas = pagina?.novas.filter(({ codigo }) => {
+    if (codigosMostrados.has(codigo)) return false;
+    codigosMostrados.add(codigo);
+    return true;
+  }) ?? [];
   const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
+  const b = mensagens.buscaExplorar;
+  const v = mensagens.sessaoVisitante;
 
   return (
-    <Tela pagina="explorar" acoes={acoesTela} rolagem={rolagem} aoRolar={(y) => { rolado.current = y; }} estiloConteudo={FIM_COM_BARRA}
+    <Tela pagina="explorar" acoes={acoesTela} rolagem={rolagem} aoRolar={(y) => { posicao.current.y = y; }} estiloConteudo={FIM_COM_BARRA}
       aoMedirConteudo={(altura) => {
         // Voltando de um perfil ou de uma trilha: a rolagem de antes, assim que a lista guardada já tem altura para ela.
         if (restaurar.current > 0 && altura > restaurar.current) {
           rolagem.current?.scrollTo({ y: restaurar.current, animated: false });
-          rolado.current = restaurar.current;
+          posicao.current.y = restaurar.current;
           restaurar.current = 0;
         }
+        retomarFoco();
       }}>
       <View style={comunidadeEstilos.painel} accessibilityState={{ busy: carregando }}>
         <View style={comunidadeEstilos.topo}>
-          <Titulo testID="titulo-explorar" foco>{c.titulo}</Titulo>
+          <Titulo testID="titulo-explorar" foco={!memoria?.foco}>{c.titulo}</Titulo>
           <Text style={comunidadeEstilos.subtitulo}>{c.subtitulo}</Text>
           {/* Enquanto houver conteúdo de exemplo na tela, uma linha explica o selo (como a web na rodada de banca). */}
           {pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao) && (
@@ -806,6 +894,17 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
             </Text>
           )}
         </View>
+
+        {!visitanteSeguindo && (
+          <View style={{ gap: 8 }}>
+            <Campo testID="explorar-busca" rotulo={b.campo} placeholder={b.placeholder} value={rascunhoBusca}
+              maxLength={80} returnKeyType="search" onChangeText={setRascunhoBusca} onSubmitEditing={() => buscar(rascunhoBusca)} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <Botao rotulo={b.buscar} testID="explorar-buscar" variante="secundario" compacto acao={() => buscar(rascunhoBusca)} />
+              {(rascunhoBusca || busca) ? <Botao rotulo={b.limpar} testID="explorar-limpar-busca" variante="texto" compacto acao={() => buscar('')} /> : null}
+            </View>
+          </View>
+        )}
 
         <View accessibilityRole="radiogroup" accessibilityLabel={c.abasRotulo} style={comunidadeEstilos.abas}>
           {(['todos', 'seguindo'] as const).map((opcao) => (
@@ -818,37 +917,50 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
         </View>
 
         {/* Uma linha só, rolável, até as bordas da tela; na aba Seguindo sem ninguém seguido, não há o que filtrar. */}
-        {!(aba === 'seguindo' && pagina?.seguindoAlguem === false) && (
-          <Fileira papel="radiogroup" rotulo={c.temas} estiloConteudo={comunidadeEstilos.temasConteudo}>
+        {!visitanteSeguindo && !(aba === 'seguindo' && pagina?.seguindoAlguem === false) && (
+          <Fileira papel="radiogroup" rotulo={c.temas} estiloConteudo={comunidadeEstilos.temasConteudo}
+            xInicial={posicao.current.temasX} aoRolar={(x) => { posicao.current.temasX = x; }}>
             <FichaTema rotulo={c.todos} marcada={tema === null} testID="tema-todos" aoTocar={() => setTema(null)} />
             {TEMAS.map((opcao) => <FichaTema key={opcao} rotulo={temas[opcao]} marcada={tema === opcao} testID={`tema-${opcao}`} aoTocar={() => setTema(opcao)} />)}
           </Fileira>
         )}
 
-        {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
-        {carregando && !pagina && (
+        {!visitanteSeguindo && erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
+        {!visitanteSeguindo && carregando && !pagina && (
           <View style={comunidadeEstilos.esqueleto} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={comunidadeEstilos.esqueletoBloco} /><View style={comunidadeEstilos.esqueletoBloco} /><View style={comunidadeEstilos.esqueletoBloco} />
           </View>
         )}
 
-        {pagina && vazio && aba === 'seguindo' && (
+        {visitanteSeguindo && (
+          <Vazio titulo={v.seguindoTitulo} texto={v.seguir} acao={<View style={{ alignItems: 'flex-start', gap: 8 }}>
+            <Botao rotulo={v.entrar} testID="seguindo-entrar" acao={entradaDaConta} />
+            <Botao rotulo={v.voltarComunidade} testID="vazio-ver-todas" variante="secundario" acao={() => setAba('todos')} />
+          </View>} />
+        )}
+        {!visitanteSeguindo && vazio && busca && (aba === 'todos' || pagina.seguindoAlguem !== false) && (
+          <Vazio titulo={b.vazia} acao={<Botao rotulo={b.limpar} variante="secundario" acao={() => buscar('')} />} />
+        )}
+        {!visitanteSeguindo && vazio && aba === 'seguindo' && (!busca || pagina.seguindoAlguem === false) && (
           <Vazio titulo={pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo} texto={pagina.seguindoAlguem ? undefined : c.vazioSeguindoTexto}
             acao={<Botao rotulo={c.vazioSeguindoAcao} variante="secundario" testID="vazio-ver-todas" acao={() => { setTema(null); setAba('todos'); }} estilo={{ alignSelf: 'flex-start' }} />} />
         )}
-        {pagina && vazio && aba === 'todos' && (
+        {vazio && !busca && aba === 'todos' && (
           <Vazio titulo={tema ? c.vazioTema(temas[tema]) : c.vazioTitulo} texto={tema ? c.vazioTemaTexto : c.vazioTexto}
             acao={tema
               ? <Botao rotulo={c.vazioTemaAcao} variante="secundario" testID="vazio-ver-temas" acao={() => setTema(null)} estilo={{ alignSelf: 'flex-start' }} />
               : <Botao rotulo={c.vazioAcao} testID="vazio-minhas-trilhas" acao={irParaTrilhas} estilo={{ alignSelf: 'flex-start' }} />} />
         )}
 
-        {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} />}
+        {!visitanteSeguindo && pagina && pagina.emAlta.length > 0 && (
+          <EmAlta cartoes={pagina.emAlta} acoes={acoesComFoco} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta}
+            xInicial={posicao.current.altaX} aoRolar={(x) => { posicao.current.altaX = x; }} />
+        )}
 
-        {pagina && pagina.novas.length > 0 && (
+        {!visitanteSeguindo && pagina && (novas.length > 0 || pagina.cursor) && (
           <View style={comunidadeEstilos.novas}>
-            <Text accessibilityRole="header" style={comunidadeEstilos.secao}>{aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</Text>
-            <Grade cartoes={pagina.novas} acoes={acoes} prefixo="nova" />
+            <Text accessibilityRole="header" style={comunidadeEstilos.secao}>{busca ? b.resultados : aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</Text>
+            {!!novas.length && <Grade cartoes={novas} acoes={acoesComFoco} prefixo="nova" />}
             {pagina.cursor
               ? <Botao rotulo={maisCarregando ? c.carregando : c.carregarMais} variante="secundario" testID="ver-mais" ocupado={maisCarregando} acao={() => void verMais()}
                   estilo={comunidadeEstilos.verMais} />
@@ -1020,9 +1132,11 @@ function Indisponivel({ titulo, texto, criar }: { titulo: string; texto?: string
  * O perfil de outra pessoa dentro do app (a página /p da web): o cabeçalho com Seguir (e a contagem que muda na hora) e
  * "Compartilhar perfil", os cartões dela ("Trilhas de Ana") e "Denunciar perfil" no fim. Sem a comunidade, a lista simples.
  */
-export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, criarTrilha, irAoExplorar }: {
+export function TelaPerfilPublico({ cliente, perfilId, visitante, entradaDaConta, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, criarTrilha, irAoExplorar }: {
   cliente: ClienteNativo;
   perfilId: string;
+  visitante: boolean;
+  entradaDaConta: () => void;
   /** Depois de bloquear, de denunciar o perfil ou de desbloquear: o Explorar recarregado (spec 14). */
   irAoExplorar: () => void;
   acoesTela?: ReactNode;
@@ -1102,9 +1216,15 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
             <CabecalhoPerfil demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
               alcance={{ ...perfil.alcance, ...(seguidores !== undefined ? { seguidores } : {}) }}
               acoes={<>
-                {comunidade && <BotaoSeguir cliente={cliente} perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} aoMudar={setSeguidores} />}
+                {comunidade && !visitante && !perfil.demo && <BotaoSeguir cliente={cliente} perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} aoMudar={setSeguidores} />}
                 <CompartilharPerfil perfilId={perfilId} nome={perfil.nome} />
               </>} />
+            {comunidade && (perfil.demo || visitante) && (
+              <View style={{ gap: 8, alignItems: 'flex-start' }}>
+                <Text style={estilos.texto}>{perfil.demo ? 'Este perfil é um exemplo e não pode ser seguido.' : mensagens.sessaoVisitante.seguir}</Text>
+                {visitante && <Botao rotulo={mensagens.sessaoVisitante.entrar} testID="perfil-publico-entrar" variante="secundario" acao={entradaDaConta} />}
+              </View>
+            )}
             {perfil.cartoes ? (
               <>
                 <CartoesDoPerfil cliente={cliente} inicial={perfil.cartoes} titulo={mensagens.perfil.paginaTitulo(perfil.nome)}

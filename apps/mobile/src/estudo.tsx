@@ -12,7 +12,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, RolagemDaTela, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -60,6 +60,7 @@ type Etapa =
   | { tipo: 'previaTrilha'; codigo: string; voltar: Etapa };
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
+export type DestinoPublico = Omit<Extract<Etapa, { tipo: 'perfilPublico' }>, 'voltar'> | Omit<Extract<Etapa, { tipo: 'previaTrilha' }>, 'voltar'>;
 type Aba = 'planos' | 'objetivo' | 'plano' | 'perfil' | 'explorar';
 const ABAS: readonly string[] = ['planos', 'objetivo', 'plano', 'perfil', 'explorar'];
 
@@ -104,8 +105,10 @@ function anunciar(texto: string) {
   setTimeout(() => AccessibilityInfo.announceForAccessibility(texto), 0);
 }
 
-export function Estudo({ cliente, sair, expirar }: {
+export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   cliente: ClienteNativo;
+  visitante: boolean;
+  destino?: DestinoPublico;
   sair: () => Promise<void>;
   expirar: () => Promise<void>;
 }) {
@@ -124,7 +127,7 @@ export function Estudo({ cliente, sair, expirar }: {
   useEffect(() => {
     if (planos) void guardarTinhaTrilhas(planos.length > 0);
   }, [planos]);
-  const [etapa, setEtapa] = useState<Etapa>({ tipo: 'planos' });
+  const [etapa, setEtapa] = useState<Etapa>(() => destino ? { ...destino, voltar: { tipo: 'explorar' } } : { tipo: 'planos' });
   // O pedido guardado quando a sessão terminou no meio volta para o campo (rodada 4 da web).
   const [objetivo, setObjetivo] = useState(() => tomarRascunho());
   const objetivoAtual = useRef(objetivo);
@@ -566,8 +569,15 @@ export function Estudo({ cliente, sair, expirar }: {
     aoConfirmar: () => void } | null>(null);
 
   /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
-  function pedirParaSair() {
-    setConfirmacao({ mensagem: mensagens.sairPergunta, confirmarRotulo: mensagens.sair, aoConfirmar: () => void executar('sair', sair) });
+  function pedirParaSair(paraEntrar = false) {
+    const m = mensagens.sessaoVisitante;
+    setConfirmacao({
+      mensagem: visitante ? (paraEntrar ? m.entrarTitulo : m.sairTitulo) : mensagens.sairPergunta,
+      texto: visitante ? (paraEntrar ? m.entrarTexto : m.sairTexto) : undefined,
+      confirmarRotulo: paraEntrar ? m.entrar : mensagens.sair,
+      cancelarRotulo: visitante ? m.ficar : undefined,
+      aoConfirmar: () => void executar('sair', sair),
+    });
   }
 
   /**
@@ -757,7 +767,7 @@ export function Estudo({ cliente, sair, expirar }: {
       const proxima = proximaDoCaminho(etapa.plano);
       const { concluidas, total } = etapa.plano.progresso;
       return (
-        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado}
+        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado} visitante={visitante}
           compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} rodape={<>
           {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
           {total > 0 && concluidas === total && <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
@@ -798,31 +808,35 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'perfil' && !compartilhar) {
-      return <PerfilSemSocial cliente={cliente} acoes={acoes} desativado={ocupado} sair={pedirParaSair} aoSessaoTerminada={() => void expirarGuardando()} />;
+      return <PerfilSemSocial cliente={cliente} visitante={visitante} acoes={acoes} desativado={ocupado}
+        sair={pedirParaSair} entrar={() => pedirParaSair(true)} aoSessaoTerminada={() => void expirarGuardando()} />;
     }
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
-        sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
+        sair={pedirParaSair} entradaDaConta={() => pedirParaSair(true)} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
         aoSessaoTerminada={() => void expirarGuardando()} novaTrilha={() => abrir({ tipo: 'objetivo' })} focarNome={etapa.focarNome} />;
     }
 
     if (etapa.tipo === 'explorar' && comunidade) {
-      return <TelaExplorar cliente={cliente} acoesTela={acoes} memoria={etapa.restaurar ? memoriaExplorar.current : null} guardar={guardarExplorar}
+      return <TelaExplorar cliente={cliente} visitante={visitante} entradaDaConta={() => pedirParaSair(true)}
+        acoesTela={acoes} memoria={etapa.restaurar ? memoriaExplorar.current : null} guardar={guardarExplorar}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
         abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} irParaTrilhas={() => abrir({ tipo: 'planos' })} />;
     }
 
     if (etapa.tipo === 'perfilPublico') {
-      return <TelaPerfilPublico key={etapa.perfilId} cliente={cliente} perfilId={etapa.perfilId} acoesTela={acoes}
+      return <TelaPerfilPublico key={etapa.perfilId} cliente={cliente} perfilId={etapa.perfilId} visitante={visitante} entradaDaConta={() => pedirParaSair(true)}
+        acoesTela={<><Botao rotulo={mensagens.voltar} testID="voltar-perfil-publico" compacto variante="texto" acao={() => abrir(etapa.voltar)} />{acoes}</>}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
         abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} criarTrilha={() => abrir({ tipo: 'objetivo' })}
         irAoExplorar={() => abrir({ tipo: 'explorar' })} />;
     }
 
     if (etapa.tipo === 'previaTrilha') {
-      return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo} acoesTela={acoes}
+      return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo}
+        acoesTela={<><Botao rotulo={mensagens.voltar} testID="voltar-previa" compacto variante="texto" acao={() => abrir(etapa.voltar)} />{acoes}</>}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
         criarTrilha={() => abrir({ tipo: 'objetivo' })} irAoExplorar={() => abrir({ tipo: 'explorar' })} />;
     }
@@ -904,6 +918,21 @@ function planoInicial(planos: PlanoResumo[]) {
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
+/**
+ * Spec 16, item 35: mede, dentro da rolagem, onde termina a última opção de antes de escolher o material, para o pedido mostrar a
+ * pílula "Ver mais abaixo" quando ela fica abaixo da dobra (tela baixa). Mede de novo quando a área visível muda.
+ */
+function VigiaDaOpcao({ alvo, medida, aoMedir }: { alvo: { current: ComponentRef<typeof View> | null }; medida: number; aoMedir: (fim: number | null) => void }) {
+  const rolagem = useContext(RolagemDaTela);
+  useEffect(() => {
+    const medirAgora = () => rolagem?.medir(alvo.current, (y, altura) => aoMedir(y + altura));
+    const espera = setTimeout(medirAgora, 250);
+    return () => clearTimeout(espera);
+  }, [rolagem, alvo, medida, aoMedir]);
+  useEffect(() => () => aoMedir(null), [aoMedir]);
+  return null;
+}
+
 function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink }: {
   /** "Adicionar por link" (com o compartilhar), antes de "Ver como funciona", como na web. */
   porLink?: ReactNode;
@@ -937,7 +966,20 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   const [escolhida, setEscolhida] = useState<string | null>(null);
   // Janela baixa (até 700 de altura): o Stu vai a 56 e o subtítulo sai, para o material e as ideias ficarem à vista.
   const baixa = useWindowDimensions().height <= 700;
-  const tamanhoDoStu = baixa ? 56 : 72;
+  // Spec 16, item 35: no material, o alto da tela fica compacto (Stu de 56, título 24/30, subtítulo 15/22), para as três opções
+  // de antes de escolher caberem na primeira vista em 390 × 844.
+  const compacto = baixa || modo === 'material';
+  const tamanhoDoStu = compacto ? 56 : 72;
+  // Com o material lido, "Criar trilha deste material" é a ação presa da tela (o cartão do material entrega o botão).
+  const [acaoMaterial, setAcaoMaterial] = useState<ReactNode>(null);
+  // A pílula "Ver mais abaixo" (tela baixa, antes de escolher): onde termina a última opção, quanto se vê e quanto rolou.
+  const ultimaOpcao = useRef<ComponentRef<typeof View>>(null);
+  const rolagemDoPedido = useRef<ComponentRef<typeof ScrollView>>(null);
+  const [fimDasOpcoes, setFimDasOpcoes] = useState<number | null>(null);
+  const [alturaVisivel, setAlturaVisivel] = useState(0);
+  const [rolado, setRolado] = useState(0);
+  const antesDeEscolher = modo === 'material' && !acaoMaterial;
+  const opcaoAbaixo = antesDeEscolher && fimDasOpcoes !== null && alturaVisivel > 0 && fimDasOpcoes > rolado + alturaVisivel - 4;
   const [brilho, setBrilho] = useState(0);
   // Decidido uma vez: o erro que some enquanto a pessoa digita não devolve o foco ao título.
   const [focarTitulo] = useState(() => !erro && !falha);
@@ -996,18 +1038,29 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   }
 
   return (
-    <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta}>
-      <View style={[estudoEstilos.pedidoHeroi, baixa && estudoEstilos.pedidoHeroiBaixo]}>
+    <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta} rolagem={rolagemDoPedido}
+      rodape={modo === 'material' && acaoMaterial ? acaoMaterial : undefined} aoMedir={setAlturaVisivel} aoRolar={antesDeEscolher ? setRolado : undefined}
+      flutuante={opcaoAbaixo ? (
+        // Como a pílula da aula (.aula-mais-abaixo): leva até a última opção, acima da cápsula.
+        <Pressable testID="mais-abaixo-material" accessibilityRole="button" accessibilityLabel={mensagens.licao.maisAbaixo} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          onPress={() => rolagemDoPedido.current?.scrollTo({ y: Math.max(0, (fimDasOpcoes ?? 0) - alturaVisivel + 16), animated: true })}
+          style={({ pressed }) => [estudoEstilos.maisAbaixo, pressed && { opacity: 0.7 }]}>
+          <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
+          <Text style={estudoEstilos.maisAbaixoTexto}>{mensagens.licao.maisAbaixo}</Text>
+        </Pressable>
+      ) : undefined}>
+      {antesDeEscolher && <VigiaDaOpcao alvo={ultimaOpcao} medida={alturaVisivel} aoMedir={setFimDasOpcoes} />}
+      <View style={[estudoEstilos.pedidoHeroi, compacto && estudoEstilos.pedidoHeroiBaixo]}>
         {/* Spec 13: o Stu convida curioso (uma vez ao abrir), encoraja enquanto a pessoa escreve (parado) e se anima quando
             uma ideia entra no campo (no acontecimento); 72 no celular (56 na janela baixa), com o halo lavanda. Sem a estrela
             desenhada ao lado (o esboço da banca da noite e os adereços que saíram do mascote oficial). */}
         <View testID="stu-pedido" style={{ width: tamanhoDoStu, height: tamanhoDoStu }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Stu nome={expressaoDoPedido} tamanho={tamanhoDoStu} halo animado={animacaoDoPedido} acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
         </View>
-        <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={[estudoEstilos.pedidoTitulo, baixa && estudoEstilos.pedidoTituloBaixo]}>
+        <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={[estudoEstilos.pedidoTitulo, compacto && estudoEstilos.pedidoTituloBaixo]}>
           {modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}
         </Titulo>
-        {!baixa && <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>}
+        {!baixa && <Text accessibilityLiveRegion="polite" style={[estudoEstilos.pedidoFala, modo === 'material' && estudoEstilos.pedidoFalaMaterial]}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>}
       </View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
@@ -1016,7 +1069,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
         acao={mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
           : repetivel ? { rotulo: mensagens.tentar, testID: 'tentar-geracao', desativado: ocupado, acao: tentar } : undefined} />}
       <View style={modo !== 'material' ? { display: 'none' } : estudoEstilos.materialNoPedido}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false}
-        aoEsperar={setEsperaMaterial} /></View>
+        aoEsperar={setEsperaMaterial} definirAcaoPresa={setAcaoMaterial} ultimaOpcao={ultimaOpcao} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
           <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} baixo={baixa} />
@@ -2402,12 +2455,13 @@ function formatarTempo(segundos: number) {
  * Lição concluída, como na web: chuva de confete, raios girando atrás do Stu, que pula, o resumo da lição (tempo,
  * acerto e etapas), a lição liberada e o progresso do plano, que enche a partir de onde estava.
  */
-function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }: {
+function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, compartilhar }: {
   etapa: Extract<Etapa, { tipo: 'concluida' }>;
   acoes: ReactNode;
   mensagem: ReactNode;
   rodape: ReactNode;
   ocupado: boolean;
+  visitante: boolean;
   /** Com a trilha concluída, "Compartilhar esta trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
 }) {
@@ -2468,7 +2522,9 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
           <CartaoHistoria tipo="ensino" titulo={mensagens.licao.historia.ensinoTitulo} texto={mensagens.licao.historia.ensinoTexto}
             ordem={resumo.ponteConstruida ? 2 : 1} />
         )}
-        <Text style={estudoEstilos.historiaSincronia}>{mensagens.licao.historia.sincronia}</Text>
+        <Text style={estudoEstilos.historiaSincronia}>
+          {visitante ? mensagens.sessaoVisitante.progresso : mensagens.licao.historia.sincronia}
+        </Text>
       </View>
       {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo. Como na web. */}
       {licao.falas && licao.falas.length > 0 && (
@@ -2707,6 +2763,12 @@ const estudoEstilos = StyleSheet.create({
   pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
   // Janela baixa (até 700 de altura): o título numa linha só, como o esboço da banca da noite em 390×667.
   pedidoTituloBaixo: { fontSize: 24, lineHeight: 30 },
+  // Spec 16, item 35: o subtítulo do material em 15/22.
+  pedidoFalaMaterial: { minHeight: 22, fontSize: 15, lineHeight: 22 },
+  // A pílula "Ver mais abaixo" do material, como a da aula (.aula-mais-abaixo).
+  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 4,
+    borderRadius: 999, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 2px 0 ${cores.gelo}` },
+  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
   // .pedido-alternar (regra final de pedido.css): borda lisa de 2 em #C3CDF2, raio 22, degradê e degrau de 3 por fora.
   // O cartão compacto (banca da noite §3): 64 de altura, o ícone num quadro de 40, o título 16/24 e a dica 14/20.

@@ -56,6 +56,16 @@ function TituloSecao({ children }: { children: ReactNode }) {
   return <Text accessibilityRole="header" style={perfilEstilos.secaoTitulo}>{children}</Text>;
 }
 
+function ContaTemporaria({ entrar, desativado }: { entrar: () => void; desativado: boolean }) {
+  return (
+    <View style={perfilEstilos.cartao}>
+      <Text style={estilos.texto}>{p.visitante}</Text>
+      <Botao rotulo={mensagens.sessaoVisitante.entrar} testID="perfil-visitante-entrar" variante="secundario"
+        desativado={desativado} acao={entrar} estilo={{ alignSelf: 'flex-start', marginTop: 10 }} />
+    </View>
+  );
+}
+
 /**
  * Tela Perfil, como `TelaPerfil` da web em 6122cc2 (lote 4: direto nos dados, sem tela de convite): sem nome, os campos já vêm
  * abertos ali mesmo; com nome, o cartão como os outros veem, com "Editar" (abre os mesmos campos no lugar do cartão) e
@@ -63,7 +73,7 @@ function TituloSecao({ children }: { children: ReactNode }) {
  * (com o total no título), os cartões "Como os outros veem" (com a comunidade), o perfil público, a conta e "Sair".
  */
 export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
-  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, novaTrilha, focarNome: focarNomeAoAbrir = false }: {
+  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, entradaDaConta, novaTrilha, focarNome: focarNomeAoAbrir = false }: {
   /** "Nova trilha" da folha "Postar no perfil" sem trilhas (spec 10). */
   novaTrilha?: () => void;
   /** Aberto pelo "Editar perfil" da folha "Postar no perfil" (pelo "•••"): o foco vai para o campo do nome (P6). */
@@ -76,6 +86,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   aoMudarLink: (planoId: string, link: LinkCompartilhado | null) => void;
   abrirPlano: (id: string) => void;
   sair: () => void;
+  entradaDaConta: () => void;
   desativado: boolean;
   /** Os cartões "Como os outros veem" (com a comunidade): as mesmas ações do Explorar. */
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
@@ -114,11 +125,13 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
     setFocarNome(nome);
     setEditando(true);
   }
-  /** Salvo: os campos fecham, o aviso do app diz "Perfil salvo." e o foco vai para "Editar". */
-  function aoSalvo() {
+  function fecharEditor() {
     setEditando(false);
-    avisar(p.salvo, { icone: 'check', som: 'salvo' });
     setTimeout(() => focarSemRolar(botaoEditar.current), 250);
+  }
+  function aoSalvo() {
+    fecharEditor();
+    avisar(p.salvo, { icone: 'check', som: 'salvo' });
   }
   // A barra de salvar do editor fica presa embaixo, acima da barra de abas (na web, `position: sticky` no fim do bloco).
   const [rodapeDoEditor, setRodapeDoEditor] = useState<ReactNode>(null);
@@ -211,13 +224,13 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
         {perfil && (
           <>
             {perfil.visitante ? (
-              <View style={perfilEstilos.cartao}><Text style={estilos.texto}>{p.visitante}</Text></View>
+              <ContaTemporaria entrar={entradaDaConta} desativado={desativado} />
             ) : comEditor ? (
               // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
               <EditorPerfil key={editando ? 'editar' : 'dados'} cliente={cliente} perfil={perfil} aoMudarPerfil={mudarPerfil} registrarGuarda={registrarGuarda}
                 aoSalvo={aoSalvo} focarResumo={focarResumo} focarNome={focarNome}
                 definirRodape={setRodapeDoEditor} inscreverRolagem={inscreverRolagem}
-                aoCancelar={perfil.nome ? () => setEditando(false) : undefined} />
+                aoCancelar={perfil.nome ? fecharEditor : undefined} />
             ) : (
               <>
                 <CabecalhoPerfil daDona nome={perfil.nome ?? ''} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
@@ -731,14 +744,16 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
  * conta": Apple 5.1.2(i) e 5.1.1(v)) e Conta, com Sair. Se é visitante vem de /api/sessao. Como a web na revisão do
  * TestFlight (20/11): o caminho para revogar a IA e excluir a conta nunca depende do compartilhar.
  */
-export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerminada }: {
+export function PerfilSemSocial({ cliente, acoes, desativado, visitante: visitanteInicial, entrar, sair, aoSessaoTerminada }: {
   cliente: ClienteNativo;
+  visitante: boolean;
   aoSessaoTerminada?: () => void;
   acoes?: ReactNode;
   desativado: boolean;
+  entrar: () => void;
   sair: () => void;
 }) {
-  const [visitante, setVisitante] = useState(false);
+  const [visitante, setVisitante] = useState(visitanteInicial);
   useEffect(() => {
     let ativo = true;
     cliente.sessao().then((dados) => { if (ativo) setVisitante(dados.visitante === true); })
@@ -749,6 +764,7 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerm
     <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
       <View style={perfilEstilos.painel}>
         <Titulo testID="titulo-perfil" foco>{p.titulo}</Titulo>
+        {visitante && <ContaTemporaria entrar={entrar} desativado={desativado} />}
         <View style={perfilEstilos.secao}>
           <TituloSecao>{mensagens.som.titulo}</TituloSecao>
           <SomNoPerfil />

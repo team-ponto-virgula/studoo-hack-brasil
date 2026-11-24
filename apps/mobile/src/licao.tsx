@@ -1,4 +1,5 @@
 import { ApoioDaLicao } from './estudio-adaptativo';
+import { focarSemRolar } from './foco';
 import type { ClienteEstudio, NomeStu } from '@studoo/contratos';
 import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
@@ -263,6 +264,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [pedidoPonte, setPedidoPonte] = useState(0);
   /** O rodapé que a ponte clara entrega (a ação do passo atual), ou null. */
   const [rodapePonte, setRodapePonte] = useState<ReactNode | null>(null);
+  const [rodapeEnsino, setRodapeEnsino] = useState<ReactNode | null>(null);
   const [consultaAberta, setConsultaAberta] = useState(false);
   const [explicacaoAberta, setExplicacaoAberta] = useState(false);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. Como na web. */
@@ -492,7 +494,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setCitacaoAberta(numero);
     setTimeout(() => {
       rolagem.current?.scrollTo({ y: Math.max(0, citacaoY.current - 16), animated: reduzir === false });
-      if (cartaoCitacao.current) AccessibilityInfo.sendAccessibilityEvent(cartaoCitacao.current, 'focus');
+      focarSemRolar(cartaoCitacao.current);
     }, 80);
   }
 
@@ -712,6 +714,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }
   // Com a ponte aberta, o rodapé é o dela: a ação do passo ("Ver exemplo", "Ir para o desafio", "Verificar"…), spec 05.
   if (ponteAberta) rodape = rodapePonte ?? undefined;
+  else if (expliqueAberto && rodapeEnsino) rodape = rodapeEnsino;
 
   function campoDoExercicio(atual: ExercicioPublico): ReactNode {
     const respondido = avaliacao !== null;
@@ -838,8 +841,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   {/* Trilha recebida feita de material (spec 09): "Baseado no material de Ana", nunca "seu material", como na web. */}
                   <Text style={licaoEstilos.marcadoresTexto}>{licao.materialDe ? mensagens.compartilhar.baseadoMaterialDe(licao.materialDe) : mensagens.estudio.baseadoMaterial}</Text>
                   {licao.referencias.map((_, numero) => (
-                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button"
-                      accessibilityLabel={`${licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
+                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="link"
+                      accessibilityLabel={`Ir para a fonte ${numero + 1}`}
                       onPress={() => mostrarCitacao(numero)}
                       hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
                       style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
@@ -1001,6 +1004,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         aoMostrarCena={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 8), animated: reduzir === false })}
         // Ponte clara (spec 05, 62b964b): a ação de cada passo vem para o rodapé preso da aula.
         definirRodapePonte={setRodapePonte}
+        definirRodapeEnsino={setRodapeEnsino}
         aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })}
