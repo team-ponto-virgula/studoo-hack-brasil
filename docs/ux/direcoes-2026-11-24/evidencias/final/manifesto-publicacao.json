@@ -1,0 +1,1768 @@
+{
+  "createdAt": "2026-11-24T22:19:41.969Z",
+  "sourceCandidate": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "sourceFiles": {
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "qaDirectory": "revisao-a11y-r7",
+  "nativeExecution": false,
+  "images": [
+    {
+      "file": "evidencias/final/jornada-boasvindas-390.png",
+      "page": "boasvindas",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "e0778a39924193e9dc2261b425adff82d73fcd921d42a131d39d7eccc30bb4d4"
+    },
+    {
+      "file": "evidencias/final/jornada-boasvindas-360.png",
+      "page": "boasvindas",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "02b8a57912a6bc3816838b1b03db5d32684ff360b62ab89b7bee4f429732b3d1"
+    },
+    {
+      "file": "evidencias/final/jornada-apresentacao-390.png",
+      "page": "apresentacao",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "3e4861762e14d00ea11b4a471c541717db72bf982fd1f282b558c619d6b002cb"
+    },
+    {
+      "file": "evidencias/final/jornada-apresentacao-360.png",
+      "page": "apresentacao",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "844415a62f85b980fc2be2cab61d39fb79ca86de3b0fa78ac976b8096848c32d"
+    },
+    {
+      "file": "evidencias/final/jornada-interesses-390.png",
+      "page": "interesses",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "ec495bc7caefbda259dc249b7a03fa5be048f94375ca3c15ddee23b0bb8e715a"
+    },
+    {
+      "file": "evidencias/final/jornada-interesses-360.png",
+      "page": "interesses",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "2e4881c8ad8e5fd2bf09204e37191cbdf62623506961f6501774b8026fd3d8ca"
+    },
+    {
+      "file": "evidencias/final/jornada-entrar-390.png",
+      "page": "entrar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "6a5cc0c0b770e5ad58af5df126948677176ece19483a1a2b94f45bb3424f3839"
+    },
+    {
+      "file": "evidencias/final/jornada-entrar-360.png",
+      "page": "entrar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "2e46dd90935016cfba2217b54a092556d9aed7235a7fa9f87b113b3e101cecac"
+    },
+    {
+      "file": "evidencias/final/jornada-cadastro-390.png",
+      "page": "cadastro",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "d647b0bb5aa8f84a2436e144c95d9525f86a2cd9191b0f3ae2cd22b5810b665e"
+    },
+    {
+      "file": "evidencias/final/jornada-cadastro-360.png",
+      "page": "cadastro",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "a92c94b25a0e3069dc1272dc879deeb1e64c26e6efcecf8462977007401ab38a"
+    },
+    {
+      "file": "evidencias/final/jornada-codigo-390.png",
+      "page": "codigo",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "b437caf87d28e9fda689f5ab42d021f70f960f3a6f8f500c094b669409af6274"
+    },
+    {
+      "file": "evidencias/final/jornada-codigo-360.png",
+      "page": "codigo",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "f86164e77a18d12d8a0b3b16cbf17aaf58c525a1b682572135aa288948d77f98"
+    },
+    {
+      "file": "evidencias/final/jornada-senha-390.png",
+      "page": "senha",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "8e5bf827a53c459c6ccc6d796ed4234b21c7bf079a5bb5097b09b02db09b387d"
+    },
+    {
+      "file": "evidencias/final/jornada-senha-360.png",
+      "page": "senha",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "c852438ee6edfd3d436f43e7abf417641f9af1b43a95e123fe806096c1d4082f"
+    },
+    {
+      "file": "evidencias/final/jornada-recuperar-390.png",
+      "page": "recuperar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "4ee9e95627bad8fb4ab0131fa67c27b5f1188e4c033b0610517a86b7b5d678ae"
+    },
+    {
+      "file": "evidencias/final/jornada-recuperar-360.png",
+      "page": "recuperar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "febc879e947b9a09491c256e3084a92fec24f51066f72b87f92bb1feb7d1b42f"
+    },
+    {
+      "file": "evidencias/final/jornada-inicio-390.png",
+      "page": "inicio",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "9aae298ff2fb3ffce4acc5880440ac9ca7eb9e52aa126a2eec0299e53fdac290"
+    },
+    {
+      "file": "evidencias/final/jornada-inicio-360.png",
+      "page": "inicio",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "2e4fd1a129ec3ec308c0bb946a682e933571d7ef5be96f9440344ed0ee1cb3ee"
+    },
+    {
+      "file": "evidencias/final/jornada-pedido-390.png",
+      "page": "pedido",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "c8ccb29198c5ba0eb2049b0262a9235c41666b0e8ecfaa389e45b35f8d6ace50"
+    },
+    {
+      "file": "evidencias/final/jornada-pedido-360.png",
+      "page": "pedido",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "9169c0ef037e4ec26e0136a0fdc46d7f4e250ee6c14e08444185342afffc9e20"
+    },
+    {
+      "file": "evidencias/final/jornada-material-390.png",
+      "page": "material",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "695d8c2c7201933ae4aa9f6c8862511b86d929f82072d549a1b2cfc55fb0df09"
+    },
+    {
+      "file": "evidencias/final/jornada-material-360.png",
+      "page": "material",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "cecde19da5b40635ce9487fc28caa7a2568ef22698a4ea0b172598c91b8571e2"
+    },
+    {
+      "file": "evidencias/final/jornada-consentimento-390.png",
+      "page": "consentimento",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "c9fe81bd0ea468e9d09693a3a3c4367225f588539cacd6db87b993b671b2fa45"
+    },
+    {
+      "file": "evidencias/final/jornada-consentimento-360.png",
+      "page": "consentimento",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "fe960963daf0d50b21535cc4f1d923703abd2fc2dfae70d5fd1bdaa9691c532d"
+    },
+    {
+      "file": "evidencias/final/jornada-geracao-390.png",
+      "page": "geracao",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "52fa2c4fd0ddfbc7a04cfe6285395a5bad2f3e073baf4e69c04bee32d63c5724"
+    },
+    {
+      "file": "evidencias/final/jornada-geracao-360.png",
+      "page": "geracao",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "32aa6eae9e62fdfd81215c6779b0b40e8e400de1a6208be00fc7f9c81181720d"
+    },
+    {
+      "file": "evidencias/final/jornada-proposta-390.png",
+      "page": "proposta",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "71e61c023a50ead05d75437a3de6e1477befeeffb6ce91db4a6f72825c0f6961"
+    },
+    {
+      "file": "evidencias/final/jornada-proposta-360.png",
+      "page": "proposta",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "468c46fc92ca92cc99b6a12d42007af8735d9e2b2baa5492117855966da02c71"
+    },
+    {
+      "file": "evidencias/final/jornada-mapa-390.png",
+      "page": "mapa",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "53845fdc564913b12d428cef14e166ec679e66e725e1904b2c67ee5abb185716"
+    },
+    {
+      "file": "evidencias/final/jornada-mapa-360.png",
+      "page": "mapa",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "84321ce044716f152899dac931c10e515c2af0ac1ba2f78259d27bd58a60d554"
+    },
+    {
+      "file": "evidencias/final/jornada-licao-390.png",
+      "page": "licao",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "e8e7e01c6dc39e90a4700643c607078f11033b13abe5b8b61471dda67083a536"
+    },
+    {
+      "file": "evidencias/final/jornada-licao-360.png",
+      "page": "licao",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "8db14948bb024b26dd017670f705b12c77cbf4b0c97b723e0729f52aa33c2840"
+    },
+    {
+      "file": "evidencias/final/jornada-exercicio-390.png",
+      "page": "exercicio",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "a10e16fbf78749ca2bb4fa5632c0fa0fc6187f51cd597f613ddc868f1180f5e4"
+    },
+    {
+      "file": "evidencias/final/jornada-exercicio-360.png",
+      "page": "exercicio",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "c862cee6b6f691b6c0f0470db18ac426a17fb03445360be9710d43de4fda0966"
+    },
+    {
+      "file": "evidencias/final/jornada-reforco-390.png",
+      "page": "reforco",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "32716fe73ac569f5ebd0431a05e4ea31d5a42434cefbf97de950e897147cd24c"
+    },
+    {
+      "file": "evidencias/final/jornada-reforco-360.png",
+      "page": "reforco",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "ecd40acc5892b824de34872c64c0097c4eecb4441c258fc0692ea206ff50d7f4"
+    },
+    {
+      "file": "evidencias/final/jornada-explique-390.png",
+      "page": "explique",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "0384dc3edda0722edc2f5f960507ae114fc368471d5501d2c9eeb89b87933c4e"
+    },
+    {
+      "file": "evidencias/final/jornada-explique-360.png",
+      "page": "explique",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "a84f51c89cfe9a8e783f09f6c7e21a096a54238d59f675e40374d7ac6deb86e4"
+    },
+    {
+      "file": "evidencias/final/jornada-retorno-390.png",
+      "page": "retorno",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "ad321a7aa9a5354303fdb7643454b520339c631009a8c2bd7b84c7689ff81dd6"
+    },
+    {
+      "file": "evidencias/final/jornada-retorno-360.png",
+      "page": "retorno",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "d23287e82df9417bf2e27cb83eddf9487d32d7b80d166aefadcce8897518f6e1"
+    },
+    {
+      "file": "evidencias/final/jornada-conclusao-390.png",
+      "page": "conclusao",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "c1ff22dd82b6a97b914915c1e92b8c5d3aa944edc22adf56c5d63c63e20e074e"
+    },
+    {
+      "file": "evidencias/final/jornada-conclusao-360.png",
+      "page": "conclusao",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "6b5cf7c024468fdbac701bb79513704cd5b92da9035d0d4f91867c54f82b20c9"
+    },
+    {
+      "file": "evidencias/final/jornada-explorar-390.png",
+      "page": "explorar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "66ad0bab21f9326d8b7f7948ae043c90f7d7b2a632028654a2cc5727d4d09f31"
+    },
+    {
+      "file": "evidencias/final/jornada-explorar-360.png",
+      "page": "explorar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "03554c8feacd977bf360a1976e27408fd1fb9712ec88d26872a0089a4c7cdcb5"
+    },
+    {
+      "file": "evidencias/final/jornada-previa-390.png",
+      "page": "previa",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "1d769e5619a4aecd293b8bdea668a12d3c30ea63ef5f403466ba6e51a49fb1c6"
+    },
+    {
+      "file": "evidencias/final/jornada-previa-360.png",
+      "page": "previa",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "c96c757058f8b76b7e44ccb7834985aad5d79693ca60c993d8a982f3739bc136"
+    },
+    {
+      "file": "evidencias/final/jornada-publico-390.png",
+      "page": "publico",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "4742f76268efd640362f15f2956392315df026e723404ed605150885c3ce27da"
+    },
+    {
+      "file": "evidencias/final/jornada-publico-360.png",
+      "page": "publico",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "6dc9124ba38915da37f5a542acc304d8a0b8a3a46babe11be5d953a68b637d00"
+    },
+    {
+      "file": "evidencias/final/jornada-perfil-390.png",
+      "page": "perfil",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "23254147e7a455e026fd8c3e2d5a6d0c78dd0cddf5ac5593e1f5799451942043"
+    },
+    {
+      "file": "evidencias/final/jornada-perfil-360.png",
+      "page": "perfil",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "412cef79f97af87310c2bcf420d7f484388d335241e14393b1258b4777eda428"
+    },
+    {
+      "file": "evidencias/final/jornada-editar-390.png",
+      "page": "editar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "874db635c3462a7751aee05acf475e89b799d62498a98c8a955f9b10bbf802fe"
+    },
+    {
+      "file": "evidencias/final/jornada-editar-360.png",
+      "page": "editar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "31b17a2d766d409c5c263f28d8670f8de27661c0cc2e60c1d1aa2b0fabc01f81"
+    },
+    {
+      "file": "evidencias/final/jornada-foto-390.png",
+      "page": "foto",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "a3843c60984aec6fb22553dfdf3254da2ab560032c3ccea6997ca4874f5094ac"
+    },
+    {
+      "file": "evidencias/final/jornada-foto-360.png",
+      "page": "foto",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "b457b79ad6fe1dddddb699591f69ec6828dfbf58dca10730aea6172662548611"
+    },
+    {
+      "file": "evidencias/final/jornada-compartilhar-390.png",
+      "page": "compartilhar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "cb827af90ca812fc4d8d84f325bc3289a5cca306927482f24b3f0a46bc1795e0"
+    },
+    {
+      "file": "evidencias/final/jornada-compartilhar-360.png",
+      "page": "compartilhar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "53702019e8f61086f8460ae5b6867858fb393a7174c02916c2921735c5f9cefb"
+    },
+    {
+      "file": "evidencias/final/jornada-codigostudoo-390.png",
+      "page": "codigostudoo",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "92e23d3ed4923cfb2fba3eb4c7b06002abda6d3484cf5ab4eb6159733d4f2aee"
+    },
+    {
+      "file": "evidencias/final/jornada-codigostudoo-360.png",
+      "page": "codigostudoo",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "8121a448fcf9594c109c73669b7c0fd8cc9d635ebac375b7c0ba629d65e563cf"
+    },
+    {
+      "file": "evidencias/final/jornada-denunciar-390.png",
+      "page": "denunciar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "a8c212cccb2e0a5de765f201cea762340cefa1412261e709d4244ca7087863b2"
+    },
+    {
+      "file": "evidencias/final/jornada-denunciar-360.png",
+      "page": "denunciar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "77277ce9b029137f59c0b6bdf198750ba03cbb2df78a99cb2913c9d69abe249f"
+    },
+    {
+      "file": "evidencias/final/jornada-configurar-390.png",
+      "page": "configurar",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "c88303de3071857c554e1e3e07a41cebda8de04f5809868615b9220a53a79e1c"
+    },
+    {
+      "file": "evidencias/final/jornada-configurar-360.png",
+      "page": "configurar",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "d08ea3bdb3292b19793ce48ec09fa1927043b6af293fac94da45730bfabfb549"
+    },
+    {
+      "file": "evidencias/final/jornada-preferencias-390.png",
+      "page": "preferencias",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "eb5b7ade3b6479aa2bf74ea795c6005fef859afdaa473b6118defeefeedefccb"
+    },
+    {
+      "file": "evidencias/final/jornada-preferencias-360.png",
+      "page": "preferencias",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "3bd01ad7d67ffc16514018761102653d316aaafd9963df158e0fe61cecea76d1"
+    },
+    {
+      "file": "evidencias/final/jornada-privacidade-390.png",
+      "page": "privacidade",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "e4f1c6342c9bca441cf863f44826c2f29f761de274c544f4d23c63919c3b5cc2"
+    },
+    {
+      "file": "evidencias/final/jornada-privacidade-360.png",
+      "page": "privacidade",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "09d7b9cfd1409c1a4a6cce9bfc9d436a2fb0e10988f4bceb4f1af2ee7a8c0b7f"
+    },
+    {
+      "file": "evidencias/final/jornada-ajuda-390.png",
+      "page": "ajuda",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "d52f15a3a33ff0d84bdbbd6d8489eae82a4873f4c5bf10789e1ca997e682c49c"
+    },
+    {
+      "file": "evidencias/final/jornada-ajuda-360.png",
+      "page": "ajuda",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "1fb4d51be2198e994eee73c4659c469b1ffaaf0745f524b97f7dd90b9e4667f7"
+    },
+    {
+      "file": "evidencias/final/jornada-bloqueados-390.png",
+      "page": "bloqueados",
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "sha256": "d7dc295d54f65e7e3b72c9f8b1c2173f84e09ffb0ac7373cc05201c043e85c5a"
+    },
+    {
+      "file": "evidencias/final/jornada-bloqueados-360.png",
+      "page": "bloqueados",
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "sha256": "a8b606872288b7c209a4ba48b5ef20603be314f74ada4add02809f8812da8b55"
+    },
+    {
+      "file": "evidencias/final/caderno-boasvindas-390.png",
+      "page": "boasvindas",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "85a8b0d56e2d0bc54f8f31781f5551687600498db4d67c3babcd5ca2d760ca12"
+    },
+    {
+      "file": "evidencias/final/caderno-boasvindas-360.png",
+      "page": "boasvindas",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "80a65fca86a1f23af81e56f9593fc2e31620beb975d20fa1d7e348441a281daf"
+    },
+    {
+      "file": "evidencias/final/caderno-apresentacao-390.png",
+      "page": "apresentacao",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "5258124532a3fd01ede4687e26f24bf2e73648b947811ccc9f21791c196fdc2e"
+    },
+    {
+      "file": "evidencias/final/caderno-apresentacao-360.png",
+      "page": "apresentacao",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "9a4d9f28d2b5c4678aa450aff5aed7a87550df8fc0a63401848c6ea67d36a71b"
+    },
+    {
+      "file": "evidencias/final/caderno-interesses-390.png",
+      "page": "interesses",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "db655d6c07c55809168ed878d6acb4df1035217b8c634b22e21950e2f532141e"
+    },
+    {
+      "file": "evidencias/final/caderno-interesses-360.png",
+      "page": "interesses",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "81435e914830502248f2fb070b476ce4725336e4773ea9a84664ea63935875bd"
+    },
+    {
+      "file": "evidencias/final/caderno-entrar-390.png",
+      "page": "entrar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "027f4c83ae0855d2db9c88e2db5ce5daeb85a6ae07cbcc6081977c216c69dd1d"
+    },
+    {
+      "file": "evidencias/final/caderno-entrar-360.png",
+      "page": "entrar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "e2b4c9fbdb42f83d8f331e78dbcdf34625a6ee1259c24f7788bfc57588649d79"
+    },
+    {
+      "file": "evidencias/final/caderno-cadastro-390.png",
+      "page": "cadastro",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "3a3c653589e6fb3965d18b46b1be5a6ebe4aee27eaeb7876c4b93e997c73f109"
+    },
+    {
+      "file": "evidencias/final/caderno-cadastro-360.png",
+      "page": "cadastro",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "7464c4e3428fb141a2736e449196c6db07ac912340ce3a4795b67c43467172ce"
+    },
+    {
+      "file": "evidencias/final/caderno-codigo-390.png",
+      "page": "codigo",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "00bdf637d92ec9bff3142f2c8b16f3154e04c4cfc53e7bedef20dd09d1914716"
+    },
+    {
+      "file": "evidencias/final/caderno-codigo-360.png",
+      "page": "codigo",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "ce41d7f7cc9950efaf472cca423ef8d6b60fb938ee2dbed5b602a40f68ee8868"
+    },
+    {
+      "file": "evidencias/final/caderno-senha-390.png",
+      "page": "senha",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "26366b4dc3aaf04234b4b55de4ee6f75af94f536d3295f9b829eb0b16bf1d508"
+    },
+    {
+      "file": "evidencias/final/caderno-senha-360.png",
+      "page": "senha",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "d4b93950109f76b9d3595461e19b2dd359b8c515532d72b6a1e5f38241817a86"
+    },
+    {
+      "file": "evidencias/final/caderno-recuperar-390.png",
+      "page": "recuperar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "67639132c3710413316eadd7295f94c83fc61b2de06bbcb9ab81cbefd23081a9"
+    },
+    {
+      "file": "evidencias/final/caderno-recuperar-360.png",
+      "page": "recuperar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "df5efc481395e8055495f7ac72c9acd99dfd31d42a2053fbc2699fc6a72efca2"
+    },
+    {
+      "file": "evidencias/final/caderno-inicio-390.png",
+      "page": "inicio",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "36ce29f356d926dd103578e38484f75af4bc45d5a884f87a6c0d49961929e9b7"
+    },
+    {
+      "file": "evidencias/final/caderno-inicio-360.png",
+      "page": "inicio",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "768c47f3da4bf813a5621bd1f31234cf79f744c0f7baceb38ced306c7652561b"
+    },
+    {
+      "file": "evidencias/final/caderno-pedido-390.png",
+      "page": "pedido",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "9ed5f19e329362f23b294a76ac2d3e2e46c3dd54580ef4518e66cfe7f30353c1"
+    },
+    {
+      "file": "evidencias/final/caderno-pedido-360.png",
+      "page": "pedido",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "35c945e4cc21f5049688429d76cf6454d010d0a764717eb8feef4de971fa95d0"
+    },
+    {
+      "file": "evidencias/final/caderno-material-390.png",
+      "page": "material",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "591a228fa991c77f57bf5349238f04a086079345fde09ba21b2ff5ccbb6c815f"
+    },
+    {
+      "file": "evidencias/final/caderno-material-360.png",
+      "page": "material",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "286c5031360c3800e035879f7d06caefe350cf2cfe039d4fb372464d78f5510e"
+    },
+    {
+      "file": "evidencias/final/caderno-consentimento-390.png",
+      "page": "consentimento",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "76290d29e8cd7d8084220382549731978d720583e24f6f5f1de586b0674de2ad"
+    },
+    {
+      "file": "evidencias/final/caderno-consentimento-360.png",
+      "page": "consentimento",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "4f82b495eeea8e82a6958fd4206382cc8d6c932f1162248da2859738cf36b1e1"
+    },
+    {
+      "file": "evidencias/final/caderno-geracao-390.png",
+      "page": "geracao",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "b175d14dd382ef67860a4b7329a1aee4fa906493c4426cd7cdd9fc4a7379216e"
+    },
+    {
+      "file": "evidencias/final/caderno-geracao-360.png",
+      "page": "geracao",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "9b8ee3fda4ab736865073fd130d5243b5e9984290888d69c3f8118d2c12f056b"
+    },
+    {
+      "file": "evidencias/final/caderno-proposta-390.png",
+      "page": "proposta",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "745a15feb077963fee595d57f0b4e1efbd6c3ff748bef6cc1b542e6418200784"
+    },
+    {
+      "file": "evidencias/final/caderno-proposta-360.png",
+      "page": "proposta",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "c3d1c7af173161c6ea26c95e63913c65a114f2ad15c046e4e75e113aefe34ec7"
+    },
+    {
+      "file": "evidencias/final/caderno-mapa-390.png",
+      "page": "mapa",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "58f09c577435ec7d0a1fcf3caed4af9302078998a29f3bc25193c3833b4d0b15"
+    },
+    {
+      "file": "evidencias/final/caderno-mapa-360.png",
+      "page": "mapa",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "6d6af78a3f054035173c4e680ff3896851bdda82f8c182246f76365ad3715f2c"
+    },
+    {
+      "file": "evidencias/final/caderno-licao-390.png",
+      "page": "licao",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "5381c43b818774d5635e79e7f12520da8caf89e7077aea9830e43a8d051e5165"
+    },
+    {
+      "file": "evidencias/final/caderno-licao-360.png",
+      "page": "licao",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "649353674bcc250d42acb07df366e2a763e97d0414260b1c0f2497ae26979998"
+    },
+    {
+      "file": "evidencias/final/caderno-exercicio-390.png",
+      "page": "exercicio",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "5be8c45485103b5837683eba991dcdb8db3ef05dc2a01dd6ebd05dd8b7052d9d"
+    },
+    {
+      "file": "evidencias/final/caderno-exercicio-360.png",
+      "page": "exercicio",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "00ae54d90b1347a70433dd70689167f5141989b6f70336dcd261e9732625d70d"
+    },
+    {
+      "file": "evidencias/final/caderno-reforco-390.png",
+      "page": "reforco",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "514d4e389567a67fba9e207435fcf90b9a86a7209e03aa12d4ee667d47ae411e"
+    },
+    {
+      "file": "evidencias/final/caderno-reforco-360.png",
+      "page": "reforco",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "282228f82086d8f197e2d32479df077f78fb0e7a69332579a9724452afbf13b8"
+    },
+    {
+      "file": "evidencias/final/caderno-explique-390.png",
+      "page": "explique",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "4a8a7b089d3b09eb75148f726e986a12f52c3542e20363f23935c7ae96775385"
+    },
+    {
+      "file": "evidencias/final/caderno-explique-360.png",
+      "page": "explique",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "de57f423e85f55894305e936e8d8696d1ff9d757e06c9ff875b423ee7f75e741"
+    },
+    {
+      "file": "evidencias/final/caderno-retorno-390.png",
+      "page": "retorno",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "c134eaffa253075cb6a321e19ff13ce72d2dcbee78757c558f8889932ae7c8a7"
+    },
+    {
+      "file": "evidencias/final/caderno-retorno-360.png",
+      "page": "retorno",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "f34060ab4219138d2b7a8979142574202d78488e161b7f6456b60a159e7d0772"
+    },
+    {
+      "file": "evidencias/final/caderno-conclusao-390.png",
+      "page": "conclusao",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "ee9b235087eefa30accd615f04b989e85a6f11c22d42c8cca7812edbbdc84c8e"
+    },
+    {
+      "file": "evidencias/final/caderno-conclusao-360.png",
+      "page": "conclusao",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "b8b82f45a241f0027da474749a0966a6d051939e586b150dc01aa82394ebf6bf"
+    },
+    {
+      "file": "evidencias/final/caderno-explorar-390.png",
+      "page": "explorar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "652e48e69869567eb530e4f09b2188f6ce5ac975853b2c26804611a7f36b6831"
+    },
+    {
+      "file": "evidencias/final/caderno-explorar-360.png",
+      "page": "explorar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "1d58e41e38795417132d1eaa2445f1bd6df3081f0a02543698e24fa4dc3d2730"
+    },
+    {
+      "file": "evidencias/final/caderno-previa-390.png",
+      "page": "previa",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "302666e1c8483dc45deef5a9ac975254fa6ea1d46e609994e65c8b69249e21fd"
+    },
+    {
+      "file": "evidencias/final/caderno-previa-360.png",
+      "page": "previa",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "2b59a3acf568bd87ba6a76edb756c7d44c3f33f1a8415768ea7522e402347f36"
+    },
+    {
+      "file": "evidencias/final/caderno-publico-390.png",
+      "page": "publico",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "3abaf5fd5b74f44373896a524dcb6b99488fc7796d5758de267071a80f6a3abd"
+    },
+    {
+      "file": "evidencias/final/caderno-publico-360.png",
+      "page": "publico",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "e242a05c501cac129eab19b5ba5d986455db88849d702592f1a3b0c1fc9169b5"
+    },
+    {
+      "file": "evidencias/final/caderno-perfil-390.png",
+      "page": "perfil",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "9e438de3626e6e729cc35ee0235f07bd4a217a776cf64819e0f216b03d7effd2"
+    },
+    {
+      "file": "evidencias/final/caderno-perfil-360.png",
+      "page": "perfil",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "87a2db1bfa69f4da015b9fa6371161488bf14f98d778ca76f23b0d65d5765353"
+    },
+    {
+      "file": "evidencias/final/caderno-editar-390.png",
+      "page": "editar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "9158ef62412393a232249de2fff9bc3ca87aa0331ac7c366677efef4b51d669c"
+    },
+    {
+      "file": "evidencias/final/caderno-editar-360.png",
+      "page": "editar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "45215c779b2c549cf86b761c953878851b6cee52e66c1bbe9f58dcff716dfa28"
+    },
+    {
+      "file": "evidencias/final/caderno-foto-390.png",
+      "page": "foto",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "00162b6464ea3f0e43c5b7fc76dd3bbc63f2467afd791dd843de9ceea5b3fe1a"
+    },
+    {
+      "file": "evidencias/final/caderno-foto-360.png",
+      "page": "foto",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "8a66842e29d4c34ca8cb7363294a0a11b7a3cba9c90ad122b01ec9a4ee123960"
+    },
+    {
+      "file": "evidencias/final/caderno-compartilhar-390.png",
+      "page": "compartilhar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "286355c69aef3b7ff0139333c26f1ff5cc32735b572b0a7041e7d019437dbf87"
+    },
+    {
+      "file": "evidencias/final/caderno-compartilhar-360.png",
+      "page": "compartilhar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "3df3eaceb2c86e213b790f1d10431c9fa5dce5370cea31d2e6431f17a4253ff1"
+    },
+    {
+      "file": "evidencias/final/caderno-codigostudoo-390.png",
+      "page": "codigostudoo",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "e6cfa278238fa12e1fa7ab91a577d6088b095aae6cd71c47a309665509ebd508"
+    },
+    {
+      "file": "evidencias/final/caderno-codigostudoo-360.png",
+      "page": "codigostudoo",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "23fbcffcfe16c1769ec8e9e96c4229cb21eb48d3a86c5faed5d2fcbf125dd617"
+    },
+    {
+      "file": "evidencias/final/caderno-denunciar-390.png",
+      "page": "denunciar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "ba418bb2c4dda18cc3f2490c95fb631a45621d743bd9c1cff26627cbeaebaade"
+    },
+    {
+      "file": "evidencias/final/caderno-denunciar-360.png",
+      "page": "denunciar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "53cf58b1129d5b510ffe1d56662b23ca217efb1a75e12ec34d29b64f80333c77"
+    },
+    {
+      "file": "evidencias/final/caderno-configurar-390.png",
+      "page": "configurar",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "d106840bec1c2cacad247d0955ee34482c14cd09916c7d79e43f9c1027fafce5"
+    },
+    {
+      "file": "evidencias/final/caderno-configurar-360.png",
+      "page": "configurar",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "5cdf91bc88aa995d3dca60ba4b6048befecbeb5374d240a9e7fe455013bfaee0"
+    },
+    {
+      "file": "evidencias/final/caderno-preferencias-390.png",
+      "page": "preferencias",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "1dee9caf48571b957e481e14c52b734dc8b29db9a3e3ace412413342f5300bd0"
+    },
+    {
+      "file": "evidencias/final/caderno-preferencias-360.png",
+      "page": "preferencias",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "c13b48a8ae410fc525fab68cdef7aadceac2963393550c051d592692b8ca13ab"
+    },
+    {
+      "file": "evidencias/final/caderno-privacidade-390.png",
+      "page": "privacidade",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "c515a703e5b4611b86d2b6d248b2cd0d2e862e7152832e1c42bbc116f0512315"
+    },
+    {
+      "file": "evidencias/final/caderno-privacidade-360.png",
+      "page": "privacidade",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "df20a32199f2c64ed2448e0d3d9f0767b36b650f16617bc28c72020e39040fec"
+    },
+    {
+      "file": "evidencias/final/caderno-ajuda-390.png",
+      "page": "ajuda",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "b38f45750c735b43ef2c7a8da993b5fc838a782bc1238ddb4e36d3bf5e2a60d5"
+    },
+    {
+      "file": "evidencias/final/caderno-ajuda-360.png",
+      "page": "ajuda",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "aa4a5d7954b2681996d731289b9b42308ee4e18c0084e7b8dab5a8d5420574cd"
+    },
+    {
+      "file": "evidencias/final/caderno-bloqueados-390.png",
+      "page": "bloqueados",
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "sha256": "b4da0334eec7cc091f7efa1489d5d5a07fddb851e2074ab56c7447cbc69e1032"
+    },
+    {
+      "file": "evidencias/final/caderno-bloqueados-360.png",
+      "page": "bloqueados",
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "sha256": "8d09c742d9e0f3dbaf4062ec83a3a82b3a58d9ee89751bca9e74ace823f20f88"
+    },
+    {
+      "file": "evidencias/final/foco-boasvindas-390.png",
+      "page": "boasvindas",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "955338794e23f934889ed37eb389e4638c3c69906e3963323b57905a8e9ad5a9"
+    },
+    {
+      "file": "evidencias/final/foco-boasvindas-360.png",
+      "page": "boasvindas",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "b4cfb689d2729dfbd43a14f739edba7998f7fad9c07757f1c9f98433a7eda702"
+    },
+    {
+      "file": "evidencias/final/foco-apresentacao-390.png",
+      "page": "apresentacao",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "994509498ec95ff8e202ba9bd9fcc6f38f726f08fada2b5974e227bb0fb67327"
+    },
+    {
+      "file": "evidencias/final/foco-apresentacao-360.png",
+      "page": "apresentacao",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "647754c2e648068c9d91215dee05b5bb990bb7c848847492b9789867716144b5"
+    },
+    {
+      "file": "evidencias/final/foco-interesses-390.png",
+      "page": "interesses",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "7018e9e713a3ed2eb1d1d13afa44effc8812a562cab4ada2d97f386c8fdd61c4"
+    },
+    {
+      "file": "evidencias/final/foco-interesses-360.png",
+      "page": "interesses",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "0246d053517c42ba263702e613618389a85fc65660391be2d7165f2bdc8c628d"
+    },
+    {
+      "file": "evidencias/final/foco-entrar-390.png",
+      "page": "entrar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "e75d125876e8f976e1e2f92fed460af5e1360b74faea794fe91b28cea444f858"
+    },
+    {
+      "file": "evidencias/final/foco-entrar-360.png",
+      "page": "entrar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "dc243715e250685b5a240fad567ff40e1ffaa17f66cf8cd909f8fbcd8d0b744d"
+    },
+    {
+      "file": "evidencias/final/foco-cadastro-390.png",
+      "page": "cadastro",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "c6286172ee2f8f69aaf7bc5306f24215809bf9f57c8c4f8b50dfb27de114d7d3"
+    },
+    {
+      "file": "evidencias/final/foco-cadastro-360.png",
+      "page": "cadastro",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "eb2f3783e6bf53478c36bcb420d9a84105fbf3c4a5ceb169d9beff4ea168cb44"
+    },
+    {
+      "file": "evidencias/final/foco-codigo-390.png",
+      "page": "codigo",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "0ce48237a073007ab666279b4699c5c7dbb488a9ff1cbf33034cab9f95fc05fb"
+    },
+    {
+      "file": "evidencias/final/foco-codigo-360.png",
+      "page": "codigo",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "72fece1a8e91c562bcc5e1777a512a1b1c5fd194e6acb39ac5eba4b917fde204"
+    },
+    {
+      "file": "evidencias/final/foco-senha-390.png",
+      "page": "senha",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "05c8168faded34dff8edfe0d02231593fb3aca1615908e396d463949ce57e4b4"
+    },
+    {
+      "file": "evidencias/final/foco-senha-360.png",
+      "page": "senha",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "df0760312b0d1ff4d8b11c2d729933017ba64d1f071f96ba78791631639e1674"
+    },
+    {
+      "file": "evidencias/final/foco-recuperar-390.png",
+      "page": "recuperar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "f02f702b7e017e6d88f7c207b41fb0d7dd086760e25e553dd6b93d91edc37896"
+    },
+    {
+      "file": "evidencias/final/foco-recuperar-360.png",
+      "page": "recuperar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "a902daad73bfe07f171b44cc7ca4e7a6051ccb66d1ea6c269b7cd7bf551b08a4"
+    },
+    {
+      "file": "evidencias/final/foco-inicio-390.png",
+      "page": "inicio",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "aba2f9456280e21bc725aef82d800b2ab051394f916af2edea6b41d9b4cf8626"
+    },
+    {
+      "file": "evidencias/final/foco-inicio-360.png",
+      "page": "inicio",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "17bbea9eafef02ab818f022855a963095382b798d2ba8385c8ecf74631aa54f1"
+    },
+    {
+      "file": "evidencias/final/foco-pedido-390.png",
+      "page": "pedido",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "aceae59b87eb1c053b2d889300c0b194b81f45921c41fa819b252c454cf9161f"
+    },
+    {
+      "file": "evidencias/final/foco-pedido-360.png",
+      "page": "pedido",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "1557ad6114cbd06e1fd9f9d7aae1252d8b8485fe48b1b147d3047fe2b64975f4"
+    },
+    {
+      "file": "evidencias/final/foco-material-390.png",
+      "page": "material",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "3dabff15ac2d543ce5d5a2cc75e1b6aea56cd8370d13b813e0cb0c8057e5d899"
+    },
+    {
+      "file": "evidencias/final/foco-material-360.png",
+      "page": "material",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "aa329638b0b55c68072cd4fade2a1a6b5e87fa5cad5cb7c715120eed4ba32ea9"
+    },
+    {
+      "file": "evidencias/final/foco-consentimento-390.png",
+      "page": "consentimento",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "4246131776ccb3c6923904fd5b89b7e13fb34c2d7eb30053e1c9aa250614adfb"
+    },
+    {
+      "file": "evidencias/final/foco-consentimento-360.png",
+      "page": "consentimento",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "cc1129f309bca3901667f9231ae79bf7b8aac827d58d43cb3ad294522973e13c"
+    },
+    {
+      "file": "evidencias/final/foco-geracao-390.png",
+      "page": "geracao",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "95aca71f33fd13c5b855f265c4e7815779b3d6b3b2d8df4a3ff28f95f1571aa7"
+    },
+    {
+      "file": "evidencias/final/foco-geracao-360.png",
+      "page": "geracao",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "15eaa1b9e5ec0c858c539c33bc4e3821029331108a7086375c931e6c0a24dd43"
+    },
+    {
+      "file": "evidencias/final/foco-proposta-390.png",
+      "page": "proposta",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "f343909255ecc13f60eb13bf938c1a8574d4164d4a057e69e8fbad3a2589daab"
+    },
+    {
+      "file": "evidencias/final/foco-proposta-360.png",
+      "page": "proposta",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "23acd92cbd514452bb64ef075cbe879556aa64a3469eb5656d2e8de0fb1bfb67"
+    },
+    {
+      "file": "evidencias/final/foco-mapa-390.png",
+      "page": "mapa",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "9bd439c8d4008458ee97693aedc9a9dbafbbbb7c3d7d0740b867ba4a3240b8e5"
+    },
+    {
+      "file": "evidencias/final/foco-mapa-360.png",
+      "page": "mapa",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "600834f4cc7ca93abddb8eaec786e53b11afdad04e90c937540d439883fe7075"
+    },
+    {
+      "file": "evidencias/final/foco-licao-390.png",
+      "page": "licao",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "cbff9273afefddca7637f8fbc8ded11a22f8e24bb00f0309e5502f59dc0db650"
+    },
+    {
+      "file": "evidencias/final/foco-licao-360.png",
+      "page": "licao",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "6d0d8429cfc85d79f79dc1a87875ab78d99eb1faad8ab1022d618ade1115f9b0"
+    },
+    {
+      "file": "evidencias/final/foco-exercicio-390.png",
+      "page": "exercicio",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "8865876689d9cb7eaf7193c46f2af6b13d736688854bef3a2ffc042dac57e229"
+    },
+    {
+      "file": "evidencias/final/foco-exercicio-360.png",
+      "page": "exercicio",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "5aa38d7952cb1005022a75b3c6fa0a6165da89cbd927f8cde236bd0bfa35c4e6"
+    },
+    {
+      "file": "evidencias/final/foco-reforco-390.png",
+      "page": "reforco",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "a2f12e962ecb70bd7bd7ad6aa13d180f4eb6fb62c47e16a2dd50e870b71b32ac"
+    },
+    {
+      "file": "evidencias/final/foco-reforco-360.png",
+      "page": "reforco",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "66f80960a773033dd31a22e694dffb48267b34858f840840991f10e07b96c714"
+    },
+    {
+      "file": "evidencias/final/foco-explique-390.png",
+      "page": "explique",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "3880dd9fb891594a73e71b17fb39247240b75710d0823deeb6fe7c219d299c6f"
+    },
+    {
+      "file": "evidencias/final/foco-explique-360.png",
+      "page": "explique",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "6d03bb430c7b1e6461b247ef034208f7ae672f83114e890ff35ab7554032c8d7"
+    },
+    {
+      "file": "evidencias/final/foco-retorno-390.png",
+      "page": "retorno",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "50cb99b435ffa252e58f9fa71f6cb24296089b54a448d60eb7357d0fb61a6168"
+    },
+    {
+      "file": "evidencias/final/foco-retorno-360.png",
+      "page": "retorno",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "d40994950d473ac10e8b018d039a8cb8c47d511208d1fb83e24b5c32a261c576"
+    },
+    {
+      "file": "evidencias/final/foco-conclusao-390.png",
+      "page": "conclusao",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "3d8eb2c8a8649a88af3c7806953983e502bb424a2f53dd91f05b17bc56b50b5b"
+    },
+    {
+      "file": "evidencias/final/foco-conclusao-360.png",
+      "page": "conclusao",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "bd89effecedec598fa8c4b3c6f1a3a9e1088dc8c8a01e786866ba06a7d308f0e"
+    },
+    {
+      "file": "evidencias/final/foco-explorar-390.png",
+      "page": "explorar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "afd2d3a1f372b625adfcaffc351434d2c0fc8ee675b28e0157557f7b476ae9ee"
+    },
+    {
+      "file": "evidencias/final/foco-explorar-360.png",
+      "page": "explorar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "ced502331f9c1a3801451b6507c7c00aea0d92a95ccac7a7d8c8471e2d604b76"
+    },
+    {
+      "file": "evidencias/final/foco-previa-390.png",
+      "page": "previa",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "bb3fbe633637a1af769a4cc83c70a1d119fccece95cc479a1b57d53716567df5"
+    },
+    {
+      "file": "evidencias/final/foco-previa-360.png",
+      "page": "previa",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "4e6c9399586333fa87a4f2597c41bf99e03dc1447ceeda5aec6aab99a292d2eb"
+    },
+    {
+      "file": "evidencias/final/foco-publico-390.png",
+      "page": "publico",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "e47179fbc4c6cea947c815c1dbf46496710cfe6dbeed8b69f97ea3e4b03e2c2c"
+    },
+    {
+      "file": "evidencias/final/foco-publico-360.png",
+      "page": "publico",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "8a695e4937e06b3af82f19fe616d08e6c700761a2b4ed9abddad08a60856b8bd"
+    },
+    {
+      "file": "evidencias/final/foco-perfil-390.png",
+      "page": "perfil",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "47ac396f98bfd6f87d0567175700514b5462505d44c5027f63d5cfe810ba54c7"
+    },
+    {
+      "file": "evidencias/final/foco-perfil-360.png",
+      "page": "perfil",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "f9dc1d795e55b93c83fff7d03c5697e9b3266d165d074ba4ce642c78c1c84b4a"
+    },
+    {
+      "file": "evidencias/final/foco-editar-390.png",
+      "page": "editar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "9a7bf1594d42911cbfa3a48a19b4d756b69c2c1d73004490c54639ccb11d14af"
+    },
+    {
+      "file": "evidencias/final/foco-editar-360.png",
+      "page": "editar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "e65c94b85df8d4d7057eb698ec9bd2d0a21e44e8a0bf7698413344ee20f72d30"
+    },
+    {
+      "file": "evidencias/final/foco-foto-390.png",
+      "page": "foto",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "251d03c2449d6728e5657122d4742579e342d300abea1377157b13c2858a3ea0"
+    },
+    {
+      "file": "evidencias/final/foco-foto-360.png",
+      "page": "foto",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "d3cdab8f7acfd4ba169619019a7cc07b0f99dc78ffdc7ca2ca3557d0381f1d21"
+    },
+    {
+      "file": "evidencias/final/foco-compartilhar-390.png",
+      "page": "compartilhar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "ece418d1b32f36f7ed259ec37510286b8990e97369f9e2d124f8b7ed0736675d"
+    },
+    {
+      "file": "evidencias/final/foco-compartilhar-360.png",
+      "page": "compartilhar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "2c6132b33b91284ce9289b95c1654c440a2deb704f6356c41dfed2f8e23f48a5"
+    },
+    {
+      "file": "evidencias/final/foco-codigostudoo-390.png",
+      "page": "codigostudoo",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "77ac9056737d8f303bf52c9e3a7f7390a7f0728cef76bbedea510026ffc13034"
+    },
+    {
+      "file": "evidencias/final/foco-codigostudoo-360.png",
+      "page": "codigostudoo",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "6c909cf30e399690d2df8de45878a39b5a2c45f3ba28d9e3586abf2b23cd1a51"
+    },
+    {
+      "file": "evidencias/final/foco-denunciar-390.png",
+      "page": "denunciar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "7be27b9b884f9fbc9ff21b46e2b6e07acacec60186e355632446a23da11f9ca8"
+    },
+    {
+      "file": "evidencias/final/foco-denunciar-360.png",
+      "page": "denunciar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "c36ec44c89e947cf850a0d71ad09dc3b940e7db3a6c316bcbbf55576a81f233e"
+    },
+    {
+      "file": "evidencias/final/foco-configurar-390.png",
+      "page": "configurar",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "ef6682b92fbac47d203750704e05524cc8fee5b46ad734bf188a6b95b38e6fba"
+    },
+    {
+      "file": "evidencias/final/foco-configurar-360.png",
+      "page": "configurar",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "c6dc9d6b990f86de1cfb942390b9e1fb463a4836afdf1709381f706305359e02"
+    },
+    {
+      "file": "evidencias/final/foco-preferencias-390.png",
+      "page": "preferencias",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "523d27b63d0d628aed37a64e6d1863913623bec5145b35ab4c3aa19003dc8a5b"
+    },
+    {
+      "file": "evidencias/final/foco-preferencias-360.png",
+      "page": "preferencias",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "17d4bf18da6740fa47bc25310b428a96f9ef45e043c6b4a52299593a4f329f05"
+    },
+    {
+      "file": "evidencias/final/foco-privacidade-390.png",
+      "page": "privacidade",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "697eb3cdd34a06798f274d4050037579ffa21f05716216a97088e27a05c57569"
+    },
+    {
+      "file": "evidencias/final/foco-privacidade-360.png",
+      "page": "privacidade",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "73392c06f1ff8b65c693daa82ec62081b70052d41d1195247ca458f3574b70c9"
+    },
+    {
+      "file": "evidencias/final/foco-ajuda-390.png",
+      "page": "ajuda",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "620067c75ee9b144e55719e98b0315c92e9423e5ed58e740ab29e745a7c22f87"
+    },
+    {
+      "file": "evidencias/final/foco-ajuda-360.png",
+      "page": "ajuda",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "f2a6ccd1a029d4e9f924597231b0678b9784c4100a0051c859191b97ec2d182c"
+    },
+    {
+      "file": "evidencias/final/foco-bloqueados-390.png",
+      "page": "bloqueados",
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "sha256": "927bab04d2af09dde60199cf3e60306de41ef6aa8af1026c39266a7f07c219e0"
+    },
+    {
+      "file": "evidencias/final/foco-bloqueados-360.png",
+      "page": "bloqueados",
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "sha256": "e56c32103aed3789e3b8d63efe045827e63547489105c11f0c83719b623b63d9"
+    }
+  ],
+  "pdfs": [
+    {
+      "file": "entrega/studoo-direcao-a.pdf",
+      "sha256": "ce4f035c1a65fa5873a352a4b393b01ac89d516e275c5ca77d37bfa1929684d6",
+      "frames": 35,
+      "scope": "Dobra inicial; use o protótipo para rolar/interagir."
+    },
+    {
+      "file": "entrega/studoo-direcao-b.pdf",
+      "sha256": "a987b619253879e1805149ad5667966e019f5d18e71f22aea5df6b48caa2b1da",
+      "frames": 35,
+      "scope": "Dobra inicial; use o protótipo para rolar/interagir."
+    },
+    {
+      "file": "entrega/studoo-direcao-c.pdf",
+      "sha256": "4a9dae16e4795c66e089ddbfb89dd984f9a9466bdc09147c32a18429b8a11965",
+      "frames": 35,
+      "scope": "Dobra inicial; use o protótipo para rolar/interagir."
+    }
+  ],
+  "panels": [
+    {
+      "file": "evidencias/final/comparativo-inicio.png",
+      "sha256": "144f99565785dceeb1321cf12e2407c9f13a77477d289aa990ed2eb375d07b27"
+    },
+    {
+      "file": "evidencias/final/comparativo-mapa.png",
+      "sha256": "343b9bd4886de0e4c459e1eb0c70122c6fad18814e663610122bc300ba69a550"
+    },
+    {
+      "file": "evidencias/final/prancha-a.png",
+      "sha256": "2d942d3a9632c56374e2e64879cf19a34bdae10400604a0621965924951fa581"
+    },
+    {
+      "file": "evidencias/final/prancha-b.png",
+      "sha256": "f52d7119a06dbd863476bb09c6729ce717ba3e9cd0a2d686da1ee1cce41cb52c"
+    },
+    {
+      "file": "evidencias/final/prancha-c.png",
+      "sha256": "b52d26b159ef8c45322f5ad4ccadfa57c82fb5d5657985d04da2c438d90aedfe"
+    }
+  ],
+  "htmlBundles": [
+    {
+      "file": "entrega/direcao-a.html",
+      "sha256": "18f84517fff743e95b16df265186337538363313b71003b9b2d1c8a0ecef97ad"
+    },
+    {
+      "file": "entrega/direcao-b.html",
+      "sha256": "65aca6ebfc2f7b0b808396fc5c2d76bb8dad0f75eb1fdfbc8c630ab263c186f8"
+    },
+    {
+      "file": "entrega/direcao-c.html",
+      "sha256": "71f0b6b54aff876232a67f1ed837fa78f37679c7183db2070b64e84cbf3a19e4"
+    },
+    {
+      "file": "entrega/studoo-tres-direcoes.zip",
+      "sha256": "90115eacee025749ed5ae81c25d36c947f9b42be9573fc659f32f707e94a0255"
+    }
+  ],
+  "scope": "Pranchas visuais das dobras iniciais; conteúdo rolável e interações no protótipo."
+}
