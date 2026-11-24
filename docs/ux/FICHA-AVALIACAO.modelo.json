@@ -11,11 +11,11 @@
   },
   "fluxo": {
     "id": "F01",
-    "nome": "Assinatura mobile v2 — Óculos em foco",
+    "nome": "Assinatura mobile v2 — Óculos em foco, ritmo suave",
     "objetivoDaPessoa": "Abrir o app Studoo em iOS/Android, reconhecer a marca com os óculos em foco e alcançar o destino, podendo dispensar a coreografia sem interferência em callbacks, foco ou ações.",
     "entrada": "Novo boot elegível do app; callbacks e links diretos fazem bypass.",
-    "saidaEsperada": "Com movimento permitido confirmado, após coreografia de 360–560 ms escolhida antes do início e recursos locais prontos, dissolve de 120 ms. Preferência pendente mantém PNG estático; ready antes da resposta encerra por pronto(false), sem aguardar 560 ms. Dispensa interrompe a qualquer momento; deadline único módulo JS + 900 ms compartilhado pelo splash e React não reinicia. Tela de destino utilizável, sem repetição em rota/foreground. Sem orçamento para o mínimo de 360 ms, dispensar por limite com PNG integral antes de mover.",
-    "escopoDaRodada": "F01 v2 Óculos em foco, brief registrado em 24/11/2026 antes da avaliação. Somente iOS/Android; RN Web complementar; site não aplicável. Não é o tutorial Apresentacao.",
+    "saidaEsperada": "Com movimento permitido confirmado, após coreografia de 680–880 ms escolhida antes do início e recursos locais prontos, dissolve de 160 ms. Preferência pendente mantém PNG estático; ready antes da resposta encerra por pronto(false), sem aguardar 880 ms. Dispensa interrompe a qualquer momento; deadline único módulo JS + 1400 ms compartilhado pelo splash e React não reinicia. Tela de destino utilizável, sem repetição em rota/foreground. Sem orçamento para o mínimo de 680 ms, dispensar por limite com PNG integral antes de mover.",
+    "escopoDaRodada": "F01 v2 Óculos em foco, revisão de ritmo suave pedida em 24/11/2026 antes de distribuir. Somente iOS/Android; RN Web complementar; site não aplicável. Não é o tutorial Apresentacao. Evidências anteriores não aprovam esta candidata.",
     "foraDoEscopo": [
       "Intro no site e notas da implementação web histórica",
       "Redesenhar o onboarding/tutorial existente de cinco cenas",
@@ -43,13 +43,13 @@
   "variantesPlanejadas": [
     "Boot frio/quente em iOS/Android; registrar início do módulo JS, deadline absoluto, montagem React e prazo restante recebido",
     "Launch screen estática de 210x69 igual aos quadros inicial/final da marca React; boot anterior do sistema medido separadamente",
-    "Caminho permitido: coreografia padrão 560 ms ou adaptada 360–560, duração decidida antes de iniciar; recursos prontos antes, depois ou simultaneamente ao fim dela",
+    "Caminho permitido: coreografia padrão 880 ms ou adaptada 680–880, duração decidida antes de iniciar; recursos prontos antes, depois ou simultaneamente ao fim dela",
     "Prontidão e conclusão da sequência repetidas; não reiniciar coreografia, dissolve nem prazo",
-    "Montagem tardia ou após expiração e condições perto do deadline módulo JS + 900 ms; nenhuma nova contagem de 900 ms ou extensão para concluir animação",
-    "Nominal padrão 680 ms com orçamento suficiente e recursos prontos; compressão 360–560 por min(560, restante − 120 − 32); sem mínimo de 360 ms, dispensar estaticamente antes de mover; nenhuma espera de API",
+    "Montagem tardia ou após expiração e condições perto do deadline módulo JS + 1400 ms; nenhuma nova contagem de 1400 ms ou extensão para concluir animação",
+    "Nominal padrão 1040 ms com orçamento suficiente e recursos prontos; compressão 680–880 por min(880, restante − 160 − 48); sem mínimo de 680 ms, dispensar estaticamente antes de mover; nenhuma espera de API",
     "Marcos visuais do JSON: óculos, palavra, sorriso, lentes e reflexo; participação preservando a composição inicial/final",
     "Preferência pendente (null): PNG estático, sem coreografia; ready antes da resposta encerra por pronto(false), falta de resposta e de ready termina no deadline",
-    "Consulta de movimento que falha usa fallback reduzido; reduced conhecido/tecnologia assistiva/interação/falha/contexto/retornos dispensam sem aguardar os 560 ms",
+    "Consulta de movimento que falha usa fallback reduzido; reduced conhecido/tecnologia assistiva/interação/falha/contexto/retornos dispensam sem aguardar os 880 ms",
     "Callbacks OAuth, links diretos e retornos preservam destino/sessão/parâmetros e não esperam a coreografia",
     "VoiceOver no iOS, TalkBack e Voltar no Android; foco e conteúdo da próxima tela",
     "Segundo plano/foreground, navegação e remontagem sem repetição no processo",
@@ -60,11 +60,11 @@
     {
       "id": "G3-abertura-ciclo",
       "superficie": null,
-      "eventoInicial": "Início do módulo JS da abertura; registrar timestamp e deadline absoluto = início + 900 ms",
+      "eventoInicial": "Início do módulo JS da abertura; registrar timestamp e deadline absoluto = início + 1400 ms",
       "eventoFinal": "Assinatura concluída/removida",
       "unidade": "ms",
-      "limite": 900,
-      "regra": "Um único deadline compartilhado pelo splash e React. Montagem recebe max(0, deadline − agora), sem novos 900 ms; montagem após expiração encerra. Ready, sequência, re-render e dissolve não reiniciam. Pode cortar animação tardia. Boot anterior ao módulo é medição separada.",
+      "limite": 1400,
+      "regra": "Um único deadline compartilhado pelo splash e React. Montagem recebe max(0, deadline − agora), sem novos 1400 ms; montagem após expiração encerra. Ready, sequência, re-render e dissolve não reiniciam. Pode cortar animação tardia. Boot anterior ao módulo é medição separada.",
       "metodo": null
     },
     {
@@ -72,20 +72,20 @@
       "superficie": null,
       "tipo": "duracao_adaptativa_antes_do_inicio",
       "unidade": "ms",
-      "alvo": 560,
-      "regra": "Somente movimento permitido confirmado. Escolher uma única duração antes de iniciar, entre 360 e 560 ms, preservando forma/marcos. Se o cálculo não comportar 360 ms, dispensar por limite com PNG integral antes de mover. Não modificar duração durante a execução. Dispensa a qualquer momento.",
+      "alvo": 880,
+      "regra": "Somente movimento permitido confirmado. Escolher uma única duração antes de iniciar, entre 680 e 880 ms, preservando forma/marcos. Se o cálculo não comportar 680 ms, dispensar por limite com PNG integral antes de mover. Não modificar duração durante a execução. Dispensa a qualquer momento.",
       "metodo": null,
-      "minimo": 360,
-      "maximo": 560,
-      "reservaFramesMs": 32,
-      "formula": "min(560, restante − 120 − 32)"
+      "minimo": 680,
+      "maximo": 880,
+      "reservaFramesMs": 48,
+      "formula": "min(880, restante − 160 − 48)"
     },
     {
       "id": "G3-abertura-dissolve",
       "superficie": null,
       "tipo": "duracao_configurada",
       "unidade": "ms",
-      "alvo": 120,
+      "alvo": 160,
       "regra": "Começa após sequência e recursos locais prontos, em qualquer ordem; interrupções dispensam e cap pode truncar sem estender prazo.",
       "metodo": null
     },
@@ -96,7 +96,7 @@
       "eventoFinal": "Início da saída",
       "unidade": "ms",
       "limite": null,
-      "regra": "No caminho permitido, ready isolado não antecipa a duração já escolhida de 360–560 ms e sequência concluída não ignora os recursos. Com preferência ainda pendente, ready chama pronto(false) e encerra sem sequência. Sem API await ou reinício por sinal repetido.",
+      "regra": "No caminho permitido, ready isolado não antecipa a duração já escolhida de 680–880 ms e sequência concluída não ignora os recursos. Com preferência ainda pendente, ready chama pronto(false) e encerra sem sequência. Sem API await ou reinício por sinal repetido.",
       "metodo": null
     },
     {
@@ -104,9 +104,9 @@
       "superficie": null,
       "tipo": "duracao_nominal_planejada",
       "unidade": "ms",
-      "alvo": 680,
-      "condicao": "Orçamento suficiente para sequência padrão de 560 ms, recursos locais prontos desde cedo e início sem atraso; 560 + 120.",
-      "regra": "Nominal padrão não é tempo já medido nem mínimo dos caminhos adaptados/de dispensa. Coreografia adaptada 360–560 mais dissolve de 120 ms, sem ampliar deadline de 900 ms.",
+      "alvo": 1040,
+      "condicao": "Orçamento suficiente para sequência padrão de 880 ms, recursos locais prontos desde cedo e início sem atraso; 880 + 160.",
+      "regra": "Nominal padrão não é tempo já medido nem mínimo dos caminhos adaptados/de dispensa. Coreografia adaptada 680–880 mais dissolve de 160 ms, sem ampliar deadline de 1400 ms.",
       "metodo": null
     },
     {
@@ -116,7 +116,7 @@
       "eventoFinal": "Assinatura removida/bypass",
       "unidade": "ms",
       "limite": null,
-      "regra": "Encerrar sem aguardar os 560 ms ou o dissolve. Preferência pendente isolada não integra esta dispensa: mantém PNG estático até ready ou deadline. Medir a resposta efetiva; não inventar zero ms observado.",
+      "regra": "Encerrar sem aguardar os 880 ms ou o dissolve. Preferência pendente isolada não integra esta dispensa: mantém PNG estático até ready ou deadline. Medir a resposta efetiva; não inventar zero ms observado.",
       "metodo": null
     },
     {
@@ -126,7 +126,7 @@
       "eventoFinal": "Ready antes da resposta, resposta conhecida, falha de consulta ou deadline",
       "unidade": "ms",
       "limite": null,
-      "regra": "Exibir PNG estático sem iniciar coreografia. Ready antes da resposta encerra por pronto(false), sem aguardar 560 ms. Sem ready ou resposta, respeitar deadline módulo JS + 900 ms; null não provoca dispensa imediata. Falha da consulta usa fallback reduzido e encerra.",
+      "regra": "Exibir PNG estático sem iniciar coreografia. Ready antes da resposta encerra por pronto(false), sem aguardar 880 ms. Sem ready ou resposta, respeitar deadline módulo JS + 1400 ms; null não provoca dispensa imediata. Falha da consulta usa fallback reduzido e encerra.",
       "metodo": null
     }
   ],
@@ -901,12 +901,13 @@
       "Sem observação com pessoas, declarar validação empírica não realizada; não alegar comportamento universal.",
       "Não incluir chaves, tokens, sessões, senhas ou dados pessoais em evidências compartilhadas.",
       "Brief v2 Óculos em foco registrado antes da avaliação; pesos e meta permanecem iguais.",
-      "A regra v1 sem exposição mínima foi substituída por coreografia de até 560 ms intencional e dispensável, com duração adaptativa decidida antes de iniciar no caminho permitido; nenhum resultado v1 aprova a v2.",
-      "Dissolve de 120 ms requer coreografia e recursos locais prontos no caminho permitido; deadline absoluto módulo JS + 900 ms é compartilhado pelo splash e React, que recebe só o restante na montagem.",
+      "A regra v1 sem exposição mínima foi substituída por coreografia de até 880 ms intencional e dispensável, com duração adaptativa decidida antes de iniciar no caminho permitido; nenhum resultado v1 aprova a v2.",
+      "Dissolve de 160 ms requer coreografia e recursos locais prontos no caminho permitido; deadline absoluto módulo JS + 1400 ms é compartilhado pelo splash e React, que recebe só o restante na montagem.",
       "Filme Python é conceito visual; RNWeb é execução complementar; nenhum deles comprova a gravação ou desempenho nativos.",
       "Registrar versão e hash do contrato em cada evidência; não reaproveitar a origem de uma mídia para rotular outra.",
-      "Preferência null não dispensa imediatamente e não inicia os 560 ms: mostra PNG estático até ready, resposta ou deadline; ready antes da resposta encerra por pronto(false).",
-      "Antes do movimento, calcular min(560, restante − 120 − 32): duração entre 360 e 560 ms; se não couber 360 ms, dispensar por limite com PNG integral. Registrar duração/restante; não começar meio gesto nem elevar o cap."
+      "Preferência null não dispensa imediatamente e não inicia os 880 ms: mostra PNG estático até ready, resposta ou deadline; ready antes da resposta encerra por pronto(false).",
+      "Antes do movimento, calcular min(880, restante − 160 − 48): duração entre 680 e 880 ms; se não couber 680 ms, dispensar por limite com PNG integral. Registrar duração/restante; não começar meio gesto nem elevar o cap.",
+      "O ritmo suave exige evidências próprias com candidata/hash novos. O contrato 560/120/900 e suas 603/17 verificações são históricos; não reaproveitar nota, captura ou medição como aprovação atual."
     ],
     "estadoCriterioNaRevisao": [
       "pendente",
@@ -952,8 +953,8 @@
       "estaticaNaLaunchScreen": true,
       "frameInicialIgualAoFinal": true
     },
-    "dissolveMs": 120,
-    "cicloMsMaximo": 900,
+    "dissolveMs": 160,
+    "cicloMsMaximo": 1400,
     "movimentoSomenteQuandoPermitidoConfirmado": true,
     "aguardaApi": false,
     "naoRepeteEm": [
@@ -977,12 +978,12 @@
     ],
     "aplicacaoDosCriterios": {
       "C1": "Reconhecimento da identidade; não exigir slogan, valor do produto ou loading fictício.",
-      "C2": "Dispensa a qualquer momento, sem ação oculta. A coreografia de 360–560 ms escolhida antes de iniciar no caminho permitido é intencional no brief v2, sem exigir botão novo.",
+      "C2": "Dispensa a qualquer momento, sem ação oculta. A coreografia de 680–880 ms escolhida antes de iniciar no caminho permitido é intencional no brief v2, sem exigir botão novo.",
       "C3": "Marca em 210x69, fundo branco, recortes e transformações dos óculos sem cortes indevidos; início/fim iguais ao splash estático.",
       "C4": "Óculos participam do gesto de foco/reflexo conforme o JSON, preservando a composição oficial inicial/final; nenhuma obrigação de acrescentar mascote ou tutorial.",
-      "C5": "Sequência de até 560 ms, duração 360–560 ms escolhida antes do início por min(560, restante − 120 − 32), só com movimento permitido confirmado. Preferência null mostra PNG estático; ready antes da resposta encerra sem sequência. Reduced conhecido/tecnologia assistiva/falha/contexto/interação/retornos dispensam imediatamente; falha de consulta usa fallback reduzido. Se não couber o mínimo de 360 ms, dispensa estática antes do movimento; forma/marcos preservados.",
+      "C5": "Sequência de até 880 ms, duração 680–880 ms escolhida antes do início por min(880, restante − 160 − 48), só com movimento permitido confirmado. Preferência null mostra PNG estático; ready antes da resposta encerra sem sequência. Reduced conhecido/tecnologia assistiva/falha/contexto/interação/retornos dispensam imediatamente; falha de consulta usa fallback reduzido. Se não couber o mínimo de 680 ms, dispensa estática antes do movimento; forma/marcos preservados.",
       "C6": "Marca decorativa não cria etapa de foco ou anúncio indevido; conferir VoiceOver/TalkBack e tela seguinte no nativo.",
-      "C7": "No caminho permitido, saída de 120 ms após sequência e recursos locais prontos em qualquer ordem, nominal padrão 680 ms; duração 360–560 ms decidida antes do movimento com reserva de 120 + 32 ms e dispensa estática quando faltar o mínimo de 360 ms. Deadline absoluto módulo JS + 900 ms compartilhado por splash/React; montagem recebe só o restante e não reinicia. Nunca aguarda API. Preferência pendente não inicia sequência e ready encerra por pronto(false).",
+      "C7": "No caminho permitido, saída de 160 ms após sequência e recursos locais prontos em qualquer ordem, nominal padrão 1040 ms; duração 680–880 ms decidida antes do movimento com reserva de 160 + 48 ms e dispensa estática quando faltar o mínimo de 680 ms. Deadline absoluto módulo JS + 1400 ms compartilhado por splash/React; montagem recebe só o restante e não reinicia. Nunca aguarda API. Preferência pendente não inicia sequência e ready encerra por pronto(false).",
       "C8": "Falhas e sinais tardios/repetidos não retêm, reiniciam ou estendem o prazo; dispensas e callbacks preservam destino.",
       "C9": "Não repetir em navegação ou foreground; não criar dado de estudo ou preferência de onboarding.",
       "C10": "Comparar iOS/Android realmente executados; RN Web apenas complementa. Não exigir intro no site nem herdar sua nota histórica."
@@ -996,9 +997,9 @@
     "versao": 2,
     "direcao": "Óculos em foco",
     "fonteCiclo": "packages/contratos/src/abertura.ts",
-    "sequenciaMs": 560,
-    "duracaoNominalPlanejadaMs": 680,
-    "origemDoPrazo": "Início do módulo JS da abertura; deadline absoluto = início + 900 ms compartilhado pelo splash nativo e controlador React. Boot anterior ao módulo é medição separada.",
+    "sequenciaMs": 880,
+    "duracaoNominalPlanejadaMs": 1040,
+    "origemDoPrazo": "Início do módulo JS da abertura; deadline absoluto = início + 1400 ms compartilhado pelo splash nativo e controlador React. Boot anterior ao módulo é medição separada.",
     "reiniciaPrazo": false,
     "saidaRequer": [
       "coreografiaConcluida",
@@ -1007,7 +1008,7 @@
     "ordemDasCondicoes": "qualquer",
     "permiteDispensaEmQualquerMomento": true,
     "capPodeInterromperSequenciaOuDissolve": true,
-    "parametrosVisuais": "Ler marcos e vetores do JSON versionado da candidata; não reaproveitar escala/deslocamento da acomodação v1.",
+    "parametrosVisuais": "Ler marcos e vetores do JSON vigente. Ritmo suave usa curva simétrica e inclinações de −5°/+2°; arte/geometria mantidas em 210×69. Capturas e avaliações dos marcos/curva anteriores não aprovam a nova candidata.",
     "assetOculos": {
       "caminho": "apps/mobile/assets/marca/abertura-oculos-hd.png",
       "origem": "Derivado do ícone oficial de 1024 px, conforme geração da candidata.",
@@ -1015,28 +1016,52 @@
       "marcaCompletaEmRepouso": "Original de 210 px preservada nos quadros inicial/final.",
       "aprovacaoVisualOuNativa": null
     },
-    "prazoNaMontagem": "max(0, deadline − agora); apenas o restante, nunca outros 900 ms. Montagem após a expiração encerra sem timer extra.",
+    "prazoNaMontagem": "max(0, deadline − agora); apenas o restante, nunca outros 1400 ms. Montagem após a expiração encerra sem timer extra.",
     "preferenciaPendente": {
       "estado": null,
       "apresentacao": "PNG estático, sem coreografia",
-      "readyAntesDaResposta": "pronto(false) encerra sem aguardar 560 ms",
+      "readyAntesDaResposta": "pronto(false) encerra sem aguardar 880 ms",
       "semReadyOuResposta": "Termina no mesmo deadline absoluto",
       "falhaDaConsulta": "Hook usa estado reduzido true e encerra",
       "dispensaImediataApenasPorNull": false
     },
     "adaptacaoAntesDoInicio": {
-      "sequenciaPadraoMs": 560,
-      "sequenciaMinimaMs": 360,
-      "sequenciaMaximaMs": 560,
-      "formula": "min(560, restante − 120 − 32)",
-      "dissolveReservadoMs": 120,
-      "reservaFramesMs": 32,
+      "sequenciaPadraoMs": 880,
+      "sequenciaMinimaMs": 680,
+      "sequenciaMaximaMs": 880,
+      "formula": "min(880, restante − 160 − 48)",
+      "dissolveReservadoMs": 160,
+      "reservaFramesMs": 48,
       "momentoDaDecisao": "Antes de iniciar o movimento; não mudar a duração durante o gesto.",
       "semOrcamentoMinimo": "Dispensar por limite com PNG integral antes do movimento.",
       "preservaFormaEMarcos": true,
-      "estendeDeadline": false
+      "estendeDeadline": false,
+      "escopoDaPreservacao": "A compressão preserva forma e marcos do contrato suave vigente; a revisão de suavização mudou deliberadamente curva, marcos e rotação em relação ao contrato anterior."
     },
-    "execucaoDoMovimento": "Um único timing com curva por trechos amostrada preserva forma/marcos, sem callbacks JS entre eles; driver nativo no app e driver JS apenas na prévia RN Web."
+    "execucaoDoMovimento": "Um único timing com curva por trechos amostrada preserva forma/marcos, sem callbacks JS entre eles; driver nativo no app e driver JS apenas na prévia RN Web.",
+    "revisaoDoRitmo": "suave-2026-11-24",
+    "marcosAtuais": [
+      0,
+      0.26,
+      0.4,
+      0.56,
+      0.9,
+      1
+    ],
+    "curvaAtual": [
+      0.42,
+      0,
+      0.58,
+      1
+    ],
+    "oculosRotacaoAtual": [
+      0,
+      -5,
+      2,
+      0,
+      0,
+      0
+    ]
   },
   "regressoesAdjacentesPlanejadas": [
     "Smoke do onboarding Apresentacao mobile existente: abrir pelo caminho atual e sair/continuar sem alterar cenas, interesses, ações ou preferência de visto.",
@@ -1057,53 +1082,240 @@
     }
   ],
   "briefAntesDaAvaliacao": {
-    "registradoEm": "2026-11-24",
+    "registradoEm": "2026-11-24T17:43:29Z",
     "versaoAbertura": 2,
+    "revisaoDoRitmo": "suave-2026-11-24",
     "direcao": "Óculos em foco",
-    "origem": "Novo pedido explícito do dono: movimento inovador com participação dos óculos.",
-    "regraSubstituida": "A v1 não exigia exposição mínima e liberava ao ficar pronta.",
-    "regraAtual": "Com movimento permitido confirmado, coreografia intencional de até 560 ms, com duração 360–560 ms decidida antes de iniciar por min(560, restante − 120 − 32), ou dispensa estática por limite se não couber o mínimo de 360 ms; saída após sequência e recursos locais prontos, em qualquer ordem. Preferência pendente mantém PNG estático e ready sem resposta encerra por pronto(false). Dispensa a qualquer momento; deadline absoluto módulo JS + 900 ms compartilhado pelo splash e React, com somente restante na montagem.",
+    "origem": "Pedido explícito do dono de suavizar e deixar um pouco menos rápida antes de distribuir.",
+    "regraSubstituida": "Contrato anterior de 24/11: sequência 560, mínimo 360, saída 120, margem 32, nominal 680 e deadline 900; mantido apenas no histórico.",
+    "regraAtual": "No caminho permitido, saída de 160 ms após sequência e recursos locais prontos em qualquer ordem, nominal padrão 1040 ms; duração 680–880 ms decidida antes do movimento com reserva de 160 + 48 ms e dispensa estática quando faltar o mínimo de 680 ms. Deadline absoluto módulo JS + 1400 ms compartilhado por splash/React; montagem recebe só o restante e não reinicia. Nunca aguarda API. Preferência pendente não inicia sequência e ready encerra por pronto(false).",
+    "parametros": {
+      "sequenciaPadraoMs": 880,
+      "sequenciaMinimaMs": 680,
+      "dissolveMs": 160,
+      "margemQuadroMs": 48,
+      "nominalPadraoMs": 1040,
+      "deadlineAbsolutoMs": 1400,
+      "formula": "min(880, restante − 160 − 48)",
+      "marcos": [
+        0,
+        0.26,
+        0.4,
+        0.56,
+        0.9,
+        1
+      ],
+      "curva": [
+        0.42,
+        0,
+        0.58,
+        1
+      ],
+      "oculosRotacao": [
+        0,
+        -5,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
     "alteraPesosOuMeta": false,
     "resultadosAnterioresAprovamEstaVersao": false,
-    "refinamentoDeLatencia": {
-      "registradoEm": "2026-11-24",
-      "sequenciaInicialMs": 640,
-      "sequenciaAtualMs": 560,
-      "nominalAtualMs": 680,
-      "capMantidoMs": 900,
-      "motivo": "Medição exploratória do renderer relatada pela coordenação atingiu o cap em boot frio e truncou o dissolve em 77 ms. Redução da sequência reserva margem para assets e frames sem estender o cap.",
-      "alteraMarcosHistoriaOuCurva": false,
-      "alteraPesosOuMeta": false,
-      "evidenciaNativa": false
-    },
-    "precisaoDeImplementacao": {
-      "registradoEm": "2026-11-24",
-      "deadlineAbsolutoCompartilhado": "Módulo JS + 900 ms; montagem passa somente o tempo restante, sem outra contagem de 900 ms.",
-      "preferenciaPendente": "Não é dispensa imediata: PNG estático, sem sequência; ready antes da resposta encerra por pronto(false). Falha da consulta usa fallback reduzido.",
-      "alteraPesosOuMeta": false,
-      "execucaoNativaComprovada": false
-    },
-    "adaptacaoDeOrcamento": {
-      "registradoEm": "2026-11-24",
-      "motivo": "Diagnóstico de boot frio relatado pela coordenação encontrou 542 ms restantes no início; sequência fixa de 560 ms mais dissolve de 120 ms não cabia.",
-      "sequenciaPadraoMs": 560,
-      "sequenciaMinimaMs": 360,
-      "sequenciaMaximaMs": 560,
-      "reservaDissolveMs": 120,
-      "reservaFramesMs": 32,
-      "formula": "min(560, restante − 120 − 32)",
-      "semMinimo": "Dispensa por limite antes do movimento, com PNG integral.",
-      "exemploRelatado": {
-        "restanteMs": 542,
-        "sequenciaMs": 390,
-        "dissolveMs": 120,
-        "reservaFramesMs": 32
+    "notasOuCapturasHerdadas": false,
+    "execucaoNativaComprovada": false
+  },
+  "historicoContratosAnteriores": [
+    {
+      "data": "2026-11-24",
+      "posicaoTemporal": "Antes do pedido posterior de ritmo mais suave; substituído antes de distribuir.",
+      "candidataProduto": "6ef71a9eee651cd988aa53c35947198f43f787a8",
+      "releaseIntegrada": "4523a2ee5f2f137b5b31f74c2468facc4f1e8b1d",
+      "hashContratoMotion": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+      "contrato": {
+        "versao": 2,
+        "direcao": "Óculos em foco",
+        "largura": 210,
+        "fundo": "#FFFFFF",
+        "corLente": "#2563FF",
+        "sequenciaMs": 560,
+        "sequenciaMinimaMs": 360,
+        "margemQuadroMs": 32,
+        "saidaMs": 120,
+        "limiteMs": 900,
+        "curva": [
+          0.22,
+          1,
+          0.36,
+          1
+        ],
+        "fonte": {
+          "largura": 560,
+          "altura": 184,
+          "divisao": 348,
+          "linhaSorriso": 134
+        },
+        "marcos": [
+          0,
+          0.18,
+          0.34,
+          0.5,
+          0.88,
+          1
+        ],
+        "oculosX": [
+          0,
+          -1,
+          -1,
+          -1,
+          0,
+          0
+        ],
+        "oculosY": [
+          0,
+          -12,
+          -12,
+          -12,
+          0,
+          0
+        ],
+        "oculosEscala": [
+          1,
+          2.15,
+          2.15,
+          2.15,
+          1,
+          1
+        ],
+        "oculosRotacao": [
+          0,
+          -8,
+          3,
+          0,
+          0,
+          0
+        ],
+        "palavraOpacidade": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        "palavraX": [
+          0,
+          -16,
+          -16,
+          -16,
+          0,
+          0
+        ],
+        "sorrisoOpacidade": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ],
+        "sorrisoEscala": [
+          1,
+          0.3,
+          0.3,
+          0.3,
+          1,
+          1
+        ],
+        "lenteOpacidade": [
+          0,
+          0.1,
+          0.1,
+          0.05,
+          0,
+          0
+        ],
+        "reflexoOpacidade": [
+          0,
+          0,
+          0.95,
+          0,
+          0,
+          0
+        ],
+        "reflexoX": [
+          -18,
+          -18,
+          0,
+          18,
+          18,
+          18
+        ],
+        "lentes": [
+          {
+            "x": 400.5,
+            "y": 84,
+            "diametro": 52
+          },
+          {
+            "x": 505.5,
+            "y": 84,
+            "diametro": 52
+          }
+        ]
       },
-      "capMantidoMs": 900,
-      "alteraFormaOuMarcos": false,
-      "alteraPesosOuMeta": false,
-      "evidenciaNativa": false,
-      "rodadaNaturalIntermediaria": "4/5 relatada; não aprovada e não substituída por testes unitários."
+      "decisoesAnteriores": {
+        "registradoEm": "2026-11-24",
+        "versaoAbertura": 2,
+        "direcao": "Óculos em foco",
+        "origem": "Novo pedido explícito do dono: movimento inovador com participação dos óculos.",
+        "regraSubstituida": "A v1 não exigia exposição mínima e liberava ao ficar pronta.",
+        "regraAtual": "Com movimento permitido confirmado, coreografia intencional de até 560 ms, com duração 360–560 ms decidida antes de iniciar por min(560, restante − 120 − 32), ou dispensa estática por limite se não couber o mínimo de 360 ms; saída após sequência e recursos locais prontos, em qualquer ordem. Preferência pendente mantém PNG estático e ready sem resposta encerra por pronto(false). Dispensa a qualquer momento; deadline absoluto módulo JS + 900 ms compartilhado pelo splash e React, com somente restante na montagem.",
+        "alteraPesosOuMeta": false,
+        "resultadosAnterioresAprovamEstaVersao": false,
+        "refinamentoDeLatencia": {
+          "registradoEm": "2026-11-24",
+          "sequenciaInicialMs": 640,
+          "sequenciaAtualMs": 560,
+          "nominalAtualMs": 680,
+          "capMantidoMs": 900,
+          "motivo": "Medição exploratória do renderer relatada pela coordenação atingiu o cap em boot frio e truncou o dissolve em 77 ms. Redução da sequência reserva margem para assets e frames sem estender o cap.",
+          "alteraMarcosHistoriaOuCurva": false,
+          "alteraPesosOuMeta": false,
+          "evidenciaNativa": false
+        },
+        "precisaoDeImplementacao": {
+          "registradoEm": "2026-11-24",
+          "deadlineAbsolutoCompartilhado": "Módulo JS + 900 ms; montagem passa somente o tempo restante, sem outra contagem de 900 ms.",
+          "preferenciaPendente": "Não é dispensa imediata: PNG estático, sem sequência; ready antes da resposta encerra por pronto(false). Falha da consulta usa fallback reduzido.",
+          "alteraPesosOuMeta": false,
+          "execucaoNativaComprovada": false
+        },
+        "adaptacaoDeOrcamento": {
+          "registradoEm": "2026-11-24",
+          "motivo": "Diagnóstico de boot frio relatado pela coordenação encontrou 542 ms restantes no início; sequência fixa de 560 ms mais dissolve de 120 ms não cabia.",
+          "sequenciaPadraoMs": 560,
+          "sequenciaMinimaMs": 360,
+          "sequenciaMaximaMs": 560,
+          "reservaDissolveMs": 120,
+          "reservaFramesMs": 32,
+          "formula": "min(560, restante − 120 − 32)",
+          "semMinimo": "Dispensa por limite antes do movimento, com PNG integral.",
+          "exemploRelatado": {
+            "restanteMs": 542,
+            "sequenciaMs": 390,
+            "dissolveMs": 120,
+            "reservaFramesMs": 32
+          },
+          "capMantidoMs": 900,
+          "alteraFormaOuMarcos": false,
+          "alteraPesosOuMeta": false,
+          "evidenciaNativa": false,
+          "rodadaNaturalIntermediaria": "4/5 relatada; não aprovada e não substituída por testes unitários."
+        }
+      },
+      "parametrosVigentes": false,
+      "notasCapturasOuChecksTransferiveis": false
     }
-  }
+  ]
 }

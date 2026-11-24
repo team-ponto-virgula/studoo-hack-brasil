@@ -10,6 +10,7 @@ const fs = require('node:fs/promises');
 
 const OUT = resolve(process.env.QA_OUT || '.studoo-local/abertura-app', 'browser-app-motion-independent.json');
 const BASE = process.env.QA_APP_BASE || 'http://localhost:8090';
+const motion = require(resolve('packages/contratos/src/abertura-motion.json'));
 
 function observeIntro() {
   const evidence = window.__introEvidence = { events: [], resources: [], timeOrigin: performance.timeOrigin };
@@ -61,14 +62,25 @@ function observeIntro() {
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.STUDOO_CHROMIUM || '/usr/bin/chromium', args: ['--no-sandbox'] });
   const results = [];
+  let activePage;
+  const saveResults = async () => {
+    await fs.mkdir(dirname(OUT), { recursive: true });
+    await fs.writeFile(OUT, JSON.stringify({ date: new Date().toISOString(), surface: 'app_previa_web', base: BASE, motionContract: motion, sourceCommit: process.env.QA_SOURCE_COMMIT || execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), productionInstrumented: false, cacheScope: 'Fresh browser context then two reloads in the same context. Expo dev can transfer assets again; this does not assert cache hits', environment: 'Headless Chromium; local Expo development server; no CPU/network throttle; 390x844', observation: 'MutationObserver DOM phases; external font/image/two-RAF estimates are not exact React pronta callbacks', results }, null, 2));
+  };
   const check = async (name, fn) => {
     try { results.push({ name, passed: true, evidence: await fn() }); console.log('PASS', name); }
-    catch (e) { results.push({ name, passed: false, error: e.message, evidence: e.evidence ?? null }); console.log('FAIL', name, e.message); }
+    catch (e) {
+      let raw;
+      try { raw = await activePage?.evaluate(() => ({ evidence: window.__introEvidence, body: document.body.innerText.slice(0, 500), overlayCount: document.querySelectorAll('[data-testid="abertura-studoo"]').length })); }
+      catch (readError) { raw = { readError: readError.message }; }
+      results.push({ name, passed: false, error: e.message, evidence: e.evidence ?? raw?.evidence ?? null, diagnostic: raw });
+      console.log('FAIL', name, e.message);
+    } finally { await saveResults(); }
   };
   try {
     const context = await b.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'no-preference' });
     await context.addInitScript(observeIntro);
-    const page = await context.newPage();
+    const page = activePage = await context.newPage();
     for (let i = 0; i < 3; i++) {
       await check(i === 0 ? 'cold-browser-cache-boot' : `same-context-reload-${i}`, async () => {
         if (i === 0) await page.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -81,7 +93,7 @@ function observeIntro() {
         const done = e.events.find(e => e.name === 'concluida');
         try {
           assert.ok(visible && exit && done, 'Expected all three DOM phases');
-          assert.ok(done.atMs - visible.atMs < 900, 'Observed layer lifetime must stay below 900ms on normal boot');
+          assert.ok(done.atMs - visible.atMs < motion.limiteMs, `Observed layer lifetime must stay below ${motion.limiteMs}ms on normal boot`);
         } catch (error) { error.evidence = e; throw error; }
         e.measured = { visibleToExitMs: exit.atMs - visible.atMs, exitToRemovedMs: done.atMs - exit.atMs, visibleToRemovedMs: done.atMs - visible.atMs };
         e.destination = (await page.locator('body').innerText()).slice(0, 220);
@@ -102,7 +114,7 @@ function observeIntro() {
     await check('background-return-interrupts-without-replay', async () => {
       const c = await b.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'no-preference' });
       await c.addInitScript(observeIntro);
-      const p = await c.newPage();
+      const p = activePage = await c.newPage();
       await p.route(/\.(ttf|otf)(\?|$)/, r => new Promise(() => {}));
       await p.goto(BASE, { waitUntil: 'domcontentloaded' });
       await p.getByTestId('abertura-studoo').waitFor({ state: 'attached' });
@@ -123,13 +135,12 @@ function observeIntro() {
       const e = await p.evaluate(() => ({ ...window.__introEvidence, overlayCount: document.querySelectorAll('[data-testid="abertura-studoo"]').length }));
       assert.equal(e.overlayCount, 0); assert.equal(e.events.filter(x => x.name === 'visivel').length, 1);
       const hidden = e.events.find(x => x.name === 'simulated-background'); const done = e.events.find(x => x.name === 'concluida');
-      assert.ok(done.atMs - hidden.atMs < 120, 'Background should skip instead of dissolving');
+      assert.ok(done.atMs - hidden.atMs < motion.saidaMs, 'Background should skip instead of dissolving');
       e.backgroundToRemovalMs = done.atMs - hidden.atMs;
       e.scope = 'Synthetic document.hidden/visibilityState and visibilitychange; does not prove real native AppState';
       await c.close(); return e;
     });
-    await fs.mkdir(dirname(OUT), { recursive: true });
-    await fs.writeFile(OUT, JSON.stringify({ date: new Date().toISOString(), surface: 'app_previa_web', base: BASE, sourceCommit: process.env.QA_SOURCE_COMMIT || execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), productionInstrumented: false, cacheScope: 'Fresh browser context then two reloads in the same context. Expo dev can transfer assets again; this does not assert cache hits', environment: 'Headless Chromium; local Expo development server; no CPU/network throttle; 390x844', observation: 'MutationObserver DOM phases; external font/image/two-RAF estimates are not exact React pronta callbacks', results }, null, 2));
+    await saveResults();
     console.log('TOTAL', results.filter(r => r.passed).length, '/', results.length);
     if (results.some(r => !r.passed)) process.exitCode = 1;
   } finally { await b.close(); }

@@ -220,10 +220,12 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
     sorrisoOpacidade, sorrisoEscala, lenteOpacidade, reflexoOpacidade, reflexoX } = useMemo(() => {
     // Prontidão e troca entre PNG/fatias não recriam o grafo que está rodando no driver nativo.
     const interpolar = (valores: number[]) => progresso.interpolate({ inputRange: abertura.marcos, outputRange: valores, extrapolate: 'clamp' });
+    const retornoDaMarcaInteira = abertura.marcos[abertura.marcos.length - 2];
+    const marcosDoBitmap = [0, 0.001, retornoDaMarcaInteira - 0.001, retornoDaMarcaInteira, 1];
     return {
       // O bitmap integral coincide com a launch screen; as fatias só aparecem enquanto ele se move.
-      marcaOpacidade: progresso.interpolate({ inputRange: [0, 0.001, 0.879, 0.88, 1], outputRange: [1, 0, 0, 1, 1], extrapolate: 'clamp' }),
-      fatiasOpacidade: progresso.interpolate({ inputRange: [0, 0.001, 0.879, 0.88, 1], outputRange: [0, 1, 1, 0, 0], extrapolate: 'clamp' }),
+      marcaOpacidade: progresso.interpolate({ inputRange: marcosDoBitmap, outputRange: [1, 0, 0, 1, 1], extrapolate: 'clamp' }),
+      fatiasOpacidade: progresso.interpolate({ inputRange: marcosDoBitmap, outputRange: [0, 1, 1, 0, 0], extrapolate: 'clamp' }),
       oculosX: interpolar(abertura.oculosX.map((valor) => valor * centroDosOculos)),
       oculosY: interpolar(abertura.oculosY),
       oculosEscala: interpolar(abertura.oculosEscala),

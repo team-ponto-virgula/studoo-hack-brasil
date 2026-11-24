@@ -24,6 +24,20 @@ const largura = motion.largura;
 const altura = largura * motion.fonte.altura / motion.fonte.largura;
 let b;
 let results = [];
+let activePage;
+const pageErrors = new WeakMap();
+function trackPage(page) {
+  activePage = page;
+  const errors = [];
+  pageErrors.set(page, errors);
+  page.on('pageerror', error => errors.push(error.message));
+  return page;
+}
+async function saveResults() {
+  await fs.writeFile(path.join(OUT, 'browser-app-preview.json'), JSON.stringify({
+    date: new Date().toISOString(), surface: 'app_previa_web', motionContract: motion, results
+  }, null, 2));
+}
 async function check(name, fn) {
   try {
     results.push({
@@ -33,22 +47,34 @@ async function check(name, fn) {
     });
     console.log('PASS', name);
   } catch (e) {
+    let diagnostic;
+    try {
+      diagnostic = await activePage?.evaluate(() => ({
+        atMs: performance.now(), path: location.pathname, body: document.body.innerText.slice(0, 500),
+        overlayCount: document.querySelectorAll('[data-testid="abertura-studoo"]').length,
+        fonts: document.fonts?.status, visibility: document.visibilityState,
+      }));
+    } catch (error) { diagnostic = { readError: error.message }; }
     results.push({
       name,
       passed: false,
-      error: e.message
+      error: e.message,
+      diagnostic,
+      pageErrors: pageErrors.get(activePage) ?? [],
     });
     console.log('FAIL', name, e.message);
+  } finally {
+    await saveResults();
   }
 }
-async function controlled(width = 390, height = 844) {
+async function controlled(width = 390, height = 844, advanceMs = 32) {
   const c = await b.newContext({
     viewport: {
       width,
       height
     }
   });
-  const p = await c.newPage();
+  const p = trackPage(await c.newPage());
   await p.clock.install();
   await p.clock.pauseAt(new Date());
   const requests = [];
@@ -61,7 +87,7 @@ async function controlled(width = 390, height = 844) {
     timeout: 90000
   });
   await p.waitForTimeout(1200);
-  await p.clock.runFor(32);
+  if (advanceMs) await p.clock.runFor(advanceMs);
   await p.getByTestId('abertura-studoo').waitFor({
     timeout: 10000
   });
@@ -83,16 +109,14 @@ async function controlled(width = 390, height = 844) {
     const {
       p,
       c
-    } = await controlled(w, h);
-    await p.addStyleTag({
-      content: '[data-testid="abertura-studoo"] > div { transform:none !important }'
-    });
+    } = await controlled(w, h, 0);
     const img = p.getByTestId('abertura-marca');
     const box = await img.boundingBox();
     assert.ok(Math.abs(box.width - largura) < .2);
     assert.ok(Math.abs(box.height - altura) < .2);
     assert.ok(Math.abs(box.x + box.width / 2 - w / 2) < .2);
     assert.ok(Math.abs(box.y + box.height / 2 - h / 2) < .2);
+    assert.equal(await img.evaluate(element => getComputedStyle(element).opacity), '1');
     const capture = await (await c.newCDPSession(p)).send('Page.captureScreenshot', {
       format: 'png'
     });
@@ -100,11 +124,20 @@ async function controlled(width = 390, height = 844) {
     const ax = await p.getByTestId('abertura-studoo').locator('..').ariaSnapshot();
     assert.ok(!ax.includes('Tentar'));
     assert.ok(!ax.includes('img'));
+    let finalRest;
+    if (w === 390 && h === 844) {
+      await p.clock.runFor(motion.sequenciaMs + motion.margemQuadroMs);
+      assert.equal(await img.evaluate(element => getComputedStyle(element).opacity), '1');
+      const final = await (await c.newCDPSession(p)).send('Page.captureScreenshot', { format: 'png' });
+      await fs.writeFile(path.join(OUT, 'app-preview-repouso-final.png'), Buffer.from(final.data, 'base64'));
+      finalRest = { controlledAdvanceMs: motion.sequenciaMs + motion.margemQuadroMs, fullBitmapOpacity: 1 };
+    }
     await c.close();
     return {
       box,
       scope: 'React Native Web; local Expo dev; fonts held; clock controlled; AX scoped to app root, excluding Expo dev toolbar',
-      decorativeAX: ax
+      decorativeAX: ax,
+      finalRest,
     };
   });
   await check('app-preview-timeout', async () => {
@@ -112,11 +145,11 @@ async function controlled(width = 390, height = 844) {
       p,
       c
     } = await controlled();
-    await p.clock.runFor(900);
+    await p.clock.runFor(motion.limiteMs);
     assert.equal(await p.getByTestId('abertura-studoo').count(), 0);
     await c.close();
     return {
-      afterControlledMs: 932
+      afterControlledMs: 32 + motion.limiteMs
     };
   });
   await check('app-preview-touch-dismiss', async () => {
@@ -169,7 +202,7 @@ async function controlled(width = 390, height = 844) {
       },
       reducedMotion: 'reduce'
     });
-    const p = await c.newPage();
+    const p = trackPage(await c.newPage());
     await p.goto(process.env.QA_APP_BASE || 'http://localhost:8090', {
       waitUntil: 'domcontentloaded'
     });
@@ -187,7 +220,7 @@ async function controlled(width = 390, height = 844) {
         height: 844
       }
     });
-    const p = await c.newPage();
+    const p = trackPage(await c.newPage());
     await p.goto((process.env.QA_APP_BASE || 'http://localhost:8090') + '/?erro=teste', {
       waitUntil: 'domcontentloaded'
     });
@@ -212,14 +245,17 @@ async function controlled(width = 390, height = 844) {
         }
       }
     });
-    const p = await c.newPage();
-    const errors = [];
-    p.on('pageerror', e => errors.push(e.message));
+    const p = trackPage(await c.newPage());
+    const errors = pageErrors.get(p);
     await p.goto(process.env.QA_APP_BASE || 'http://localhost:8090', {
       waitUntil: 'domcontentloaded'
     });
-    await p.waitForTimeout(1500);
+    // Registra a abertura natural: não avança relógio nem depende de um sleep fixo após navegar.
+    await p.getByTestId('abertura-studoo').waitFor({ state: 'attached', timeout: 10000 });
+    await p.getByTestId('abertura-studoo').waitFor({ state: 'detached', timeout: motion.limiteMs });
+    await p.waitForTimeout(motion.saidaMs);
     assert.equal(await p.getByTestId('abertura-studoo').count(), 0);
+    assert.deepEqual(errors, []);
     await p.screenshot({
       path: path.join(OUT, 'app-preview-destino.png')
     });
@@ -234,15 +270,12 @@ async function controlled(width = 390, height = 844) {
     };
   });
   await b.close();
-  await fs.writeFile(path.join(OUT, 'browser-app-preview.json'), JSON.stringify({
-    date: new Date().toISOString(),
-    surface: 'app_previa_web',
-    results
-  }, null, 2));
+  await saveResults();
   console.log('TOTAL', results.filter(r => r.passed).length, '/', results.length);
   if (results.some(r => !r.passed)) process.exitCode = 1;
 })().catch(async e => {
   console.error(e);
+  await fs.writeFile(path.join(OUT, 'fatal.json'), JSON.stringify({ error: e.message, stack: e.stack }, null, 2)).catch(() => {});
   await b?.close();
   process.exitCode = 1;
 });

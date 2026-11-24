@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Filme de conceito da assinatura mobile; usa a coreografia e o PNG reais do projeto.
 
-Não é captura nativa. O hold de leitura do filme é explícito e não muda os 560+120 ms do app.
+Não é captura nativa. O hold do filme é explícito e não muda os tempos lidos do contrato do app.
 Render: python3 scripts/motion/oculos-em-foco.py --out .studoo-local/oculos --hold-ms 500
 Dependências: Pillow, NumPy e FFmpeg. Não altera a imagem original nem redesenha letras.
 """
@@ -86,7 +86,7 @@ def frame(n: int, hold_ms: int, tail_ms: int) -> Image.Image:
     alpha = 1.0 if ms <= final_ms else 1-bezier(min(1.0, (ms-final_ms)/CFG['saidaMs']))
     canvas = Image.new('RGBA', (W, H), CFG['fundo'])
     # O original integral é usado nos dois repousos, também no componente nativo.
-    if progress <= 0 or progress >= .88:
+    if progress <= 0 or progress >= CFG['marcos'][-2]:
         compose(canvas, FULL, (W-FULL.width)/2, (H-FULL.height)/2, alpha)
         return canvas.convert('RGB')
     word = WORD.resize((round(DIV*K), FULL.height), Image.Resampling.LANCZOS)
@@ -145,13 +145,14 @@ def main():
     for n in range(total): process.stdin.write(frame(n, args.hold_ms, args.tail_ms).tobytes())
     process.stdin.close()
     if process.wait(): raise SystemExit('Falha do FFmpeg')
-    for ms in [0, 101, 190, 280, 385, 493, 560]:
+    samples = sorted({round(CFG['sequenciaMs']*p) for p in [0, .13, *CFG['marcos'][1:], .73]})
+    for ms in samples:
         frame(round(ms*FPS/1000), args.hold_ms, args.tail_ms).save(args.out / f'frame-{ms:03}.png')
     assert np.array_equal(np.array(frame(0, 500, 0)), np.array(static_frame().convert('RGB')))
     meta = {'type': 'filme de conceito, não captura do app', 'style': STYLE, 'source': str(SOURCE.relative_to(ROOT)),
             'motionContract': 'packages/contratos/src/abertura-motion.json', 'fps': FPS, 'resolution': [W,H],
             'mobileNominalMs': CFG['sequenciaMs']+CFG['saidaMs'], 'conceptHoldMs': args.hold_ms,
-            'durationMs': duration, 'nativeValidated': False}
+            'durationMs': duration, 'sampleMs': samples, 'nativeValidated': False}
     (args.out/'render.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps({'video': str(target), 'frames': total, 'nominalMobileMs': CFG['sequenciaMs']+CFG['saidaMs'], 'conceptHoldMs': args.hold_ms}))
 

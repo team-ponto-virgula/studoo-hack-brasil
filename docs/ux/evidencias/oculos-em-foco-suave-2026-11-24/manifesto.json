@@ -1,0 +1,59 @@
+{
+  "sourceCommit": "7b737f766c2e44b96c885c9e8c858ba8ba8161a0",
+  "scope": "Intro suave antes da integração do piloto de UI",
+  "nativeExecuted": false,
+  "nativeScore": null,
+  "checks": {
+    "interface": 604,
+    "openingSubset": 18,
+    "parity": 5,
+    "movement": 4,
+    "webTypes": true,
+    "mobileTypes": true,
+    "rnwebInterface": 10,
+    "rnwebMotion": 5,
+    "iosHermesExport": true
+  },
+  "sources": {
+    "apps/mobile/src/abertura.tsx": "2df590d60705de9d2945efaa6c4ba5cf707509c5a6445f73dd17c5accede0a1a",
+    "packages/contratos/src/abertura-motion.json": "7eeecd405a1acbdc554cc4c43969593fb33dfa3831532ed5abe9f39fdbf0e0bd",
+    "packages/contratos/src/abertura.ts": "0928bb58fda29e8a843c6c5708a215faddf515de71302d32571a430f7def7fc1",
+    "scripts/motion/oculos-em-foco.py": "a9ef199f19a0232a70d7c2121eb4d8bc6dcc05724a3b0bd4f184e8122fd0fc8c"
+  },
+  "artifacts": {
+    "app-preview-360x800.png": "44786988ce31632c1efad063811396a71a50d370a8ea7ca4f7f3af74296acdcc",
+    "app-preview-390x667.png": "cf7ef007f62f22f2608725feb38ebdd177f4944159b1685674512e63f6e794e2",
+    "app-preview-390x844.png": "94cc99be48ae946ecae83c7cf244f8941d93cc249aae802fa52313d766716870",
+    "app-preview-abertura.webm": "d0552bf4566b7e0be7417f20cfe520431d839e459d5a68219f5f2f7500b678df",
+    "app-preview-destino.png": "70edc6946c9e42edb2dd0890734cb1c5f452ebe4f5b50024e579239ad13ccc30",
+    "app-preview-repouso-final.png": "94cc99be48ae946ecae83c7cf244f8941d93cc249aae802fa52313d766716870",
+    "browser-app-motion-independent.json": "83af5a26304f85057884212aaff3dc940f7358262027c5f827331af95135246d",
+    "browser-app-preview.json": "f5a729c80ef95ce381fb0f486c4e724cfcc25865bbca930368209bdefdcc796c",
+    "checks.json": "4cc85c21d53a45e100e00ad5ada3530170e72e35920a3d4e903f51b89eddef98",
+    "frame-000.png": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122",
+    "frame-114.png": "1df8a7b093192484c19eb9b8a5f511d2048a969afd9636e2104d2267cd2f00cd",
+    "frame-229.png": "3464d7f7d1e4fd85a3c4f921262418a03ab4d109d45cb05b9f1eef55e7b90e4a",
+    "frame-352.png": "1b6137ed16a28eddf227c9161225ca1e93b68ba68f141e2f72fd1f6d37b36af5",
+    "frame-493.png": "e9b1bb47d9c99acf84684fad132b1ba0f757ffff096f986b0d54a1223e49ad73",
+    "frame-642.png": "da43644e5b092f13a3a06cd6ce76d908552a6cfcd270c3c9e8c9bef6ded286e6",
+    "frame-792.png": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122",
+    "frame-880.png": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122",
+    "limpeza-e-pixels.json": "4246d3b5b33aad25c7b7f410b4aa6bd52aad53f24e39b171f8fd7dcb8dc7d65c",
+    "oculos-em-foco.gif": "b361bac24ac3aebeb77d1811c4aebb0b1c8e05115bd704e4ff1224b5d4e2e79d",
+    "oculos-em-foco.mp4": "f6f4a28cc42c3df718e93b05ebdf10e6e990c40d9e3cca77e0a64a611b70aa67",
+    "render.json": "240a47d5e14b24e6b0afbe9fff7d7219ccc5d6587165e672361ecf538ddaa062"
+  },
+  "concept": {
+    "nominalMobileMs": 1040,
+    "holdMs": 0,
+    "tailMs": 240,
+    "nativeCapture": false
+  },
+  "previousBuild": {
+    "number": 5,
+    "easId": "6a33fcf1-058e-4d32-9e8d-0786450abc7d",
+    "submissionId": "a35b0260-5607-45b7-963d-f145f816df91",
+    "submissionState": "CANCELED",
+    "cancelledBeforeUpload": true
+  }
+}
