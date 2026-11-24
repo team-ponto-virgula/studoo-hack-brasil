@@ -57,7 +57,7 @@ test('item 20: "Excluir conta" é o botão secundário de 44 px, com borda e tex
   assert.ok(sair > 0 && excluir > sair, '"Excluir conta" vem depois de "Sair"');
   assert.ok(perfil.indexOf('</section>', sair) > excluir, 'na mesma seção "Conta"');
   const secao = ler('src/app/privacidade-perfil.tsx');
-  assert.match(secao, /<Botao variante="secundario" className="privacidade-excluir" onClick=\{\(\) => setExcluindo\(true\)\}>\{t\.excluir\}<\/Botao>/, 'secundário, não mais de texto');
+  assert.match(secao, /<Botao ref=\{gatilho\} variante="secundario" className="privacidade-excluir" onClick=\{\(\) => setExcluindo\(true\)\}>\{t\.excluir\}<\/Botao>/, 'secundário com foco de volta, não mais de texto');
   assert.doesNotMatch(secao.slice(0, secao.indexOf('export function BotaoExcluirConta')), /privacidade-excluir/, 'a seção de privacidade não tem mais o botão');
   const css = ler('src/app/privacidade.css');
   assert.match(css, /\.botao\.privacidade-excluir \{ height: 44px; min-height: 44px; padding-block: 0; border-color: #c23b4e; color: #c23b4e; \}/);
@@ -72,13 +72,17 @@ test('item 21: a coluna do Perfil vai até 680 px, no celular e no computador la
   assert.doesNotMatch(perfil, /44rem/, 'a largura antiga (704 px) saiu');
 });
 
-test('item 22: o cartão do visitante continua sem "Entrar com uma conta", porque entrar ou criar conta não leva o progresso dele', () => {
-  // Condição da spec 16: a saída só entra se a entrada guardar o progresso do visitante. O visitante é uma conta à parte (visitante+…@visitante.studoo.local, 24 h):
-  // nenhum caminho de entrada ou de cadastro o aproveita, então um botão ali faria a pessoa perder o que fez.
+test('item 22: o cartão do visitante oferece "Entrar ou criar conta" deixando claro que o progresso temporário não migra', () => {
+  // Decisão das rodadas web (24/11): o visitante tem saída explícita para entrar ou criar conta,
+  // avisando antes da troca que as trilhas da sessão temporária não vão para a conta (sem prometer migração).
   const perfil = ler('src/app/perfil.tsx');
-  assert.match(perfil, /<div className="perfil-cartao"><p className="perfil-cartao__visitante">\{p\.visitante\}<\/p><\/div>/, 'o cartão segue só com o texto');
+  assert.match(perfil, /<p className="perfil-cartao__visitante">\{p\.visitante\}<\/p>/, 'explica a sessão temporária');
+  assert.match(perfil, /<p className="campo-dica">\{p\.visitanteAvisoTroca\}<\/p>/, 'avisa que trilhas não migram');
+  assert.match(perfil, /<Botao variante="secundario" onClick=\{sair\}>\{p\.entrarOuCriar\}<\/Botao>/, 'oferece saída explícita');
+  assert.equal(p.entrarOuCriar, 'Entrar ou criar conta');
+  assert.match(p.visitanteAvisoTroca, /não passam para a conta/i);
   for (const arquivo of ['src/servidor/acesso/cadastro.ts', 'src/servidor/acesso/credenciais.ts', 'src/servidor/acesso/sessao.ts']) {
-    assert.doesNotMatch(ler(arquivo), /promov|migrar|mesclar|herdar.*visitante|visitante.*(?:herd|transfer)/i, `${arquivo}: nenhum caminho aproveita as trilhas do visitante`);
+    assert.doesNotMatch(ler(arquivo), /promov|migrar|mesclar|herdar.*visitante|visitante.*(?:herd|transfer)/i, `${arquivo}: nenhum caminho promete migração de visitante`);
   }
   assert.doesNotMatch(mensagens.perfil.visitante, /Entrar com uma conta/);
 });

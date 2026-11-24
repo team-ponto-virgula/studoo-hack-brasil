@@ -9,14 +9,15 @@ import { mensagens } from '@studoo/contratos/experiencia';
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 
-test('item 28: os dois seletores de arquivo usam as classes do botão secundário, com o campo de arquivo por cima (continua o seletor do sistema)', () => {
+test('item 28: os seletores de arquivo usam Botao secundário acessível por teclado, com câmera só em ponteiro de toque', () => {
   assert.equal(mensagens.inicio.arquivo, 'Escolher arquivo');
   assert.equal(mensagens.inicio.camera, 'Usar a câmera');
   const fonte = ler('src/app/estudio.tsx');
-  assert.equal((fonte.match(/<label className="estudio-arquivo botao botao--secundario">/g) ?? []).length, 2, 'os dois: arquivo e câmera');
+  assert.match(fonte, /<Botao\s+variante="secundario"\s+className="estudio-arquivo"\s+disabled=\{ocupado\}\s+onClick=\{\(\) => inputArquivoRef\.current\?\.click\(\)\}\s*>\s*\{mensagens\.inicio\.arquivo\}\s*<\/Botao>/);
+  assert.match(fonte, /\{toque && \(\s*<>\s*<Botao\s+variante="secundario"\s+className="estudio-arquivo"\s+disabled=\{ocupado\}\s+onClick=\{\(\) => inputCameraRef\.current\?\.click\(\)\}\s*>\s*\{mensagens\.inicio\.camera\}\s*<\/Botao>/);
+  assert.match(fonte, /ref=\{inputArquivoRef\}[^>]*type="file"/);
+  assert.match(fonte, /ref=\{inputCameraRef\}[^>]*type="file"[^>]*capture="environment"/);
   assert.doesNotMatch(fonte, /<label className="estudio-arquivo">/, 'nenhum ficou só com a classe do tracejado');
-  assert.match(fonte, /\{mensagens\.inicio\.arquivo\}\s*<input\s+type="file"/);
-  assert.match(fonte, /\{mensagens\.inicio\.camera\}\s*<input\s+type="file"[^>]*capture="environment"/);
 });
 
 test('item 28: o tracejado só existe a partir de 768 px; até 767 px o seletor é o botão secundário de sempre (borda sólida, relevo)', () => {
