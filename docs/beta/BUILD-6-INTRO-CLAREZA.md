@@ -14,7 +14,11 @@ Entrega de 24/11/2026. Esta candidata reúne a abertura mobile Óculos em foco, 
 | SHA-256 do IPA | `1969bed8ab7f331fb35cd281c09800f8a9a766fdefe00e5dca5d4875bebb0881` |
 | Tamanho do IPA | 30.177.899 bytes |
 
-**Estado de distribuição:** envio agendado e observado em `IN_QUEUE`; o build 6 ainda não foi confirmado no App Store Connect. Processamento `VALID`, notas de teste e vínculo ao grupo interno só podem ser afirmados após leitura de confirmação. A compilação concluída não significa disponibilidade no TestFlight.
+**Estado observado em 24/11, 18:54 UTC:** envio agendado e observado em `IN_QUEUE`; o build 6 ainda não foi confirmado no App Store Connect. Processamento `VALID`, notas de teste e vínculo ao grupo interno só podem ser afirmados após leitura de confirmação. A compilação concluída não significa disponibilidade no TestFlight.
+
+**Acompanhamento no Cloud:** monitor persistente ativo, com exclusão por lock, até **20:51:22 UTC de 24/11**, enquanto a máquina Cloud estiver ativa. Aguarda o envio EAS concluído e o build Apple `VALID`; então executa uma única tentativa de notas e associação ao grupo interno existente. Só confirma disponibilidade com `VALID` + `IN_BETA_TESTING`; após a associação, eventual espera usa apenas leituras. Falha ambígua não repete a operação. Não publica no grupo externo. Sintaxe, primeiro ciclo e processo vivo foram conferidos; isso não é uma simulação de upload concluído.
+
+O [snapshot de início](build-6/monitor-iniciado.json) é histórico, não um painel ao vivo. O estado corrente e o resultado ficam em `/workspace/work/testflight-oculos-suave/monitor-persistente-6-status.json` e, após a tentativa, `ativacao-6-resultado-monitor.json`, fora do Git. A [página da submissão](https://expo.dev/accounts/studoo/projects/studoo-mobile/submissions/233c34a2-d7cb-4809-8833-a21b47c1a128) acompanha o envio EAS.
 
 O build 5, de ritmo anterior, teve a submissão cancelada ainda na fila e não foi associado a grupo. Este envio usa o ID exato do build 6. O PR do piloto é o [#93](https://github.com/team-ponto-virgula/studoo-hack-brasil/pull/93), mantido como draft para revisão; o código compilado continua identificado pelo SHA acima, mesmo quando novos relatórios são adicionados.
 

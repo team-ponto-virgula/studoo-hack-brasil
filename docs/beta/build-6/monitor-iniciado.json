@@ -1,0 +1,20 @@
+{
+  "startedAt": "2026-11-24T18:51:22.106Z",
+  "deadlineAt": "2026-11-24T20:51:22.107Z",
+  "observedAt": "2026-11-24T18:55:28.645Z",
+  "submissionId": "233c34a2-d7cb-4809-8833-a21b47c1a128",
+  "easBuildId": "08d54669-e551-400e-92db-bfbf378b9b88",
+  "appId": "6837508955",
+  "status": "MONITORING",
+  "submission": {
+    "id": "233c34a2-d7cb-4809-8833-a21b47c1a128",
+    "status": "IN_QUEUE",
+    "createdAt": "2026-11-24T18:36:50.477Z"
+  },
+  "appleStatus": 200,
+  "appleBuild": null,
+  "snapshotOnly": true,
+  "singleActivationAttempt": true,
+  "externalReviewRequested": false,
+  "nativeExecution": false
+}
