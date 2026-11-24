@@ -933,13 +933,13 @@ export function TelaExplorar({ cliente, visitante, entradaDaConta, acoesTela, ao
         )}
 
         {visitanteSeguindo && (
-          <Vazio titulo={v.seguindoTitulo} texto={v.seguir} acao={<View style={{ alignItems: 'flex-start', gap: 8 }}>
+          <Vazio titulo={v.seguindoTitulo} texto={v.seguindoTexto} acao={<View style={{ alignItems: 'flex-start', gap: 8 }}>
             <Botao rotulo={v.entrar} testID="seguindo-entrar" acao={entradaDaConta} />
             <Botao rotulo={v.voltarComunidade} testID="vazio-ver-todas" variante="secundario" acao={() => setAba('todos')} />
           </View>} />
         )}
         {!visitanteSeguindo && vazio && busca && (aba === 'todos' || pagina.seguindoAlguem !== false) && (
-          <Vazio titulo={b.vazia} acao={<Botao rotulo={b.limpar} variante="secundario" acao={() => buscar('')} />} />
+          <Vazio titulo={b.vazia(busca)} acao={<Botao rotulo={b.limpar} variante="secundario" acao={() => buscar('')} />} />
         )}
         {!visitanteSeguindo && vazio && aba === 'seguindo' && (!busca || pagina.seguindoAlguem === false) && (
           <Vazio titulo={pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo} texto={pagina.seguindoAlguem ? undefined : c.vazioSeguindoTexto}
