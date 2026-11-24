@@ -24,3 +24,9 @@ Na candidata, tipos web/mobile, interface **622/622**, movimento **6/6**, parida
 Os testes de contrato e do store exercitam os estados iniciais, preferência pendente/verdadeira, contexto e janela visual sem relógio real. O roteiro de componente usa o TSX real com mocks das APIs nativas e identifica essa origem. Tipos, interface e exportação têm resultados próprios na entrega.
 
 Esta máquina não executou o app em iPhone/Android. Reprodução com mocks, export Hermes, auditoria de IPA e disponibilidade no TestFlight não são uma gravação instalada da passagem launch screen → React. A validação nativa e as notas completas continuam `null` até essa prova. Os resultados v2 foram preservados como históricos.
+
+## Distribuição confirmada
+
+O hotfix v3 da fonte `0a96649e44c56feefa92a59daec950d4484756f0` está disponível como **Studoo 0.1.0 (7)** no **Studoo Beta Interno**. `VALID` + `IN_BETA_TESTING` foram confirmados às 20:32 UTC de 24/11, com leitura independente às 20:33 UTC. [Registro do build, auditoria, checksums e ativação](../beta/BUILD-7-INTRO-BOOT.md).
+
+Atualizar pelo TestFlight para o build 7, fechar totalmente e reabrir permite conferir a correção. A distribuição não equivale a execução física nesta máquina e não altera as notas nativas `null`.

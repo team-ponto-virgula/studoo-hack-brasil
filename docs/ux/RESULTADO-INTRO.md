@@ -24,15 +24,17 @@ A prévia complementar RNWeb passou **10/10 de interface e 5/5 de movimento**; c
 
 O [estudo de movimento](MOTION-OCULOS.md) usa os tempos atuais sem pausa extra de leitura. É filme Python, não gravação nativa. Nenhum resultado anterior é reapresentado como execução deste ajuste.
 
-## Relato do build 6 e correção em andamento
+## Relato do build 6 e correção v3
 
-O dono relatou que a animação não aparece ao abrir o app no build instalado. A auditoria encontrou dispensas prematuras no boot: estado inicial inactive/null era convertido em movimento reduzido; ready com preferência desconhecida encerrava o controlador; a importação consumia o orçamento visual antes do primeiro frame elegível. O [hotfix v3](HOTFIX-INTRO-BOOT.md) separa esses estados e preserva a assinatura suave. A nova compilação e a validação instalada precisam de registro próprio; ativação interna do build 6 não prova que o motion foi visto.
+O dono relatou que a animação não aparece ao abrir o app no build instalado. A auditoria encontrou dispensas prematuras no boot: estado inicial inactive/null era convertido em movimento reduzido; ready com preferência desconhecida encerrava o controlador; a importação consumia o orçamento visual antes do primeiro frame elegível. O [hotfix v3](HOTFIX-INTRO-BOOT.md) separa esses estados e preserva a assinatura suave. Está distribuído no **build 0.1.0 (7)**; fonte, auditoria e [ativação interna confirmada](../beta/BUILD-7-INTRO-BOOT.md) têm registro próprio. A ativação do build 6 não prova que o motion foi visto, e os resultados visuais v2 acima não aprovam a execução instalada v3.
 
 ## Distribuição e histórico
 
 O PR #92 foi integrado à release em `4523a2e`. O build **0.1.0 (5)** com o ritmo anterior compilou e passou no auditor do IPA, mas sua submissão EAS `a35b0260-5607-45b7-963d-f145f816df91` foi **cancelada enquanto ainda estava IN_QUEUE**, após o pedido de suavização. Não foi associado a grupo de teste e não é apresentado como a versão suave.
 
-O **build 0.1.0 (6)** reúne o ritmo suave e o piloto Clareza e está disponível no **Studoo Beta Interno**, com `VALID` + `IN_BETA_TESTING` confirmados em 24/11, 19:25 UTC, e leitura independente às 19:26 UTC. A intro já está ativa sem flag remota. Atualizar pelo TestFlight, fechar totalmente o app e reabrir permite conferir a assinatura, que aparece uma vez por processo. [Fonte, proveniência, auditoria e ativação](../beta/BUILD-6-INTRO-CLAREZA.md) têm identificação própria; a distribuição não substitui a conferência instalada.
+O **build 0.1.0 (6)** reuniu o ritmo suave v2 e o piloto Clareza, com distribuição interna confirmada às 19:25 UTC de 24/11. [Fonte, proveniência, auditoria e ativação históricas](../beta/BUILD-6-INTRO-CLAREZA.md) foram preservadas, junto ao relato posterior de ausência da animação.
+
+A versão atual para conferir o boot corrigido é **0.1.0 (7)**: `VALID` + `IN_BETA_TESTING` confirmados às 20:32 UTC, com leitura independente às 20:33 UTC. No TestFlight, atualizar para 7, fechar totalmente e reabrir o Studoo. A assinatura continua uma vez por processo e sem flag remota; a [distribuição v3](../beta/BUILD-7-INTRO-BOOT.md) não substitui observação física ou notas nativas.
 
 - [Resultado completo do ritmo anterior](RESULTADO-INTRO-RAPIDA-2026-11-24.md), com seus próprios checks e mídias.
 - [Primeira rodada de intro](RESULTADO-INTRO-2026-11-23.md).
