@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 
 const OUT = resolve(process.env.QA_OUT || '.studoo-local/abertura-app', 'browser-app-motion-independent.json');
-const BASE = process.env.QA_APP_BASE || 'http://localhost:8082';
+const BASE = process.env.QA_APP_BASE || 'http://localhost:8090';
 
 function observeIntro() {
   const evidence = window.__introEvidence = { events: [], resources: [], timeOrigin: performance.timeOrigin };
@@ -63,7 +63,7 @@ function observeIntro() {
   const results = [];
   const check = async (name, fn) => {
     try { results.push({ name, passed: true, evidence: await fn() }); console.log('PASS', name); }
-    catch (e) { results.push({ name, passed: false, error: e.message }); console.log('FAIL', name, e.message); }
+    catch (e) { results.push({ name, passed: false, error: e.message, evidence: e.evidence ?? null }); console.log('FAIL', name, e.message); }
   };
   try {
     const context = await b.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'no-preference' });
@@ -79,8 +79,10 @@ function observeIntro() {
         const visible = e.events.find(e => e.name === 'visivel');
         const exit = e.events.find(e => e.name === 'saindo');
         const done = e.events.find(e => e.name === 'concluida');
-        assert.ok(visible && exit && done, 'Expected all three DOM phases');
-        assert.ok(done.atMs - visible.atMs < 900, 'Observed layer lifetime must stay below 900ms on normal boot');
+        try {
+          assert.ok(visible && exit && done, 'Expected all three DOM phases');
+          assert.ok(done.atMs - visible.atMs < 900, 'Observed layer lifetime must stay below 900ms on normal boot');
+        } catch (error) { error.evidence = e; throw error; }
         e.measured = { visibleToExitMs: exit.atMs - visible.atMs, exitToRemovedMs: done.atMs - exit.atMs, visibleToRemovedMs: done.atMs - visible.atMs };
         e.destination = (await page.locator('body').innerText()).slice(0, 220);
         return e;

@@ -1,0 +1,20 @@
+{
+  "scope": "Prévia RNWeb complementar; fontes retidas; relógio controlado com salto350ms antes do rAF para exercer duração adaptativa; bundle sem shims; não mede iOS/Android",
+  "initial": {
+    "name": "inicio",
+    "at": 4,
+    "fullOpacity": "1"
+  },
+  "middle": {
+    "at": 514,
+    "fullOpacity": "0",
+    "glasses": "transform: translateX(-65.25px) translateY(-12px) rotate(0.866441deg) scale(2.15);"
+  },
+  "final": {
+    "name": "final",
+    "at": 774,
+    "fullOpacity": "1"
+  },
+  "sourceHash": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+  "passed": true
+}

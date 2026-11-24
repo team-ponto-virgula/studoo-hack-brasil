@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
 const require = createRequire(import.meta.url);
-const port = process.env.QA_APP_PORT || '8082';
+const port = process.env.QA_APP_PORT || '8090';
 if (!/^\d+$/.test(port)) throw new Error('QA_APP_PORT deve ser uma porta numérica.');
 const app = fileURLToPath(new URL('../../apps/mobile/', import.meta.url));
 for (const name of ['app.config.js', 'app.config.ts']) {

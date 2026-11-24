@@ -1,0 +1,680 @@
+{
+  "startedAt": "2026-11-24T15:34:25.246098+00:00",
+  "baseCommit": "8fa75505e71bbc63732db4dc745a59432dfb5782",
+  "workingTree": true,
+  "candidateLabel": "Óculos em foco v2; sequência 560 ms / dissolve 120 ms / cap 900 ms",
+  "frozenProductScope": "Controller, motion JSON, native component/layout/config, source assets, dependencies and test entry point; QA helpers excluded.",
+  "databaseResetPerformed": false,
+  "nativeScoresAssigned": false,
+  "sourceHashesBefore": {
+    "packages/contratos/src/abertura.ts": "d257d9654fe9b302877ebe7d180d6c95240397b0fe0261f852a2f0504ac6b3a5",
+    "packages/contratos/src/abertura-motion.json": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+    "apps/mobile/src/abertura.tsx": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+    "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+    "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+    "tests/abertura.test.mjs": "18ac6966c67106fa564682686d585e43155547350ffb51c7bec1acf3aca4cd7c",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "environment": {
+    "databaseLocal": true,
+    "ia": "falsa",
+    "email": "falso",
+    "databaseCheckScope": "URL configurada classificada como local; não foi executado reset nem declarada conectividade independente da execução das suítes."
+  },
+  "results": [
+    {
+      "suite": "test:paridade",
+      "command": [
+        "npm",
+        "run",
+        "test:paridade"
+      ],
+      "startedAt": "2026-11-24T15:34:25.253952+00:00",
+      "finishedAt": "2026-11-24T15:34:26.746032+00:00",
+      "durationMs": 1492.09,
+      "exitCode": 0,
+      "counts": {
+        "tests": 5,
+        "suites": 0,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-paridade.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:movimento",
+      "command": [
+        "npm",
+        "run",
+        "test:movimento"
+      ],
+      "startedAt": "2026-11-24T15:34:26.751148+00:00",
+      "finishedAt": "2026-11-24T15:34:28.298409+00:00",
+      "durationMs": 1547.27,
+      "exitCode": 0,
+      "counts": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-movimento.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:visitante-mobile",
+      "command": [
+        "npm",
+        "run",
+        "test:visitante-mobile"
+      ],
+      "startedAt": "2026-11-24T15:34:28.298808+00:00",
+      "finishedAt": "2026-11-24T15:34:31.263773+00:00",
+      "durationMs": 2964.97,
+      "exitCode": 0,
+      "counts": {
+        "tests": 6,
+        "suites": 0,
+        "pass": 6,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-visitante-mobile.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:estudio:interface",
+      "command": [
+        "npm",
+        "run",
+        "test:estudio:interface"
+      ],
+      "startedAt": "2026-11-24T16:00:15.947563+00:00",
+      "finishedAt": "2026-11-24T16:00:31.934628+00:00",
+      "durationMs": 15987.08,
+      "exitCode": 0,
+      "counts": {
+        "tests": 603,
+        "suites": 0,
+        "pass": 603,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-estudio-interface-timing-unico-adaptativo.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:formatos",
+      "command": [
+        "npm",
+        "run",
+        "test:formatos"
+      ],
+      "startedAt": "2026-11-24T15:34:25.254171+00:00",
+      "finishedAt": "2026-11-24T15:35:00.864737+00:00",
+      "durationMs": 35610.58,
+      "exitCode": 0,
+      "counts": {
+        "tests": 271,
+        "suites": 0,
+        "pass": 271,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-formatos.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:dominio",
+      "command": [
+        "npm",
+        "run",
+        "test:dominio"
+      ],
+      "startedAt": "2026-11-24T15:35:00.865293+00:00",
+      "finishedAt": "2026-11-24T15:35:01.771760+00:00",
+      "durationMs": 906.48,
+      "exitCode": 0,
+      "counts": {
+        "tests": 18,
+        "suites": 0,
+        "pass": 18,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/oculos-v2-checks/test-dominio.log",
+      "sanitized": true
+    }
+  ],
+  "limits": [
+    "Testes de código/controlador não comprovam renderização, foco real, desempenho observado ou execução nativa.",
+    "A falha de paleta é resultado de teste de código; não é nota nativa ou medição visual em aparelho."
+  ],
+  "finishedAt": "2026-11-24T16:00:31.935990+00:00",
+  "sourceHashesAfter": {
+    "packages/contratos/src/abertura.ts": "d257d9654fe9b302877ebe7d180d6c95240397b0fe0261f852a2f0504ac6b3a5",
+    "packages/contratos/src/abertura-motion.json": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+    "apps/mobile/src/abertura.tsx": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+    "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+    "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+    "tests/abertura.test.mjs": "18ac6966c67106fa564682686d585e43155547350ffb51c7bec1acf3aca4cd7c",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "sourceFilesChangedDuringChecks": [],
+  "allPassed": true,
+  "failures": [],
+  "executionHistory": [
+    {
+      "attempt": 1,
+      "label": "Primeira execução congelada, com falha de paleta preservada",
+      "report": {
+        "startedAt": "2026-11-24T15:34:25.246098+00:00",
+        "baseCommit": "8fa75505e71bbc63732db4dc745a59432dfb5782",
+        "workingTree": true,
+        "candidateLabel": "Óculos em foco v2; sequência560/dissolve120/cap900",
+        "frozenProductScope": "Controller, motion JSON, native component/layout/config, source assets, dependencies and test entry point; QA helpers excluded.",
+        "databaseResetPerformed": false,
+        "nativeScoresAssigned": false,
+        "sourceHashesBefore": {
+          "packages/contratos/src/abertura.ts": "0b5a018e2ec7eaf5636f0f2d6ed3758b69c3ac19c3e5ff020ad5652bd9c8e6a9",
+          "packages/contratos/src/abertura-motion.json": "dc5dcf1869081500c82ee6574c96399ec41ccd4d3790c93214419543526c57de",
+          "apps/mobile/src/abertura.tsx": "84d6e13c96e5373d2729c73fbee975c17a56c4807bedda8d9516dd03cfd8d731",
+          "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+          "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+          "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+          "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+          "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+          "tests/abertura.test.mjs": "396295c69ac9ee80615c7d8532491fca666dc894ee655f665a6a95dee9378699",
+          "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+          "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+          "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+          "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+        },
+        "environment": {
+          "databaseLocal": true,
+          "ia": "falsa",
+          "email": "falso",
+          "databaseCheckScope": "URL configurada classificada como local; não foi executado reset nem declarada conectividade independente da execução das suítes."
+        },
+        "results": [
+          {
+            "suite": "test:paridade",
+            "command": [
+              "npm",
+              "run",
+              "test:paridade"
+            ],
+            "startedAt": "2026-11-24T15:34:25.253952+00:00",
+            "finishedAt": "2026-11-24T15:34:26.746032+00:00",
+            "durationMs": 1492.09,
+            "exitCode": 0,
+            "counts": {
+              "tests": 5,
+              "suites": 0,
+              "pass": 5,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-paridade.log",
+            "sanitized": true
+          },
+          {
+            "suite": "test:movimento",
+            "command": [
+              "npm",
+              "run",
+              "test:movimento"
+            ],
+            "startedAt": "2026-11-24T15:34:26.751148+00:00",
+            "finishedAt": "2026-11-24T15:34:28.298409+00:00",
+            "durationMs": 1547.27,
+            "exitCode": 0,
+            "counts": {
+              "tests": 4,
+              "suites": 0,
+              "pass": 4,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-movimento.log",
+            "sanitized": true
+          },
+          {
+            "suite": "test:visitante-mobile",
+            "command": [
+              "npm",
+              "run",
+              "test:visitante-mobile"
+            ],
+            "startedAt": "2026-11-24T15:34:28.298808+00:00",
+            "finishedAt": "2026-11-24T15:34:31.263773+00:00",
+            "durationMs": 2964.97,
+            "exitCode": 0,
+            "counts": {
+              "tests": 6,
+              "suites": 0,
+              "pass": 6,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-visitante-mobile.log",
+            "sanitized": true
+          },
+          {
+            "suite": "test:estudio:interface",
+            "command": [
+              "npm",
+              "run",
+              "test:estudio:interface"
+            ],
+            "startedAt": "2026-11-24T15:34:25.253564+00:00",
+            "finishedAt": "2026-11-24T15:34:53.821702+00:00",
+            "durationMs": 28568.16,
+            "exitCode": 1,
+            "counts": {
+              "tests": 597,
+              "suites": 0,
+              "pass": 596,
+              "fail": 1,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-estudio-interface.log",
+            "sanitized": true
+          },
+          {
+            "suite": "test:formatos",
+            "command": [
+              "npm",
+              "run",
+              "test:formatos"
+            ],
+            "startedAt": "2026-11-24T15:34:25.254171+00:00",
+            "finishedAt": "2026-11-24T15:35:00.864737+00:00",
+            "durationMs": 35610.58,
+            "exitCode": 0,
+            "counts": {
+              "tests": 271,
+              "suites": 0,
+              "pass": 271,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-formatos.log",
+            "sanitized": true
+          },
+          {
+            "suite": "test:dominio",
+            "command": [
+              "npm",
+              "run",
+              "test:dominio"
+            ],
+            "startedAt": "2026-11-24T15:35:00.865293+00:00",
+            "finishedAt": "2026-11-24T15:35:01.771760+00:00",
+            "durationMs": 906.48,
+            "exitCode": 0,
+            "counts": {
+              "tests": 18,
+              "suites": 0,
+              "pass": 18,
+              "fail": 0,
+              "cancelled": 0,
+              "skipped": 0,
+              "todo": 0
+            },
+            "log": "/workspace/work/intro-ux/oculos-v2-checks/test-dominio.log",
+            "sanitized": true
+          }
+        ],
+        "limits": [
+          "Testes de código/controlador não comprovam renderização, foco real, desempenho observado ou execução nativa.",
+          "A falha de paleta é resultado de teste de código; não é nota nativa ou medição visual em aparelho."
+        ],
+        "finishedAt": "2026-11-24T15:35:01.772496+00:00",
+        "sourceHashesAfter": {
+          "packages/contratos/src/abertura.ts": "0b5a018e2ec7eaf5636f0f2d6ed3758b69c3ac19c3e5ff020ad5652bd9c8e6a9",
+          "packages/contratos/src/abertura-motion.json": "dc5dcf1869081500c82ee6574c96399ec41ccd4d3790c93214419543526c57de",
+          "apps/mobile/src/abertura.tsx": "84d6e13c96e5373d2729c73fbee975c17a56c4807bedda8d9516dd03cfd8d731",
+          "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+          "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+          "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+          "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+          "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+          "tests/abertura.test.mjs": "396295c69ac9ee80615c7d8532491fca666dc894ee655f665a6a95dee9378699",
+          "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+          "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+          "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+          "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+        },
+        "sourceFilesChangedDuringChecks": [],
+        "allPassed": false,
+        "failures": [
+          {
+            "suite": "test:estudio:interface",
+            "testFile": "tests/paleta-mobile.test.mjs",
+            "testLine": 17,
+            "testName": "nenhuma cor antiga escrita à mão nas telas do app",
+            "sourcePath": "apps/mobile/src/abertura.tsx",
+            "sourceLine": 308,
+            "observed": "vidro.backgroundColor contém a cor literal antiga #3858D6",
+            "resolution": "pendente; nenhuma alteração de produto pelo revisor"
+          }
+        ]
+      }
+    },
+    {
+      "attempt": 2,
+      "label": "Somente interface após novo freeze e correção de paleta",
+      "startedAt": "2026-11-24T15:37:31.936502+00:00",
+      "finishedAt": "2026-11-24T15:37:49.808348+00:00",
+      "sourceHashesBefore": {
+        "packages/contratos/src/abertura.ts": "0b5a018e2ec7eaf5636f0f2d6ed3758b69c3ac19c3e5ff020ad5652bd9c8e6a9",
+        "packages/contratos/src/abertura-motion.json": "1bdf6b883a830f00f7dd3b178cd15dec06c7f0a343cc2f4fb3f4811780cafb67",
+        "apps/mobile/src/abertura.tsx": "c29d29637b74f8932bf7a2e2dcec65c9d8915d8d3212deab565e622e6c73ad7d",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "396295c69ac9ee80615c7d8532491fca666dc894ee655f665a6a95dee9378699",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceHashesAfter": {
+        "packages/contratos/src/abertura.ts": "0b5a018e2ec7eaf5636f0f2d6ed3758b69c3ac19c3e5ff020ad5652bd9c8e6a9",
+        "packages/contratos/src/abertura-motion.json": "1bdf6b883a830f00f7dd3b178cd15dec06c7f0a343cc2f4fb3f4811780cafb67",
+        "apps/mobile/src/abertura.tsx": "c29d29637b74f8932bf7a2e2dcec65c9d8915d8d3212deab565e622e6c73ad7d",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "396295c69ac9ee80615c7d8532491fca666dc894ee655f665a6a95dee9378699",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceFilesChangedDuringChecks": [],
+      "results": [
+        {
+          "suite": "test:estudio:interface",
+          "command": [
+            "npm",
+            "run",
+            "test:estudio:interface"
+          ],
+          "startedAt": "2026-11-24T15:37:31.936502+00:00",
+          "finishedAt": "2026-11-24T15:37:49.808348+00:00",
+          "durationMs": 17871.86,
+          "exitCode": 0,
+          "counts": {
+            "tests": 597,
+            "suites": 0,
+            "pass": 597,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": "/workspace/work/intro-ux/oculos-v2-checks/test-estudio-interface-repeticao-paleta.log",
+          "sanitized": true
+        }
+      ]
+    },
+    {
+      "attempt": 3,
+      "label": "Somente interface e abertura após freeze do deadline absoluto compartilhado",
+      "startedAt": "2026-11-24T15:45:13.215601+00:00",
+      "finishedAt": "2026-11-24T15:45:29.230714+00:00",
+      "sourceHashesBefore": {
+        "packages/contratos/src/abertura.ts": "7791ba1ae599d1ca238e44b4cba84104fe1d1b5d17da79f1a755a401297c7620",
+        "packages/contratos/src/abertura-motion.json": "1bdf6b883a830f00f7dd3b178cd15dec06c7f0a343cc2f4fb3f4811780cafb67",
+        "apps/mobile/src/abertura.tsx": "d45aa1b53f4db6ae117443abfb4c20c483c33d4380e9872bf72b0765b5648ed4",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "57c905e505d31fc99638dba2520aec8cf95186442ca7414472aca79204b0a671",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceHashesAfter": {
+        "packages/contratos/src/abertura.ts": "7791ba1ae599d1ca238e44b4cba84104fe1d1b5d17da79f1a755a401297c7620",
+        "packages/contratos/src/abertura-motion.json": "1bdf6b883a830f00f7dd3b178cd15dec06c7f0a343cc2f4fb3f4811780cafb67",
+        "apps/mobile/src/abertura.tsx": "d45aa1b53f4db6ae117443abfb4c20c483c33d4380e9872bf72b0765b5648ed4",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "57c905e505d31fc99638dba2520aec8cf95186442ca7414472aca79204b0a671",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceFilesChangedDuringChecks": [],
+      "sourceFilesChangedSincePriorAttempt": [
+        "packages/contratos/src/abertura.ts",
+        "apps/mobile/src/abertura.tsx",
+        "tests/abertura.test.mjs"
+      ],
+      "results": [
+        {
+          "suite": "test:estudio:interface",
+          "command": [
+            "npm",
+            "run",
+            "test:estudio:interface"
+          ],
+          "startedAt": "2026-11-24T15:45:13.221278+00:00",
+          "finishedAt": "2026-11-24T15:45:29.229346+00:00",
+          "durationMs": 16008.08,
+          "exitCode": 0,
+          "counts": {
+            "tests": 600,
+            "suites": 0,
+            "pass": 600,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": "/workspace/work/intro-ux/oculos-v2-checks/test-estudio-interface-deadline-absoluto.log",
+          "sanitized": true
+        },
+        {
+          "suite": "test:abertura",
+          "command": [
+            "npm",
+            "run",
+            "test:abertura"
+          ],
+          "startedAt": "2026-11-24T15:45:13.221824+00:00",
+          "finishedAt": "2026-11-24T15:45:13.674778+00:00",
+          "durationMs": 452.96,
+          "exitCode": 0,
+          "counts": {
+            "tests": 14,
+            "suites": 0,
+            "pass": 14,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": "/workspace/work/intro-ux/oculos-v2-checks/test-abertura-deadline-absoluto.log",
+          "sanitized": true
+        }
+      ],
+      "scope": "Abertura dedicada é subconjunto da interface; não somar seus 14 casos à contagem consolidada de 600."
+    },
+    {
+      "attempt": 4,
+      "label": "Somente interface e abertura após freeze do timing único com duração adaptativa antes do movimento",
+      "startedAt": "2026-11-24T16:00:15.942677+00:00",
+      "finishedAt": "2026-11-24T16:00:31.935970+00:00",
+      "sourceHashesBefore": {
+        "packages/contratos/src/abertura.ts": "d257d9654fe9b302877ebe7d180d6c95240397b0fe0261f852a2f0504ac6b3a5",
+        "packages/contratos/src/abertura-motion.json": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+        "apps/mobile/src/abertura.tsx": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "18ac6966c67106fa564682686d585e43155547350ffb51c7bec1acf3aca4cd7c",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceHashesAfter": {
+        "packages/contratos/src/abertura.ts": "d257d9654fe9b302877ebe7d180d6c95240397b0fe0261f852a2f0504ac6b3a5",
+        "packages/contratos/src/abertura-motion.json": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+        "apps/mobile/src/abertura.tsx": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+        "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+        "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+        "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+        "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+        "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+        "tests/abertura.test.mjs": "18ac6966c67106fa564682686d585e43155547350ffb51c7bec1acf3aca4cd7c",
+        "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+        "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+        "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+        "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+      },
+      "sourceFilesChangedDuringChecks": [],
+      "sourceFilesChangedSincePriorAttempt": [
+        "packages/contratos/src/abertura.ts",
+        "packages/contratos/src/abertura-motion.json",
+        "apps/mobile/src/abertura.tsx",
+        "tests/abertura.test.mjs"
+      ],
+      "results": [
+        {
+          "suite": "test:estudio:interface",
+          "command": [
+            "npm",
+            "run",
+            "test:estudio:interface"
+          ],
+          "startedAt": "2026-11-24T16:00:15.947563+00:00",
+          "finishedAt": "2026-11-24T16:00:31.934628+00:00",
+          "durationMs": 15987.08,
+          "exitCode": 0,
+          "counts": {
+            "tests": 603,
+            "suites": 0,
+            "pass": 603,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": "/workspace/work/intro-ux/oculos-v2-checks/test-estudio-interface-timing-unico-adaptativo.log",
+          "sanitized": true
+        },
+        {
+          "suite": "test:abertura",
+          "command": [
+            "npm",
+            "run",
+            "test:abertura"
+          ],
+          "startedAt": "2026-11-24T16:00:15.947970+00:00",
+          "finishedAt": "2026-11-24T16:00:16.423996+00:00",
+          "durationMs": 476.04,
+          "exitCode": 0,
+          "counts": {
+            "tests": 17,
+            "suites": 0,
+            "pass": 17,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "log": "/workspace/work/intro-ux/oculos-v2-checks/test-abertura-timing-unico-adaptativo.log",
+          "sanitized": true
+        }
+      ],
+      "scope": "Abertura dedicada é subconjunto da interface; não somar seus casos novamente à contagem consolidada."
+    }
+  ],
+  "sourceFilesChangedSinceInitialExecution": [
+    "packages/contratos/src/abertura-motion.json",
+    "apps/mobile/src/abertura.tsx"
+  ],
+  "hashScope": "Hashes superiores pertencem à repetição interface + abertura do timing único adaptativo; todas as execuções anteriores e seus hashes permanecem no histórico sem sobrescrita.",
+  "carriedForwardSuites": [
+    "test:paridade",
+    "test:movimento",
+    "test:visitante-mobile",
+    "test:formatos",
+    "test:dominio"
+  ],
+  "correctionScope": "Um único timing com curva amostrada substitui Animated.sequence e preserva forma/marcos sem callbacks JS entre eles. Duração decidida antes do movimento por min(560, restante − 120 − 32), entre 360 e 560 ms; abaixo do mínimo de 360 ms, dispensa estática por limite. Testes novos de curva e orçamento. Deadline absoluto módulo JS + 900 ms mantido. Demais cinco suítes preservadas sem repetição.",
+  "initialPaletteFailureResolved": true,
+  "motionMetadataObservedAtRepeat": {
+    "corLente": "#2563FF",
+    "sequenciaMs": 560,
+    "saidaMs": 120,
+    "limiteMs": 900
+  },
+  "assetsUnchangedSinceInitialExecution": {
+    "apps/mobile/assets/marca/logo-com-sorriso.png": true,
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": true
+  },
+  "controllerCoverageNote": "Abertura tem 17 casos incluídos nos 603 da interface e também executados separadamente por pedido da coordenação. A repetição dedicada não aumenta o total consolidado.",
+  "sourceFilesChangedSincePriorAttempt": [
+    "packages/contratos/src/abertura.ts",
+    "packages/contratos/src/abertura-motion.json",
+    "apps/mobile/src/abertura.tsx",
+    "tests/abertura.test.mjs"
+  ],
+  "suiteEvidenceScope": "Este allPassed se refere somente às suítes automatizadas consolidadas. Não é prova independente do renderer: a coordenação relatou rodada intermediária 4/5 e rodada adaptativa final 5/5, com artefatos próprios. Não declara iOS/Android executados."
+}

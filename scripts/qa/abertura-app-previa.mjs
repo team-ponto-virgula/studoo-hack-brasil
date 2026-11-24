@@ -19,6 +19,9 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const OUT = resolve(process.env.QA_OUT || '.studoo-local/abertura-qa');
+const motion = JSON.parse(await fs.readFile(resolve('packages/contratos/src/abertura-motion.json'), 'utf8'));
+const largura = motion.largura;
+const altura = largura * motion.fonte.altura / motion.fonte.largura;
 let b;
 let results = [];
 async function check(name, fn) {
@@ -53,7 +56,7 @@ async function controlled(width = 390, height = 844) {
     requests.push(r);
     await new Promise(() => {});
   });
-  await p.goto(process.env.QA_APP_BASE || 'http://localhost:8082', {
+  await p.goto(process.env.QA_APP_BASE || 'http://localhost:8090', {
     waitUntil: 'domcontentloaded',
     timeout: 90000
   });
@@ -86,8 +89,8 @@ async function controlled(width = 390, height = 844) {
     });
     const img = p.getByTestId('abertura-marca');
     const box = await img.boundingBox();
-    assert.ok(Math.abs(box.width - 180) < .2);
-    assert.ok(Math.abs(box.height - 180 * 184 / 560) < .2);
+    assert.ok(Math.abs(box.width - largura) < .2);
+    assert.ok(Math.abs(box.height - altura) < .2);
     assert.ok(Math.abs(box.x + box.width / 2 - w / 2) < .2);
     assert.ok(Math.abs(box.y + box.height / 2 - h / 2) < .2);
     const capture = await (await c.newCDPSession(p)).send('Page.captureScreenshot', {
@@ -167,7 +170,7 @@ async function controlled(width = 390, height = 844) {
       reducedMotion: 'reduce'
     });
     const p = await c.newPage();
-    await p.goto(process.env.QA_APP_BASE || 'http://localhost:8082', {
+    await p.goto(process.env.QA_APP_BASE || 'http://localhost:8090', {
       waitUntil: 'domcontentloaded'
     });
     await p.waitForTimeout(500);
@@ -185,7 +188,7 @@ async function controlled(width = 390, height = 844) {
       }
     });
     const p = await c.newPage();
-    await p.goto((process.env.QA_APP_BASE || 'http://localhost:8082') + '/?erro=teste', {
+    await p.goto((process.env.QA_APP_BASE || 'http://localhost:8090') + '/?erro=teste', {
       waitUntil: 'domcontentloaded'
     });
     await p.waitForTimeout(500);
@@ -212,7 +215,7 @@ async function controlled(width = 390, height = 844) {
     const p = await c.newPage();
     const errors = [];
     p.on('pageerror', e => errors.push(e.message));
-    await p.goto(process.env.QA_APP_BASE || 'http://localhost:8082', {
+    await p.goto(process.env.QA_APP_BASE || 'http://localhost:8090', {
       waitUntil: 'domcontentloaded'
     });
     await p.waitForTimeout(1500);
