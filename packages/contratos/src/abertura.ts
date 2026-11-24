@@ -69,7 +69,7 @@ export function criarControleAbertura(
     publicar(fase, motivo);
   };
   // O app compartilha uma origem no módulo com a guarda do splash. Montar tarde
-  // recebe só o prazo restante; nunca ganha outros 900 ms nem estende o teto.
+  // recebe só o prazo restante; nunca renova o orçamento nem estende o teto.
   const restante = Number.isFinite(tempoRestanteMs) ? Math.max(0, Math.min(abertura.limiteMs, tempoRestanteMs)) : 0;
   if (restante > 0) cancelarLimite = agendar(() => concluir('limite'), restante);
   else concluir('limite');

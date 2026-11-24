@@ -35,25 +35,25 @@ test('somente aberturas limpas de entrada recebem a assinatura; links e retornos
   assert.equal(permiteAbertura('/', '', '#licao'), false);
 });
 
-test('prontidão antecipada aguarda a coreografia e termina o caso nominal em 680 ms', () => {
+test('prontidão antecipada aguarda a coreografia e termina o caso nominal em 1040 ms', () => {
   const c = cenario(); c.controle.pronto(true);
   c.avancar(abertura.sequenciaMs);
   assert.equal(c.controle.fase(), 'visivel');
   assert.deepEqual(c.publicados, []);
   c.controle.animacaoConcluida();
-  assert.deepEqual(c.publicados, [{ fase: 'saindo', motivo: 'pronto', em: 560 }]);
+  assert.deepEqual(c.publicados, [{ fase: 'saindo', motivo: 'pronto', em: 880 }]);
   c.avancar(abertura.saidaMs);
-  assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'pronto', em: 680 });
+  assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'pronto', em: 1040 });
   assert.equal(c.pendentes(), 0);
 });
 
 test('a coreografia pode terminar antes da prontidão sem iniciar uma saída prematura', () => {
-  const c = cenario(); c.avancar(640); c.controle.animacaoConcluida();
+  const c = cenario(); c.avancar(abertura.sequenciaMs); c.controle.animacaoConcluida();
   assert.equal(c.controle.fase(), 'visivel');
   c.avancar(60); c.controle.pronto(true);
-  assert.equal(c.publicados[0].em, 700);
-  c.avancar(120);
-  assert.equal(c.publicados.at(-1).em, 820);
+  assert.equal(c.publicados[0].em, abertura.sequenciaMs + 60);
+  c.avancar(abertura.saidaMs);
+  assert.equal(c.publicados.at(-1).em, abertura.sequenciaMs + 60 + abertura.saidaMs);
 });
 
 test('sem movimento permitido a prontidão encerra imediatamente, antes ou durante a saída', () => {
@@ -72,21 +72,21 @@ test('o teto prevalece quando recursos ou animação não respondem', () => {
     const c = cenario();
     if (sinal === 'pronto') c.controle.pronto(true);
     if (sinal === 'animacao') c.controle.animacaoConcluida();
-    c.avancar(899); assert.equal(c.controle.fase(), 'visivel');
+    c.avancar(abertura.limiteMs - 1); assert.equal(c.controle.fase(), 'visivel');
     c.avancar(1);
-    assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: 900 });
+    assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: abertura.limiteMs });
     assert.equal(c.pendentes(), 0);
   }
 });
 
-test('ambos os sinais aos 899 ms não estendem o teto, em qualquer ordem', () => {
+test('ambos os sinais no último milissegundo não estendem o teto, em qualquer ordem', () => {
   for (const ordem of ['pronto-primeiro', 'animacao-primeiro']) {
-    const c = cenario(); c.avancar(899);
+    const c = cenario(); c.avancar(abertura.limiteMs - 1);
     if (ordem === 'pronto-primeiro') { c.controle.pronto(true); c.controle.animacaoConcluida(); }
     else { c.controle.animacaoConcluida(); c.controle.pronto(true); }
     assert.equal(c.controle.fase(), 'saindo');
     c.avancar(1);
-    assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: 900 });
+    assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: abertura.limiteMs });
     assert.equal(c.pendentes(), 0);
   }
 });
@@ -115,8 +115,8 @@ test('interromper dissolve não entrega outra conclusão por callback tardio da 
 test('sinais repetidos não reiniciam dissolve nem seu prazo', () => {
   const c = cenario(); c.controle.pronto(true); c.controle.animacaoConcluida();
   c.avancar(50); c.controle.pronto(true); c.controle.animacaoConcluida();
-  c.avancar(70);
-  assert.deepEqual(c.publicados.map(p => p.em), [0, 120]);
+  c.avancar(abertura.saidaMs - 50);
+  assert.deepEqual(c.publicados.map(p => p.em), [0, abertura.saidaMs]);
   assert.equal(c.pendentes(), 0);
 });
 
@@ -145,12 +145,13 @@ test('os dados da coreografia respeitam orçamento e interpolações válidas', 
 
 test('montagem tardia recebe só o orçamento restante da origem compartilhada', () => {
   const origemAoMontar = 200;
-  const c = cenario(abertura.limiteMs - origemAoMontar);
+  const saldo = abertura.limiteMs - origemAoMontar;
+  const c = cenario(saldo);
   c.controle.pronto(true);
-  c.avancar(699); assert.equal(c.controle.fase(), 'visivel');
+  c.avancar(saldo - 1); assert.equal(c.controle.fase(), 'visivel');
   c.avancar(1);
-  assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: 700 });
-  assert.equal(origemAoMontar + c.publicados.at(-1).em, 900);
+  assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: saldo });
+  assert.equal(origemAoMontar + c.publicados.at(-1).em, abertura.limiteMs);
   assert.equal(c.pendentes(), 0);
 });
 
@@ -167,9 +168,9 @@ test('prazo esgotado ou inválido dispensa sincronicamente, sem agendar outra ab
 
 test('um chamador não consegue aumentar o teto pelo parâmetro de prazo restante', () => {
   const c = cenario(2000);
-  c.avancar(900);
+  c.avancar(abertura.limiteMs);
   assert.equal(c.controle.fase(), 'concluida');
-  assert.equal(c.publicados.at(-1).em, 900);
+  assert.equal(c.publicados.at(-1).em, abertura.limiteMs);
   assert.equal(c.pendentes(), 0);
 });
 
@@ -188,16 +189,29 @@ test('curva única preserva marcos, monotonicidade e limites sem callbacks inter
 });
 
 test('coreografia usa somente o saldo disponível e reserva o dissolve antes de começar', () => {
-  assert.equal(duracaoDaCoreografia(900), 560);
-  assert.equal(duracaoDaCoreografia(542), 390);
-  assert.equal(duracaoDaCoreografia(512), 360);
-  for (let restante = 512; restante <= 1400; restante++) {
+  assert.equal(duracaoDaCoreografia(1400), 880);
+  assert.equal(duracaoDaCoreografia(1040), 832);
+  assert.equal(duracaoDaCoreografia(888), 680);
+  for (let restante = 888; restante <= 2000; restante++) {
     const duracao = duracaoDaCoreografia(restante);
-    assert.ok(duracao >= 360 && duracao <= 560);
-    assert.ok(duracao + abertura.saidaMs + abertura.margemQuadroMs <= Math.min(restante, 900));
+    assert.ok(duracao >= abertura.sequenciaMinimaMs && duracao <= abertura.sequenciaMs);
+    assert.ok(duracao + abertura.saidaMs + abertura.margemQuadroMs <= Math.min(restante, abertura.limiteMs));
   }
 });
 
 test('sem orçamento para movimento legível, dispensa antes de animar em vez de cortar no meio', () => {
-  for (const restante of [511, 100, 0, -1, NaN, Infinity]) assert.equal(duracaoDaCoreografia(restante), 0);
+  for (const restante of [887, 100, 0, -1, NaN, Infinity]) assert.equal(duracaoDaCoreografia(restante), 0);
+});
+
+test('o ritmo alongado suaviza a entrada e a chegada, com inclinação contida', () => {
+  assert.ok(abertura.sequenciaMs >= 850 && abertura.sequenciaMs <= 900);
+  assert.ok(abertura.sequenciaMinimaMs >= 650 && abertura.sequenciaMinimaMs <= 700);
+  assert.ok(abertura.sequenciaMs + abertura.saidaMs >= 1000);
+  assert.ok(abertura.marcos[1] * abertura.sequenciaMs >= 200);
+  assert.ok(abertura.oculosRotacao.every((graus) => graus >= -5 && graus <= 2));
+  const entrada = abertura.marcos[1];
+  const partida = progressoDaCoreografia(entrada * 0.1) / entrada;
+  const chegada = progressoDaCoreografia(entrada * 0.9) / entrada;
+  assert.ok(partida > 0 && partida < 0.1, 'os primeiros 10% não arrancam acima da velocidade média');
+  assert.ok(chegada < 1 && 1 - chegada < 0.1, 'os últimos 10% desaceleram antes do foco');
 });
