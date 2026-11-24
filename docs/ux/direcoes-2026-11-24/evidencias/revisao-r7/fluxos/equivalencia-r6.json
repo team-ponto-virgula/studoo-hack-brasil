@@ -1,0 +1,38 @@
+{
+  "before": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "after": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "changedRuntimeFiles": [
+    "docs/ux/direcoes-2026-11-24/prototipo/app.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/media-pages.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/social-pages.js"
+  ],
+  "identicalRuntimeFileCount": 23,
+  "identicalRuntimeFiles": [
+    "docs/ux/direcoes-2026-11-24/prototipo/accessibility.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/app.html",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/logo.png",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/nunito.woff2",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/quicksand.woff2",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/stu-acolhida.webp",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/stu-comemorando.webp",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/stu-encorajador.webp",
+    "docs/ux/direcoes-2026-11-24/prototipo/assets/stu-estudando.webp",
+    "docs/ux/direcoes-2026-11-24/prototipo/base.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/directions/caderno.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/directions/foco.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/directions/jornada.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/exportar.py",
+    "docs/ux/direcoes-2026-11-24/prototipo/index.html",
+    "docs/ux/direcoes-2026-11-24/prototipo/material-pages.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/material-pages.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/media-pages.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/personal-pages.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/personal-pages.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/social-pages.css",
+    "docs/ux/direcoes-2026-11-24/prototipo/vendor/LICENSE",
+    "docs/ux/direcoes-2026-11-24/prototipo/vendor/qrcode.js"
+  ],
+  "historicalEvidence": "/workspace/work/revisao-fluxos-r6/{resultado,novos-resultados,integracao-resultados,fronteiras-resultados,riscos-lc-resultados}.json",
+  "historicalNotNewExecution": true,
+  "diffRead": "Três JS: contexto de cópia/confirmação/retirada/cancelamento; disclosure. Jornada, material, personalização e CSS sem alterações. Ciclo SQL e continuidade testados novamente para integração."
+}

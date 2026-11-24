@@ -1,5 +1,7 @@
 # C · Foco Vivo
 
+**Resultado final R7:9,0 no escopo do desenho**, conforme [resultados](RESULTADOS.md) e [matriz](MATRIZ-COBERTURA-R7.md). As anotações de autoria abaixo conservam o contexto anterior às revisões; o fechamento atual está nesses pareceres.
+
 ## Proposta
 
 Uma experiência de estudo contemporânea: o próximo conceito ocupa a região principal, a progressão continua reconhecível e os detalhes aparecem onde ajudam a tarefa. O princípio do Duolingo está no caminho claro, no desafio por vez e no feedback recuperável. A linguagem é do Studoo: azul, navy, Nunito e personagem contextual.

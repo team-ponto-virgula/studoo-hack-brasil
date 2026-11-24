@@ -1,0 +1,1022 @@
+{
+  "candidate": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "previous": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "chromium": "156.0.8078.79",
+  "DPR": 2,
+  "sourceFileCount": 17,
+  "before": {
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "after": {
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "stable": true,
+  "equivalence": [
+    {
+      "file": "accessibility.css",
+      "previous": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "current": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "equal": true
+    },
+    {
+      "file": "app.html",
+      "previous": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "current": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "equal": true
+    },
+    {
+      "file": "app.js",
+      "previous": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+      "current": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+      "equal": false
+    },
+    {
+      "file": "base.css",
+      "previous": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "current": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "equal": true
+    },
+    {
+      "file": "directions/caderno.css",
+      "previous": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "current": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "equal": true
+    },
+    {
+      "file": "directions/foco.css",
+      "previous": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "current": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "equal": true
+    },
+    {
+      "file": "directions/jornada.css",
+      "previous": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "current": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "equal": true
+    },
+    {
+      "file": "index.html",
+      "previous": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "current": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "equal": true
+    },
+    {
+      "file": "material-pages.css",
+      "previous": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "current": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "equal": true
+    },
+    {
+      "file": "material-pages.js",
+      "previous": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "current": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "equal": true
+    },
+    {
+      "file": "media-pages.css",
+      "previous": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "current": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "equal": true
+    },
+    {
+      "file": "media-pages.js",
+      "previous": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+      "current": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+      "equal": false
+    },
+    {
+      "file": "personal-pages.css",
+      "previous": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "current": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "equal": true
+    },
+    {
+      "file": "personal-pages.js",
+      "previous": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "current": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "equal": true
+    },
+    {
+      "file": "social-pages.css",
+      "previous": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "current": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "equal": true
+    },
+    {
+      "file": "social-pages.js",
+      "previous": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+      "current": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+      "equal": false
+    },
+    {
+      "file": "vendor/qrcode.js",
+      "previous": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "current": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "equal": true
+    }
+  ],
+  "changed": [
+    "docs/ux/direcoes-2026-11-24/prototipo/app.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/media-pages.js",
+    "docs/ux/direcoes-2026-11-24/prototipo/social-pages.js"
+  ],
+  "rows": [
+    {
+      "d": "jornada",
+      "id": "material-inicial",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "file": "jornada-material-inicial-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "material-aviso",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "scroll": "notice",
+      "file": "jornada-material-aviso-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "material-aviso-200",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 360,
+      "scale": 200,
+      "scroll": "notice",
+      "file": "jornada-material-aviso-200-360.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 611.21875,
+          "bottom": 718.40625
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 726.40625,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "material-revisar",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "s": "publicacao-revisar",
+      "scroll": "notice",
+      "file": "jornada-material-revisar-390.png",
+      "errors": [],
+      "title": "Ativar o link do exemplo?",
+      "text": "CONFERIR COMPARTILHAMENTO\nAtivar o link do exemplo?\n\nNenhuma publicação acontece sem sua confirmação.\n\nrevisao.pdf para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nEste fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade.",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&s=publicacao-revisar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+        "Este fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Ativar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "fallback-valido",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "action": "copy-link",
+      "file": "jornada-fallback-valido-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "Link de exemplo\n\nhttps://studoo.example.test/t/sql-exemplo\n\nEntendi\nCancelar",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 1,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "recebida-compartilhar",
+      "p": "compartilhar",
+      "seed": "received",
+      "w": 360,
+      "file": "jornada-recebida-compartilhar-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "recebida-codigo",
+      "p": "codigostudoo",
+      "seed": "received",
+      "w": 360,
+      "file": "jornada-recebida-codigo-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=jornada&p=codigostudoo&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "jornada-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-inicial",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "file": "caderno-material-inicial-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-aviso",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "scroll": "notice",
+      "file": "caderno-material-aviso-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-aviso-200",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 360,
+      "scale": 200,
+      "scroll": "notice",
+      "file": "caderno-material-aviso-200-360.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 609.21875,
+          "bottom": 718.40625
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 726.40625,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-revisar",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "s": "publicacao-revisar",
+      "scroll": "notice",
+      "file": "caderno-material-revisar-390.png",
+      "errors": [],
+      "title": "Ativar o link do exemplo?",
+      "text": "CONFERIR COMPARTILHAMENTO\nAtivar o link do exemplo?\n\nNenhuma publicação acontece sem sua confirmação.\n\nrevisao.pdf para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nEste fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade.",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&s=publicacao-revisar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+        "Este fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Ativar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "fallback-valido",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "action": "copy-link",
+      "file": "caderno-fallback-valido-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "Link de exemplo\n\nhttps://studoo.example.test/t/sql-exemplo\n\nEntendi\nCancelar",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 1,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "recebida-compartilhar",
+      "p": "compartilhar",
+      "seed": "received",
+      "w": 360,
+      "file": "caderno-recebida-compartilhar-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "recebida-codigo",
+      "p": "codigostudoo",
+      "seed": "received",
+      "w": 360,
+      "file": "caderno-recebida-codigo-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=caderno&p=codigostudoo&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "caderno-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-inicial",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "file": "foco-material-inicial-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-aviso",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "scroll": "notice",
+      "file": "foco-material-aviso-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-aviso-200",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 360,
+      "scale": 200,
+      "scroll": "notice",
+      "file": "foco-material-aviso-200-360.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 610.625,
+          "bottom": 721
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 729,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-revisar",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "s": "publicacao-revisar",
+      "scroll": "notice",
+      "file": "foco-material-revisar-390.png",
+      "errors": [],
+      "title": "Ativar o link do exemplo?",
+      "text": "CONFERIR COMPARTILHAMENTO\nAtivar o link do exemplo?\n\nNenhuma publicação acontece sem sua confirmação.\n\nrevisao.pdf para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nEste fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade.",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&s=publicacao-revisar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+        "Este fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Ativar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "fallback-valido",
+      "p": "compartilhar",
+      "seed": "material",
+      "w": 390,
+      "action": "copy-link",
+      "file": "foco-fallback-valido-390.png",
+      "errors": [],
+      "title": "Uma ideia que pode ajudar.",
+      "text": "COMPARTILHAR TRILHA\nUma ideia que pode ajudar.\n\nEscolha onde sua trilha poderá ser encontrada.\n\nrevisao.pdf para a prova\n5 lições · Sem seu progresso pessoal\nSó com o link\nApenas quem receber o link pode abrir.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nTrilhas de material pessoal podem ficar no link ou no perfil.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.\n\nVer Código Studoo",
+      "dialog": "Link de exemplo\n\nhttps://studoo.example.test/t/sql-exemplo\n\nEntendi\nCancelar",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": true,
+      "qr": 0,
+      "copies": 1,
+      "footer": [
+        {
+          "text": "Copiar link de exemplo",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "recebida-compartilhar",
+      "p": "compartilhar",
+      "seed": "received",
+      "w": 360,
+      "file": "foco-recebida-compartilhar-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "recebida-codigo",
+      "p": "codigostudoo",
+      "seed": "received",
+      "w": 360,
+      "file": "foco-recebida-codigo-360.png",
+      "errors": [],
+      "title": "Esta cópia continua privada.",
+      "text": "SUA CÓPIA DE ESTUDO\nEsta cópia continua privada.\n\nVocê pode estudar e personalizar a cópia recebida. Ela não gera outro link ou Código Studoo.",
+      "dialog": "",
+      "url": "?d=foco&p=codigostudoo&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Voltar à minha cópia",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Explorar trilhas",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "foco-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    }
+  ],
+  "recheck": "rechecagem-legado.json"
+}

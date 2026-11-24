@@ -1,0 +1,1101 @@
+{
+  "scope": "R7 author HTTP controlled Promise/DOM-dialog callbacks; no native or server execution",
+  "hashesBefore": {
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c"
+  },
+  "hashesAfter": {
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c"
+  },
+  "sourceStable": true,
+  "checks": 717,
+  "scenarios": 216,
+  "failed": 3,
+  "errors": [],
+  "rows": [
+    {
+      "direction": "jornada",
+      "name": "media-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "media-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "common-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-afterclose-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "sheet-afterclose-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-scenario",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-destination",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-status",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "confirm-render",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "review-cancel-valid",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "review-cancel-own-b",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "review-cancel-received",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "review-cancel-mapa",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "review-cancel-render",
+      "pass": false,
+      "error": "cancelamento velho não modifica outro"
+    },
+    {
+      "direction": "jornada",
+      "name": "stop-legacy-material-explore",
+      "pass": true
+    },
+    {
+      "direction": "jornada",
+      "name": "notice-material-private-fields",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "media-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "common-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-afterclose-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "sheet-afterclose-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-scenario",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-destination",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-status",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "confirm-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-valid",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-own-b",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-received",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-mapa",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-render",
+      "pass": false,
+      "error": "cancelamento velho não modifica outro"
+    },
+    {
+      "direction": "caderno",
+      "name": "stop-legacy-material-explore",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "notice-material-private-fields",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "media-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-resolve-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "common-reject-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-afterclose-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "sheet-afterclose-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "stop-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-privacidade",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-scenario",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-destination",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-status",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "confirm-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-valid",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-own-b",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-received",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-mapa",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-render",
+      "pass": false,
+      "error": "cancelamento velho não modifica outro"
+    },
+    {
+      "direction": "foco",
+      "name": "stop-legacy-material-explore",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "notice-material-private-fields",
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,4148 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "startedAt": "2026-11-24T22:14:41.372Z",
+  "hashesStart": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "comum-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:43.732Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:44.453Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:45.073Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:45.821Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:46.503Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:47.187Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:48.013Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:48.869Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:49.376Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:50.108Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:50.729Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:51.179Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:52.021Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:53.044Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:53.572Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:54.236Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:55.012Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:55.599Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:56.380Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:57.319Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:58.139Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "comum-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:59.101Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:14:59.824Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:00.604Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:01.415Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:02.108Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:03.110Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:03.907Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:04.530Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:05.237Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:05.931Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:06.653Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:07.556Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:08.104Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:09.023Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:09.805Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:10.423Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:11.468Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:12.574Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:13.664Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:14.405Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:15.019Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:15.725Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "media-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:16.453Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-propria-diferente-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:17.205Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-recebida-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:18.246Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-sem-plano-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:18.824Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-visitante-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:19.619Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-inativa-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:20.577Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-destino-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:21.539Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-status-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:22.356Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-privacidade-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:23.366Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-outra-tela-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:24.412Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-navegar-voltar-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:25.618Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-render-novo-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:26.915Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:28.124Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:29.173Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:29.914Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:32.135Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:33.315Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:35.104Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:36.410Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:37.767Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:39.047Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:40.434Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:41.826Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:42.922Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:44.071Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:45.212Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:46.512Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:47.369Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:48.679Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:49.881Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:50.820Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:51.698Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:52.771Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "comum-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:53.908Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:55.080Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:56.011Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:57.532Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:15:59.629Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:00.503Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:01.314Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:02.380Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:03.202Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:04.241Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:04.934Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:05.454Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:06.663Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:07.324Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:07.835Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:08.455Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:09.355Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:09.907Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:10.505Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:11.174Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:11.989Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:12.475Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "media-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:13.051Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-propria-diferente-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:13.817Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-recebida-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:14.498Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-sem-plano-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:15.099Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-visitante-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:16.093Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-inativa-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:16.853Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-destino-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:17.506Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-status-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:18.454Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-privacidade-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:20.290Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-outra-tela-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:21.730Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-navegar-voltar-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:22.586Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-render-novo-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:23.460Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:23.989Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:24.606Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:25.538Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:27.203Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:27.805Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:28.318Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:28.882Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:29.408Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:30.133Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:31.121Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:32.039Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:32.812Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:33.586Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:34.771Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:35.441Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:35.950Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:36.711Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:37.388Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:37.987Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:38.644Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:39.620Z"
+    },
+    {
+      "dir": "foco",
+      "name": "comum-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "compartilhar",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:40.096Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-propria-diferente-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:40.501Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-propria-diferente-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:42.018Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-recebida-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:42.578Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-recebida-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:43.013Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-sem-plano-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:43.543Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-sem-plano-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:44.332Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-visitante-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:44.849Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-visitante-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:45.419Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-inativa-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:45.903Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-inativa-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:46.603Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-destino-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:47.139Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-destino-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:47.747Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-status-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:48.236Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-status-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:49.022Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-privacidade-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:49.595Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-privacidade-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:50.120Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-outra-tela-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:50.611Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-outra-tela-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:50.980Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-navegar-voltar-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:51.495Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-navegar-voltar-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:52.099Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-render-novo-resolve",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:52.630Z"
+    },
+    {
+      "dir": "foco",
+      "name": "media-render-novo-reject",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 1,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:53.229Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-propria-diferente-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "outra",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:54.413Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-recebida-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "Cópia adicionada ao exemplo local. Suas outras trilhas foram preservadas.",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:55.182Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-sem-plano-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": null,
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:55.963Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-visitante-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:56.613Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-inativa-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:57.307Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-destino-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:57.807Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-status-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:58.503Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-privacidade-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "privacidade",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:59.230Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-outra-tela-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "mapa",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:16:59.904Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-navegar-voltar-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:17:00.586Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-render-novo-afterClose",
+      "checks": [
+        {
+          "name": "efeito inicial só após ação em própria",
+          "passed": true
+        },
+        {
+          "name": "retorno tardio não apresenta sucesso fallback ou nova cópia em outro contexto",
+          "passed": true,
+          "evidence": {
+            "id": "prova",
+            "page": "codigostudoo",
+            "dialog": "",
+            "toast": "",
+            "status": "",
+            "writes": 0,
+            "linkInBody": false
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T22:17:01.198Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "finishedAt": "2026-11-24T22:17:01.215Z"
+}

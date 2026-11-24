@@ -1,5 +1,7 @@
 # B · Caderno Claro
 
+**Resultado final R7:9,0 no escopo do desenho**, conforme [resultados](RESULTADOS.md) e [matriz](MATRIZ-COBERTURA-R7.md). As anotações de autoria abaixo conservam o contexto anterior às revisões; o fechamento atual está nesses pareceres.
+
 ## Proposta
 
 O Studoo como um caderno que ajuda a continuar: capítulos reconhecíveis, uma decisão por etapa e espaço para o conceito. A inspiração do Duolingo aparece na orientação da progressão, no feedback perto da tentativa e no próximo passo evidente. A organização de papel, lombada e anotação diferencia esta direção; os exercícios não recebem textura ou ornamentos que prejudiquem a leitura.

@@ -1,0 +1,783 @@
+{
+  "sourceCandidate": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "createdAt": "2026-11-24T22:28:52.014427+00:00",
+  "scope": "Revisão especializada interna do desenho HTML mobile:18famílias,35páginas por direção e variantes declaradas;390x844/360x800 e texto100/200.",
+  "method": "Menor nota sustentada por revisores competentes; mínimo observado por família/faceta, com ponderada lado a lado. Sem normalizar critérios aplicáveis sem prova.",
+  "weightsFrozen": {
+    "D1": 12,
+    "D2": 12,
+    "D3": 12,
+    "D4": 8,
+    "D5": 10,
+    "D6": 14,
+    "D7": 10,
+    "D8": 10,
+    "D9": 6,
+    "D10": 6
+  },
+  "reports": {
+    "fluxos": "revisoes/PARECER-FLUXOS-R7.md",
+    "visual": "revisoes/PARECER-VISUAL-R7.md",
+    "qa": "revisoes/PARECER-A11Y-R7.md",
+    "arte": "revisoes/PARECER-ARTE-CRAFT-R7.md",
+    "matriz": "MATRIZ-COBERTURA-R7.md"
+  },
+  "directions": {
+    "jornada": {
+      "name": "Jornada Azul",
+      "criteria": {
+        "D1": {
+          "name": "Clareza do valor e dos textos",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D2": {
+          "name": "Ação principal e autonomia",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D3": {
+          "name": "Hierarquia, leitura e adaptação",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D4": {
+          "name": "Identidade e acabamento",
+          "weight": 8,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "arte",
+              "score": 9,
+              "evidence": "revisoes/PARECER-ARTE-CRAFT-R7.md"
+            }
+          ]
+        },
+        "D5": {
+          "name": "Movimento com controle",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D6": {
+          "name": "Acessibilidade observável",
+          "weight": 14,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D7": {
+          "name": "Resposta e espera locais",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D8": {
+          "name": "Feedback, erros e recuperação",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D9": {
+          "name": "Continuidade e confiança representadas",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D10": {
+          "name": "Cobertura e consistência",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "matriz_independente",
+              "score": 9,
+              "evidence": "MATRIZ-COBERTURA-R7.md"
+            }
+          ]
+        }
+      },
+      "weightedScore": 9.0,
+      "minimumObservedScore": 9,
+      "familyMinimums": {
+        "P01": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P02": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P03": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P04": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P05": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P06": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P07": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P08": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P09": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P10": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P11": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P12": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P13": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P14": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P15": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P16": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P17": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P18": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "gates": {
+        "DG1": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG2": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG3": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG4": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG5": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG6": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "openCriticalHighMediumInExaminedScope": [],
+      "status": "aprovada_no_escopo_de_desenho"
+    },
+    "caderno": {
+      "name": "Caderno Claro",
+      "criteria": {
+        "D1": {
+          "name": "Clareza do valor e dos textos",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D2": {
+          "name": "Ação principal e autonomia",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D3": {
+          "name": "Hierarquia, leitura e adaptação",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D4": {
+          "name": "Identidade e acabamento",
+          "weight": 8,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "arte",
+              "score": 9,
+              "evidence": "revisoes/PARECER-ARTE-CRAFT-R7.md"
+            }
+          ]
+        },
+        "D5": {
+          "name": "Movimento com controle",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D6": {
+          "name": "Acessibilidade observável",
+          "weight": 14,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D7": {
+          "name": "Resposta e espera locais",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D8": {
+          "name": "Feedback, erros e recuperação",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D9": {
+          "name": "Continuidade e confiança representadas",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D10": {
+          "name": "Cobertura e consistência",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "matriz_independente",
+              "score": 9,
+              "evidence": "MATRIZ-COBERTURA-R7.md"
+            }
+          ]
+        }
+      },
+      "weightedScore": 9.0,
+      "minimumObservedScore": 9,
+      "familyMinimums": {
+        "P01": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P02": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P03": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P04": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P05": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P06": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P07": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P08": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P09": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P10": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P11": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P12": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P13": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P14": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P15": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P16": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P17": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P18": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "gates": {
+        "DG1": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG2": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG3": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG4": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG5": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG6": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "openCriticalHighMediumInExaminedScope": [],
+      "status": "aprovada_no_escopo_de_desenho"
+    },
+    "foco": {
+      "name": "Foco Vivo",
+      "criteria": {
+        "D1": {
+          "name": "Clareza do valor e dos textos",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D2": {
+          "name": "Ação principal e autonomia",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D3": {
+          "name": "Hierarquia, leitura e adaptação",
+          "weight": 12,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D4": {
+          "name": "Identidade e acabamento",
+          "weight": 8,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "arte",
+              "score": 9,
+              "evidence": "revisoes/PARECER-ARTE-CRAFT-R7.md"
+            }
+          ]
+        },
+        "D5": {
+          "name": "Movimento com controle",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "visual",
+              "score": 9,
+              "evidence": "revisoes/PARECER-VISUAL-R7.md"
+            },
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D6": {
+          "name": "Acessibilidade observável",
+          "weight": 14,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D7": {
+          "name": "Resposta e espera locais",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "qa",
+              "score": 9,
+              "evidence": "revisoes/PARECER-A11Y-R7.md"
+            }
+          ]
+        },
+        "D8": {
+          "name": "Feedback, erros e recuperação",
+          "weight": 10,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D9": {
+          "name": "Continuidade e confiança representadas",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "fluxos",
+              "score": 9,
+              "evidence": "revisoes/PARECER-FLUXOS-R7.md"
+            }
+          ]
+        },
+        "D10": {
+          "name": "Cobertura e consistência",
+          "weight": 6,
+          "score": 9,
+          "competentReviews": [
+            {
+              "reviewer": "matriz_independente",
+              "score": 9,
+              "evidence": "MATRIZ-COBERTURA-R7.md"
+            }
+          ]
+        }
+      },
+      "weightedScore": 9.0,
+      "minimumObservedScore": 9,
+      "familyMinimums": {
+        "P01": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P02": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P03": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P04": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P05": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P06": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P07": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P08": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P09": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P10": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P11": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P12": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P13": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P14": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P15": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P16": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P17": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "P18": {
+          "score": 9,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "gates": {
+        "DG1": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG2": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG3": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG4": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG5": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        },
+        "DG6": {
+          "passed": true,
+          "evidence": "MATRIZ-COBERTURA-R7.md"
+        }
+      },
+      "openCriticalHighMediumInExaminedScope": [],
+      "status": "aprovada_no_escopo_de_desenho"
+    }
+  },
+  "productCriteria": {
+    "C1": null,
+    "C2": null,
+    "C3": null,
+    "C4": null,
+    "C5": null,
+    "C6": null,
+    "C7": null,
+    "C8": null,
+    "C9": null,
+    "C10": null
+  },
+  "productScore": null,
+  "nativeScore": null,
+  "researchWithStudents": "nao_realizada",
+  "brandFinalApproval": null,
+  "originalStuNotebookAssetIntegrated": false,
+  "limits": [
+    "Dados e armazenamento locais, IA/email/API falsos.",
+    "Não comprova ReactNative/iPhone/Android, clipboard/folha nativos, microfone, seletor/câmera/OCR, VoiceOver/TalkBack ou persistência de servidor.",
+    "R6 permanece histórica; equivalência explícita aproveita somente ramos pertinentes inalterados.",
+    "Kit do personagem atual provisório; os PNGs originais exigem integração e revisão.",
+    "9 é a âncora do conjunto examinado; não é perfeição universal ou resultado empírico."
+  ]
+}
