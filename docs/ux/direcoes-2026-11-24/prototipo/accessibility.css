@@ -37,3 +37,6 @@ body[data-direction=jornada] .map-node:has(+.route-section)::after{display:none}
 .avatar-photo[data-shape=circle]{border-radius:50%}
 .avatar-photo img{width:100%;height:100%;object-fit:cover;max-width:none}
 .profile-cover[data-hue=lilas]{background:#eee9fa}.profile-cover[data-hue=verde]{background:#e7f3ec}
+.lead,.flow-description{overflow-wrap:anywhere}
+body[data-direction=caderno] .screen[data-page=conclusao] .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,6rem),1fr))}
+.completion-next>div{min-width:0;overflow-wrap:anywhere}
