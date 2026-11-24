@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { origemStudoo } from '../acesso/origem';
+import { origemStudoo, origemWebPermitida } from '../acesso/origem';
 
 function local() {
   const origem = origemStudoo();
@@ -19,8 +19,13 @@ export function recuperacaoDisponivel() {
 }
 type Mensagem = { to: string; subject: string; text: string };
 
-export async function enviarRecuperacao(email: string, codigo: string) {
-  const url = new URL('/recuperar', origemStudoo() ?? 'http://localhost');
+function urlRecuperacao(origem?: string | null) {
+  const base = (origem && origemWebPermitida(origem) ? origem : origemStudoo()) ?? 'http://localhost';
+  return new URL('/recuperar', base);
+}
+
+export async function enviarRecuperacao(email: string, codigo: string, origem?: string | null) {
+  const url = urlRecuperacao(origem);
   await enviarEmail({
     to: email, subject: 'Seu código para recuperar a senha do Studoo',
     text: `Seu código do Studoo é: ${codigo}\n\nEle vale por 15 minutos e só pode ser usado uma vez. Informe-o no app ou em ${url}.\n\nSe você não solicitou a troca, ignore esta mensagem. Sua senha continua a mesma.`,
@@ -36,8 +41,8 @@ export async function enviarCodigoCadastro(email: string, codigo: string) {
 }
 
 /** Quem tenta criar conta com um e-mail que já tem conta recebe este aviso, e nenhum código (a API responde igual). */
-export async function enviarAvisoContaExistente(email: string) {
-  const url = new URL('/recuperar', origemStudoo() ?? 'http://localhost');
+export async function enviarAvisoContaExistente(email: string, origem?: string | null) {
+  const url = urlRecuperacao(origem);
   await enviarEmail({
     to: email, subject: 'Você já tem uma conta no Studoo',
     text: `Alguém pediu para criar uma conta no Studoo com este e-mail, mas ele já tem uma conta.\n\nPara entrar, use o mesmo jeito de sempre (e-mail e senha, Google ou Apple). Se esqueceu a senha, recupere em ${url}.\n\nSe não foi você, ignore esta mensagem.`,

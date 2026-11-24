@@ -7,7 +7,7 @@ import { enviarRecuperacao, recuperacaoDisponivel } from '../email/recuperacao';
 import { emailInterno } from './cadastro';
 
 const validadeMs = 15 * 60_000;
-export async function solicitarRecuperacao(entrada: unknown) {
+export async function solicitarRecuperacao(entrada: unknown, origem?: string | null) {
   const email = normalizarEmail(entrada);
   if (!email) throw new FalhaApi('invalido');
   if (!recuperacaoDisponivel()) throw new FalhaApi('recuperacao_indisponivel');
@@ -26,7 +26,7 @@ export async function solicitarRecuperacao(entrada: unknown) {
   });
   if (resultado.limitado) throw new FalhaApi('limite_recuperacao');
   if (resultado.usuarioId) {
-    try { await enviarRecuperacao(email, codigo); }
+    try { await enviarRecuperacao(email, codigo, origem); }
     catch {
       await banco.recuperacaoSenha.deleteMany({ where: { usuarioId: resultado.usuarioId, codigoHash } });
       // Resposta neutra também quando o provedor de e-mail falha, para não revelar quais e-mails existem.

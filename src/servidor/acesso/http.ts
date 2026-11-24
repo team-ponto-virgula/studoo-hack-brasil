@@ -2,7 +2,7 @@ import type { CodigoErro } from "@studoo/contratos";
 import { mensagensApi } from "@/mensagens/erros-api";
 import type { CanalSessao } from "@/servidor/banco/gerado/client";
 import { descreverErroInterno } from "./erro-interno";
-import { lerCookieSessao, origemStudoo } from "./origem";
+import { lerCookieSessao, origemStudoo, origemWebPermitida } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
 const statusErros: Record<CodigoErro, number> = {
@@ -119,8 +119,7 @@ async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
 function validarOrigemWeb(request: Request) {
   const origem = request.headers.get("origin");
   const leitura = request.method === "GET" || request.method === "HEAD";
-  const permitida = origemStudoo();
-  if ((!leitura || origem !== null) && (!permitida || origem !== permitida)) {
+  if ((!leitura || origem !== null) && !origemWebPermitida(origem)) {
     throw new FalhaApi("origem_invalida");
   }
 }
