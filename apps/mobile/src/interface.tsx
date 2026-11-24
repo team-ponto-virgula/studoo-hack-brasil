@@ -586,7 +586,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false, plano = false }: {
+  /** Apresentação opt-in da direção Clareza: sem relevo, CTA 52 e alternativa 44. Não muda ações ou estados. */
+  plano?: boolean;
   /** O rótulo numa linha só (o "Ajustar pedido" que volta ao lado do botão principal, sem quebrar enquanto ele encolhe). */
   umaLinha?: boolean;
   /** O botão em si, para quem leva o foco até ele (o "Começar" do fim da geração). */
@@ -639,6 +641,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
     if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
+  const principal = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo';
   let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : variante === 'destrutivoBaixo' ? cores.erro : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
   // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
@@ -658,7 +661,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
               // 12 até o texto (o gap do botão é 8) e, desativado, 38% de opacidade sem virar cinza (spec 06).
               style={{ width: imagemAntes.tamanho, height: imagemAntes.tamanho, marginRight: 4, opacity: apagado ? 0.38 : 1 }} />
           )}
-          <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+          <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, plano && { fontSize: principal ? 17 : 16, lineHeight: principal ? 24 : 22, fontWeight: principal ? '900' : '700' }, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
         </>
@@ -673,11 +676,11 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
-        style={({ pressed }) => [degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
+        style={({ pressed }) => [plano ? { borderRadius: 16, opacity: pressed ? 0.88 : 1 } : degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
           variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
           variante === 'destrutivoBaixo' && estilos.botaoFaceDestrutivaBaixa,
-          compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
+          compacto && estilos.botaoFaceCompacta, plano && { minHeight: principal ? 52 : 44, borderWidth: 0, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 10, ...(variante === 'secundario' ? { backgroundColor: 'transparent' } : {}) }, face, apagado && estilos.botaoFaceApagada]}>
           {conteudo}
         </View>
       </Pressable>

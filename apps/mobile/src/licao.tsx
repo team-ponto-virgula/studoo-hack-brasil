@@ -682,7 +682,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     rodape = (
       <View style={{ gap: 8 }}>
         {falta && <Text testID="falta-para-verificar" accessibilityLiveRegion="polite" style={[estilos.legenda, licaoEstilos.notaRodape]}>{textoDaFalta(falta)}</Text>}
-        <Botao testID="enviar-resposta" peso="900" rotulo={pendente === 'avaliar' ? t.avaliando : t.avaliar}
+        <Botao plano testID="enviar-resposta" peso="900" rotulo={pendente === 'avaliar' ? t.avaliando : t.avaliar}
           desativado={ocupado || !respostaCompleta(exercicio, resposta, iniciais[indice])} ocupado={pendente === 'avaliar'} carregando={pendente === 'avaliar'}
           acao={() => void enviar()} />
       </View>
@@ -693,11 +693,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
         {autoAvaliacao === 'ainda_nao' && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.aindaNaoNota}</Text>}
         {autoAvaliacao === 'ainda_nao' && (
-          <Botao testID="praticar-mais" peso="900" rotulo={t.pratica.praticarMais} desativado={ocupado}
+          <Botao plano testID="praticar-mais" peso="900" rotulo={t.pratica.praticarMais} desativado={ocupado}
             acao={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); mostrarComoFoi(); }} />
         )}
         {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
-        <Botao testID="concluir-pratica" peso="900"
+        <Botao plano testID="concluir-pratica" peso="900"
           rotulo={pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
           variante={autoAvaliacao === 'ainda_nao' ? 'texto' : 'sucesso'}
           desativado={ocupado} esmaecido={!autoAvaliacao} dica={autoAvaliacao ? undefined : t.pratica.escolha}
@@ -710,9 +710,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     rodape = resolva.rodape;
   } else if (temMais) {
     // Como .botao--ler-mais da web: a seta depois do texto, girada para baixo.
-    rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} icone="seta" giroIcone="90deg" acao={lerMais} />;
+    rodape = <Botao plano testID="ler-mais" peso="900" rotulo={t.continuarLendo} icone="seta" giroIcone="90deg" acao={lerMais} />;
   } else {
-    rodape = <Botao testID="avancar-licao" peso="900" rotulo={t.seguir} icone="seta" desativado={ocupado}
+    rodape = <Botao plano testID="avancar-licao" peso="900" rotulo={t.seguir} icone="seta" desativado={ocupado}
       acao={() => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); }} />;
   }
   if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
@@ -849,10 +849,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <Text style={licaoEstilos.revisaoTexto}>{mensagens.trilha.revisitando}</Text>
               </View>
             )}
-            <TextoComFormulas texto={licao.objetivo} estilo={estilos.introducao} />
+            <TextoComFormulas texto={licao.objetivo} estilo={[estilos.introducao, licaoEstilos.textoLeitura]} />
             <ExplicacaoDoStu>
               <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
-              <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={estilos.texto} />
+              <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={[estilos.texto, licaoEstilos.textoLeitura]} />
               {/* O marcador fica no bloco, não numa frase: a referência é da lição inteira (não garante o apoio de uma frase). */}
               {!!licao.referencias?.length && (
                 <View style={licaoEstilos.marcadores}>
@@ -891,7 +891,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.tituloQuadro, quebraEquilibrada]}>
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
             </Text>
-            <TextoComFormulas texto={licao.exemplo} estilo={estilos.texto} />
+            <TextoComFormulas texto={licao.exemplo} estilo={[estilos.texto, licaoEstilos.textoLeitura]} />
             <VisuaisDaLicao visuais={licao.visuais} testID="visual-exemplo" />
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
             {licao.passos && <Passos passos={licao.passos} titulo={t.recursos.passos} />}
@@ -907,7 +907,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {/* Como na web 4B: a pergunta é o título do exercício (e recebe o foco); o selo no alto diz qual exercício é. */}
             <TextoComFormulas referencia={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced"
               estilo={[licaoEstilos.pergunta, exercicio.visual && licaoEstilos.perguntaComVisual, quebraEquilibrada]} texto={exercicio.enunciado} />
-            {exercicio.contexto && <TextoComFormulas texto={exercicio.contexto} estilo={estilos.texto} />}
+            {exercicio.contexto && <TextoComFormulas texto={exercicio.contexto} estilo={[estilos.texto, licaoEstilos.textoLeitura]} />}
             {/* Spec 15 (seção 3): enunciado, visual e opções, nessa ordem; a figura com até 200 de altura em 390. Depois do acerto,
                 ela troca no lugar pela do retorno (o procurado vira resposta, entrando de leve); no erro, nada muda. A troca
                 remonta o desenho (chave nova), e a entrada roda uma vez só. */}
@@ -948,8 +948,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 </Pressable>
                 {explicacaoAberta && (
                   <View style={licaoEstilos.consultaConteudo}>
-                    <TextoComFormulas texto={licao.conceito} estilo={estilos.texto} />
-                    <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text><TextoComFormulas texto={licao.exemplo} estilo={estilos.texto} /></Text>
+                    <TextoComFormulas texto={licao.conceito} estilo={[estilos.texto, licaoEstilos.textoLeitura]} />
+                    <Text style={[estilos.texto, licaoEstilos.textoLeitura]}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text><TextoComFormulas texto={licao.exemplo} estilo={[estilos.texto, licaoEstilos.textoLeitura]} /></Text>
                     {resolva.metodo}
                   </View>
                 )}
@@ -1075,7 +1075,7 @@ function BarraDaAula({ fracao, certa }: { fracao: number; certa: boolean }) {
       <Animated.View style={[licaoEstilos.preenchimento, certa && licaoEstilos.preenchimentoCerto, {
         width: largura.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
       }]}>
-        <View style={licaoEstilos.brilho} />
+
       </Animated.View>
     </View>
   );
@@ -1280,16 +1280,16 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
       </View>
       {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite}
         estilo={licaoEstilos.convite} />}
-      {!certa && !compacto && <Botao testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
+      {!certa && !compacto && <Botao plano testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       {/* Compacto (Explique aberto): 16 entre o título e o "Continuar" (o visto ficava a 4 px do botão); a web segue o mesmo. */}
       <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto, linhaCompacta && licaoEstilos.retornoAcoesLinha]}>
         {!certa && (
           <View style={licaoEstilos.acaoTentar}>
-            <Botao testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
+            <Botao plano testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
           </View>
         )}
         <View style={certa && !linhaCompacta ? licaoEstilos.metade : undefined}>
-          <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : rotuloPular}
+          <Botao plano testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : rotuloPular}
             variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={linhaCompacta ? licaoEstilos.continuarLinha : certa ? undefined : licaoEstilos.pular}
             desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
@@ -1328,6 +1328,7 @@ function StuDaEtapa({ espaco, comStu }: { espaco: number; comStu: boolean }) {
 }
 
 const licaoEstilos = StyleSheet.create({
+  textoLeitura: { fontSize: 17, lineHeight: 26 },
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
   // rodapé; as outras telas têm 20. A barra do alto vem da faixa comum (20), então ela avança 4 para cada lado.
   // .aula-topo no celular: 8 em cima e embaixo, começando 2 abaixo do topo (a margem de -12 sobre os 14 da página): o X fica
@@ -1335,7 +1336,7 @@ const licaoEstilos = StyleSheet.create({
   topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4, marginTop: 2 },
   topoColuna: { flex: 1, minWidth: 0, gap: 2 },
   andamento: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
+  tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   /** A aula começa mais perto do topo (rodada 4B da web). */
   // 40 entre o último conteúdo e o rodapé fixo no fim da rolagem (bf8cf37: o vão de 22 do painel mais os 18 do rodapé).
   // 18 da faixa do alto até o primeiro bloco: com a faixa de 62, "Etapa anterior", a etiqueta do exercício e o título da ponte
@@ -1349,19 +1350,19 @@ const licaoEstilos = StyleSheet.create({
   // .aula-miolo h1 { margin-top: -6px } vale também para o título dentro do quadro (vence o .aula-pergunta).
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28, marginTop: -6 },
   /** A pergunta como título do exercício, como `.aula-pergunta` da web: entrelinha de 27,6 e 6 embaixo. */
-  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 27.6, marginTop: -6, marginBottom: 6 },
+  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 30, letterSpacing: -0.6, lineHeight: 36, marginTop: -6, marginBottom: 6 },
   /** Com visual, o enunciado desce para 22 (spec 15, seção 3): as opções começam na primeira tela. */
   perguntaComVisual: { fontSize: 22, lineHeight: 25.3, letterSpacing: -0.8 },
   /** O formulário da resposta: 4 em cima (.aula-quadro .formulario). */
   formulario: { marginTop: 4 },
-  trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },
-  preenchimento: { height: '100%', minWidth: 18, borderRadius: 9, backgroundColor: cores.acao, overflow: 'hidden' },
+  trilha: { flex: 1, height: 10, borderRadius: 5, backgroundColor: cores.gelo, overflow: 'hidden' },
+  preenchimento: { height: '100%', minWidth: 10, borderRadius: 5, backgroundColor: cores.acao, overflow: 'hidden' },
   preenchimentoCerto: { backgroundColor: cores.sucessoClaro },
   brilho: { position: 'absolute', top: 4, left: 10, right: 10, height: 4, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.34)' },
   // .aula-posicao: 14 px em 900.
   posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
   // .aula-rodape__nota no celular: 13 px em 700, centrada.
-  notaRodape: { textAlign: 'center', fontSize: 13, lineHeight: 19.5, fontWeight: '700' },
+  notaRodape: { textAlign: 'center', fontSize: 14, lineHeight: 21, fontWeight: '700' },
   // O aviso de pular no painel do erro, como na web: 15 px em 700, na cor do texto.
   avisoPular: { textAlign: 'center', color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 21, fontWeight: '700' },
   retornoTexto: { fontSize: 15, lineHeight: 21 },
@@ -1369,11 +1370,11 @@ const licaoEstilos = StyleSheet.create({
   pular: { minHeight: 48, paddingHorizontal: 8 },
   etapa: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  etapaTexto: { fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
+  etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, letterSpacing: 0.6 },
   // Como .aula-miolo h1 da web no celular: clamp(1,5rem, 4,6vw, 2rem) = 24 px, entrelinha 1,15.
   // .aula-miolo h1 no celular: 24 px na entrelinha de 1,15; com o vão de 14 da etapa e o -6 de cima, fica a 8 da etapa e a 14 do
   // objetivo (a introdução já tem 8 em cima).
-  tituloLicao: { fontSize: 24, lineHeight: 27.6, marginTop: 4, marginBottom: 6 },
+  tituloLicao: { fontSize: 30, lineHeight: 36, marginTop: 4, marginBottom: 6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   // 48 dp de toque sem empurrar a etapa: as margens negativas devolvem o espaço que o visual de antes ocupava.
   // .aula-voltar-etapa: 4 de respiro em cima e embaixo (29 de altura), na largura da coluna, 6 embaixo mais o vão de 14 da grade;
@@ -1417,9 +1418,8 @@ const licaoEstilos = StyleSheet.create({
   explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 14 },
   stu: { marginTop: 6 },
   // .aula-balao: borda de 2 em volta e o degrau de 4 por fora (box-shadow 0 4px 0 gelo).
-  balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo,
-    boxShadow: `0 4px 0 ${cores.gelo}` },
-  balaoSeta: { position: 'absolute', top: 24, left: -10, width: 16, height: 16, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo,
+  balao: { flex: 1, gap: 10, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  balaoSeta: { position: 'absolute', top: 24, left: -10, width: 16, height: 16, borderLeftWidth: 1, borderBottomWidth: 1, borderColor: cores.gelo,
     borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   // O primeiro cartão de apoio fica 113 px abaixo do último texto do exercício, como na web. Embaixo, a margem de 24 do último
@@ -1433,10 +1433,9 @@ const licaoEstilos = StyleSheet.create({
   apoioComPonte: { marginTop: 16, marginBottom: -12 },
   // .aula-quadro: borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0, na cor da borda); 14 da
   // etiqueta (o vão de .aula-miolo).
-  quadro: { marginTop: 10, gap: 12, padding: 18, borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo,
-    boxShadow: `0 4px 0 ${cores.gelo}` },
-  quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0', boxShadow: '0 4px 0 #FFE3A3' },
-  quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF', boxShadow: '0 4px 0 #E2D1F5' },
+  quadro: { marginTop: 10, gap: 12, padding: 18, borderRadius: 20, borderWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  quadroExemplo: { borderColor: '#E2E8F4', backgroundColor: '#F4F7FF' },
+  quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF' },
   // .aula-consulta: 12 de respiro e vão de 10 (a consulta da prática).
   consulta: { gap: 10, padding: 12, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
   // .aula-consulta--recolhivel: sem respiro próprio; o resumo tem 48 com 10 × 14 (52 com a borda) e o conteúdo aberto fica a 12

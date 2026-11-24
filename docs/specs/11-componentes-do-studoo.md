@@ -4,6 +4,20 @@
 
 Hoje a web tem dois menus (o balão do Explorar, que abre em cima, e o `details` de Minhas trilhas) e duas confirmações (a folha com título, `DialogoConfirmar`, e o `.modal-cartao`, com a mensagem toda em negrito e sem título). Cada componente abaixo passa a ser um só, nas três plataformas.
 
+## Controles do piloto A (24/11/2026)
+
+Por pedido de repaginação do dono, os controles do percurso Pedido/Geração/Proposta/Aula/Conclusão e da ação de retomada passam a usar a direção **Clareza que ensina**. É uma apresentação opt-in: na web, escopo `estudo[data-direcao="clareza"]`; no app, `Botao.plano` e `Caminho.claro` nos locais do piloto. O padrão dos demais botões, menus, confirmações e folhas permanece como especificado abaixo. A direção não muda callbacks, papéis, nomes acessíveis, testIDs ou regras de bloqueio/envio.
+
+| Papel no piloto | Anatomia |
+| --- | --- |
+| Ação principal | Largura toda no celular, mínimo 52, raio 16, azul `#2563FF` e texto branco 17/24 em peso 900; sem degrau. Feedback de pressão, carregamento e foco continuam. |
+| Alternativa | Mínimo 44, texto 16/22, depois da ação principal. Pode ficar sem uma caixa extra; nunca desaparecer para caber. Cores semânticas de sucesso/erro continuam nos retornos apropriados. |
+| Campo de objetivo | Borda legível de 1,5 em `#7B8AAF`, raio 18, respiro lateral 16, texto 17/26 e placeholder `#566382`; foco no controle existente. Validação, limite e descrição acessível preservados. |
+| Informação de apoio | Auxiliares a partir de 14/21. Separador ou superfície sutil agrupa informação; evitar borda, sombra e outro cartão empilhados para o mesmo conteúdo. |
+| Resumo da conclusão | Progresso e sincronia primeiro; objetivo praticado e aviso de rever continuam legíveis. Métricas reais em duas colunas neutras, rótulo 14/21 e valor 17/26, sem relevo/colorização competindo com a próxima ação. |
+
+O contraste, foco, teclado, leitor de tela, texto ampliado e as áreas seguras precisam ser conferidos no produto integrado. Remover relevo não remove o indicador de foco nem a distinção de estado. A [spec 04](04-experiencia-ilustrada.md) fixa a ordem das telas; a [spec 07](07-paridade-web-mobile.md) continua exigindo pares nas mesmas larguras. Nenhum destes controles é uma autorização para substituir a lógica real por mocks ou alterar a API.
+
 ## Menu de ações
 
 **Onde.** No “•••” dos cartões (Minhas trilhas, Explorar e perfil) e em qualquer lista curta de ações, até cinco. Com mais de cinco, ou com conteúdo além de ações, usa-se a folha.

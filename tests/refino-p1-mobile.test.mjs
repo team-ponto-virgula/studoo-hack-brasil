@@ -219,7 +219,7 @@ test('item 31: um estado só, curto, no botão do mapa e no selo do cartão, vin
   assert.match(social, /seloEstadoAlertaTexto: \{ color: '#9A5B00' \}/);
 });
 
-test('item 34: o alto da proposta como a web: voltar de 44, o nome da trilha em 17/22 800 até 2 linhas (15/20 com 3 ou mais)', async () => {
+test('item 34 e piloto A: voltar de 44, título 24/30 sem truncamento e reserva coerente com a placa', async () => {
   const estudo = await ler('estudo.tsx');
   const faixa = estudo.slice(estudo.indexOf('const nomeNoAlto = titulo || geracao.objetivo;'), estudo.indexOf('const expirada = criacao === \'expirada\';'));
   assert.match(faixa, /<Pressable testID="geracao-voltar" accessibilityRole="button"/);
@@ -228,9 +228,12 @@ test('item 34: o alto da proposta como a web: voltar de 44, o nome da trilha em 
   assert.doesNotMatch(faixa, /numberOfLines=\{1\}/, 'sem reticências');
   assert.match(faixa, /evento\.nativeEvent\.lines\.length >= 3/);
   assert.match(estudo, /geracaoVoltar: \{ width: 44, height: 44, borderRadius: 22,/);
-  assert.match(estudo, /faixaGeracaoNome: \{ flex: 1, minWidth: 0, color: cores\.texto, fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 17, lineHeight: 22 \}/);
-  assert.match(estudo, /faixaGeracaoNomeLongo: \{ fontSize: 15, lineHeight: 20 \}/);
-  // A placa "Proposta pronta" e a área livre do item 1 acompanham a faixa quando o nome ocupa duas linhas.
-  assert.match(faixa, /\{ top: alturaFaixaGeracao \+ 10 \}/);
-  assert.match(estudo, /const topoLivre = semPlaca \? 0 : alturaFaixaGeracaoAgora\.current \+ 10 \+ alturaPlacaAgora\.current;/);
+  assert.match(estudo, /faixaGeracaoNome: \{ flex: 1, minWidth: 0, color: cores\.texto, fontFamily: fontes\.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 \}/);
+  assert.match(estudo, /faixaGeracaoNomeLongo: \{ fontSize: 24, lineHeight: 30 \}/);
+  // Posicionamento e acompanhamento usam a mesma folga, inclusive quando o título faz a faixa crescer.
+  assert.match(estudo, /const FOLGA_PLACA_GERACAO = 16;/);
+  assert.match(faixa, /\{ top: alturaFaixaGeracao \+ FOLGA_PLACA_GERACAO \}/);
+  assert.match(estudo, /const topoLivre = semPlaca \? 0 : alturaFaixaGeracaoAgora\.current \+ FOLGA_PLACA_GERACAO \+ alturaPlacaAgora\.current;/);
+  assert.match(estudo, /const topoLivre = cartaoDeVolta \? 0 : alturaFaixaGeracao \+ FOLGA_PLACA_GERACAO \+ alturaPlaca;/);
+  assert.match(estudo, /faixaGeracaoLarga: \{ paddingVertical: 10 \}/);
 });

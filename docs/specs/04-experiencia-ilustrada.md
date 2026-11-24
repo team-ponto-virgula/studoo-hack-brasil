@@ -2,6 +2,18 @@
 
 **Estado:** implementada na web e no app (13/11/2026), em três passadas: o mundo ilustrado; as animações e o retorno da aula; e, com a IA da OpenAI, a tela que escreve as lições. Complementa a [spec 03](03-trilha-ao-vivo.md) sem mudar API, contrato ou banco.
 
+## Piloto A — Clareza que ensina (pedido do dono, 24/11/2026)
+
+O pedido de repaginação urgente adota a [direção A](../ux/propostas/PROPOSTA-UI-UX.md) no percurso **Pedido → Geração → Proposta → Aula → Conclusão/retomada**. Nesta superfície, a emenda substitui as descrições de 19/11 sobre hero central, relevo de campos/ações, cenário da prévia e a pilha visual da conclusão. As regras de acesso, conteúdo, geração, correção, salvamento e os demais fluxos continuam valendo. Não é mudança de API nem migração completa da interface.
+
+- **Pedido:** título alinhado à esquerda, Stu de 72 ao lado (56 nas janelas baixas), fala curta abaixo; campo de objetivo sem relevo, borda de 1,5, raio 18 e conteúdo 17/26. A ação principal ocupa a largura, com 52 de altura, antes do material e das saídas. Material, sugestões, sorteio, ajuda, validações e aceite de IA continuam acessíveis.
+- **Geração e proposta:** mantêm a fila de eventos reais, nós, partes, coordenadas, acompanhamento/rolagem, cancelamento, ajuste, aceite e recuperação de erro/proposta expirada. Só a prévia adota a superfície `#F4F7FF`, relevo `#E2E8F4`, placa clara sem degrau e menos cenário decorativo. O mapa salvo não é recolorido globalmente. Não inventar porcentagem, prazo ou confirmação de trilha criada antes do aceite real.
+- **Aula:** hierarquia 30/36 nos títulos e 17/26 na leitura, auxiliares de pelo menos 14/21, contêineres com borda de 1 e raio 20, sem degrau redundante. Preservar fórmulas, figuras, áudio, formatos, correção, reforço, rascunho e controles de navegação. Rodapé, teclado e áreas seguras continuam usando os mecanismos existentes.
+- **Conclusão:** hero compacto com Stu 110, título e nome da lição; depois progresso confirmado, sincronia, próxima lição liberada, objetivo praticado e eventual aviso de rever. Comemoração textual, histórias condicionais, métricas reais em duas colunas, frases e compartilhar são secundários. A ação principal vem antes das alternativas e permanece visível sem rolar até 600 de largura. Nenhum estado de “salvo” é produzido só por animação.
+- **Movimento:** a conclusão usa uma reação do Stu de um ciclo, sem chuva de confete ou raios contínuos. Preferência reduzida/desconhecida conserva a composição estática; o conteúdo e as ações não esperam a decoração. A animação da assinatura de abertura é outro fluxo e não é redefinida por este piloto.
+
+A marca continua azul/branco e usa Quicksand/Nunito; não há XP, ranking ou pontuação nova. O kit do personagem atual permanece provisório em relação aos PNGs do **Stu caderno**: seguir a [referência de origem](../ux/REFERENCIAS-DO-STU.md), sem recriar uma versão e apresentá-la como o original. Aceite do piloto exige os checks e pares web/app da spec 07 e a revisão pelo [método de UX](../ux/METODO-AVALIACAO.md); esta emenda não declara validação nativa ou nota 9,5.
+
 ## Problema
 
 A interface funcionava, mas era plana: a entrada não dizia o que o Studoo faz, não havia apresentação para quem chega, as sugestões do pedido puxavam para programação e a trilha era um caminho sobre fundo branco. Queremos a sensação de jornada do caminho do Duolingo, com a cara do Studoo.

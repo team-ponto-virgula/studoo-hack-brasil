@@ -6,6 +6,18 @@
 
 O kit tem 31 PNG: a folha de personagem (3200×2180), a acolhida, 5 vistas, 8 expressões, 3 poses, 6 acessórios, o logo e 6 amostras de cor. As imagens do personagem e dos acessórios têm 1024×1024, fundo transparente e 260–420 KB cada. O mascote novo é o mesmo Stu de hoje (bolinha azul, topete, óculos), agora em volume e com expressões. Os originais entram no projeto como fonte, fora de qualquer pasta servida: PNG em `assets/mascote/originais` e GIF em `assets/mascote/originais-gif` (pedido do dono; decisão do Lead em 19/11). O script dos devs gera deles as versões leves desta tabela, e só elas vão para `public/` e para o pacote do app.
 
+## Emenda do piloto A (pedido de repaginação, 24/11/2026)
+
+Nas telas Pedido/Geração/Proposta/Aula/Conclusão do piloto **Clareza que ensina**, o Stu orienta o contexto sem disputar com a tarefa. Esta emenda substitui, somente nesse recorte, a composição central do pedido e a conclusão com chuva de confete, raios giratórios e dois ciclos descrita na revisão de 19/11. Não altera o mascote dos demais fluxos nem as animações da assinatura de abertura.
+
+- Pedido: expressão e reação existentes, com imagem de 72 ao lado do título e 56 na janela baixa; mensagem continua em texto acessível. Material e sugestões preservam seus estados e anúncios.
+- Geração/proposta: manter o Stu no caminho e seus acontecimentos reais. A superfície da prévia fica clara e os cenários decorativos recuam; nós, partes, estado de rascunho e troféu continuam. O mapa salvo mantém sua composição até uma revisão específica.
+- Aula: o texto e os controles têm prioridade. O Stu existente permanece contextual, sem ampliar o personagem ou acrescentar ciclos durante leitura e resposta.
+- Conclusão: uma pose de 110, uma reação de um ciclo e check compacto. Sem chuva de confete, sem raios contínuos ou espera decorativa antes de mostrar o progresso. Resultado que pede rever usa a expressão encorajadora e mantém o aviso; a ilustração não afirma domínio nem salvamento por conta própria.
+- Redução de movimento, segundo plano e acessibilidade continuam obrigatórios: composição estática segura quando não houver confirmação para animar; personagem decorativo, mensagem e estado em texto. Nenhuma animação bloqueia a próxima ação.
+
+**Origem da arte:** o kit presente no código é o Stu azul arredondado de 19/11; não é o novo **Stu caderno de capa azul, folha dobrada e óculos com os dois “o”** dos PNGs enviados pelo dono. Os originais são a referência final e devem ser integrados a partir dos próprios arquivos, sem uma recriação inventada. A [referência de origem](../ux/REFERENCIAS-DO-STU.md) registra a diferença e a disponibilidade dos arquivos. Este piloto reorganiza os componentes com os assets existentes e não declara que o caderno já foi incorporado.
+
 ## A1. Arquivos
 
 ### Recorte
