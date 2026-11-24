@@ -261,3 +261,13 @@ Fotos do build de produção local em 390 (Android e iPhone), 768 e 1280, com e 
   - o momento 1 com o PDF de verdade, sem o selo;
   - de preferência, o mapa do momento 4 sem "Em revisão".
   O momento 1 não espera um build com o texto novo: espera a captura com o material de verdade.
+
+**Segunda rodada (24/11):** os três ajustes estão conferidos nas fotos novas.
+- O título fica com uma frase por linha. Em 1280, "Aprenda / qualquer coisa. / Uma lição por vez.", com o equilíbrio da primeira frase em duas linhas; está aceito.
+- As ideias estão em grade em 390 e em 1280, sem fileira correndo. Isso já atende a regra 2.2.2 da WCAG, e não precisa de botão de pausa.
+- O aviso de música não cobre mais botões.
+
+Também está aceito:
+- **O laço do herói sem quadro vazio:** a soma das opacidades nunca ficou abaixo de 0,95 nas amostras do Web & API.
+- **A captura do momento 1 com o "!" no Wi-Fi do emulador:** é a barra do sistema da captura, sem recorte. É pequena e não diz nada falso.
+- **O mapa do momento 4 com "Em revisão":** fica. O selo é pequeno, a janela do site ao lado mostra "Compartilhar", e trocar pediria outra rodada nativa. Se vier uma captura nova por outro motivo, ela entra.
