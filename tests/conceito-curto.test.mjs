@@ -217,6 +217,9 @@ test('o rótulo repetido: "O Stu explica:" no começo do conceito sai, com ou se
   sai('  o stu explica:   a regra.  ', 'A regra.');
   sai('O STU EXPLICA: a regra.', 'A regra.');
   sai('O Stu explica: O Stu explica: A regra.', 'A regra.');
+  // O texto exato que a IA real pôs no balão da trilha "Enquadramento com a regra dos terços" (captura da QA em produção): minúscula depois dos dois-pontos, como se escreve em português.
+  sai('O Stu explica: a regra dos terços divide a imagem em nove partes iguais com duas linhas horizontais e duas verticais. O assunto fica sobre uma linha ou num ponto de cruzamento.',
+    'A regra dos terços divide a imagem em nove partes iguais com duas linhas horizontais e duas verticais. O assunto fica sobre uma linha ou num ponto de cruzamento.');
   // Negrito, itálico, aspas, título de markdown, travessão e quebra de linha.
   sai('**O Stu explica:** A regra dos terços.', 'A regra dos terços.');
   sai('**O Stu explica**: A regra dos terços.', 'A regra dos terços.');
@@ -278,6 +281,10 @@ test('a normalização tira o rótulo antes de contar frases e palavras, sem der
   assert.equal(lida.conceitoCortado, undefined, 'nada passou do balão');
   assert.deepEqual(lida.descartados, [], 'os exercícios não foram tocados');
   assert.equal(lida.conteudo.exemplo, 'Ao afinar, você gira as tarraxas, que ficam na cabeça do violão.');
+  // O caso real da QA, como lição 1 da trilha (2 frases): só o rótulo sai, nada é cortado.
+  const real = normalizarLicao(licaoBruta('O Stu explica: a regra dos terços divide a imagem em nove partes iguais com duas linhas horizontais e duas verticais. O assunto fica sobre uma linha ou num ponto de cruzamento.'), 'IA', { primeiraLicao: true });
+  assert.equal(real.conteudo.conceito, 'A regra dos terços divide a imagem em nove partes iguais com duas linhas horizontais e duas verticais. O assunto fica sobre uma linha ou num ponto de cruzamento.');
+  assert.deepEqual([real.rotuloDoConceitoTirado, real.conceitoCortado], [true, undefined]);
   // Sem rótulo, nada muda e nada é dito.
   const limpa = normalizarLicao(licaoBruta('O violão tem corpo, braço e cabeça.'), 'IA');
   assert.equal(limpa.conteudo.conceito, 'O violão tem corpo, braço e cabeça.');
