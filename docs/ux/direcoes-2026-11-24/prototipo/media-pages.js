@@ -114,6 +114,16 @@
       api.render(false);return true;
     }
 
+    function captureCodeContext() {
+      const state=api.getState();
+      return {id:state.activeTrack,page:api.getPage?.(),scenario:api.getScenario?.(),destination:state.visibility,status:state.publicationStatus,renderToken:api.getRenderToken?.()};
+    }
+    function codeContextCurrent(context) {
+      if(!context?.renderToken || context.renderToken!==api.getRenderToken?.())return false;
+      const state=api.getState();
+      return context.id===state.activeTrack && context.page===api.getPage?.() && context.scenario===api.getScenario?.() && context.destination===state.visibility && context.status===state.publicationStatus && !codeBlockReason();
+    }
+
     function makeCode() {
       if(codeBlockReason())return '';
       if (codeSvg) return codeSvg;
@@ -170,17 +180,18 @@
       if (valueLabel) valueLabel.textContent = Math.round(draftZoom * 100) + '%';
     }
 
-    async function copyCodeLink() {
-      if(blockCodeAction())return;
+    async function copyCodeLink(originalContext) {
+      const context=originalContext || captureCodeContext();
+      if(!codeContextCurrent(context)){if(!originalContext)blockCodeAction();return;}
       try {
         if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('ClipboardUnavailable');
         await navigator.clipboard.writeText(exampleLink);
-        if(codeBlockReason())return;
+        if(!codeContextCurrent(context))return;
         const status = document.getElementById('media-code-message');
         if (status) status.textContent = 'Link de exemplo copiado.';
         else api.notify('Link de exemplo copiado.');
       } catch (_) {
-        if(blockCodeAction())return;
+        if(!codeContextCurrent(context))return;
         const input = document.getElementById('media-code-link');
         if (input) {
           input.focus();
@@ -194,7 +205,8 @@
     }
 
     function shareCode() {
-      if(blockCodeAction())return;
+      const context=captureCodeContext();
+      if(!codeContextCurrent(context)){blockCodeAction();return;}
       const dialog = document.createElement('dialog');
       dialog.className = 'dialog media-share-dialog';
       dialog.setAttribute('aria-labelledby', 'media-share-title');
@@ -208,16 +220,18 @@
       dialog.addEventListener('click', event => {
         const button = event.target.closest('button[data-action]');
         if (!button) return;
+        if(button.dataset.action!=='media-share-cancel' && !codeContextCurrent(context)){dialog.close();return;}
         if (button.dataset.action === 'media-share-copy') {
-          afterClose = copyCodeLink;
+          afterClose = ()=>copyCodeLink(context);
           dialog.close();
         } else if (button.dataset.action === 'media-code-download') {
-          downloadCode();
+          downloadCode(context);
           dialog.close();
         } else if (button.dataset.action === 'media-share-cancel') dialog.close();
       });
       dialog.addEventListener('close', () => {
         dialog.remove();
+        if(!codeContextCurrent(context))return;
         if (opener && opener.isConnected) opener.focus();
         if (afterClose) afterClose();
       });
@@ -225,8 +239,9 @@
       dialog.querySelector('[data-action="media-share-cancel"]').focus();
     }
 
-    function downloadCode() {
-      if(blockCodeAction())return;
+    function downloadCode(originalContext) {
+      const context=originalContext || captureCodeContext();
+      if(!codeContextCurrent(context)){if(!originalContext)blockCodeAction();return;}
       const svg = makeCode();
       if (!svg) {
         api.notify('A prévia não está disponível. Use o link de exemplo.');
@@ -240,7 +255,7 @@
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      api.notify('Prévia de exemplo preparada para baixar.');
+      if(codeContextCurrent(context))api.notify('Prévia de exemplo preparada para baixar.');
     }
 
     async function readPhotoFile(event) {
@@ -305,9 +320,9 @@
         api.go('editar');
         api.notify('Enquadramento no rascunho. Salve o perfil para aplicar.');
       },
-      'media-code-copy': copyCodeLink,
-      'media-code-share': shareCode,
-      'media-code-download': downloadCode,
+      'media-code-copy': () => copyCodeLink(),
+      'media-code-share': () => shareCode(),
+      'media-code-download': () => downloadCode(),
       'media-code-cancel': () => api.go('compartilhar')
     };
 

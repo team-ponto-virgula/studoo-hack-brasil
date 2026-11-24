@@ -22,6 +22,24 @@
     const canShare = () => !isGuest() && getState().sessionActive !== false && api.canShareTrack?.() === true;
     const usesMaterial = () => api.trackUsesMaterial?.() === true;
     const destinationAllowed = value => ['link','perfil','explorar'].includes(value) && !(value === 'explorar' && usesMaterial());
+    let reviewContext=null;
+    function captureShareContext() {
+      const state=getState();
+      return {id:state.activeTrack,page:api.getPage?.(),scenario:api.getScenario?.(),destination:state.visibility,status:state.publicationStatus,renderToken:api.getRenderToken?.()};
+    }
+    function sameShareFields(a,b) {
+      return a.id===b.id && a.page===b.page && a.scenario===b.scenario && a.destination===b.destination && a.status===b.status;
+    }
+    function shareContextCurrent(context,allowInvalidDestination=false) {
+      const current=captureShareContext();
+      return !!context?.renderToken && context.renderToken===current.renderToken && sameShareFields(context,current) && canShare() && (allowInvalidDestination || destinationAllowed(current.destination));
+    }
+    function rememberReviewFrame() {
+      const expected=captureShareContext();
+      // The token is assigned after the renderer installs this new review frame.
+      // Bind cancellation to that frame, never to a target observed after closing a dialog.
+      queueMicrotask(()=>{const current=captureShareContext();if(current.renderToken && current.renderToken!==expected.renderToken && sameShareFields(expected,current) && current.page==='compartilhar' && publicationState(current.scenario)==='revisar')reviewContext=current;});
+    }
     function ownShareUnavailable() {
       if (isGuest() || getState().sessionActive === false) return guestShare();
       return {html:title('Compartilhar trilha','Compartilhe uma trilha criada por você.','Cópias recebidas continuam privadas nos seus estudos.') + note('Você pode estudar e rever esta cópia. Criar uma trilha própria permite preparar um link ou código.'),foot:foot(btn('Voltar aos meus estudos','go:inicio'),btn('Criar minha trilha','go:pedido','quiet')),status:'indisponivel',hideLink:true};
@@ -39,13 +57,13 @@
       if (!usesMaterial()) return note('Compartilhar leva o conteúdo da trilha. Seu progresso, respostas e explicações pessoais não vão junto.');
       const name=api.trackMaterialName?.() || '';
       const containsFileName=!!name && (s.planTitle || '').toLocaleLowerCase('pt-BR').includes(String(name).toLocaleLowerCase('pt-BR'));
-      return note(containsFileName ? 'Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto e fotos das páginas não vão.' : 'Vão junto o título, os trechos citados nas lições e as páginas de referência. Confira o título: ele pode conter o nome do arquivo. Arquivo bruto e fotos das páginas não vão.');
+      return note(containsFileName ? 'Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.' : 'Vão junto o título, os trechos citados nas lições e as páginas de referência. Confira o título: ele pode conter o nome do arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.');
     }
     function setScenario(value) { if (api.setScenario) api.setScenario(value); }
     function setPublication(status) {
       if (status !== 'retirado' && !allowPublication()) return false;
       getState().publicationStatus = status;
-      if(status!=='revisar'){delete getState().publicationBeforeReview;delete getState().publicationReviewTrackId;}
+      if(status!=='revisar'){delete getState().publicationBeforeReview;delete getState().publicationReviewTrackId;reviewContext=null;}
       save(); setScenario(scenarioFor[status] || ''); render(true);return true;
     }
     function draft() {
@@ -141,6 +159,7 @@
       };
       const plan = '<div class="report-context">' + icon('book') + '<div><strong>' + esc(s.planTitle || 'SQL para a prova') + '</strong><small>Só o conteúdo da trilha. Sem respostas ou progresso pessoal.</small></div></div>';
       if (status === 'revisar') {
+        rememberReviewFrame();
         html = title('Conferir compartilhamento', s.visibility === 'link' ? 'Ativar o link do exemplo?' : 'Conferir antes de publicar.', 'Nenhuma publicação acontece sem sua confirmação.') + plan + visibilityChoices() + publicationNote('') + sharingNotice() + note('Este fluxo é local e ilustrativo. Nenhum dado será enviado para a comunidade.');
         footer = foot(btn(s.visibility === 'link' ? 'Ativar link de exemplo' : 'Confirmar publicação de exemplo', 'social-confirm-publication'), btn('Cancelar', 'social-cancel-publication', 'quiet'));
       } else if (status === 'erro') {
@@ -179,12 +198,12 @@
       'social-block-person':()=>ask('Bloquear Lia?', 'Você deixa de ver as trilhas e o perfil dessa pessoa, e ela deixa de ver os seus no Studoo. Ela não é avisada. Neste protótipo, o efeito é apenas local.', 'Bloquear', ()=>{const s=getState();s.blocked=true;s.followed=false;save();go('explorar');notify('Pessoa bloqueada no exemplo. Você pode desfazer em Segurança.');}, true),
       'social-rules':()=>ask('Regras da comunidade', 'Sem spam, ofensas ou dados pessoais de outras pessoas. Respeite direitos autorais. Trilhas e textos gerados por IA seguem as mesmas regras.', 'Entendi', ()=>{}),
       'social-review-publication':()=>{if(!allowPublication())return;const s=getState(),current=s.publicationStatus || '';s.publicationBeforeReview=current==='revisar'?(s.publicationBeforeReview || ''):current;s.publicationReviewTrackId=s.activeTrack;setPublication('revisar');},
-      'social-cancel-publication':()=>{const s=getState();const previous=s.publicationStatus==='revisar'&&s.publicationReviewTrackId===s.activeTrack?s.publicationBeforeReview || '':'';s.publicationStatus=canShare()&&destinationAllowed(s.visibility)?previous:'';delete s.publicationReviewTrackId;delete s.publicationBeforeReview;save();setScenario(scenarioFor[s.publicationStatus] || '');render(true);},
-      'social-confirm-publication':()=>{if(!allowPublication())return;const requestedId=getState().activeTrack,requestedVisibility=getState().visibility;ask('Confirmar este exemplo?', 'Você verá o retorno local da solicitação. Nenhum conteúdo será publicado nem enviado para uma equipe real.', 'Confirmar exemplo', ()=>{if(getState().activeTrack!==requestedId||getState().visibility!==requestedVisibility){notify('A trilha ou o destino mudou. Confira suas escolhas antes de confirmar.');render(true);return;}if(!allowPublication())return;setPublication(requestedVisibility === 'link' ? 'aprovado' : 'pendente');});},
+      'social-cancel-publication':()=>{const context=reviewContext || captureShareContext();if(context.page!=='compartilhar'||publicationState(context.scenario)!=='revisar'||!shareContextCurrent(context,true))return;const s=getState();if(s.publicationReviewTrackId&&s.publicationReviewTrackId!==context.id)return;if(s.publicationStatus==='revisar'&&s.publicationReviewTrackId===context.id){s.publicationStatus=s.publicationBeforeReview || '';delete s.publicationReviewTrackId;delete s.publicationBeforeReview;save();}reviewContext=null;setScenario(scenarioFor[s.publicationStatus] || '');render(true);},
+      'social-confirm-publication':()=>{const context=captureShareContext();if(!allowPublication()||!shareContextCurrent(context))return;ask('Confirmar este exemplo?', 'Você verá o retorno local da solicitação. Nenhum conteúdo será publicado nem enviado para uma equipe real.', 'Confirmar exemplo', ()=>{if(!shareContextCurrent(context))return;setPublication(context.destination === 'link' ? 'aprovado' : 'pendente');});},
       'social-retry-publication':()=>{if(!allowPublication())return;setPublication('pendente');},
       'social-save-visibility':()=>{if(!allowPublication())return;save();notify('Visibilidade guardada no exemplo. O estado de revisão não mudou.');},
-      'social-recover-link':()=>{if(!canShare()){notify('Abra uma trilha criada por você para compartilhar.');render(true);return;}const s=getState();s.visibility='link';s.publicationStatus='';delete s.publicationBeforeReview;delete s.publicationReviewTrackId;save();setScenario('');render(true);notify('Destino alterado para link. Confira antes de compartilhar.');},
-      'social-stop-publication':()=>ask('Parar de compartilhar?', 'O link de exemplo ficará inativo. A trilha e o progresso continuam nos seus estudos.', 'Parar de compartilhar', ()=>setPublication('retirado'), true),
+      'social-recover-link':()=>{if(!canShare()){notify('Abra uma trilha criada por você para compartilhar.');render(true);return;}const s=getState();s.visibility='link';s.publicationStatus='';delete s.publicationBeforeReview;delete s.publicationReviewTrackId;reviewContext=null;save();setScenario('');render(true);notify('Destino alterado para link. Confira antes de compartilhar.');},
+      'social-stop-publication':()=>{const context=captureShareContext();if(!shareContextCurrent(context,true))return;ask('Parar de compartilhar?', 'O link de exemplo ficará inativo. A trilha e o progresso continuam nos seus estudos.', 'Parar de compartilhar', ()=>{if(!shareContextCurrent(context,true))return;setPublication('retirado');}, true);},
       'social-open-added':()=>{
         const s=getState(), name=s.previewTitle || 'SQL sem complicação', id='recebida-'+name.toLowerCase().replace(/[^a-z0-9]/g,'-');
         save();s.tracks ||= {};s.tracks[id] ||= {title:name,completed:0,reviewNeeded:[]};
