@@ -56,6 +56,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
   const telasDoCelular = telasDoHeroi(aparelho);
   const qrDoHeroi = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-heroi" /> : null;
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
+  const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo /> : null;
 
   return (
     <div className="cn-pagina" data-na-raiz={naRaiz || undefined} data-fundo-so-no-gesto="">
@@ -133,7 +134,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 
         <section id="baixar" className="cn-secao cn-s4" aria-labelledby="cn-titulo-s4" data-revelar>
           <h2 id="cn-titulo-s4" className="cn-secao__titulo">{textos.s4.titulo}</h2>
-          <SecaoInstalar {...dados} qr={qrDoS4} />
+          <SecaoInstalar {...dados} qr={qrDoS4} qrIphone={qrDoS4Iphone} />
         </section>
 
         <section className="cn-secao cn-s5" aria-labelledby="cn-titulo-s5" data-revelar>

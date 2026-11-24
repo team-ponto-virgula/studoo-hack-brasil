@@ -348,12 +348,13 @@
 .cn-abas { display: inline-grid; grid-auto-flow: column; gap: 4px; margin-top: 24px; padding: 4px; border-radius: 16px; background: var(--nevoa); border: 2px solid var(--cn-borda-cartao); }
 .cn-aba { min-width: 112px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: transparent; color: var(--texto2); font: 800 1rem/22px Nunito, sans-serif; cursor: pointer; }
 .cn-aba[aria-selected='true'] { background: var(--acao); color: #fff; }
-.cn-painel { margin-top: 28px; display: grid; gap: 24px; justify-items: start; }
+.cn-painel { position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; }
 .cn-painel[hidden] { display: none; }
 .cn-painel:focus-visible { outline-offset: 6px; }
 .cn-painel__acao { display: grid; gap: 8px; width: 100%; max-width: 420px; }
 .cn-painel__qr { width: 100%; }
-.cn-ancora { position: relative; top: -16px; display: block; height: 0; }
+/* A âncora do painel do iPhone (#iphone) fica FORA da grade do painel: como item da grade ela tomava uma linha (e o vão de 24 px) e empurrava o cartão do QR e o botão para baixo, fora do alinhamento com os passos. */
+.cn-ancora { position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; }
 .cn-apoio--painel { max-width: 420px; }
 .cn-passos { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; width: 100%; max-width: 560px; }
 .cn-passo { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: 14px; font-size: 1.0625rem; line-height: 26px; font-weight: 600; color: var(--texto); }

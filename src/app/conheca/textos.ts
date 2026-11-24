@@ -95,12 +95,30 @@ export const textos = {
         'Abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador.',
         'Abra o Studoo e entre com a sua conta, ou experimente sem conta.',
       ],
+      /** No computador, com o cartão do QR ao lado (spec 18, seção 3): os passos falam do celular, e o botão "Baixar para Android" não existe ali. */
+      passosNoComputador: [
+        'Aponte a câmera do Android para o código ao lado.',
+        'Toque no link que aparecer e abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador.',
+        'Abra o Studoo e entre com a sua conta, ou experimente sem conta.',
+      ],
     },
     iphone: {
       aba: 'iPhone',
       testflightPassos: [
         'Instale o TestFlight, o app de testes da Apple, pela App Store.',
         'Toque em “Instalar no iPhone”, nesta página.',
+        'No TestFlight, toque em Instalar e abra o Studoo.',
+      ],
+      /** No computador, antes do TestFlight (spec 18, seção 3): o QR leva o iPhone à página, no Safari, e dali à Tela de Início. */
+      passosNoComputador: [
+        'Aponte a câmera do iPhone para o código ao lado e abra a página no Safari.',
+        'Toque em Compartilhar e escolha “Adicionar à Tela de Início”.',
+        'Toque em Adicionar. O Studoo fica com os seus apps.',
+      ],
+      /** No computador, com o TestFlight (spec 18, seção 3). */
+      testflightPassosNoComputador: [
+        'Instale o TestFlight, o app de testes da Apple, pela App Store.',
+        'Aponte a câmera do iPhone para o código ao lado e toque em “Instalar no iPhone”.',
         'No TestFlight, toque em Instalar e abra o Studoo.',
       ],
     },

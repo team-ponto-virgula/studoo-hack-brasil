@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ehIos, refinarAparelho, type Aparelho } from '../aparelho';
-import { IconeBaixar, IconeCelular, IconeVisto } from '../icones';
+import { IconeBaixar, IconeCelular, IconeCompartilharIos, IconeConfirmarIos, IconeVisto } from '../icones';
 import { textos } from '../textos';
 import { Passos, PassosDoIphone } from './passos';
 import { BotaoVisitante } from './visitante';
@@ -130,7 +130,7 @@ type Aba = 'android' | 'iphone';
  * três passos dele e "Instalar no iPhone"; sem, os três da Tela de Início, "O app para iPhone chega em breve pelo TestFlight." e
  * "Experimentar sem conta".
  */
-export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr }: DadosDeInstalar) {
+export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr, qrIphone = qr }: DadosDeInstalar & { /** O cartão do QR da aba do iPhone (o mesmo, sem o link do arquivo do Android). */ qrIphone?: ReactNode | null }) {
   const aparelho = useAparelho(inicial);
   const { baixando, comoInstalar, aoBaixar } = useBaixando();
   const [aba, setAba] = useState<Aba>(ehIos(inicial) ? 'iphone' : 'android');
@@ -171,6 +171,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
 
   const s4 = textos.s4;
   const comQr = aparelho === 'computador' && qr;
+  const comQrNoIphone = aparelho === 'computador' && qrIphone;
   return (
     <>
       <div className="cn-abas" role="tablist" aria-label={s4.abas}>
@@ -183,7 +184,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
       </div>
 
       <div role="tabpanel" id="cn-painel-android" aria-labelledby="cn-aba-android" hidden={aba !== 'android'} className="cn-painel" tabIndex={0}>
-        <Passos itens={s4.android.passos} />
+        <Passos itens={comQr ? s4.android.passosNoComputador : s4.android.passos} />
         {comQr ? <div className="cn-painel__qr">{qr}</div> : (
           <div className="cn-painel__acao">
             <BotaoAndroid apk={apk} aoBaixar={aoBaixar} baixando={baixando} />
@@ -197,17 +198,22 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
         <span id="iphone" className="cn-ancora" aria-hidden="true" />
         {testflight ? (
           <>
-            <Passos itens={s4.iphone.testflightPassos} />
-            <div className="cn-painel__acao">
-              <a className="botao botao--primario cn-botao-principal" href={testflight} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
-                <IconeBaixar />{textos.acoes.iphoneTestflight.rotulo}
-              </a>
-              <p className="cn-apoio">{textos.acoes.iphoneTestflight.apoio}</p>
-            </div>
+            <Passos itens={comQrNoIphone ? s4.iphone.testflightPassosNoComputador : s4.iphone.testflightPassos} />
+            {comQrNoIphone ? <div className="cn-painel__qr">{qrIphone}</div> : (
+              <div className="cn-painel__acao">
+                <a className="botao botao--primario cn-botao-principal" href={testflight} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
+                  <IconeBaixar />{textos.acoes.iphoneTestflight.rotulo}
+                </a>
+                <p className="cn-apoio">{textos.acoes.iphoneTestflight.apoio}</p>
+              </div>
+            )}
           </>
         ) : (
           <>
-            <PassosDoIphone />
+            {comQrNoIphone
+              ? <Passos itens={s4.iphone.passosNoComputador} icones={[null, <IconeCompartilharIos key="c" />, <IconeConfirmarIos key="o" />]} />
+              : <PassosDoIphone />}
+            {comQrNoIphone && <div className="cn-painel__qr">{qrIphone}</div>}
             <p className="cn-apoio cn-apoio--painel">{textos.acoes.iphoneEmBreve.apoio}</p>
             <div className="cn-painel__acao">
               <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="primario" className="cn-botao-principal" />
