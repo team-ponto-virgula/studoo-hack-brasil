@@ -18,6 +18,9 @@ adb push "$GITHUB_WORKSPACE/apps/mobile/conferencia-nativa/apk-final/regra-dos-t
 adb shell content call --method scan_volume --uri content://media --arg external_primary > /dev/null 2>&1 || true
 adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/regra-dos-tercos.pdf > /dev/null 2>&1 || true
 adb shell ls -l /sdcard/Download/ | tee "$SAIDA/registros/downloads.txt"
+# Tela de 720 × 1560 a 320 dpi (360 × 780 dp), a proporção do celular Android da página de apresentação (Web & API, 24/11).
+adb shell wm size 720x1560
+adb shell wm density 320
 # Barra de status fixa (modo de demonstração do Android), como em android.sh: 9:41, bateria e sinal cheios, sem notificações.
 adb shell settings put global sysui_demo_allowed 1
 for comando in "enter" "clock -e hhmm 0941" "battery -e level 100 -e plugged false" \

@@ -163,6 +163,9 @@ appId: com.studoo.mobile.dev
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: m4-material-fonte
+# O conserto do rótulo (a2e02b4, no site desde 24/11 01:38 UTC): o texto do balão não começa repetindo "O Stu explica:".
+- assertNotVisible:
+    text: "O Stu explica:.*"
 - assertNotVisible:
     text: "Modo demonstração"
 - assertNotVisible:
