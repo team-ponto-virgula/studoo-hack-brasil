@@ -19,16 +19,34 @@
     function guestShare() {
       return {html:title('Compartilhar trilha', 'Entre para compartilhar.', 'Visitantes podem estudar, adicionar trilhas e denunciar. Para compartilhar sua própria trilha, entre com uma conta.') + note('Nenhum conteúdo foi publicado ou enviado por este protótipo.'), foot:foot(btn('Entrar para compartilhar', 'go:entrar'), btn('Voltar à trilha', 'go:mapa', 'quiet')), status:'visitante', hideLink:true};
     }
+    const canShare = () => !isGuest() && getState().sessionActive !== false && api.canShareTrack?.() === true;
+    const usesMaterial = () => api.trackUsesMaterial?.() === true;
+    const destinationAllowed = value => ['link','perfil','explorar'].includes(value) && !(value === 'explorar' && usesMaterial());
+    function ownShareUnavailable() {
+      if (isGuest() || getState().sessionActive === false) return guestShare();
+      return {html:title('Compartilhar trilha','Compartilhe uma trilha criada por você.','Cópias recebidas continuam privadas nos seus estudos.') + note('Você pode estudar e rever esta cópia. Criar uma trilha própria permite preparar um link ou código.'),foot:foot(btn('Voltar aos meus estudos','go:inicio'),btn('Criar minha trilha','go:pedido','quiet')),status:'indisponivel',hideLink:true};
+    }
+    function invalidDestination() {
+      return {html:title('Seu material','Escolha onde compartilhar.','Trilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.')+visibilityChoices()+sharingNotice(),foot:foot(btn('Escolher só com o link','social-recover-link'),btn('Parar de compartilhar','social-stop-publication','quiet'),btn('Voltar à trilha','go:mapa','quiet')),status:'destino-invalido',hideLink:true};
+    }
+    function allowPublication() {
+      if (!canShare()) {notify('Abra uma trilha criada por você para compartilhar.');render(true);return false;}
+      if (!destinationAllowed(getState().visibility)) {notify('Escolha link ou perfil para compartilhar uma trilha criada com material.');render(true);return false;}
+      return true;
+    }
     function sharingNotice() {
       const s=getState();
-      if (!s.file) return note('Compartilhar leva o conteúdo da trilha. Seu progresso, respostas e explicações pessoais não vão junto.');
-      const containsFileName=(s.planTitle || '').toLowerCase().includes(String(s.file).toLowerCase());
-      return note(containsFileName ? 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo e as fotos das páginas não vão. O título desta trilha traz o nome do seu arquivo.' : 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo, o nome dele e as fotos das páginas não vão.');
+      if (!usesMaterial()) return note('Compartilhar leva o conteúdo da trilha. Seu progresso, respostas e explicações pessoais não vão junto.');
+      const name=api.trackMaterialName?.() || '';
+      const containsFileName=!!name && (s.planTitle || '').toLocaleLowerCase('pt-BR').includes(String(name).toLocaleLowerCase('pt-BR'));
+      return note(containsFileName ? 'Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto e fotos das páginas não vão.' : 'Vão junto o título, os trechos citados nas lições e as páginas de referência. Confira o título: ele pode conter o nome do arquivo. Arquivo bruto e fotos das páginas não vão.');
     }
     function setScenario(value) { if (api.setScenario) api.setScenario(value); }
     function setPublication(status) {
+      if (status !== 'retirado' && !allowPublication()) return false;
       getState().publicationStatus = status;
-      save(); setScenario(scenarioFor[status] || ''); render(true);
+      if(status!=='revisar'){delete getState().publicationBeforeReview;delete getState().publicationReviewTrackId;}
+      save(); setScenario(scenarioFor[status] || ''); render(true);return true;
     }
     function draft() {
       const s = getState();
@@ -79,12 +97,14 @@
     function visibilityChoices() {
       const s = getState();
       const options = [['link','Só com o link','Apenas quem receber o link.'],['perfil','No meu perfil','Também aparece no seu perfil público.'],['explorar','No Explorar','Pode ser encontrada pela comunidade.']];
-      return '<div class="publication-visibility" role="group" aria-labelledby="publication-visibility-title"><h2 id="publication-visibility-title">Quem pode ver</h2>' + options.map(([value, label, detail]) => '<button type="button" class="publication-option" data-action="social-visibility-' + value + '" aria-pressed="' + (s.visibility === value) + '"><span class="report-option-mark" aria-hidden="true"></span><span><strong>' + label + '</strong><small>' + detail + '</small></span></button>').join('') + '</div>';
+      return '<div class="publication-visibility" role="group" aria-labelledby="publication-visibility-title"><h2 id="publication-visibility-title">Quem pode ver</h2>' + options.map(([value, label, detail]) => '<button type="button" class="publication-option" data-action="social-visibility-' + value + '" aria-pressed="' + (s.visibility === value) + '" ' + (value === 'explorar' && usesMaterial() ? 'disabled aria-disabled="true"' : '') + '><span class="report-option-mark" aria-hidden="true"></span><span><strong>' + label + '</strong><small>' + (value === 'explorar' && usesMaterial() ? 'Indisponível para trilhas criadas com material.' : detail) + '</small></span></button>').join('') + '</div>';
     }
     function publicationState(scenario) {
       return aliases[scenario] || (['revisar','pendente','erro','recusado','retirado','aprovado'].includes(scenario) ? scenario : getState().publicationStatus || '');
     }
     function publicationNote(scenario) {
+      if (!canShare()) return note('Esta cópia não oferece link nem código para republicação.');
+      if (!destinationAllowed(getState().visibility)) return note('Escolha link ou perfil. Esta trilha de material não é publicada no Explorar.');
       const status = publicationState(scenario), s = getState();
       const messages = {
         pendente:['Em revisão','Em revisão pela equipe do Studoo. Por enquanto, só você vê.'],
@@ -97,14 +117,18 @@
       return s.visibility === 'perfil' || s.visibility === 'explorar' ? '<p class="publication-rules">Ao publicar, você concorda com as <button type="button" data-action="social-rules">Regras da comunidade</button>.</p>' : '';
     }
     function sharingFooter() {
-      if (isGuest()) return guestShare().foot;
+      if (!canShare()) return ownShareUnavailable().foot;
+      if (!destinationAllowed(getState().visibility)) return invalidDestination().foot;
       const s = getState(), status = publicationState(api.getScenario?.());
       if (['pendente','recusado','retirado','erro','revisar'].includes(status)) return publication(api.getScenario?.())?.foot || '';
       return foot(btn(s.visibility === 'link' ? 'Copiar link de exemplo' : 'Revisar publicação de exemplo', s.visibility === 'link' ? 'copy-link' : 'social-review-publication'), btn('Voltar à trilha', 'go:mapa', 'quiet'));
     }
     function publication(scenario) {
       const s = getState(), status = publicationState(scenario);
-      if (isGuest() && !['link-inativo','ja-adicionada'].includes(status)) return guestShare();
+      if (!['link-inativo','ja-adicionada'].includes(status)) {
+        if (!canShare()) return ownShareUnavailable();
+        if (!destinationAllowed(s.visibility)) return invalidDestination();
+      }
       if (!status) return null;
       let html, footer;
       if (status === 'link-inativo') return {
@@ -154,11 +178,12 @@
       },
       'social-block-person':()=>ask('Bloquear Lia?', 'Você deixa de ver as trilhas e o perfil dessa pessoa, e ela deixa de ver os seus no Studoo. Ela não é avisada. Neste protótipo, o efeito é apenas local.', 'Bloquear', ()=>{const s=getState();s.blocked=true;s.followed=false;save();go('explorar');notify('Pessoa bloqueada no exemplo. Você pode desfazer em Segurança.');}, true),
       'social-rules':()=>ask('Regras da comunidade', 'Sem spam, ofensas ou dados pessoais de outras pessoas. Respeite direitos autorais. Trilhas e textos gerados por IA seguem as mesmas regras.', 'Entendi', ()=>{}),
-      'social-review-publication':()=>{const s=getState(),current=publicationState(api.getScenario?.());s.publicationBeforeReview=current==='revisar'?(s.publicationBeforeReview || ''):current;setPublication('revisar');},
-      'social-cancel-publication':()=>{const s=getState();s.publicationStatus=s.publicationBeforeReview || '';save();setScenario(scenarioFor[s.publicationStatus] || '');render(true);},
-      'social-confirm-publication':()=>{if(isGuest()){notify('Entre com uma conta para compartilhar.');render(true);return;}ask('Confirmar este exemplo?', 'Você verá o retorno local da solicitação. Nenhum conteúdo será publicado nem enviado para uma equipe real.', 'Confirmar exemplo', ()=>setPublication(getState().visibility === 'link' ? 'aprovado' : 'pendente'));},
-      'social-retry-publication':()=>{if(isGuest()){notify('Entre com uma conta para compartilhar.');render(true);return;}setPublication('pendente');},
-      'social-save-visibility':()=>{const s=getState(),status=publicationState(api.getScenario?.());if(['pendente','recusado','aprovado'].includes(status))s.publicationStatus=status;save();notify('Visibilidade guardada no exemplo. O estado de revisão não mudou.');},
+      'social-review-publication':()=>{if(!allowPublication())return;const s=getState(),current=s.publicationStatus || '';s.publicationBeforeReview=current==='revisar'?(s.publicationBeforeReview || ''):current;s.publicationReviewTrackId=s.activeTrack;setPublication('revisar');},
+      'social-cancel-publication':()=>{const s=getState();const previous=s.publicationStatus==='revisar'&&s.publicationReviewTrackId===s.activeTrack?s.publicationBeforeReview || '':'';s.publicationStatus=canShare()&&destinationAllowed(s.visibility)?previous:'';delete s.publicationReviewTrackId;delete s.publicationBeforeReview;save();setScenario(scenarioFor[s.publicationStatus] || '');render(true);},
+      'social-confirm-publication':()=>{if(!allowPublication())return;const requestedId=getState().activeTrack,requestedVisibility=getState().visibility;ask('Confirmar este exemplo?', 'Você verá o retorno local da solicitação. Nenhum conteúdo será publicado nem enviado para uma equipe real.', 'Confirmar exemplo', ()=>{if(getState().activeTrack!==requestedId||getState().visibility!==requestedVisibility){notify('A trilha ou o destino mudou. Confira suas escolhas antes de confirmar.');render(true);return;}if(!allowPublication())return;setPublication(requestedVisibility === 'link' ? 'aprovado' : 'pendente');});},
+      'social-retry-publication':()=>{if(!allowPublication())return;setPublication('pendente');},
+      'social-save-visibility':()=>{if(!allowPublication())return;save();notify('Visibilidade guardada no exemplo. O estado de revisão não mudou.');},
+      'social-recover-link':()=>{if(!canShare()){notify('Abra uma trilha criada por você para compartilhar.');render(true);return;}const s=getState();s.visibility='link';s.publicationStatus='';delete s.publicationBeforeReview;delete s.publicationReviewTrackId;save();setScenario('');render(true);notify('Destino alterado para link. Confira antes de compartilhar.');},
       'social-stop-publication':()=>ask('Parar de compartilhar?', 'O link de exemplo ficará inativo. A trilha e o progresso continuam nos seus estudos.', 'Parar de compartilhar', ()=>setPublication('retirado'), true),
       'social-open-added':()=>{
         const s=getState(), name=s.previewTitle || 'SQL sem complicação', id='recebida-'+name.toLowerCase().replace(/[^a-z0-9]/g,'-');
@@ -169,12 +194,12 @@
       }
     };
     Object.keys(reasons).forEach(reason=>{actions['social-reason-'+reason]=()=>{draft().reason=reason;save();render();};});
-    ['link','perfil','explorar'].forEach(value=>{actions['social-visibility-'+value]=()=>{const s=getState(),status=publicationState(api.getScenario?.());s.visibility=value;if(['pendente','recusado','aprovado'].includes(status))s.publicationStatus=status;save();render();};});
+    ['link','perfil','explorar'].forEach(value=>{actions['social-visibility-'+value]=()=>{if(!canShare()){notify('Abra uma trilha criada por você para compartilhar.');render(true);return;}if(!destinationAllowed(value)){notify('Trilhas criadas com material não vão para o Explorar. Escolha link ou perfil.');render(true);return;}const s=getState(),wasInvalid=!destinationAllowed(s.visibility);s.visibility=value;if(wasInvalid){s.publicationStatus='';delete s.publicationBeforeReview;delete s.publicationReviewTrackId;setScenario('');}save();render();};});
     return {
       report, publication, publicationNote, sharingFooter, sharingNotice, actions,
       onInput(event) {if(event.target.id==='report-details'){draft().details=event.target.value.slice(0,500);save();}},
       onChange() {},
-      isLinkHidden(scenario) {return isGuest() || ['revisar','pendente','erro','recusado','retirado','link-inativo','ja-adicionada'].includes(publicationState(scenario));}
+      isLinkHidden(scenario) {return !canShare() || !destinationAllowed(getState().visibility) || ['revisar','pendente','erro','recusado','retirado','link-inativo','ja-adicionada'].includes(publicationState(scenario));}
     };
   };
 }());

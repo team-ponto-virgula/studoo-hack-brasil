@@ -94,7 +94,28 @@
       };
     }
 
+    function codeBlockReason() {
+      const state=api.getState();
+      if(state.isGuest || state.sessionActive===false || api.canShareTrack?.()!==true)return 'own';
+      if(!['link','perfil','explorar'].includes(state.visibility) || (api.trackUsesMaterial?.()===true && state.visibility==='explorar'))return 'destination';
+      const aliases={'publicacao-revisar':'revisar','publicacao-pendente':'pendente','em-revisao':'pendente','publicacao-erro':'erro','publicacao-reprovada':'recusado','publicacao-reprovado':'recusado','reprovado':'recusado','publicacao-recusada':'recusado','publicacao-retirada':'retirado','publicacao-retirado':'retirado','publicacao-aprovada':'aprovado'};
+      const scenario=api.getScenario?.() || '';
+      const status=aliases[scenario] || (['revisar','pendente','erro','recusado','retirado','aprovado','link-inativo','ja-adicionada'].includes(scenario)?scenario:state.publicationStatus || '');
+      return ['revisar','pendente','erro','recusado','retirado','link-inativo','ja-adicionada'].includes(status)?'publication':'';
+    }
+    function codeUnavailable(reason=codeBlockReason()) {
+      const own=reason==='own',destination=reason==='destination';
+      return {html:api.title('Código Studoo',own?'Use uma trilha criada por você.':destination?'Confira onde compartilhar.':'Confira o compartilhamento.',own?'Cópias recebidas não oferecem link ou código para republicação.':destination?'Uma trilha criada com material pode ter link ou aparecer no perfil; ela não vai para o Explorar.':'O código fica indisponível enquanto a publicação está em revisão, recusada ou interrompida.'),foot:footer(api.btn(own?'Voltar aos meus estudos':'Conferir compartilhamento',own?'go:inicio':'go:compartilhar'),api.btn('Voltar à trilha','go:mapa','quiet'))};
+    }
+    function blockCodeAction() {
+      const reason=codeBlockReason();if(!reason)return false;
+      document.querySelectorAll('.media-share-dialog').forEach(dialog=>{dialog.close();dialog.remove();});
+      api.notify(reason==='own'?'Abra uma trilha criada por você para compartilhar.':reason==='destination'?'Escolha link ou perfil para uma trilha criada com material.':'Confira o estado do compartilhamento antes de copiar ou mostrar o código.');
+      api.render(false);return true;
+    }
+
     function makeCode() {
+      if(codeBlockReason())return '';
       if (codeSvg) return codeSvg;
       if (typeof window.qrcode !== 'function') return '';
       const code = window.qrcode(0, 'M');
@@ -112,6 +133,7 @@
     }
 
     function code() {
+      const blocked=codeBlockReason();if(blocked)return codeUnavailable(blocked);
       const state = api.getState();
       const qr = makeCode();
       const html = api.title('Código Studoo', 'Uma trilha para compartilhar.', 'Mostre o código ou envie o link para apresentar sua trilha.') +
@@ -149,13 +171,16 @@
     }
 
     async function copyCodeLink() {
+      if(blockCodeAction())return;
       try {
         if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('ClipboardUnavailable');
         await navigator.clipboard.writeText(exampleLink);
+        if(codeBlockReason())return;
         const status = document.getElementById('media-code-message');
         if (status) status.textContent = 'Link de exemplo copiado.';
         else api.notify('Link de exemplo copiado.');
       } catch (_) {
+        if(blockCodeAction())return;
         const input = document.getElementById('media-code-link');
         if (input) {
           input.focus();
@@ -169,6 +194,7 @@
     }
 
     function shareCode() {
+      if(blockCodeAction())return;
       const dialog = document.createElement('dialog');
       dialog.className = 'dialog media-share-dialog';
       dialog.setAttribute('aria-labelledby', 'media-share-title');
@@ -200,6 +226,7 @@
     }
 
     function downloadCode() {
+      if(blockCodeAction())return;
       const svg = makeCode();
       if (!svg) {
         api.notify('A prévia não está disponível. Use o link de exemplo.');
