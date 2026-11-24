@@ -30,8 +30,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght-latim.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght-latim.woff2" />
       </head>
       <body><AmbienteMovimento /><AmbienteSom /><SegurancaComunidade>{children}</SegurancaComunidade><AmbienteAceiteIa /></body>
     </html>

@@ -1,8 +1,23 @@
+/*
+ * Cada fonte em duas partes (o navegador só baixa a parte que a página usa). A "latim" tem o latim, a pontuação, as setas e TODOS os caracteres
+ * especiais do texto do app (CARACTERES_ESPECIAIS_DO_TEXTO, inclusive o grego e os símbolos da matemática): é a que quase toda página usa, a que o
+ * layout pré-carrega, e tem menos da metade do tamanho. A fonte inteira continua igual e só é baixada para um caractere fora dela (o complemento exato).
+ * As duas continuam variáveis. Geradas de public/marca/*-wght.woff2 pelo subconjunto do HarfBuzz.
+ */
 @font-face {
   font-family: Quicksand;
   src: url('/marca/quicksand-wght.woff2') format('woff2');
   font-display: swap;
   font-weight: 300 700;
+  unicode-range: U+0-1F, U+7F-9F, U+100-130, U+132-151, U+154-2BA, U+2BD-2C5, U+2C7-2D9, U+2DB, U+2DD-392, U+395-39F, U+3A1-3A2, U+3A4-3A8, U+3AA-3B0, U+3B6-3B7, U+3B9-3BA, U+3BD-3BF, U+3C2, U+3C4-3C5, U+3C7-3C8, U+3CA-200F, U+2028-202F, U+203B-2043, U+2045-206F, U+2071-2073, U+207A-207F, U+208A-20AB, U+20AD-2121, U+2123-218F, U+219A-21D1, U+21D3, U+21D5-21FF, U+2201, U+2204-2206, U+220A-220E, U+2210, U+2214-2219, U+221B-221C, U+221F, U+2221-2224, U+2226-2228, U+222C-223B, U+223D-2247, U+2249-225F, U+2262-2263, U+2266-2281, U+2284-22A4, U+22A6-25B2, U+25B4-FFFC, U+FFFE-10FFFF;
+}
+
+@font-face {
+  font-family: Quicksand;
+  src: url('/marca/quicksand-wght-latim.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 300 700;
+  unicode-range: U+20-7E, U+A0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+393-394, U+3A0, U+3A3, U+3A9, U+3B1-3B5, U+3B8, U+3BB-3BC, U+3C0-3C1, U+3C3, U+3C6, U+3C9, U+2010-2027, U+2030-203A, U+2044, U+2070, U+2074-2079, U+2080-2089, U+20AC, U+2122, U+2190-2199, U+21D2, U+21D4, U+2200, U+2202-2203, U+2207-2209, U+220F, U+2211-2213, U+221A, U+221D-221E, U+2220, U+2225, U+2229-222B, U+223C, U+2248, U+2260-2261, U+2264-2265, U+2282-2283, U+22A5, U+25B3, U+FFFD;
 }
 
 @font-face {
@@ -10,6 +25,15 @@
   src: url('/marca/nunito-wght.woff2') format('woff2');
   font-display: swap;
   font-weight: 200 1000;
+  unicode-range: U+0-1F, U+7F-9F, U+100-130, U+132-151, U+154-2BA, U+2BD-2C5, U+2C7-2D9, U+2DB, U+2DD-392, U+395-39F, U+3A1-3A2, U+3A4-3A8, U+3AA-3B0, U+3B6-3B7, U+3B9-3BA, U+3BD-3BF, U+3C2, U+3C4-3C5, U+3C7-3C8, U+3CA-200F, U+2028-202F, U+203B-2043, U+2045-206F, U+2071-2073, U+207A-207F, U+208A-20AB, U+20AD-2121, U+2123-218F, U+219A-21D1, U+21D3, U+21D5-21FF, U+2201, U+2204-2206, U+220A-220E, U+2210, U+2214-2219, U+221B-221C, U+221F, U+2221-2224, U+2226-2228, U+222C-223B, U+223D-2247, U+2249-225F, U+2262-2263, U+2266-2281, U+2284-22A4, U+22A6-25B2, U+25B4-FFFC, U+FFFE-10FFFF;
+}
+
+@font-face {
+  font-family: Nunito;
+  src: url('/marca/nunito-wght-latim.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 200 1000;
+  unicode-range: U+20-7E, U+A0-FF, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+393-394, U+3A0, U+3A3, U+3A9, U+3B1-3B5, U+3B8, U+3BB-3BC, U+3C0-3C1, U+3C3, U+3C6, U+3C9, U+2010-2027, U+2030-203A, U+2044, U+2070, U+2074-2079, U+2080-2089, U+20AC, U+2122, U+2190-2199, U+21D2, U+21D4, U+2200, U+2202-2203, U+2207-2209, U+220F, U+2211-2213, U+221A, U+221D-221E, U+2220, U+2225, U+2229-222B, U+223C, U+2248, U+2260-2261, U+2264-2265, U+2282-2283, U+22A5, U+25B3, U+FFFD;
 }
 
 :root {
