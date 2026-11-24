@@ -48,14 +48,19 @@ node scripts/qa/heroi-troca.mjs --base=http://localhost:3000 [--motor=chromium|w
 
 Amostra a cada 50 ms, por dois ciclos, as opacidades das três telas do celular do herói (`/conheca`) e exige que a soma nunca fique abaixo de 0,95: a troca não pode deixar quadro vazio (a tela que sai fica inteira por baixo até a nova terminar de entrar por cima). Sai com 1 se falhar. Roda com o site no ar, sem banco e sem IA.
 
-## A raiz "/" atrás de um proxy HTTPS
+## A raiz "/" atrás de um proxy HTTPS, com a entrada pela apresentação ligada e desligada
 
 ```sh
 # o site de PRODUÇÃO, numa cópia da worktree (o `next build` apaga o `.next` do `next dev`), ligado em 127.0.0.1
-npm run build && npx next start -p 3000 --hostname 127.0.0.1
-node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3000 [--origem-publica=https://127.0.0.1:3452]
+npm run build && STUDOO_ENTRADA_APRESENTACAO=1 npx next start -p 3000 --hostname 127.0.0.1
+node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3000 --entrada=1 [--origem-publica=https://127.0.0.1:3452]
+# e com a entrada desligada (sem a variável, o padrão):
+npx next start -p 3001 --hostname 127.0.0.1
+node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3001 --entrada=0
 ```
 
-Pede `/` sem sessão, `/` com uma sessão no formato certo e `/conheca` em 8 variações de cabeçalho (sem proxy, `X-Forwarded-Proto` http e https, com o `Host` em `localhost`, em `127.0.0.1` e de fora, com `X-Forwarded-Host` e o conjunto que o Traefik manda). Exige 200 em todos, a página de apresentação sem sessão, o app com sessão, e nenhuma reescrita do proxy do Next (`x-middleware-rewrite`) nem redirecionamento. Sai com 1 se alguma variação falhar. Roda com o site no ar, sem banco e sem IA. `--origem-publica` é o `STUDOO_ORIGEM` do servidor: com `https` o cookie de sessão é o `__Host-studoo-sessao`.
+`STUDOO_ENTRADA_APRESENTACAO` (lida a cada pedido, sem rebuild) decide o que é de quem NÃO tem sessão na raiz: `1`, a página de apresentação; sem a variável (o padrão) ou com outro valor, o redirecionamento ao `/login` (307, `Location: /login`), como era antes da página. Com sessão a raiz abre o app nos dois estados; `/conheca` e `/baixar` ficam sempre no ar.
 
-Guarda o defeito da banca da QA em 8cf17cf: a raiz sem sessão era reescrita para `/conheca` no proxy do Next e, com o Next ligado em 127.0.0.1 e `X-Forwarded-Proto: https`, o Next repassava o pedido a `https://localhost:<porta>/conheca` (o servidor fala http) e dava 500 (`Failed to proxy … EPROTO … wrong version number`). Nesse código, 6 das 8 variações dão 500 e todas passam por reescrita; no atual, a página decide pelo cookie e não há reescrita.
+O roteiro pede `/` sem sessão, `/` com uma sessão no formato certo, `/conheca`, `/baixar` e `/login` em 8 variações de cabeçalho (sem proxy, `X-Forwarded-Proto` http e https, com o `Host` em `localhost`, em `127.0.0.1` e de fora, com `X-Forwarded-Host` e o conjunto que o Traefik manda) e confere o estado dado em `--entrada` (o padrão é o `STUDOO_ENTRADA_APRESENTACAO` do próprio processo): ligada, 200 com a página sem sessão; desligada, 307 para `/login`, sem a página; nos dois, o app com sessão, 200 em `/conheca` e `/login`, 302 em `/baixar` e nenhuma reescrita do proxy do Next (`x-middleware-rewrite`). Sai com 1 se alguma variação falhar. Roda com o site no ar, sem banco e sem IA. `--origem-publica` é o `STUDOO_ORIGEM` do servidor: com `https` o cookie de sessão é o `__Host-studoo-sessao`.
+
+Guarda dois defeitos. (1) A banca da QA em 8cf17cf: a raiz sem sessão era reescrita para `/conheca` no proxy do Next e, com o Next ligado em 127.0.0.1 e `X-Forwarded-Proto: https`, o Next repassava o pedido a `https://localhost:<porta>/conheca` (o servidor fala http) e dava 500 (`Failed to proxy … EPROTO … wrong version number`); nesse código, 6 das 8 variações dão 500 e todas passam por reescrita. (2) O redirecionamento ao `/login` não pode sair do proxy: um `Location` relativo vindo do proxy dá 500 no Next (`ERR_INVALID_URL`) e um absoluto precisaria montar a URL; quem redireciona é a página (`redirect('/login')`, relativo).

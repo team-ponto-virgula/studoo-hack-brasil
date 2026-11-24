@@ -196,3 +196,17 @@ Localmente, `EMAIL=falso` grava o código de recuperação em `.studoo-local/ema
 ## Experimentar sem conta (`STUDOO_VISITANTE=1`)
 
 Atrás de proxy reverso (ex.: Traefik/Dokploy), `STUDOO_VISITANTE=1` exige `STUDOO_PROXY_HTTPS=1` para identificar o endereço real (`x-forwarded-for` / `x-real-ip`); sem isso, todas as requisições compartilham o mesmo balde `loopback`. Os limites por endereço (`STUDOO_LIMITE_VISITANTES_IP`), janela (`STUDOO_JANELA_VISITANTES_MIN`), teto global (`STUDOO_LIMITE_VISITANTES_GLOBAL`), cota de gerações por visitante (`STUDOO_LIMITE_GERACOES_VISITANTE`) e teto diário de gerações de visitantes (`STUDOO_LIMITE_GERACOES_VISITANTES_DIA`) estão documentados em `.env.example`.
+
+
+## Página de apresentação na raiz (`STUDOO_ENTRADA_APRESENTACAO=1`)
+
+A página de apresentação (`/conheca`, spec 18) e o redirecionamento de aparelhos (`/baixar`) ficam sempre no ar. A variável `STUDOO_ENTRADA_APRESENTACAO` só decide o que é de quem **não tem sessão** na raiz `/`, e é lida a cada pedido (ligar ou desligar não pede novo build):
+
+| Variável | `/` sem sessão | `/` com sessão (visitante incluído) |
+|---|---|---|
+| `STUDOO_ENTRADA_APRESENTACAO=1` | a página de apresentação, no próprio `/` | o app |
+| ausente (o padrão) ou qualquer outro valor | vai ao `/login` (307), como era antes da página | o app |
+
+Quem decide é o cookie de sessão (o mesmo formato da API), sem ir ao banco. Atrás de proxy HTTPS (Traefik/Dokploy) nada depende de `X-Forwarded-Proto` nem do `Host`: a raiz nunca é reescrita pelo proxy do Next. O QR do cartão usa `STUDOO_ORIGEM` (HTTPS público) e o botão do Android, `STUDOO_APK_URL` (padrão: o APK do build 4); com `STUDOO_TESTFLIGHT_URL` o iPhone instala pelo TestFlight, e sem ela a página diz que o app para iPhone chega em breve.
+
+Para conferir os dois estados num site de produção (numa cópia, para não apagar o `.next` do `next dev`): `node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3000 --entrada=1` (e `--entrada=0` com a variável desligada). Veja `scripts/qa/LEIA-ME.md`.

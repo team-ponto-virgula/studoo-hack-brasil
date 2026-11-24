@@ -1,6 +1,7 @@
-// A raiz "/" (spec 18 + decisão do Lead): quem não tem sessão vê a página de apresentação; quem tem sessão, visitante incluído, vê o app como sempre. Quem decide é a própria
-// página (src/app/page.tsx), no servidor, só pelo cookie: nada de redirecionamento nem de reescrita no proxy (uma reescrita dependia da URL que o Next monta atrás de um proxy HTTPS,
-// com X-Forwarded-Proto, e podia virar 500 em produção).
+// A raiz "/" (spec 18 + decisão do Lead): quem tem sessão, visitante incluído, vê o app como sempre. Quem não tem sessão vê a página de apresentação SÓ com STUDOO_ENTRADA_APRESENTACAO=1
+// (lida a cada pedido); sem a variável (o padrão) ou com outro valor vai ao /login (307, Location relativo), como era antes da página. A PÁGINA decide pelo cookie e pela variável, no
+// servidor (`redirect('/login')`, sem montar URL nenhuma); o proxy não decide a raiz: nem reescreve (ela dependia da URL que o Next monta atrás de um proxy HTTPS, com X-Forwarded-Proto, e
+// dava 500 em produção) nem redireciona (um Location relativo vindo do proxy dá 500 no Next: ERR_INVALID_URL). "/conheca" e "/baixar" ficam sempre no ar.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,7 +13,7 @@ import { NextRequest } from 'next/server';
 
 register('data:text/javascript,' + encodeURIComponent(`
 export async function resolve(especificador, contexto, proximo) {
-  if (especificador === 'next/navigation') return { url: 'data:text/javascript,' + encodeURIComponent('export const useRouter = () => ({ replace() {}, push() {}, refresh() {}, back() {}, prefetch() {} }); export const usePathname = () => "/"; export const useSearchParams = () => new URLSearchParams(); export const useParams = () => ({}); export const redirect = () => {}; export const notFound = () => {};'), shortCircuit: true };
+  if (especificador === 'next/navigation') return { url: 'data:text/javascript,' + encodeURIComponent('export const useRouter = () => ({ replace() {}, push() {}, refresh() {}, back() {}, prefetch() {} }); export const usePathname = () => "/"; export const useSearchParams = () => new URLSearchParams(); export const useParams = () => ({}); export const redirect = (destino) => { const erro = new Error("NEXT_REDIRECT"); erro.destino = destino; throw erro; }; export const notFound = () => {};'), shortCircuit: true };
   if (especificador === 'next/headers') return { url: 'data:text/javascript,' + encodeURIComponent('export const cookies = async () => ({ get: (nome) => globalThis.__biscoitos?.[nome] === undefined ? undefined : { name: nome, value: globalThis.__biscoitos[nome] } }); export const headers = async () => ({ get: (nome) => globalThis.__cabecalhos?.[nome.toLowerCase()] ?? null });'), shortCircuit: true };
   return proximo(especificador, contexto);
 }
@@ -26,6 +27,7 @@ const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { proxy, config } = await import('../src/proxy.ts');
 const { lerCookieSessao, nomeCookieSessao } = await import('../src/servidor/acesso/origem.ts');
 const { escolherInicio, temCookieDeSessao } = await import('../src/app/conheca/inicio.ts');
+const { entradaPelaApresentacao } = await import('../src/servidor/acesso/entrada-apresentacao.ts');
 const { PaginaVista, PaginaDeApresentacao } = await import('../src/app/conheca/pagina.tsx');
 const { metadadosDaApresentacao, IMAGEM_DE_COMPARTILHAR } = await import('../src/app/conheca/metadados.ts');
 const { APK_PADRAO } = await import('../src/app/conheca/links.ts');
@@ -39,26 +41,80 @@ const comOrigem = async (valor, corpo) => {
   if (valor === undefined) delete process.env.STUDOO_ORIGEM; else process.env.STUDOO_ORIGEM = valor;
   try { return await corpo(); } finally { if (antes === undefined) delete process.env.STUDOO_ORIGEM; else process.env.STUDOO_ORIGEM = antes; }
 };
+const comEntrada = async (valor, corpo) => {
+  const antes = process.env.STUDOO_ENTRADA_APRESENTACAO;
+  if (valor === undefined) delete process.env.STUDOO_ENTRADA_APRESENTACAO; else process.env.STUDOO_ENTRADA_APRESENTACAO = valor;
+  try { return await corpo(); } finally { if (antes === undefined) delete process.env.STUDOO_ENTRADA_APRESENTACAO; else process.env.STUDOO_ENTRADA_APRESENTACAO = antes; }
+};
 const comCookie = async (biscoitos, corpo) => { globalThis.__biscoitos = biscoitos; try { return await corpo(); } finally { delete globalThis.__biscoitos; } };
 
-test('o proxy deixa a raiz passar, com e sem sessão: nem redireciona nem reescreve (atrás de um proxy HTTPS a reescrita podia dar 500)', () => {
-  const variantes = [{}, { 'x-forwarded-proto': 'http' }, { 'x-forwarded-proto': 'https' }, { 'x-forwarded-proto': 'https', host: 'studoo.exemplo.com' }, { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'studoo.exemplo.com' }];
-  for (const cabecalhos of variantes) {
-    for (const cookie of [undefined, `${nomeCookieSessao()}=${TOKEN}`, `${nomeCookieSessao()}=curto`]) {
-      const resposta = proxy(pedido('/', { ...cabecalhos, ...(cookie ? { cookie } : {}) }));
-      const rotulo = `${JSON.stringify(cabecalhos)} ${cookie ? 'com cookie' : 'sem cookie'}`;
-      assert.equal(resposta.status, 200, rotulo);
-      assert.equal(resposta.headers.get('location'), null, `${rotulo}: sem redirecionamento`);
-      assert.equal(resposta.headers.get('x-middleware-rewrite'), null, `${rotulo}: sem reescrita`);
-      assert.equal(resposta.headers.get('x-middleware-next'), '1', rotulo);
-      assert.equal(resposta.headers.get('cache-control'), 'no-store', rotulo);
-      assert.match(resposta.headers.get('content-security-policy') ?? '', /script-src 'self' 'nonce-[^']+'/, `${rotulo}: a página recebe o nonce`);
+const VARIANTES_DE_PROXY = [{}, { 'x-forwarded-proto': 'http' }, { 'x-forwarded-proto': 'https' }, { 'x-forwarded-proto': 'https', host: 'studoo.exemplo.com' }, { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'studoo.exemplo.com' }];
+
+test('entrada LIGADA (=1): o proxy deixa a raiz passar, com e sem sessão: nem redireciona nem reescreve (atrás de um proxy HTTPS a reescrita podia dar 500)', async () => {
+  await comEntrada('1', () => {
+    for (const cabecalhos of VARIANTES_DE_PROXY) {
+      for (const cookie of [undefined, `${nomeCookieSessao()}=${TOKEN}`, `${nomeCookieSessao()}=curto`]) {
+        const resposta = proxy(pedido('/', { ...cabecalhos, ...(cookie ? { cookie } : {}) }));
+        const rotulo = `${JSON.stringify(cabecalhos)} ${cookie ? 'com cookie' : 'sem cookie'}`;
+        assert.equal(resposta.status, 200, rotulo);
+        assert.equal(resposta.headers.get('location'), null, `${rotulo}: sem redirecionamento`);
+        assert.equal(resposta.headers.get('x-middleware-rewrite'), null, `${rotulo}: sem reescrita`);
+        assert.equal(resposta.headers.get('x-middleware-next'), '1', rotulo);
+        assert.equal(resposta.headers.get('cache-control'), 'no-store', rotulo);
+        assert.match(resposta.headers.get('content-security-policy') ?? '', /script-src 'self' 'nonce-[^']+'/, `${rotulo}: a página recebe o nonce`);
+      }
     }
+  });
+});
+
+test('entrada DESLIGADA (sem a variável, 0, true, vazia, " 1", 2): o proxy também deixa a raiz passar (quem leva ao /login é a página, sem reescrita e sem Location montado no proxy)', async () => {
+  for (const valor of [undefined, '0', 'true', '', ' 1', '2', 'sim']) {
+    await comEntrada(valor, () => {
+      for (const cabecalhos of VARIANTES_DE_PROXY) {
+        for (const cookie of [undefined, `${nomeCookieSessao()}=curto`, `${nomeCookieSessao()}=${TOKEN}`]) {
+          const rotulo = `variável ${JSON.stringify(valor)} ${JSON.stringify(cabecalhos)} ${cookie ? 'com cookie' : 'sem cookie'}`;
+          const resposta = proxy(pedido('/', { ...cabecalhos, ...(cookie ? { cookie } : {}) }));
+          assert.equal(resposta.status, 200, rotulo);
+          assert.equal(resposta.headers.get('location'), null, `${rotulo}: o proxy não redireciona`);
+          assert.equal(resposta.headers.get('x-middleware-rewrite'), null, `${rotulo}: sem reescrita`);
+          assert.equal(resposta.headers.get('x-middleware-next'), '1', rotulo);
+        }
+      }
+      // "/conheca" e as outras rotas ficam como eram nos dois estados.
+      for (const caminho of ['/conheca', '/login', '/cadastro', '/privacidade', '/explorar']) {
+        const resposta = proxy(pedido(caminho, { 'x-forwarded-proto': 'https' }));
+        assert.equal(resposta.status, 200, caminho);
+        assert.equal(resposta.headers.get('location'), null, caminho);
+        assert.equal(resposta.headers.get('x-middleware-next'), '1', caminho);
+      }
+    });
   }
+});
+
+test('o proxy não decide a raiz: não reescreve, não redireciona (um Location relativo vindo dele dá 500 no Next) e não lê o cookie nem a variável da entrada', () => {
   const fonte = ler('src/proxy.ts');
-  assert.doesNotMatch(fonte, /NextResponse\.(rewrite|redirect)/, 'o proxy não reescreve nem redireciona');
-  assert.doesNotMatch(fonte, /lerCookieSessao|x-studoo-na-raiz|acesso\/raiz/, 'e não decide a raiz pelo cookie');
+  assert.doesNotMatch(fonte, /NextResponse\.(rewrite|redirect)\b|status: 30\d|Location/, 'o proxy não reescreve nem redireciona');
+  assert.doesNotMatch(fonte, /x-studoo-na-raiz|acesso\/raiz|lerCookieSessao|entradaPelaApresentacao|escolherInicio/, 'nada do cabeçalho antigo, nem do cookie, nem da variável da entrada');
   assert.ok(config.matcher.includes('/') && config.matcher.includes('/conheca'), 'continua cobrindo a raiz (o nonce do CSP) e /conheca');
+});
+
+test('STUDOO_ENTRADA_APRESENTACAO: só o valor "1" liga a entrada, lida a cada pedido; o padrão é desligada', () => {
+  assert.equal(entradaPelaApresentacao({}), false);
+  assert.equal(entradaPelaApresentacao({ STUDOO_ENTRADA_APRESENTACAO: '1' }), true);
+  for (const valor of ['0', '', 'true', 'sim', ' 1', '1 ', '11', 'on']) assert.equal(entradaPelaApresentacao({ STUDOO_ENTRADA_APRESENTACAO: valor }), false, JSON.stringify(valor));
+  // Sem argumento, lê o ambiente do processo a cada chamada (nada de ler uma vez só).
+  const antes = process.env.STUDOO_ENTRADA_APRESENTACAO;
+  try {
+    delete process.env.STUDOO_ENTRADA_APRESENTACAO;
+    assert.equal(entradaPelaApresentacao(), false);
+    process.env.STUDOO_ENTRADA_APRESENTACAO = '1';
+    assert.equal(entradaPelaApresentacao(), true);
+    process.env.STUDOO_ENTRADA_APRESENTACAO = '0';
+    assert.equal(entradaPelaApresentacao(), false);
+  } finally { if (antes === undefined) delete process.env.STUDOO_ENTRADA_APRESENTACAO; else process.env.STUDOO_ENTRADA_APRESENTACAO = antes; }
+  // Está documentada, desligada por padrão.
+  assert.match(ler('.env.example'), /^STUDOO_ENTRADA_APRESENTACAO=0$/m);
+  assert.match(ler('docs/RODAR-LOCALMENTE.md'), /STUDOO_ENTRADA_APRESENTACAO=1/);
 });
 
 test('as outras rotas seguem como eram (login, cadastro, privacidade…)', () => {
@@ -69,28 +125,43 @@ test('as outras rotas seguem como eram (login, cadastro, privacidade…)', () =>
   }
 });
 
-test('"/" escolhe no servidor pelo cookie: sessão → o app (visitante incluído); sem sessão, com cookie torto ou vazio → a página de apresentação, já com "naRaiz"', async () => {
+test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (visitante incluído); sem sessão, com a entrada ligada → a página de apresentação, já com "naRaiz"; desligada → o /login', async () => {
   const nome = nomeCookieSessao();
-  const app = await comCookie({ [nome]: TOKEN }, () => Pagina.default());
-  assert.equal(app.type, Estudo, 'com sessão, o app');
-  for (const biscoitos of [{}, { [nome]: '' }, { [nome]: 'A'.repeat(42) }, { [nome]: 'A'.repeat(44) }, { [nome]: `${'A'.repeat(42)}!` }, { outro: TOKEN }]) {
-    const pagina = await comCookie(biscoitos, () => Pagina.default());
-    assert.equal(pagina.type, PaginaDeApresentacao, `sem sessão válida: ${JSON.stringify(biscoitos)}`);
-    assert.equal(pagina.props.naRaiz, true);
+  const semSessao = [{}, { [nome]: '' }, { [nome]: 'A'.repeat(42) }, { [nome]: 'A'.repeat(44) }, { [nome]: `${'A'.repeat(42)}!` }, { outro: TOKEN }];
+  for (const entrada of ['1', undefined, '0']) {
+    await comEntrada(entrada, async () => {
+      const app = await comCookie({ [nome]: TOKEN }, () => Pagina.default());
+      assert.equal(app.type, Estudo, `com sessão, o app (entrada ${entrada})`);
+    });
   }
-  assert.equal(Pagina.dynamic, 'force-dynamic', 'lê o cookie a cada pedido');
+  await comEntrada('1', async () => {
+    for (const biscoitos of semSessao) {
+      const pagina = await comCookie(biscoitos, () => Pagina.default());
+      assert.equal(pagina.type, PaginaDeApresentacao, `sem sessão válida: ${JSON.stringify(biscoitos)}`);
+      assert.equal(pagina.props.naRaiz, true);
+    }
+  });
+  for (const entrada of [undefined, '0', 'true']) {
+    await comEntrada(entrada, async () => {
+      for (const biscoitos of semSessao) {
+        await assert.rejects(() => comCookie(biscoitos, () => Pagina.default()), (erro) => erro.message === 'NEXT_REDIRECT' && erro.destino === '/login', `sem sessão com a entrada desligada (${entrada}): ${JSON.stringify(biscoitos)}`);
+      }
+    });
+  }
+  assert.equal(Pagina.dynamic, 'force-dynamic', 'lê o cookie e a variável a cada pedido');
   // O cookie com o nome do https (__Host-) vale do mesmo jeito, e o do http não vale no https.
-  await comOrigem('https://studoo.exemplo.test', async () => {
+  await comEntrada('1', () => comOrigem('https://studoo.exemplo.test', async () => {
     assert.equal(nomeCookieSessao(), '__Host-studoo-sessao');
     assert.equal((await comCookie({ '__Host-studoo-sessao': TOKEN }, () => Pagina.default())).type, Estudo);
     assert.equal((await comCookie({ 'studoo-sessao': TOKEN }, () => Pagina.default())).type, PaginaDeApresentacao);
-  });
+  }));
 });
 
 test('a raiz carrega a página de apresentação e o app de forma estática e só decide qual desenha (a "/conheca" continua sem "naRaiz")', () => {
   const fonte = ler('src/app/page.tsx');
-  assert.match(fonte, /escolherInicio\(\(await cookies\(\)\)\.get\(nomeCookieSessao\(\)\)\?\.value\)/);
-  assert.match(fonte, /=== 'app' \? <Estudo \/> : <PaginaDeApresentacao naRaiz \/>/);
+  assert.match(fonte, /escolherInicio\(\(await cookies\(\)\)\.get\(nomeCookieSessao\(\)\)\?\.value, entradaPelaApresentacao\(\)\)/);
+  assert.match(fonte, /if \(inicio === 'login'\) redirect\('\/login'\);/);
+  assert.match(fonte, /inicio === 'app' \? <Estudo \/> : <PaginaDeApresentacao naRaiz \/>/);
   assert.match(ler('src/app/conheca/page.tsx'), /return <PaginaDeApresentacao \/>;/);
 });
 
@@ -102,10 +173,13 @@ test('o cookie conta só no formato da sessão (o mesmo da API e da página): va
     const daApi = lerCookieSessao(pedido('/', valor === '' ? {} : { cookie: `${nomeCookieSessao()}=${valor}` })) !== null;
     assert.equal(daApi, esperado, `API: "${valor}"`);
     assert.equal(temCookieDeSessao(valor), esperado, `página: "${valor}"`);
-    assert.equal(escolherInicio(valor), esperado ? 'app' : 'apresentacao');
+    assert.equal(escolherInicio(valor, true), esperado ? 'app' : 'apresentacao');
+    assert.equal(escolherInicio(valor, false), esperado ? 'app' : 'login', 'com a entrada desligada, quem não tem sessão vai ao login');
   }
-  assert.equal(escolherInicio(undefined), 'apresentacao');
-  assert.equal(escolherInicio(null), 'apresentacao');
+  assert.equal(escolherInicio(undefined, true), 'apresentacao');
+  assert.equal(escolherInicio(null, true), 'apresentacao');
+  assert.equal(escolherInicio(undefined, false), 'login');
+  assert.equal(escolherInicio(null, false), 'login');
 });
 
 test('os metadados da raiz levam a imagem de compartilhar com endereço completo (a convenção só vale em /conheca); em /conheca ela vem da convenção', async () => {
@@ -121,9 +195,11 @@ test('os metadados da raiz levam a imagem de compartilhar com endereço completo
   assert.equal('images' in semImagem.openGraph, false, 'em /conheca a imagem vem da convenção opengraph-image');
   assert.equal('images' in semImagem.twitter, false);
   // Com sessão a raiz não traz metadados da apresentação (vale o do layout, o do app).
-  assert.deepEqual(await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.generateMetadata()), {});
-  const sem = await comCookie({}, () => Pagina.generateMetadata());
+  assert.deepEqual(await comEntrada('1', () => comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.generateMetadata())), {});
+  const sem = await comEntrada('1', () => comCookie({}, () => Pagina.generateMetadata()));
   assert.equal(sem.title, 'Studoo: aprenda qualquer coisa, uma lição por vez');
+  // Com a entrada desligada a raiz vai ao login: não anuncia a página de apresentação.
+  assert.deepEqual(await comEntrada(undefined, () => comCookie({}, () => Pagina.generateMetadata())), {});
 });
 
 const base = { aparelho: 'android', links: { apk: APK_PADRAO, testflight: null }, origem: null, comSessao: false, visitante: true };

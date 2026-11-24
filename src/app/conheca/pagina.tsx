@@ -17,7 +17,7 @@ import { Momentos } from './ilhas/momentos';
 import { Fichas } from './ilhas/fichas';
 import { Revelar } from './ilhas/revelar';
 import { SaidaDoApp } from './ilhas/saida-do-app';
-import { escolherInicio } from './inicio';
+import { temCookieDeSessao } from './inicio';
 import { linksDoSite, tamanhoDoApk, type LinksDoSite } from './links';
 import { origemPublica } from './origem-publica';
 import { svgDoQr } from './qr';
@@ -175,7 +175,7 @@ export async function PaginaDeApresentacao({ naRaiz = false }: { naRaiz?: boolea
       aparelho={detectarAparelho(cabecalhos.get('user-agent'))}
       links={linksDoSite()}
       origem={origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
-      comSessao={escolherInicio(biscoitos.get(nomeCookieSessao())?.value) === 'app'}
+      comSessao={temCookieDeSessao(biscoitos.get(nomeCookieSessao())?.value)}
       visitante={visitanteAtivo()}
       naRaiz={naRaiz}
     />
