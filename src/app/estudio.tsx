@@ -89,19 +89,26 @@ export function MaterialParaTrilha({
   objetivo,
   onProposta,
   mostrarCabeca = true,
+  aoDesconectar,
 }: {
   objetivo: string;
   onProposta: (p: PropostaPlano) => void;
   mostrarCabeca?: boolean;
+  aoDesconectar?: () => void;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
   const [provedorIa, setProvedorIa] = useState<ProvedorIa>('falsa');
+  const [toque, setToque] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const vivo = useRef(true);
+  const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const inputCameraRef = useRef<HTMLInputElement>(null);
+  const acoesMaterialRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     vivo.current = true;
+    setToque(window.matchMedia('(pointer: coarse)').matches);
     void cliente.configuracaoAcesso().then((cfg) => {
       if (vivo.current) setProvedorIa(cfg.ia);
     }).catch(() => undefined);
@@ -109,6 +116,21 @@ export function MaterialParaTrilha({
       vivo.current = false;
     };
   }, []);
+  useEffect(() => {
+    if (!material) return;
+    window.requestAnimationFrame(() => {
+      const el = acoesMaterialRef.current;
+      if (!el) return;
+      const barra = document.querySelector<HTMLElement>('.navegacao-mobile');
+      const alturaBarra = barra && barra.offsetParent !== null ? barra.getBoundingClientRect().height + 24 : 24;
+      const rect = el.getBoundingClientRect();
+      const sobra = rect.bottom - (window.innerHeight - alturaBarra);
+      if (sobra > 0) {
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollBy({ top: sobra + 16, behavior: reduzido ? 'auto' : 'smooth' });
+      }
+    });
+  }, [material]);
   async function executar(tarefa: () => Promise<void>) {
     if (emExecucao.current) return;
     emExecucao.current = true;
@@ -117,6 +139,10 @@ export function MaterialParaTrilha({
     try {
       await tarefa();
     } catch (e) {
+      if (e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+        aoDesconectar?.();
+        return;
+      }
       if (vivo.current) setErro(erroTexto(e));
     } finally {
       emExecucao.current = false;
@@ -156,31 +182,53 @@ export function MaterialParaTrilha({
       <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
-          <label className="estudio-arquivo botao botao--secundario">
+          <Botao
+            variante="secundario"
+            className="estudio-arquivo"
+            disabled={ocupado}
+            onClick={() => inputArquivoRef.current?.click()}
+          >
             {mensagens.inicio.arquivo}
-            <input
-              type="file"
-              accept=".pdf,.docx,.csv,image/jpeg,image/png,image/webp"
-              disabled={ocupado}
-              onChange={(e) => {
-                void selecionar(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-          </label>
-          <label className="estudio-arquivo botao botao--secundario">
-            {mensagens.inicio.camera}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              disabled={ocupado}
-              onChange={(e) => {
-                void selecionar(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-          </label>
+          </Botao>
+          <input
+            ref={inputArquivoRef}
+            className="estudio-arquivo-input"
+            type="file"
+            tabIndex={-1}
+            aria-hidden="true"
+            accept=".pdf,.docx,.csv,image/jpeg,image/png,image/webp"
+            disabled={ocupado}
+            onChange={(e) => {
+              void selecionar(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+          {toque && (
+            <>
+              <Botao
+                variante="secundario"
+                className="estudio-arquivo"
+                disabled={ocupado}
+                onClick={() => inputCameraRef.current?.click()}
+              >
+                {mensagens.inicio.camera}
+              </Botao>
+              <input
+                ref={inputCameraRef}
+                className="estudio-arquivo-input"
+                type="file"
+                tabIndex={-1}
+                aria-hidden="true"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                disabled={ocupado}
+                onChange={(e) => {
+                  void selecionar(e.target.files?.[0]);
+                  e.target.value = '';
+                }}
+              />
+            </>
+          )}
           <Botao
             variante="secundario"
             disabled={ocupado}
@@ -248,7 +296,7 @@ export function MaterialParaTrilha({
               </article>
             ))}
           </div>
-          <div className="estudio-acoes">
+          <div ref={acoesMaterialRef} className="estudio-acoes estudio-acoes--material">
             <Botao
               disabled={ocupado}
               onClick={() =>
@@ -294,6 +342,7 @@ export function ApoioDaLicao({
   aoConcluirPonte,
   aoEnsinar,
   aoAbrirExplique,
+  aoDesconectar,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -311,14 +360,31 @@ export function ApoioDaLicao({
   aoEnsinar?: () => void;
   /** O "Explique" abriu ou fechou: a lição deixa o rodapé só com as ações enquanto ele está aberto. */
   aoAbrirExplique?: (aberto: boolean) => void;
+  /** Sessão encerrada ou inválida (401): redireciona para o login sem mascarar o erro. */
+  aoDesconectar?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
+  const acoesEnsinoRef = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
   const revisaoApoio = useRef(0);
+  function garantirAcoesEnsinoVisiveis() {
+    window.requestAnimationFrame(() => {
+      const el = acoesEnsinoRef.current;
+      if (!el) return;
+      const rodape = document.querySelector<HTMLElement>('.aula-rodape');
+      const alturaRodape = rodape ? rodape.getBoundingClientRect().height : 0;
+      const rect = el.getBoundingClientRect();
+      const limite = window.innerHeight - alturaRodape - 20;
+      if (rect.bottom > limite) {
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollBy({ top: rect.bottom - limite, behavior: reduzido ? 'auto' : 'smooth' });
+      }
+    });
+  }
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
     setApoio(valor);
@@ -502,6 +568,10 @@ export function ApoioDaLicao({
         if (ativo && revisao === revisaoApoio.current) setApoio(x);
       })
       .catch((e) => {
+        if (e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+          aoDesconectar?.();
+          return;
+        }
         if (ativo && revisao === revisaoApoio.current) setErro(erroTexto(e));
       });
     return () => {
@@ -531,6 +601,10 @@ export function ApoioDaLicao({
     try {
       await tarefa();
     } catch (e) {
+      if (e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+        aoDesconectar?.();
+        return;
+      }
       if (vivo.current) setErro(erroTexto(e));
     } finally {
       emExecucao.current = false;
@@ -696,7 +770,9 @@ export function ApoioDaLicao({
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
-          if (!e.currentTarget.open) {
+          if (e.currentTarget.open) {
+            garantirAcoesEnsinoVisiveis();
+          } else {
             if (recorder.current?.state === 'recording') recorder.current.stop();
             controladorVozRef.current?.descartar();
             controladorVozRef.current = null;
@@ -893,6 +969,7 @@ export function ApoioDaLicao({
           rows={5}
           maxLength={3000}
           value={texto}
+          onFocus={garantirAcoesEnsinoVisiveis}
           onChange={(e) => setTexto(e.target.value)}
           disabled={ocupado || gravando || etapaVoz === 'ativa'}
         />
@@ -900,7 +977,7 @@ export function ApoioDaLicao({
           {m.vozDica}
           {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
         </p>
-        <div className="estudio-acoes">
+        <div ref={acoesEnsinoRef} className="estudio-acoes">
           <Botao
             variante="secundario"
             disabled={ocupado || etapaVoz === 'ativa'}

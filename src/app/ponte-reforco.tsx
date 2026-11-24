@@ -68,8 +68,9 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
     if (!ponte) return tentarCarregar();
     if (passo < 3) return setPasso(passo + 1);
     if (repetir) {
-      setResposta('');
       setRepetir(false);
+      setResultado(undefined);
+      setResposta('');
       requestAnimationFrame(() => opcaoInicial.current?.focus());
       return;
     }
@@ -108,13 +109,23 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
               </label>)}
           </fieldset>
         </>}
-        {resultado && <p role="status" className="estudio-retorno-ponte" data-estado={resultado.correta ? 'certa' : 'errada'}>{resultado.feedback}</p>}
-        {erro && <p role="alert" className="campo-erro">{erro}</p>}
       </>}
     </div>
     {origem}
     {!concluida && <Botao variante="texto" onClick={voltar}>{m.ponteVoltarExercicio}</Botao>}
-    <footer ref={rodape} className="reforco__rodape"><Botao variante={concluida ? 'sucesso' : 'primario'}
-      disabled={ocupado || (!ponte && !erro) || (!concluida && passo === 3 && !resposta)} onClick={() => void agir()}>{acao}</Botao></footer>
+    <footer ref={rodape} className="reforco__rodape">
+      <div className="reforco__rodape-conteudo">
+        {ponte && resultado && (
+          <p role="status" aria-live="polite" className="estudio-retorno-ponte reforco__aviso" data-estado={resultado.correta ? 'certa' : 'errada'}>
+            {resultado.feedback}
+          </p>
+        )}
+        {ponte && erro && (
+          <p role="alert" className="campo-erro reforco__aviso">{erro}</p>
+        )}
+        <Botao variante={concluida ? 'sucesso' : 'primario'}
+          disabled={ocupado || (!ponte && !erro) || (!concluida && passo === 3 && !resposta)} onClick={() => void agir()}>{acao}</Botao>
+      </div>
+    </footer>
   </section>;
 }

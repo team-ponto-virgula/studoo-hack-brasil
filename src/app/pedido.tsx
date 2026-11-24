@@ -41,11 +41,12 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  focarCampo = false, porLink }: {
+  focarCampo = false, porLink, aoDesconectar }: {
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
   /** A ação da lista vazia leva diretamente ao campo de objetivo, inclusive no celular. */
   focarCampo?: boolean;
+  aoDesconectar?: () => void;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
@@ -179,7 +180,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         </EstadoErro>
       )}
       <div hidden={modo !== 'material'} className="pedido-material">
-        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} />
+        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} aoDesconectar={aoDesconectar} />
       </div>
       <form hidden={modo !== 'ideia'} className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
         <div className="campo pedido-campo">

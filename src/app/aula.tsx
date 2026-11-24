@@ -214,7 +214,7 @@ export function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: 
   }
 }
 
-export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSuaVez }: {
+export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSuaVez, aoDesconectar }: {
   licao: LicaoDetalhe;
   pendente: string | null;
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
@@ -222,6 +222,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   voltar: () => void;
   /** O "Sua vez" do "Resolva comigo" (spec 15): sem isto, o exemplo fica em texto. */
   responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
+  aoDesconectar?: () => void;
 }) {
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   /**
@@ -819,8 +820,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
                     <span>{licao.materialDe ? mensagens.compartilhar.baseadoMaterialDe(licao.materialDe) : mensagens.estudio.baseadoMaterial}</span>
                     {licao.referencias.map((ref, idx) => (
                       <button key={idx} type="button" className="aula-citacao-marcador"
-                        aria-label={`Ver fonte ${idx + 1} de ${licao.referencias!.length}`}
-                        aria-expanded={citacaoAberta === idx}
+                        aria-label={`Ir para a fonte ${idx + 1}`}
+                        aria-controls="aula-citacao-ativa"
+                        aria-current={citacaoAberta === idx ? 'true' : undefined}
                         onClick={() => {
                           setCitacaoAberta(idx);
                           window.requestAnimationFrame(() => {
@@ -839,7 +841,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside ref={cartaoCitacaoRef} className="aula-citacao" aria-label={licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial} tabIndex={-1}>
+                <aside id="aula-citacao-ativa" ref={cartaoCitacaoRef} className="aula-citacao" aria-label={licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial} tabIndex={-1}>
                   <div className="aula-citacao__topo">
                     <span className="aula-citacao__selo">[{citacaoAberta + 1}] {licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial}</span>
                     <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>
@@ -882,7 +884,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
           ultimaResposta={exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar' ? '' : respostaLegivel(exercicio, resposta)}
           aoVoltarExercicio={tentarDeNovo}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
-          aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
+          aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} aoDesconectar={aoDesconectar} />
       )}
       <footer className="aula-rodape" data-retorno={retorno} data-compacto={compacto || undefined} data-resolva={etapa.tipo === 'exemplo' && resolva.ativo ? '' : undefined}>
         {temAbaixo && (
