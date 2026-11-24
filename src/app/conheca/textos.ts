@@ -1,16 +1,10 @@
-/*
- * Os textos da página de apresentação, exatamente como na spec 18 (docs/specs/18-pagina-de-apresentacao.md, seções 1 e 3).
- * Moram aqui, e não no contrato, porque a página só existe na web (spec 07, P34). Nenhum número, promessa ou depoimento que não
- * foi medido: o único número é o tamanho do APK, medido (links.ts).
- */
-/** O título do herói em frases ("Aprenda qualquer coisa." e "Uma lição por vez."): cada uma numa linha, como pede o Designer (spec 18, seção 10). */
 export function frasesDoTitulo(titulo: string): string[] {
   return titulo.split('. ').map((parte, indice, todas) => (indice < todas.length - 1 ? `${parte}.` : parte));
 }
 
 export const textos = {
   pagina: {
-    titulo: 'Studoo: aprenda qualquer coisa, uma lição por vez',
+    titulo: 'Studoo — Seu assunto. Sua trilha.',
     descricao: 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.',
   },
   pular: 'Pular para o conteúdo',
@@ -18,8 +12,8 @@ export const textos = {
   visitante: 'Experimentar sem conta',
   visitanteIndisponivel: 'Entrar',
   heroi: {
-    titulo: 'Aprenda qualquer coisa. Uma lição por vez.',
-    subtitulo: 'Conte o que quer aprender ou mande uma foto do seu material. O Studoo monta lições curtas e, quando você erra, explica de outro jeito.',
+    titulo: 'Seu assunto. Sua trilha.',
+    subtitulo: 'Escolha um assunto ou mande uma foto do caderno. O Stu transforma o que você traz em lições curtas para praticar.',
     celularRotulo: 'Telas do Studoo: escolher o que aprender, a trilha pronta e uma lição com o acerto',
   },
   acoes: {
@@ -50,7 +44,6 @@ export const textos = {
       apoio: 'Versão de teste pelo TestFlight, o app de testes da Apple.',
     },
     computador: {
-      apoio: 'Para instalar no celular, aponte a câmera para o código.',
       instalarNoCelular: 'Instalar no celular',
     },
   },
@@ -74,12 +67,12 @@ export const textos = {
     fechar: 'Fechar',
   },
   s2: {
-    titulo: 'Como o Studoo ensina',
+    titulo: 'Veja como o Stu ensina',
     momentos: [
-      { titulo: 'Seu material vira lição', linha: 'Mande uma foto, um PDF ou um documento. Cada lição mostra de onde tirou a ideia, com o trecho do seu material.' },
-      { titulo: 'Errou? Tem outro jeito', linha: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.' },
-      { titulo: 'Explique do seu jeito', linha: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que vale revisar.' },
-      { titulo: 'No computador e no celular', linha: 'Com uma conta, a sua trilha é a mesma no site e no app. Você continua de onde parou.' },
+      { escolha: 'Seu material', titulo: 'Seu material vira lição', linha: 'Mande uma foto, um PDF ou um documento. Cada lição mostra de onde tirou a ideia, com o trecho do seu material.' },
+      { escolha: 'Tentar de novo', titulo: 'Errou? Tem outro jeito', linha: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.' },
+      { escolha: 'Ensinar ao Stu', titulo: 'Explique do seu jeito', linha: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que vale revisar.' },
+      { escolha: 'Continuar depois', titulo: 'No computador e no celular', linha: 'Com uma conta, a sua trilha é a mesma no site e no app. Você continua de onde parou.' },
     ],
     selo: 'Progresso salvo agora',
     /** A aba da janela de navegador do momento 4: o nome do site, sem endereço inventado. */
@@ -88,12 +81,11 @@ export const textos = {
     janelaAlt: 'A mesma trilha no site, aberta no navegador do computador',
   },
   s3: {
-    titulo: 'Pode ser qualquer assunto',
-    linha: 'Comece com uma ideia pronta ou escreva a sua.',
+    titulo: 'Comece por um assunto',
     lista: 'Ideias para começar',
   },
   s4: {
-    titulo: 'Instale em 3 passos',
+    titulo: 'Leve o Stu no celular',
     abas: 'Escolha o seu aparelho',
     android: {
       aba: 'Android',

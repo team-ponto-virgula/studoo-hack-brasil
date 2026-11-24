@@ -21,33 +21,34 @@ async function telaEmPng(arquivo: string, largura: number): Promise<string | nul
  */
 export async function imagemDaApresentacao(d: { linhasDoTitulo: readonly string[]; linha: string; telaDoCelular: string; plataforma: "iphone" | "android"; alturaDaTela: number; larguraDaTela: number }) {
   const [marca, desenho, tela] = await Promise.all([carregarLogo(), carregarStu(), telaEmPng(d.telaDoCelular, 560)]);
-  const moldura = 10;
-  const larguraDoCelular = 320;
+  const moldura = 8;
+  const larguraDoCelular = 210;
   const larguraInterna = larguraDoCelular - 2 * moldura;
   const alturaInterna = Math.round((larguraInterna * d.alturaDaTela) / d.larguraDaTela);
   const imagem = await resposta(
-    <div style={{ display: "flex", position: "relative", width: "100%", height: "100%", background: "linear-gradient(180deg, #eaf0ff 0%, #ffffff 100%)", overflow: "hidden" }}>
-      <div style={{ display: "flex", flexDirection: "column", width: 730, padding: "64px 0 0 72px" }}>
+    <div style={{ display: "flex", position: "relative", width: "100%", height: "100%", background: "#fdfdfb", overflow: "hidden" }}>
+      <div style={{ display: "flex", position: "absolute", left: 44, top: 140, width: 490, height: 370, borderRadius: "50%", background: "#e9ecff", transform: "rotate(-12deg)" }} />
+      <div style={{ display: "flex", flexDirection: "column", position: "absolute", left: 600, top: 75, width: 535 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {marca ? <img src={marca} width={213} height={70} alt="" /> : <span style={{ fontFamily: "Quicksand", fontSize: 48, color: "#0b1b5c" }}>studoo</span>}
+        {marca ? <img src={marca} width={166} height={55} alt="" /> : <span style={{ fontFamily: "Quicksand", fontSize: 48, color: "#0b1b5c" }}>studoo</span>}
         <div style={{ display: "flex", flexDirection: "column", marginTop: 52 }}>
-          {d.linhasDoTitulo.map((linhaDoTitulo) => (
-            <span key={linhaDoTitulo} style={{ fontFamily: "Quicksand", fontSize: 58, lineHeight: 1.14, letterSpacing: -1.4, color: "#0b1b5c" }}>{linhaDoTitulo}</span>
+          {d.linhasDoTitulo.map((linhaDoTitulo, indice) => (
+            <span key={linhaDoTitulo} style={{ fontFamily: "Nunito", fontWeight: 800, fontSize: 76, lineHeight: 1.05, letterSpacing: -2, color: indice === 0 ? "#11205a" : "#2858ed" }}>{linhaDoTitulo}</span>
           ))}
         </div>
         <span style={{ marginTop: 30, fontFamily: "Nunito", fontWeight: 700, fontSize: 29, lineHeight: 1.34, color: "#42507a", maxWidth: 610 }}>{d.linha}</span>
       </div>
-      <div style={{ display: "flex", position: "absolute", right: 96, top: 60, width: larguraDoCelular, transform: "rotate(-4deg)", borderRadius: 52, background: "#0b1b5c", padding: moldura, boxShadow: "0 24px 48px rgba(11, 27, 92, 0.22)" }}>
-        <div style={{ display: "flex", position: "relative", width: larguraInterna, height: alturaInterna, borderRadius: 42, overflow: "hidden", background: "#ffffff" }}>
+      <div style={{ display: "flex", position: "absolute", left: 105, top: 85, width: larguraDoCelular, transform: "rotate(-9deg)", borderRadius: 32, background: "#0b1b5c", padding: moldura, boxShadow: "0 24px 48px rgba(11, 27, 92, 0.22)" }}>
+        <div style={{ display: "flex", position: "relative", width: larguraInterna, height: alturaInterna, borderRadius: 25, overflow: "hidden", background: "#ffffff" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {tela && <img src={tela} width={larguraInterna} height={alturaInterna} alt="" />}
           {d.plataforma === "iphone"
-            ? <div style={{ display: "flex", position: "absolute", top: 10, left: "50%", marginLeft: -43, width: 86, height: 22, borderRadius: 12, background: "#0b1b5c" }} />
+            ? <div style={{ display: "flex", position: "absolute", top: 10, left: "50%", marginLeft: -26, width: 52, height: 12, borderRadius: 12, background: "#0b1b5c" }} />
             : <div style={{ display: "flex", position: "absolute", top: 8, left: "50%", marginLeft: -6, width: 12, height: 12, borderRadius: 12, background: "#0b1b5c" }} />}
         </div>
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {desenho && <img src={desenho} width={184} height={179} style={{ position: "absolute", right: 424, bottom: 10 }} alt="" />}
+      {desenho && <img src={desenho} width={282} height={275} style={{ position: "absolute", left: 263, bottom: 103 }} alt="" />}
     </div>,
   );
   const png = await sharp(Buffer.from(await imagem.arrayBuffer())).png({ palette: true, quality: 100, effort: 10, compressionLevel: 9 }).toBuffer();

@@ -35,7 +35,7 @@ export function BotaoVisitante({ ativo, comSessao = false, variante, className =
   const [erro, setErro] = useState<string | null>(null);
   const emEnvio = useRef(false);
   const classe = `botao botao--${variante} ${className}`.trim();
-  if (!ativo && !comSessao) return <Link id={id} className={classe} href="/login">{icone}{rotulo && icone ? rotulo : textos.visitanteIndisponivel}</Link>;
+  if (!ativo && !comSessao) return <Link id={id} className={classe} aria-label={ideia} title={ideia} href="/login">{icone}{rotulo && icone ? rotulo : textos.visitanteIndisponivel}</Link>;
 
   async function entrar() {
     if (emEnvio.current) return;
@@ -57,7 +57,7 @@ export function BotaoVisitante({ ativo, comSessao = false, variante, className =
 
   return (
     <>
-      <button id={id} type="button" className={classe} aria-busy={enviando || undefined} data-enviando={enviando || undefined} onClick={() => void entrar()}>
+      <button id={id} type="button" className={classe} aria-label={ideia} title={ideia} aria-busy={enviando || undefined} data-enviando={enviando || undefined} onClick={() => void entrar()}>
         {icone}{rotulo ?? (comSessao ? textos.cabecalho.abrir : textos.visitante)}
       </button>
       {erro && <p className="cn-erro" role="alert">{textoErro(erro)}</p>}

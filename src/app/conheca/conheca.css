@@ -1,195 +1,135 @@
-/*
- * Página de apresentação do Studoo (spec 18). Tudo com prefixo `cn-` para não esbarrar no resto do site; as cores, as fontes e os botões
- * são os do Studoo (globals.css). Animação só com CSS, e SÓ dentro de `prefers-reduced-motion: no-preference`: com movimento reduzido (ou sem
- * JavaScript) a página mostra tudo inteiro e parado. Nenhuma animação mexe em opacidade ou posição de algo que já está à vista no layout:
- * só `opacity` e `transform`, então nenhum salto de layout.
- */
+/* A apresentação usa apenas os recursos locais da marca. A largura do desenho e a da coluna
+   de leitura são independentes, para que o botão caiba mesmo em celulares pequenos. */
 .cn-pagina {
-  --cn-ceu: #eaf0ff;
-  --cn-margem: 20px;
   --cn-coluna: 1160px;
-  --cn-marinho: #0b1b5c;
-  --cn-borda-cartao: #e1e7fa;
-  /* O número de cada passo e o vão até o texto; o texto dos passos começa depois dos dois (o que fica embaixo dos passos se alinha a ele). A largura do botão principal no computador. */
+  --cn-margem: clamp(18px, 4vw, 60px);
+  --cn-marinho: #11205a;
+  --cn-borda-cartao: #dce1f1;
   --cn-passo-numero: 32px;
   --cn-passo-vao: 14px;
   --cn-botao-principal-computador: 280px;
   position: relative;
   overflow-x: clip;
-  background: var(--fundo);
+  background: #fff;
   color: var(--texto);
 }
-@media (min-width: 600px) { .cn-pagina { --cn-margem: 32px; } }
-@media (min-width: 768px) { .cn-pagina { --cn-margem: 40px; } }
-/* O Studoo instalado na tela de início abre em "/" e, sem sessão, segue direto para a entrada (a ilha `SaidaDoApp` faz o desvio): a página nem aparece. */
 @media (display-mode: standalone) { .cn-pagina[data-na-raiz] { visibility: hidden; } }
-@media (min-width: 1024px) { .cn-pagina { --cn-margem: 64px; } }
-/* Telas largas: a coluna cresce com a tela (e a página toda com ela), até 1360 px. */
-@media (min-width: 1440px) { .cn-pagina { --cn-coluna: 1240px; } }
-@media (min-width: 1800px) { .cn-pagina { --cn-coluna: 1360px; --cn-margem: 80px; } }
-
+.cn-pagina :where(h1, h2, h3, p) { margin: 0; }
 .cn-pagina :where(h1, h2, h3) { text-wrap: balance; }
-.cn-pagina p { max-width: none; }
-
-/* ---------- Cabeçalho: logo, som do site e Entrar ---------- */
+.cn-pagina :where(a, button, input) { touch-action: manipulation; }
+.cn-secao { width: min(calc(100% - 2 * var(--cn-margem)), var(--cn-coluna)); margin-inline: auto; }
+.cn-secao__titulo { font: 850 clamp(2rem, 4.1vw, 3.7rem)/1.08 Nunito, sans-serif; letter-spacing: -.035em; color: var(--cn-marinho); }
+.cn-cabecalho, .cn-rodape, .cn-heroi { padding-inline: max(var(--cn-margem), calc((100% - var(--cn-coluna)) / 2)); }
 .cn-cabecalho {
   position: relative;
   z-index: 4;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 56px;
-  padding: 0 var(--cn-margem);
-  background: var(--cn-ceu);
+  gap: 28px;
+  min-height: 72px;
+  border-bottom: 1px solid #e6e9f4;
+  background: white;
 }
-@media (min-width: 1024px) { .cn-cabecalho { min-height: 72px; } }
-.cn-cabecalho__acoes { display: flex; align-items: center; gap: 4px; }
-.cn-cabecalho .logo-quadro { display: block; }
-.cn-cabecalho .logo { width: 124px; height: auto; }
-.cn-entrar { min-height: 44px; padding-inline: 16px; }
-/* O azul da ação (#2563FF) dá 5,17:1 no branco, mas só 4,27:1 sobre o céu do cabeçalho (#EAF0FF) e 4,47:1 no ponto mais escuro do degradê do herói: os botões de texto da página
-   usam o azul escuro do app (#1D4ED8, --acao-escura: 5,87:1 sobre o céu). */
+.cn-cabecalho .cn-logo img { display: block; width: clamp(105px, 11vw, 133px); height: auto; }
+.cn-menu { display: flex; align-items: center; gap: 26px; margin-inline: auto; }
+.cn-menu a, .cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; color: #4e5876; text-decoration: none; font-size: .95rem; font-weight: 800; }
+.cn-menu a:hover, .cn-rodape__links a:hover { color: var(--acao-escura); text-decoration: underline; text-underline-offset: 4px; }
+.cn-cabecalho__acoes { display: flex; align-items: center; gap: 10px; }
+.cn-cabecalho .cn-entrar { min-height: 44px; padding: 0 21px; background: #fff; border: 1.5px solid var(--cn-borda-cartao); border-radius: 13px; box-shadow: 0 2px 0 var(--cn-borda-cartao); text-decoration: none; }
 .cn-pagina .cn-entrar, .cn-pagina .cn-visitante-texto, .cn-pagina .cn-instalar-celular { color: var(--acao-escura); }
 
-/* ---------- Botões da página ---------- */
-.cn-botao-principal { width: 100%; min-height: 56px; padding-inline: 24px; font-size: 1.0625rem; text-decoration: none; }
-.cn-botao-principal .cn-icone { flex: none; }
-.cn-icone { display: block; flex: none; }
-.cn-visitante-texto { width: 100%; min-height: 48px; }
-.cn-apoio { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 20px; }
-.cn-apoio--instalar { color: var(--texto); }
-.cn-erro { margin: 4px 0 0; color: var(--erro); font-size: 0.875rem; line-height: 20px; font-weight: 700; }
-.cn-pagina .botao[data-enviando] { opacity: 0.7; pointer-events: none; }
-.cn-botao-principal[data-baixando] { background: var(--sucesso); }
-
-/* ---------- Primeira dobra ---------- */
 .cn-heroi {
-  position: relative;
   display: grid;
-  gap: 24px;
-  padding: 24px var(--cn-margem) 0;
-  background: linear-gradient(180deg, var(--cn-ceu) 0%, #fff 82%);
-  overflow: clip;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5.5vw, 95px);
+  padding-block: clamp(28px, 3.8vw, 64px);
+  background: #fdfdfb;
 }
 .cn-heroi:focus { outline: none; }
-.cn-heroi__ceu { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.cn-heroi__ceu .cn-nuvem { position: absolute; width: 104px; height: auto; opacity: 0.95; }
-.cn-heroi__ceu .cn-nuvem--1 { top: 168px; right: -18px; }
-.cn-heroi__ceu .cn-nuvem--2 { top: 520px; left: -28px; width: 88px; }
-.cn-colina {
-  position: absolute;
-  left: -20%;
-  right: -20%;
-  bottom: 0;
-  height: 300px;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: linear-gradient(180deg, #c9e9bb 0%, #e3f4da 62%, #fff 100%);
-}
-.cn-heroi__texto { position: relative; z-index: 1; display: grid; align-content: start; }
-/* No celular o título acompanha a largura (de 28 a 32 px), para cada frase caber numa linha de 360 a 430 px: "Aprenda qualquer coisa." mede 352 px a 32 px. */
-.cn-heroi__titulo { font: 700 clamp(1.75rem, 7.9vw, 2rem)/1.19 Quicksand, sans-serif; letter-spacing: -0.035em; color: var(--texto); }
-/* Uma frase por linha ("Aprenda qualquer coisa." e "Uma lição por vez."), cada uma equilibrada por dentro (spec 18, seção 10). */
+.cn-heroi__texto { min-width: 0; }
+.cn-heroi__titulo { font: 850 clamp(3rem, 5.8vw, 5.5rem)/1.01 Nunito, sans-serif; color: var(--cn-marinho); letter-spacing: -.045em; }
 .cn-heroi__frase { display: block; text-wrap: balance; }
-.cn-heroi__subtitulo { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
-.cn-acoes { margin-top: 24px; display: grid; gap: 8px; }
-.cn-acoes--celular, .cn-acoes--computador { justify-items: stretch; }
-.cn-heroi__palco { position: relative; z-index: 1; display: flex; justify-content: center; align-items: flex-end; margin-top: 8px; }
-.cn-heroi__stu { display: none; }
-@media (max-width: 380px) {
-  .cn-heroi__titulo { font-size: 1.75rem; line-height: 34px; }
-  .cn-heroi__subtitulo { font-size: 1rem; line-height: 24px; }
+.cn-heroi__frase:last-child { color: #2858ed; }
+.cn-heroi__subtitulo { max-width: 41ch; margin-top: 20px; font: 650 clamp(1rem, 1.4vw, 1.23rem)/1.5 Nunito, sans-serif; color: #505e77; }
+.cn-acoes { display: grid; gap: 11px; width: 100%; margin-top: 26px; }
+.cn-acoes--computador, .cn-acoes--celular { max-width: 338px; }
+.cn-pagina .cn-botao-principal, .cn-instalar-celular, .cn-visitante-texto {
+  width: 100%; min-height: 51px; padding-inline: 18px; font: 850 1.02rem/1.22 Nunito, sans-serif; text-decoration: none;
 }
-/* Tablet (de 600 a 1023 px): a ordem do celular, centrada numa coluna de até 560 px, com o título (40 a 48 px, uma frase por linha) e o texto maiores. */
-@media (min-width: 600px) {
-  .cn-heroi { padding-top: 32px; }
-  .cn-heroi__texto { width: 100%; max-width: 560px; margin-inline: auto; text-align: center; }
-  .cn-heroi__titulo { font-size: clamp(2.5rem, 6.3vw, 3rem); line-height: 1.15; }
-  .cn-heroi__subtitulo { margin-top: 16px; font-size: 1.1875rem; line-height: 28px; }
-  .cn-acoes { justify-items: center; }
-  .cn-acoes--celular .cn-botao-principal, .cn-acoes--computador .cn-botao-principal { max-width: 420px; }
-  .cn-acoes--celular .cn-visitante-texto { max-width: 420px; }
-}
-@media (min-width: 768px) {
-  .cn-heroi__subtitulo { font-size: 1.25rem; line-height: 30px; }
-  .cn-heroi__ceu .cn-nuvem--1 { top: 120px; right: 6%; width: 128px; }
-  .cn-heroi__ceu .cn-nuvem--2 { top: 420px; left: 4%; width: 108px; }
-}
-/* O iPad no modo "site para computador" chega como computador e o navegador o corrige depois de carregar: abaixo de 1024 px, as ações do computador já
-   reservam a altura das do iPad (o botão, "Experimentar sem conta" e a linha de apoio), e nada abaixo delas pula na troca. */
-@media (max-width: 1023px) { .cn-acoes--computador[data-lugar='heroi'] { min-height: 140px; align-content: start; } }
-@media (min-width: 1024px) {
-  .cn-heroi {
-    grid-template-columns: minmax(0, 540px) minmax(0, 1fr);
-    column-gap: 48px;
-    align-items: start;
-    max-width: calc(var(--cn-coluna) + 2 * var(--cn-margem));
-    margin-inline: auto;
-    padding: 56px var(--cn-margem) 0;
-    overflow: visible;
-    background: none;
-  }
-  .cn-heroi::before { content: ''; position: absolute; inset: 0 calc(50% - 50vw); z-index: 0; background: linear-gradient(180deg, var(--cn-ceu) 0%, #fff 86%); }
-  .cn-heroi__ceu { inset: 0 calc(50% - 50vw); overflow: hidden; }
-  .cn-heroi__ceu .cn-nuvem--1 { top: 72px; right: 8%; width: 156px; }
-  .cn-heroi__ceu .cn-nuvem--2 { top: 380px; left: 3%; width: 120px; }
-  .cn-colina { left: 36%; right: -6%; height: 230px; }
-  .cn-heroi__texto { max-width: none; margin: 0; text-align: left; }
-  .cn-heroi__titulo { font-size: 3rem; line-height: 1.12; }
-  .cn-heroi__subtitulo { margin-top: 16px; font-size: 1.25rem; line-height: 30px; }
-  .cn-acoes { margin-top: 32px; justify-items: start; }
-  .cn-heroi__palco { justify-content: flex-start; align-self: end; margin-top: 0; gap: 0; }
-  /* De 1024 a 1279 px (iPad deitado, notebook pequeno) não sobra lado para o Stu ao lado do celular: ele aparece a partir de 1280. */
-  .cn-heroi__stu { display: none; order: -1; width: 160px; margin-right: -28px; margin-bottom: 8px; position: relative; z-index: 2; }
-  /* O celular cabe inteiro na primeira dobra: a largura sai da altura da tela (a captura tem 2,17 vezes a largura), entre um mínimo e um máximo por faixa. */
-  .cn-heroi__palco .cn-heroi__celular .cn-celular { --celular: clamp(240px, calc((100svh - 160px) / 2.2), 300px); transform: rotate(-4deg); transform-origin: 50% 100%; }
-}
-/* Tela baixa (notebook): o herói começa mais perto do cabeçalho. */
-@media (min-width: 1024px) and (max-height: 820px) { .cn-heroi { padding-top: 32px; } }
-@media (min-width: 1280px) {
-  .cn-heroi { grid-template-columns: minmax(0, 620px) minmax(0, 1fr); column-gap: 64px; }
-  .cn-heroi__titulo { font-size: 3.5rem; line-height: 64px; }
-  .cn-heroi__stu { display: block; }
-  .cn-heroi__palco .cn-heroi__celular .cn-celular { --celular: clamp(260px, calc((100svh - 180px) / 2.2), 340px); }
-}
-@media (min-width: 1440px) {
-  .cn-heroi { grid-template-columns: minmax(0, 680px) minmax(0, 1fr); column-gap: 72px; padding-top: 72px; }
-  .cn-heroi__titulo { font-size: 3.75rem; line-height: 68px; }
-  .cn-heroi__subtitulo { font-size: 1.375rem; line-height: 34px; }
-  .cn-heroi__palco .cn-heroi__celular .cn-celular { --celular: clamp(280px, calc((100svh - 200px) / 2.2), 380px); }
-}
-@media (min-width: 1440px) and (max-height: 820px) { .cn-heroi { padding-top: 40px; } }
-@media (min-width: 1800px) {
-  .cn-heroi { grid-template-columns: minmax(0, 760px) minmax(0, 1fr); column-gap: 80px; }
-  .cn-heroi__titulo { font-size: 4.25rem; line-height: 76px; }
-  .cn-heroi__subtitulo { font-size: 1.5rem; line-height: 36px; }
-  .cn-heroi__stu { width: 200px; margin-right: -36px; }
-  .cn-heroi__palco .cn-heroi__celular .cn-celular { --celular: clamp(300px, calc((100svh - 220px) / 2.2), 420px); }
-}
+.cn-pagina .cn-botao-principal { border-radius: 15px; }
+.cn-instalar-celular, .cn-visitante-texto { border: 1.5px solid var(--cn-borda-cartao); border-radius: 15px; background: #fff; box-shadow: 0 3px 0 var(--cn-borda-cartao); }
+.cn-botao-principal .cn-icone, .cn-icone { display: block; flex: none; }
+.cn-instalar-celular .cn-icone { width: 19px; height: 19px; }
+.cn-apoio { color: #505e77; font-size: .875rem; line-height: 1.42; }
+/* A reserva segue a mesma fonte e a mesma quebra da ajuda do iPad, inclusive com zoom. */
+.cn-reserva-ipad { visibility: hidden; }
+.cn-apoio--instalar { color: var(--texto); }
+.cn-erro { color: var(--erro); font-size: .9rem; font-weight: 750; }
+.cn-pagina .botao[data-enviando] { opacity: .7; pointer-events: none; }
+.cn-botao-principal[data-baixando] { background: var(--sucesso); }
 
-/* A fileira do computador: "Experimentar sem conta" (principal, 56 px) e, ao lado, o cartão do QR com o topo alinhado ao botão. */
-.cn-acoes--computador .cn-acoes__linha { display: grid; gap: 12px; }
-.cn-acoes--computador .cn-acoes__botoes { display: grid; gap: 8px; }
-.cn-instalar-celular { width: 100%; min-height: 48px; }
-.cn-instalar-celular--sem-qr { display: inline-flex; }
-.cn-qr { display: none; }
-@media (min-width: 1024px) {
-  .cn-acoes--computador .cn-acoes__linha { display: flex; align-items: flex-start; gap: 24px; }
-  .cn-acoes--computador .cn-acoes__botoes { flex: 0 0 auto; min-width: 280px; }
-  .cn-acoes--computador .cn-botao-principal { width: auto; min-width: var(--cn-botao-principal-computador, 280px); max-width: none; }
-  .cn-acoes--computador .cn-instalar-celular--sem-qr { display: none; }
-  .cn-acoes--computador[data-lugar='final'] .cn-instalar-celular--sem-qr { display: inline-flex; }
-  .cn-qr { display: grid; }
-  .cn-acoes--computador .cn-apoio--qr { margin-top: 8px; max-width: 280px; }
-  .cn-acoes--computador[data-lugar='final'] .cn-acoes__linha { justify-content: center; }
-  .cn-acoes--computador[data-lugar='final'] .cn-acoes__botoes { justify-items: center; min-width: 0; }
+/* O palco usa a captura nativa ao lado do Stu oficial. Tudo escala no mesmo quadro. */
+.cn-heroi__palco { position: relative; width: 100%; max-width: min(590px, 74svh); aspect-ratio: 1.28; margin: 0 auto; isolation: isolate; }
+.cn-ilha { position: absolute; inset: 7% 4% 6%; border-radius: 58% 43% 56% 42% / 55% 52% 48% 46%; background-color: #e9ecff; background-image: radial-gradient(#c9d2f7 1.1px, transparent 1.4px); background-size: 13px 13px; transform: rotate(-8deg); }
+.cn-orbita { position: absolute; inset: 22% 1% 17%; border: 2px dashed #aab8ec; border-radius: 50%; transform: rotate(21deg); }
+.cn-heroi__palco .cn-heroi__celular { position: absolute; top: 4%; left: 17%; width: 33%; transform: rotate(-10deg); }
+.cn-heroi__celular .cn-celular { --celular: 100%; border-width: clamp(4px, .55vw, 8px); border-radius: 16% / 7.5%; box-shadow: 5px 8px 0 #bdc9ef, 0 15px 21px #12265b22; }
+.cn-heroi__celular .cn-celular__tela { border-radius: 13% / 6%; }
+.cn-heroi__celular .cn-celular__ilha { top: 1.3%; height: 3.3%; }
+.cn-heroi__celular [data-plataforma='android'] .cn-celular__ilha { top: 1%; width: 3.7%; height: 1.7%; }
+.cn-heroi__stu { position: absolute; z-index: 2; width: 54%; left: 40%; bottom: 7%; transform: rotate(4deg); filter: drop-shadow(0 10px 7px #203a8b24); }
+.cn-heroi__stu img { display: block; width: 100%; height: auto; }
+.cn-satelite { position: absolute; z-index: 3; display: grid; place-items: center; width: 13%; aspect-ratio: 1; border-radius: 28%; }
+.cn-satelite--musica { top: 6%; right: 11%; background: #f1ddff; box-shadow: 2px 5px 0 #b99bdc; transform: rotate(13deg); }
+.cn-satelite--musica svg { width: 68%; height: auto; }
+.cn-satelite--fracao { left: 4%; bottom: 9%; background: #ffedbc; box-shadow: -2px 4px 0 #dfbc6d; transform: rotate(-14deg); }
+.cn-satelite--fracao i { width: 54%; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from -90deg, #f6a435 0 24%, #fff5d7 24% 27%, #f08053 27% 97%, #fff5d7 97%); }
+.cn-faisca { position: absolute; width: 5.8%; aspect-ratio: 1; clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%); }
+.cn-faisca--ouro { top: 10%; left: 4%; background: #ffb63b; }
+.cn-faisca--azul { right: 1%; bottom: 20%; width: 4.2%; background: #7692f9; }
+@media (prefers-reduced-motion: no-preference) {
+  .cn-heroi__stu { animation: cn-aceno 900ms ease-out 1; }
 }
-.cn-apoio--qr { display: none; }
-@media (min-width: 1024px) { .cn-apoio--qr { display: block; } }
-.cn-acoes--computador[data-lugar='final'] .cn-acoes__botoes { justify-items: center; }
+.cn-previa-controle {
+  position: absolute; left: 50%; bottom: -3%; transform: translateX(-50%); display: inline-flex;
+  align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 0 9px; border: 0;
+  background: transparent; color: #354575; cursor: pointer; border-radius: 12px;
+}
+.cn-previa-controle span { display: flex; align-items: center; gap: 4px; }
+.cn-previa-controle i { display: block; width: 6px; height: 6px; border-radius: 99px; background: #9aa8cb; }
+.cn-previa-controle i[data-atual] { width: 15px; background: #3c5192; }
+.cn-previa-controle::after { content: ''; width: 8px; height: 10px; border-inline: 3px solid currentColor; }
+.cn-previa-controle[data-parada]::after { width: 0; border: solid transparent; border-width: 5px 0 5px 8px; border-left-color: currentColor; }
+@media (prefers-reduced-motion: reduce), (scripting: none) { .cn-previa-controle { display: none; } }
+@keyframes cn-aceno { 0% { transform: translateY(6%) rotate(-3deg); } 65% { transform: translateY(-2%) rotate(6deg); } 100% { transform: rotate(4deg); } }
 
+@media (max-width: 739px) {
+  .cn-cabecalho { min-height: 58px; }
+  .cn-menu { display: none; }
+  .cn-cabecalho__acoes { margin-left: auto; }
+  .cn-heroi { grid-template-columns: 1fr; gap: 18px; padding-block: 23px 32px; }
+  .cn-heroi__palco { width: min(100%, 39svh, 360px); }
+  .cn-heroi__texto { text-align: center; }
+  .cn-heroi__titulo { font-size: clamp(2.7rem, 10.8vw, 3.9rem); }
+  .cn-heroi__subtitulo { max-width: 38ch; margin: 12px auto 0; }
+  .cn-heroi .cn-acoes { margin: 18px auto 0; }
+}
+@media (min-width: 740px) and (max-width: 1039px) {
+  .cn-heroi { gap: 28px; padding-block: 50px; }
+  .cn-heroi__titulo { font-size: clamp(3.1rem, 6.3vw, 4.1rem); }
+}
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 560px) {
+  .cn-heroi { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 26px; padding-block: 24px; }
+  .cn-heroi__palco { width: min(100%, 78svh); }
+  .cn-heroi__texto { text-align: left; }
+  .cn-heroi__titulo { font-size: 2.65rem; }
+  .cn-heroi__subtitulo { margin: 10px 0 0; }
+  .cn-heroi .cn-acoes { margin: 16px 0 0; }
+}
 /* O cartão do QR: 196 × 248, borda de 2 px, raio 20. */
 .cn-qr {
+  display: grid;
   width: 196px;
   min-height: 248px;
   box-sizing: border-box;
@@ -236,22 +176,6 @@
 .cn-tela[data-ativa] { opacity: 1; z-index: 2; }
 /* A tela que sai fica INTEIRA e por baixo até a nova terminar de entrar por cima dela: nenhum quadro vazio na troca (a soma das opacidades nunca cai abaixo de 1). */
 .cn-tela[data-saindo] { opacity: 1; z-index: 1; }
-.cn-heroi__celular { position: relative; }
-/* No celular e no tablet o celular do herói cresce com a largura, mas sempre cabe na altura da tela (celular deitado, tablet baixo). */
-.cn-heroi__celular .cn-celular { --celular: min(260px, calc((100svh - 72px) / 2.18)); }
-@media (min-width: 600px) { .cn-heroi__celular .cn-celular { --celular: min(300px, calc((100svh - 72px) / 2.18)); } }
-@media (min-width: 768px) { .cn-heroi__celular .cn-celular { --celular: min(340px, calc((100svh - 72px) / 2.18)); } }
-/* Celular deitado (tela baixa): o herói em duas colunas, o texto à esquerda e o celular à direita, inteiro na altura da tela. */
-@media (orientation: landscape) and (max-height: 520px) and (min-width: 560px) and (max-width: 1023px) {
-  .cn-heroi { grid-template-columns: minmax(0, 1fr) auto; column-gap: 32px; align-items: center; padding: 16px var(--cn-margem) 24px; }
-  .cn-heroi__texto { max-width: none; margin: 0; text-align: left; }
-  .cn-heroi__titulo { font-size: 2rem; line-height: 38px; }
-  .cn-heroi__subtitulo { margin-top: 8px; font-size: 1rem; line-height: 24px; }
-  .cn-acoes { margin-top: 16px; justify-items: start; }
-  .cn-heroi__palco { margin-top: 0; }
-  .cn-heroi__celular .cn-celular { --celular: calc((100svh - 48px) / 2.18); }
-  .cn-colina { left: 40%; right: -10%; height: 160px; }
-}
 
 /* Com movimento reduzido: só a proposta pronta, parada (a segunda captura). */
 @media (prefers-reduced-motion: reduce) {
@@ -264,178 +188,35 @@
 }
 @keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-/* ---------- Seções ---------- */
-.cn-secao { max-width: calc(var(--cn-coluna) + 2 * var(--cn-margem)); margin-inline: auto; padding: 72px var(--cn-margem) 0; }
-@media (min-width: 1024px) { .cn-secao { padding-top: 120px; } }
-.cn-secao__titulo { font: 700 1.75rem/34px Quicksand, sans-serif; letter-spacing: -0.02em; color: var(--texto); }
-@media (min-width: 1024px) { .cn-secao__titulo { font-size: 2.5rem; line-height: 48px; } }
-.cn-secao__linha { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
 
-/* ---------- S2: os quatro momentos ---------- */
-.cn-s2__momentos { display: grid; gap: 56px; margin-top: 32px; }
-.cn-momento { display: grid; gap: 24px; justify-items: center; }
-.cn-momento__texto { width: 100%; max-width: 560px; }
-/* O número do momento: lavanda, e azul no momento que se lê (a ilha Momentos marca data-ativo). A troca de cor não é movimento. */
-.cn-momento__numero { display: inline-grid; place-items: center; width: 32px; height: 32px; margin-bottom: 12px; border-radius: 50%; background: var(--lavanda); color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
-.cn-momento[data-ativo] .cn-momento__numero { background: var(--acao); color: #fff; }
-@media (prefers-reduced-motion: no-preference) { .cn-momento__numero { transition: background-color 200ms linear, color 200ms linear; } }
-.cn-momento__titulo { font: 800 1.25rem/26px Nunito, sans-serif; letter-spacing: 0; color: var(--texto); }
-.cn-momento__linha { margin-top: 8px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
-.cn-momento__visual { position: relative; display: grid; justify-items: center; gap: 16px; width: 100%; }
-.cn-momento__visual .cn-celular { --celular: min(240px, calc((100svh - 96px) / 2.2)); }
-@media (min-width: 600px) {
-  .cn-momento__titulo { font-size: 1.375rem; line-height: 30px; }
-  .cn-momento__linha { font-size: 1.125rem; line-height: 28px; }
+/* Assuntos: cada ficha preenche o pedido com a ideia completa no app. */
+.cn-s3 {
+  width: 100%; padding: 22px max(var(--cn-margem), calc((100% - var(--cn-coluna)) / 2)) 26px;
+  border-block: 1px solid #e1e5f0; background: #fff;
 }
-@media (min-width: 768px) {
-  .cn-s2__momentos { gap: 80px; margin-top: 40px; }
-  .cn-momento__visual .cn-celular { --celular: min(280px, calc((100svh - 96px) / 2.2)); }
-}
-/* Tablet e celular deitado (de 600 a 1023 px): cada momento numa linha, o texto ao lado do celular, alternando os lados; o momento 4 (o site e o app
-   juntos) ocupa a linha toda, centrado. */
-@media (min-width: 600px) and (max-width: 1023px) {
-  .cn-s2 > .cn-secao__titulo { text-align: center; }
-  .cn-s2__momentos { gap: 64px; }
-  .cn-momento { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 40px; align-items: center; justify-items: stretch; }
-  .cn-momento:nth-child(even) .cn-momento__texto { order: 2; }
-  .cn-momento__visual .cn-celular { --celular: min(260px, calc((100svh - 96px) / 2.2)); }
-  .cn-momento[data-momento='4'] { grid-template-columns: minmax(0, 1fr); justify-items: center; row-gap: 28px; text-align: center; }
-  .cn-momento[data-momento='4'] .cn-momento__texto { order: 0; max-width: 520px; }
-  .cn-momento[data-momento='4'] .cn-composto { max-width: 520px; }
-}
-/* Celular deitado: o momento 4 segue as linhas alternadas (o texto à direita) e o site com o app cabe inteiro na altura da tela (o conjunto tem cerca de
-   1,31 vez a largura, mais a barra da janela). */
-@media (orientation: landscape) and (max-height: 520px) and (min-width: 600px) and (max-width: 1023px) {
-  .cn-momento[data-momento='4'] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); justify-items: stretch; text-align: left; }
-  .cn-momento[data-momento='4'] .cn-momento__texto { order: 2; }
-  .cn-momento[data-momento='4'] .cn-composto { max-width: min(520px, calc((100svh - 64px) / 1.31)); }
-}
-.cn-selo-sincronia {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 8px 14px;
-  border: 2px solid var(--cn-borda-cartao);
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgb(11 27 92 / 0.1);
-  color: var(--texto);
-  font-size: 0.875rem;
-  line-height: 20px;
-  font-weight: 800;
-}
-.cn-selo-sincronia__ponto { width: 10px; height: 10px; border-radius: 50%; background: #9aa6c4; transition: background-color 200ms linear; }
-[data-momento='4'][data-sincronizou] .cn-selo-sincronia__ponto { background: var(--sucesso-claro); }
-@media (prefers-reduced-motion: reduce) { .cn-selo-sincronia__ponto { background: var(--sucesso-claro); transition: none; } }
-@media (prefers-reduced-motion: no-preference) {
-  [data-momento='4'][data-sincronizou] .cn-selo-sincronia { animation: cn-pulso 320ms ease-out 1; }
-}
-@keyframes cn-pulso { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-
-/* S2, momento 4: o site (uma janela de navegador desenhada pelo Studoo, com a captura REAL da web) e o app, a mesma trilha. O celular sobe sobre o canto da janela. */
-.cn-composto { position: relative; display: grid; width: 100%; max-width: 440px; margin-inline: auto; }
-.cn-janela { width: 86%; border: 2px solid var(--cn-borda-cartao); border-radius: 14px; background: #fff; box-shadow: 0 16px 36px rgb(11 27 92 / 0.12); overflow: hidden; }
-.cn-janela__barra { display: flex; align-items: flex-end; gap: 14px; height: 34px; padding: 0 12px; background: #e9eefc; }
-.cn-janela__pontos { display: flex; align-items: center; align-self: center; gap: 6px; }
-.cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
-.cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
-.cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
-.cn-momento__visual .cn-composto .cn-celular { --celular: 44%; justify-self: end; margin-top: -22%; z-index: 2; box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
-.cn-momento__visual .cn-composto .cn-selo-sincronia { position: absolute; z-index: 3; left: 0; top: 49%; margin-top: 8px; }
-@media (max-width: 767px) { .cn-momento__visual .cn-composto .cn-selo-sincronia { padding: 6px 12px; font-size: 0.8125rem; } }
-
-/* No computador, com movimento: o celular fica preso à direita e a tela dentro dele troca (300 ms) conforme o texto que cruza o meio. */
-/* No computador o texto de cada momento ganha tamanho de título (Quicksand) e o número cresce. */
-@media (min-width: 1024px) {
-  .cn-momento__numero { width: 40px; height: 40px; margin-bottom: 16px; font-size: 1.125rem; }
-  .cn-momento__titulo { font: 700 1.875rem/38px Quicksand, sans-serif; letter-spacing: -0.02em; }
-  .cn-momento__linha { margin-top: 12px; font-size: 1.1875rem; line-height: 30px; }
-}
-@media (min-width: 1440px) {
-  .cn-momento__titulo { font-size: 2.125rem; line-height: 42px; }
-  .cn-momento__linha { font-size: 1.25rem; line-height: 32px; }
-  .cn-secao__titulo { font-size: 2.75rem; line-height: 54px; }
-}
-@media (min-width: 1800px) { .cn-secao { padding-top: 160px; } }
-@media (min-width: 1024px) {
-  .cn-s2__momentos { margin-top: 56px; gap: 0; }
-  .cn-momento { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 96px; align-items: center; justify-items: stretch; padding-block: 48px; }
-  .cn-momento__visual { justify-items: center; }
-  .cn-momento__visual .cn-celular { --celular: 300px; }
-  .cn-momento__visual--composto { justify-items: end; }
-  .cn-composto { width: min(520px, calc(100% + 100px)); max-width: none; margin-inline: 0; }
-}
-@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
-  .cn-s2__momentos { display: grid; grid-template-columns: minmax(0, 1fr) 420px; column-gap: 96px; align-items: start; }
-  .cn-momento { display: contents; }
-  .cn-momento__texto { grid-column: 1; align-self: center; display: flex; flex-direction: column; justify-content: center; min-height: 72svh; max-width: 520px; }
-  .cn-momento__visual {
-    --celular: clamp(240px, calc((100svh - 120px) * 0.46), 320px);
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    position: sticky;
-    top: calc(50svh - (var(--celular) / 0.46 + 20px) / 2);
-    align-self: start;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .cn-momento__visual .cn-celular { --celular: inherit; width: var(--celular); }
-  .cn-momento .cn-celular__tela { opacity: 0; transition: opacity 300ms linear; }
-  .cn-momento[data-ativo] .cn-celular__tela { opacity: 1; }
-  .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__tela { opacity: 1; }
-  /* As molduras dos momentos 1 a 3 se sobrepõem no mesmo lugar (a moldura não se mexe): só a do primeiro desenha o fundo e a borda; as outras ficam transparentes, para a
-     moldura de um momento de trás não cobrir a tela do momento que está à vista. A ilha (ou o ponto da câmera) é a da plataforma da captura que aparece. */
-  .cn-momento .cn-celular { box-shadow: none; background: transparent; border-color: transparent; }
-  .cn-momento:first-child .cn-celular { background: var(--cn-marinho); border-color: var(--cn-marinho); box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
-  .cn-momento .cn-celular__ilha { opacity: 0; transition: opacity 300ms linear; }
-  .cn-momento[data-ativo] .cn-celular__ilha,
-  .cn-s2__momentos:not(:has([data-ativo])) .cn-momento:first-child .cn-celular__ilha { opacity: 1; }
-  /* O momento 4 não usa o celular preso (que no Chrome continua preso até o fim da grade, e então some): o site e o app aparecem juntos, numa linha comum
-     ao lado do texto, no mesmo instante (300 ms) em que o celular preso dos momentos 1 a 3 sai. */
-  .cn-momento__visual:not(.cn-momento__visual--composto) { transition: opacity 300ms linear; }
-  .cn-s2__momentos:has(.cn-momento[data-momento='4'][data-ativo]) .cn-momento__visual:not(.cn-momento__visual--composto) { opacity: 0; }
-  .cn-momento__visual--composto { grid-row: 4; position: relative; top: auto; align-self: center; pointer-events: auto; justify-items: end; opacity: 0; transition: opacity 300ms linear; }
-  .cn-momento[data-momento='4'][data-ativo] .cn-momento__visual--composto { opacity: 1; }
-  .cn-momento__visual--composto .cn-composto { width: min(560px, calc(100% + 80px + clamp(0px, (100vw - 1024px) * 0.25, 60px))); }
-  .cn-momento[data-momento='4'] .cn-celular__tela { opacity: 1; }
-  .cn-momento[data-momento='4'] .cn-celular { background: var(--cn-marinho); border-color: var(--cn-marinho); }
-  .cn-momento[data-momento='4'] .cn-celular__ilha { opacity: 1; }
-}
-/* Telas largas: o celular preso e a coluna do texto crescem com a tela. */
-@media (min-width: 1440px) and (prefers-reduced-motion: no-preference) {
-  .cn-s2__momentos { grid-template-columns: minmax(0, 1fr) 460px; column-gap: 120px; }
-  .cn-momento__texto { max-width: 560px; }
-  .cn-momento__visual { --celular: clamp(260px, calc((100svh - 120px) * 0.46), 360px); }
-}
-@media (min-width: 1800px) and (prefers-reduced-motion: no-preference) {
-  .cn-momento__visual { --celular: clamp(280px, calc((100svh - 120px) * 0.46), 400px); }
-}
-
-/* ---------- S3: as fichas de ideias ---------- */
-.cn-s3 { display: grid; justify-items: center; text-align: center; }
-.cn-s3__cabeca { display: grid; justify-items: center; }
-.cn-s3 .cn-secao__linha { margin-inline: auto; }
-.cn-s3__stu { width: 96px; min-height: 96px; margin-bottom: 8px; }
-.cn-s3 .cn-fichas { width: 100%; }
-.cn-fichas { margin-top: 28px; }
-.cn-fichas__lista { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.cn-ficha-item { display: block; }
+.cn-s3 .cn-secao__titulo { margin-bottom: 12px; font: 850 1.05rem/1.3 Nunito, sans-serif; letter-spacing: -.02em; }
+.cn-fichas__lista { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 11px; margin: 0; padding: 0; list-style: none; }
+.cn-ficha-item { min-width: 0; --pastel: #eee5ff; --relevo: #c4b2ec; }
+.cn-ficha-item:nth-child(2) { --pastel: #dcf1ff; --relevo: #a5d5f6; }
+.cn-ficha-item:nth-child(3) { --pastel: #ffedd7; --relevo: #f3c593; }
+.cn-ficha-item:nth-child(4) { --pastel: #ffedc3; --relevo: #ebcc8a; }
+.cn-ficha-item:nth-child(5) { --pastel: #e4ecff; --relevo: #b7c8f9; }
+.cn-ficha-item:nth-child(6) { --pastel: #ddf6e9; --relevo: #a9d9c6; }
 .cn-ficha.botao {
-  min-height: 56px;
-  gap: 10px;
-  padding: 8px 20px 8px 14px;
-  border-radius: 999px;
-  border: 2px solid var(--cn-borda-cartao);
-  background: #fff;
-  color: var(--texto);
-  font-size: 1rem;
-  line-height: 22px;
-  font-weight: 800;
-  text-align: left;
-  white-space: nowrap;
+  display: flex; width: 100%; min-width: 0; min-height: 58px; gap: 9px; padding: 7px 10px; justify-content: flex-start;
+  border: 1.5px solid var(--cn-borda-cartao); border-radius: 15px; box-shadow: 0 3px 0 #e3e7f0;
+  background: #fff; color: var(--cn-marinho); font: 850 1rem/1.2 Nunito, sans-serif; text-align: left; text-decoration: none;
 }
-.cn-ficha .mundo-desenho { width: 28px; height: 28px; flex: none; }
+.cn-ficha__icone { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: var(--pastel); box-shadow: 0 2px 0 var(--relevo); }
+.cn-ficha__icone .mundo-desenho { display: block; width: 25px; height: 25px; }
+@media (hover: hover) { .cn-ficha.botao:hover { background: var(--pastel); border-color: var(--relevo); } }
+@media (max-width: 960px) { .cn-fichas__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 540px) {
+  .cn-fichas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .cn-ficha.botao { min-height: 48px; font-size: .93rem; }
+  .cn-ficha__icone { width: 29px; height: 29px; border-radius: 9px; }
+  .cn-ficha__icone .mundo-desenho { width: 21px; height: 21px; }
+}
 @media (prefers-reduced-motion: no-preference) {
   /* As seis entram uma a uma, uma vez, quando a lista chega à tela (a ilha Revelar põe data-oculto e depois data-revelado): 300 ms cada, 60 ms entre elas, subindo 8 px. Só `opacity` e `transform`. */
   .cn-ficha-item { transition: opacity 300ms ease-out, transform 300ms ease-out; }
@@ -447,6 +228,61 @@
   [data-revelar-itens][data-oculto]:not([data-revelado]) > .cn-ficha-item { opacity: 0; transform: translateY(8px); }
 }
 
+
+/* Cada opção do grupo expõe seu artigo. O mesmo painel atende ao toque e às setas do teclado. */
+.cn-s2, .cn-s4 { padding-block: clamp(48px, 7vw, 98px) 0; }
+.cn-escolhas { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; border: 0; padding: 0; }
+.cn-escolha { position: relative; display: block; }
+.cn-escolha input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; margin: 0; }
+.cn-escolha span { display: grid; align-content: center; min-height: 44px; padding: 8px 18px; border: 1.5px solid #d8ddec; border-radius: 100px; color: #495677; font-weight: 850; }
+.cn-escolha input:checked + span { background: var(--cn-marinho); border-color: var(--cn-marinho); color: white; }
+.cn-escolha input:focus-visible + span { outline: 3px solid var(--acao); outline-offset: 3px; }
+.cn-escolha input:hover:not(:checked) + span { background: #f1f4ff; }
+.cn-s2__momentos:has(input[value="1"]:checked) .cn-momento:not([data-momento="1"]),
+.cn-s2__momentos:has(input[value="2"]:checked) .cn-momento:not([data-momento="2"]),
+.cn-s2__momentos:has(input[value="3"]:checked) .cn-momento:not([data-momento="3"]),
+.cn-s2__momentos:has(input[value="4"]:checked) .cn-momento:not([data-momento="4"]) { display: none; }
+.cn-momento {
+  --papel: #eeedff; --halo: #dcd8ff; --tinta: #382b79;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; min-height: 420px;
+  padding: 28px clamp(24px, 6vw, 84px); border-radius: 32px; background: var(--papel);
+}
+.cn-momento[data-momento='2'] { --papel: #fff2cd; --halo: #ffe099; --tinta: #604616; }
+.cn-momento[data-momento='3'] { --papel: #e1f6eb; --halo: #c2e9d2; --tinta: #164d43; }
+.cn-momento[data-momento='4'] { --papel: #e9f1ff; --halo: #cedfff; --tinta: #213d7f; }
+.cn-momento__titulo { max-width: 15ch; font: 850 clamp(1.95rem, 4vw, 3.5rem)/1.08 Nunito, sans-serif; letter-spacing: -.035em; color: var(--tinta); }
+.cn-momento__linha { max-width: 38ch; margin-top: 14px; font: 650 clamp(1rem, 1.45vw, 1.21rem)/1.5 Nunito, sans-serif; color: #3f4d66; }
+.cn-momento__ampliar { display: flex; flex-wrap: wrap; gap: 0 18px; margin-top: 7px; }
+.cn-momento__ampliar a { display: inline-flex; align-items: center; min-height: 44px; font-size: .91rem; font-weight: 850; color: var(--tinta); text-underline-offset: 4px; }
+.cn-momento__visual { position: relative; isolation: isolate; display: grid; place-items: center; }
+.cn-momento__visual::before { content: ''; position: absolute; z-index: -1; width: min(100%, 360px); aspect-ratio: 1.12; border-radius: 46% 54% 53% 47%; background: var(--halo); transform: rotate(-12deg); }
+.cn-momento__visual .cn-celular { --celular: clamp(156px, 16vw, 202px); border-width: 6px; border-radius: 30px; box-shadow: 3px 5px 0 #17225325, 0 12px 22px #19214e15; }
+.cn-momento__visual .cn-celular__tela { border-radius: 24px; }
+.cn-momento__visual .cn-celular__ilha { top: 4px; height: 10px; }
+.cn-momento__visual [data-plataforma='android'] .cn-celular__ilha { width: 6px; height: 6px; }
+.cn-selo-sincronia { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 7px 11px; border-radius: 14px; background: white; box-shadow: 0 3px 9px #16234118; color: var(--cn-marinho); font-size: .8rem; font-weight: 850; }
+.cn-selo-sincronia__ponto { width: 9px; height: 9px; border-radius: 50%; background: #32824e; }
+.cn-composto { position: relative; display: grid; width: 100%; max-width: 440px; margin-inline: auto; }
+.cn-janela { width: 86%; border: 2px solid var(--cn-borda-cartao); border-radius: 14px; background: #fff; box-shadow: 0 16px 36px rgb(11 27 92 / 0.12); overflow: hidden; }
+.cn-janela__barra { display: flex; align-items: flex-end; gap: 14px; height: 34px; padding: 0 12px; background: #e9eefc; }
+.cn-janela__pontos { display: flex; align-items: center; align-self: center; gap: 6px; }
+.cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
+.cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
+.cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
+.cn-momento__visual .cn-composto .cn-celular { --celular: 44%; justify-self: end; margin-top: -22%; z-index: 2; box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
+.cn-momento__visual .cn-composto .cn-selo-sincronia { position: absolute; z-index: 3; left: 0; top: 49%; margin-top: 8px; }
+
+.cn-momento__visual--composto .cn-composto { width: min(100%, 305px); }
+@media (max-width: 639px) {
+  .cn-escolhas { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .cn-escolha span { text-align: center; padding: 6px; font-size: .91rem; }
+  .cn-momento { grid-template-columns: 1fr; padding: 27px 22px; gap: 20px; border-radius: 23px; }
+  .cn-momento__titulo { max-width: none; }
+  .cn-momento__linha { margin-top: 8px; }
+  .cn-momento__visual { min-height: 318px; }
+  .cn-momento__visual .cn-celular { --celular: 148px; }
+  .cn-momento__visual--composto .cn-composto { max-width: 240px; }
+}
 /* ---------- S4: instale em 3 passos ---------- */
 .cn-s4 { scroll-margin-top: 16px; }
 .cn-abas { display: inline-grid; grid-auto-flow: column; gap: 4px; margin-top: 24px; padding: 4px; border-radius: 16px; background: var(--nevoa); border: 2px solid var(--cn-borda-cartao); }
@@ -497,18 +333,32 @@
 .cn-folha__acoes { margin-top: 8px; }
 .cn-folha .folha-fechar .cn-icone { width: 22px; height: 22px; }
 
-/* ---------- S5 e rodapé ---------- */
-.cn-s5 { display: grid; justify-items: center; gap: 20px; text-align: center; padding-bottom: 8px; }
-.cn-s5__stu { width: 160px; min-height: 160px; }
-.cn-s5 .cn-acoes { width: 100%; max-width: 420px; margin-top: 8px; }
-.cn-s5 .cn-apoio { text-align: center; }
-.cn-rodape { display: grid; justify-items: center; gap: 12px; margin-top: 72px; padding: 40px var(--cn-margem) 48px; border-top: 2px solid var(--cn-borda-cartao); background: var(--nevoa); text-align: center; }
-@media (min-width: 1024px) { .cn-rodape { margin-top: 120px; } }
-@media (min-width: 1800px) { .cn-rodape { margin-top: 160px; } }
-.cn-rodape__linha { margin: 0; color: var(--texto2); font-size: 0.9375rem; line-height: 20px; font-weight: 700; }
-.cn-rodape__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; }
-.cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 0.9375rem; line-height: 20px; font-weight: 800; color: var(--acao-escura); text-underline-offset: 3px; }
 
+.cn-s4 { display: grid; justify-items: start; }
+.cn-instalador { width: 100%; margin-top: 22px; padding: 0 clamp(18px, 4vw, 56px) 30px; background: #f6f8fd; border: 1px solid #e3e8f4; border-radius: 26px; }
+.cn-instalador .cn-abas { background: white; }
+.cn-s4 .cn-painel { margin: 24px 0 0; max-width: none; justify-items: start; }
+.cn-instalador .cn-passo__numero, .cn-folha .cn-passo__numero { background: #e0e9ff; }
+.cn-s5 { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; gap: clamp(24px, 6vw, 86px); margin-block: clamp(50px, 7vw, 96px); padding: clamp(30px, 4vw, 55px); border-radius: 32px; background: #173876; color: white; overflow: hidden; }
+.cn-s5::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(#ffffff26 1px, transparent 1.4px); background-size: 18px 18px; }
+.cn-s5__stu { flex: 0 1 225px; min-width: 0; }
+.cn-s5__stu > *, .cn-s5__stu img { display: block; max-width: 100%; height: auto; }
+.cn-s5__convite { max-width: 460px; }
+.cn-s5 .cn-secao__titulo { font-size: clamp(1.9rem, 3.3vw, 3.1rem); color: white; }
+.cn-s5 .cn-botao-principal { background: white; color: #1c46b0; --labio: #a9bee9; }
+.cn-s5 .cn-instalar-celular, .cn-s5 .cn-visitante-texto { background: #173876; border-color: #859dcd; box-shadow: 0 2px 0 #859dcd; color: #fff; }
+.cn-s5 .cn-apoio, .cn-s5 .cn-erro { color: #fff; }
+.cn-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; min-height: 95px; padding-block: 22px; border-top: 1px solid #e3e7f1; }
+.cn-rodape .logo-quadro img { display: block; width: 104px; height: auto; }
+.cn-rodape__linha { font-size: .87rem; font-weight: 700; color: #505e77; }
+.cn-rodape__links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-left: auto; }
+@media (max-width: 639px) {
+  .cn-s5 { flex-direction: column; text-align: center; gap: 12px; padding: 26px 20px 32px; border-radius: 23px; }
+  .cn-s5__stu { flex: none; width: 110px; }
+  .cn-s5 .cn-acoes { margin-inline: auto; }
+  .cn-rodape { column-gap: 15px; }
+  .cn-rodape__links { width: 100%; margin: 0; }
+}
 /* ---------- Entrada de cada seção (20% na tela, uma vez) ---------- */
 @media (prefers-reduced-motion: no-preference) {
   [data-revelar] { transition: opacity 400ms ease-out, transform 400ms ease-out; }

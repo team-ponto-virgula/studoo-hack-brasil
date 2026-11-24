@@ -21,7 +21,7 @@ export function Celular({ children, className = '', rotulo, plataforma = 'iphone
  * densidade da tela, para escolher entre as larguras do AVIF (320, 480 e 640). Em 390 px com tela de 2x, por exemplo, o herói pede 480 e não os 640 de antes.
  */
 export const TAMANHOS = {
-  heroi: '(min-width: 1024px) 320px, (min-width: 768px) 280px, 240px',
+  heroi: '(min-width: 1200px) 175px, (min-width: 740px) 14vw, 110px',
   momento: '(min-width: 1024px) 300px, (min-width: 768px) 260px, 220px',
   celularDoComposto: '(min-width: 1024px) 230px, 180px',
   janela: '(min-width: 1024px) 480px, 380px',

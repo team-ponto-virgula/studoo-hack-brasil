@@ -18,7 +18,7 @@ export const IMAGEM_DE_COMPARTILHAR = '/conheca/opengraph-image';
  */
 export function metadadosDaApresentacao({ imagem = false }: { imagem?: boolean } = {}): Metadata {
   const base = baseDoSite();
-  const imagens = imagem ? [{ url: IMAGEM_DE_COMPARTILHAR, width: 1200, height: 630, alt: 'Studoo: aprenda qualquer coisa, uma lição por vez' }] : undefined;
+  const imagens = imagem ? [{ url: IMAGEM_DE_COMPARTILHAR, width: 1200, height: 630, alt: textos.pagina.titulo }] : undefined;
   return {
     ...(base ? { metadataBase: base } : {}),
     title: textos.pagina.titulo,

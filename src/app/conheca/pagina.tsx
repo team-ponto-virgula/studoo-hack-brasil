@@ -45,16 +45,17 @@ export interface ContextoDaPagina {
   visitante: boolean;
   /** A página está sendo servida em "/" (a raiz de quem não entrou); o app instalado na tela de início segue dela direto para o login. */
   naRaiz?: boolean;
+  /** O Safari do iPad também pode enviar a identificação de um Mac. */
+  podeSerIpad?: boolean;
 }
 
 /** A página já com tudo decidido: pura, sem ler o pedido (por isso se testa com `renderToStaticMarkup`). */
-export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naRaiz = false }: ContextoDaPagina) {
+export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naRaiz = false, podeSerIpad = false }: ContextoDaPagina) {
   const tamanho = tamanhoDoApk(links);
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
   const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
   const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: '/' } : { rotulo: textos.cabecalho.entrar, href: '/login' };
   const telasDoCelular = telasDoHeroi(aparelho);
-  const qrDoHeroi = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-heroi" /> : null;
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
   const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo /> : null;
 
@@ -63,6 +64,11 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
       <a className="pular" href="#conteudo">{textos.pular}</a>
       <header className="cn-cabecalho">
         <LogoDaPagina />
+        <nav className="cn-menu" aria-label="Nesta página">
+          <a href="#assuntos">Assuntos</a>
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#baixar">Instalar</a>
+        </nav>
         <div className="cn-cabecalho__acoes">
           <BotaoSom />
           <Link className="botao botao--texto cn-entrar" href={entrar.href}>{entrar.rotulo}</Link>
@@ -71,36 +77,47 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 
       <main>
         <section id="conteudo" className="cn-heroi" aria-labelledby="cn-titulo-heroi" tabIndex={-1}>
-          <div className="cn-heroi__ceu" aria-hidden="true">
-            <Desenho nome="nuvem" className="cn-nuvem cn-nuvem--1" />
-            <Desenho nome="nuvem" className="cn-nuvem cn-nuvem--2" />
-            <span className="cn-colina" />
+          <div className="cn-heroi__palco">
+            <div className="cn-ilha" aria-hidden="true" />
+            <span className="cn-orbita" aria-hidden="true" />
+            <span className="cn-satelite cn-satelite--musica" aria-hidden="true"><Desenho nome="temaMusica" /></span>
+            <span className="cn-satelite cn-satelite--fracao" aria-hidden="true"><i /></span>
+            <span className="cn-faisca cn-faisca--ouro" aria-hidden="true" />
+            <span className="cn-faisca cn-faisca--azul" aria-hidden="true" />
+            <CelularDoHeroi telas={telasDoCelular} rotulo={textos.heroi.celularRotulo} plataforma={telasDoCelular[0].captura.plataforma} />
+            <div className="cn-heroi__stu" aria-hidden="true">
+              <img src="/marca/stu/stu-acolhida-320.webp"
+                srcSet="/marca/stu/stu-acolhida-192.webp 192w, /marca/stu/stu-acolhida-320.webp 320w, /marca/stu/stu-acolhida-480.webp 480w"
+                sizes="(min-width: 1200px) 300px, (min-width: 740px) 24vw, 175px"
+                width={480} height={468} alt="" decoding="async" draggable={false} />
+            </div>
           </div>
           <div className="cn-heroi__texto">
             <h1 id="cn-titulo-heroi" className="cn-heroi__titulo">
               {frasesDoTitulo(textos.heroi.titulo).map((frase, indice) => <Fragment key={frase}>{indice > 0 && ' '}<span className="cn-heroi__frase">{frase}</span></Fragment>)}
             </h1>
             <p className="cn-heroi__subtitulo">{textos.heroi.subtitulo}</p>
-            <AcoesDeInstalar {...dados} qr={qrDoHeroi} lugar="heroi" />
-          </div>
-          <div className="cn-heroi__palco">
-            <CelularDoHeroi telas={telasDoCelular} rotulo={textos.heroi.celularRotulo} plataforma={telasDoCelular[0].captura.plataforma} />
-            <div className="cn-heroi__stu" aria-hidden="true">
-              <Mascote expressao="stu-acolhida" tamanho={160} decorativo animado="acontecimento" acontecimento={1} ciclos={3} />
-            </div>
+            <AcoesDeInstalar {...dados} lugar="heroi" reservarIpad={podeSerIpad} />
           </div>
         </section>
 
-        <section className="cn-secao cn-s2" aria-labelledby="cn-titulo-s2">
+        <section id="assuntos" className="cn-secao cn-s3" aria-labelledby="cn-titulo-s3">
+          <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
+          <Fichas visitanteAtivo={visitante} comSessao={comSessao} />
+        </section>
+
+        <section id="como-funciona" className="cn-secao cn-s2" aria-labelledby="cn-titulo-s2">
           <h2 id="cn-titulo-s2" className="cn-secao__titulo" data-revelar>{textos.s2.titulo}</h2>
           <Momentos>
             {textos.s2.momentos.map((momento, indice) => (
-              <article key={momento.titulo} className="cn-momento" data-momento={indice + 1} data-revelar>
+              <article key={momento.titulo} className="cn-momento" id={`cn-momento-${indice + 1}`} data-momento={indice + 1} aria-labelledby={`cn-momento-titulo-${indice + 1}`}>
                 <div className="cn-momento__texto">
-                  {/* O número do momento (1 a 4): marca a sequência e acende no momento que se lê. Só desenho: o leitor de tela já tem o título. */}
-                  <span className="cn-momento__numero" aria-hidden="true">{indice + 1}</span>
-                  <h3 className="cn-momento__titulo">{momento.titulo}</h3>
+                  <h3 className="cn-momento__titulo" id={`cn-momento-titulo-${indice + 1}`}>{momento.titulo}</h3>
                   <p className="cn-momento__linha">{momento.linha}</p>
+                  <div className="cn-momento__ampliar">
+                    <a href={MOMENTOS_DO_S2[indice].captura.src2x}>Ampliar tela do app</a>
+                    {indice === 3 && <a href={CAPTURAS['janela-4'].src2x}>Ampliar tela do site</a>}
+                  </div>
                 </div>
                 <div className={`cn-momento__visual${indice === 3 ? ' cn-momento__visual--composto' : ''}`}>
                   {indice === 3 ? (
@@ -123,28 +140,19 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
           </Momentos>
         </section>
 
-        <section className="cn-secao cn-s3" aria-labelledby="cn-titulo-s3">
-          <div className="cn-s3__cabeca" data-revelar>
-            <div className="cn-s3__stu" aria-hidden="true">
-              <Mascote expressao="stu-curioso" tamanho={96} decorativo />
-            </div>
-            <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
-            <p className="cn-secao__linha">{textos.s3.linha}</p>
-          </div>
-          <Fichas visitanteAtivo={visitante} comSessao={comSessao} />
-        </section>
-
         <section id="baixar" className="cn-secao cn-s4" aria-labelledby="cn-titulo-s4" data-revelar>
           <h2 id="cn-titulo-s4" className="cn-secao__titulo">{textos.s4.titulo}</h2>
-          <SecaoInstalar {...dados} qr={qrDoS4} qrIphone={qrDoS4Iphone} />
+          <div className="cn-instalador"><SecaoInstalar {...dados} qr={qrDoS4} qrIphone={qrDoS4Iphone} /></div>
         </section>
 
         <section className="cn-secao cn-s5" aria-labelledby="cn-titulo-s5" data-revelar>
           <div className="cn-s5__stu" aria-hidden="true">
             <Mascote expressao="stu-celebrando" tamanho={160} decorativo animado="uma-vez" />
           </div>
-          <h2 id="cn-titulo-s5" className="cn-secao__titulo">{textos.s5.titulo}</h2>
-          <AcoesDeInstalar {...dados} qr={null} lugar="final" />
+          <div className="cn-s5__convite">
+            <h2 id="cn-titulo-s5" className="cn-secao__titulo">{textos.s5.titulo}</h2>
+            <AcoesDeInstalar {...dados} lugar="final" />
+          </div>
         </section>
       </main>
 
@@ -173,11 +181,13 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 export async function PaginaDeApresentacao({ naRaiz = false }: { naRaiz?: boolean } = {}) {
   const cabecalhos = await headers();
   const biscoitos = await cookies();
+  const agente = cabecalhos.get('user-agent') ?? '';
   // O módulo do visitante abre o cliente do banco ao ser importado: aqui, só na hora do pedido, a página (e o teste dela) não depende do banco.
   const { visitanteAtivo } = await import('@/servidor/acesso/visitante');
   return (
     <PaginaVista
-      aparelho={detectarAparelho(cabecalhos.get('user-agent'))}
+      aparelho={detectarAparelho(agente)}
+      podeSerIpad={/Macintosh/.test(agente)}
       links={linksDoSite()}
       origem={origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
       comSessao={temCookieDeSessao(biscoitos.get(nomeCookieSessao())?.value)}

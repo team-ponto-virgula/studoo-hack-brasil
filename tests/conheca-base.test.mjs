@@ -97,11 +97,11 @@ test('/baixar no Android leva ao APK (o padrão ou o da variável), com 302 e se
   assert.equal(destino(baixar(AGENTES.androidReduzido, { apk: 'http://exemplo.test/inseguro.apk' })), APK_PADRAO, 'link inseguro é ignorado');
 });
 
-test('/baixar no iPhone e no iPad: TestFlight vazio leva à seção do iPhone; preenchido, ao TestFlight', () => {
+test('/baixar usa TestFlight só no iPhone; o iPad sempre abre as instruções da Tela de Início', () => {
   for (const agente of [AGENTES.iphone, AGENTES.ipad]) {
     assert.equal(destino(baixar(agente)), '/conheca#iphone');
     assert.equal(destino(baixar(agente, { testflight: '' })), '/conheca#iphone');
-    assert.equal(destino(baixar(agente, { testflight: 'https://testflight.apple.com/join/ABC123' })), 'https://testflight.apple.com/join/ABC123');
+    assert.equal(destino(baixar(agente, { testflight: 'https://testflight.apple.com/join/ABC123' })), agente === AGENTES.ipad ? '/conheca#iphone' : 'https://testflight.apple.com/join/ABC123');
     assert.equal(destino(baixar(agente, { testflight: 'javascript:alert(1)' })), '/conheca#iphone', 'link inválido vale "em breve"');
     const r = baixar(agente);
     assert.equal(r.status, 302);

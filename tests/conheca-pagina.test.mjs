@@ -24,7 +24,7 @@ const { PaginaVista } = await import('../src/app/conheca/pagina.tsx');
 const { APK_PADRAO } = await import('../src/app/conheca/links.ts');
 const { svgDoQr } = await import('../src/app/conheca/qr.ts');
 const { textos, frasesDoTitulo } = await import('../src/app/conheca/textos.ts');
-const { IDEIAS_DO_S3, iconeDaIdeia } = await import('../src/app/conheca/ideias.ts');
+const { IDEIAS_DO_S3, fichaDaIdeia } = await import('../src/app/conheca/ideias.ts');
 const { iconesDosTemas } = await import('../src/app/pedido.tsx');
 const { mensagens } = await import('../src/mensagens/pt-BR.ts');
 const { foraDoSafariNoIphone } = await import('../src/app/conheca/ilhas/folha-iphone.tsx');
@@ -52,12 +52,12 @@ test('a página tem o título do herói, o subtítulo da spec, um só h1 e a ord
   assert.match(texto(html), /Com uma conta, a sua trilha é a mesma no site e no app\./, 'o momento 4 diz "com uma conta": o progresso do visitante fica só no aparelho dele');
 });
 
-test('o título do herói é uma frase por linha ("Aprenda qualquer coisa." e "Uma lição por vez."), cada uma equilibrada por dentro, e continua lendo-se como uma frase só', () => {
+test('o título do herói é uma frase por linha ("Seu assunto." e "Sua trilha."), cada uma equilibrada por dentro, e continua lendo-se como uma frase só', () => {
   const html = desenhar({ aparelho: 'android' });
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1];
-  assert.equal(h1, '<span class="cn-heroi__frase">Aprenda qualquer coisa.</span> <span class="cn-heroi__frase">Uma lição por vez.</span>', 'duas frases, com um espaço entre elas para o leitor de tela e a cópia do texto');
+  assert.equal(h1, '<span class="cn-heroi__frase">Seu assunto.</span> <span class="cn-heroi__frase">Sua trilha.</span>', 'duas frases, com um espaço entre elas para o leitor de tela e a cópia do texto');
   assert.equal(texto(h1).trim(), textos.heroi.titulo);
-  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Aprenda qualquer coisa.', 'Uma lição por vez.']);
+  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Seu assunto.', 'Sua trilha.']);
   assert.match(ler('src/app/conheca/conheca.css'), /\.cn-heroi__frase \{ display: block; text-wrap: balance; \}/);
 });
 
@@ -118,18 +118,27 @@ test('iPad: o app nativo é só de iPhone, então o caminho é sempre a Tela de 
     assert.deepEqual(abas, ['Android', 'iPad']);
     assert.doesNotMatch(html, /testflight\.apple\.com/);
   }
+  const desktopPossivelIpad = desenhar({ podeSerIpad: true });
+  assert.ok(desktopPossivelIpad.includes(`class="cn-apoio cn-reserva-ipad" aria-hidden="true">${textos.acoes.ipad.apoio}</p>`));
+  assert.doesNotMatch(desenhar(), /cn-reserva-ipad/);
+  assert.doesNotMatch(desenhar({ aparelho: 'ipad', podeSerIpad: true }), /cn-reserva-ipad/);
   assert.equal(textos.folhaIphone.tituloIpad, 'Use o Studoo no iPad hoje');
   assert.match(ler('src/app/conheca/ilhas/folha-iphone.tsx'), /\{ipad \? t\.tituloIpad : t\.titulo\}/);
   assert.match(ler('apps/mobile/app.json'), /"supportsTablet": false/, 'se o app nativo passar a ter iPad, o caminho do iPad volta a seguir o do iPhone');
 });
 
-test('S2: cada momento leva o seu número (1 a 4), só desenho (aria-hidden), e o número acende no momento que se lê (troca de cor só no bloco "com movimento")', () => {
+test('o seletor oferece quatro escolhas no mesmo grupo, cada uma ligada ao respectivo artigo; o material já vem selecionado', () => {
   const html = desenhar();
-  const numeros = [...html.matchAll(/<span class="cn-momento__numero" aria-hidden="true">(\d)<\/span>/g)].map((m) => m[1]);
-  assert.deepEqual(numeros, ['1', '2', '3', '4']);
-  const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-momento\[data-ativo\] \.cn-momento__numero \{ background: var\(--acao\); color: #fff; \}/);
-  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{ \.cn-momento__numero \{ transition: background-color 200ms linear, color 200ms linear; \} \}/);
+  const grupo = html.match(/<fieldset class="cn-escolhas">([\s\S]*?)<\/fieldset>/)[1];
+  const opcoes = [...grupo.matchAll(/<input[^>]*type="radio"[^>]*>/g)].map(([opcao]) => opcao);
+  assert.equal(opcoes.length, textos.s2.momentos.length);
+  for (const [indice, opcao] of opcoes.entries()) {
+    const id = `cn-momento-${indice + 1}`;
+    assert.ok(opcao.includes('name="cn-momento"') && opcao.includes(`aria-controls="${id}"`));
+    assert.ok(html.includes(`<article class="cn-momento" id="${id}"`));
+    assert.equal(opcao.includes('checked=""'), indice === 0);
+    assert.ok(grupo.includes(textos.s2.momentos[indice].escolha));
+  }
 });
 
 test('fontes: cada família em duas partes complementares (o latim, pré-carregado e com menos de 60% do tamanho, e a fonte inteira para o resto), e o latim tem todos os caracteres especiais do texto do app', async () => {
@@ -146,7 +155,7 @@ test('fontes: cada família em duas partes complementares (o latim, pré-carrega
     let proximo = 0;
     for (const [a, b] of todas) { assert.equal(a, proximo, `${familia}: sem buraco nem sobreposição em U+${a.toString(16)}`); proximo = b + 1; }
     assert.equal(proximo, 0x110000, 'as duas partes cobrem todos os pontos de código');
-    for (const ch of CARACTERES_ESPECIAIS_DO_TEXTO + 'Aprenda qualquer coisa. Uma lição por vez. “—…”ÁÉÍÓÚÂÊÔÃÕÇàáâãéêíóôõúüç→') assert.ok(cobre(latim, ch.codePointAt(0)), `${ch} no latim`);
+    for (const ch of CARACTERES_ESPECIAIS_DO_TEXTO + 'Seu assunto. Sua trilha. “—…”ÁÉÍÓÚÂÊÔÃÕÇàáâãéêíóôõúüç→') assert.ok(cobre(latim, ch.codePointAt(0)), `${ch} no latim`);
     const inteiraBytes = statSync(join(raiz, 'public/marca', `${nome}.woff2`)).size;
     const latimBytes = statSync(join(raiz, 'public/marca', `${nome}-latim.woff2`)).size;
     assert.ok(latimBytes < inteiraBytes * 0.6, `${nome}: ${latimBytes} de ${inteiraBytes} bytes`);
@@ -157,33 +166,30 @@ test('fontes: cada família em duas partes complementares (o latim, pré-carrega
   assert.doesNotMatch(layout, /href="\/marca\/(nunito|quicksand)-wght\.woff2"/, 'a fonte inteira não é pré-carregada');
 });
 
-test('responsivo: o celular com uma frase por linha, o tablet centrado e com título maior, o celular deitado em duas colunas, celulares desenhados que cabem na altura da tela e o computador que cresce com a tela', () => {
-  const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-heroi__titulo \{ font: 700 clamp\(1\.75rem, 7\.9vw, 2rem\)\/1\.19 Quicksand/, 'no celular cada frase do título cabe numa linha de 360 a 430 px');
-  assert.match(css, /@media \(min-width: 600px\) \{\n  \.cn-heroi \{ padding-top: 32px; \}\n  \.cn-heroi__texto \{ width: 100%; max-width: 560px; margin-inline: auto; text-align: center; \}/, 'o tablet centra a primeira dobra');
-  assert.match(css, /@media \(orientation: landscape\) and \(max-height: 520px\) and \(min-width: 560px\) and \(max-width: 1023px\) \{\n  \.cn-heroi \{ grid-template-columns: minmax\(0, 1fr\) auto;/, 'celular deitado: o herói em duas colunas');
-  assert.match(css, /\.cn-heroi__celular \.cn-celular \{ --celular: min\(260px, calc\(\(100svh - 72px\) \/ 2\.18\)\); \}/, 'o celular do herói cabe na altura da tela');
-  assert.match(css, /\.cn-momento__visual \.cn-celular \{ --celular: min\(240px, calc\(\(100svh - 96px\) \/ 2\.2\)\); \}/);
-  assert.match(css, /\.cn-momento:nth-child\(even\) \.cn-momento__texto \{ order: 2; \}/, 'tablet: linhas alternadas');
-  assert.match(css, /\.cn-heroi__palco \.cn-heroi__celular \.cn-celular \{ --celular: clamp\(240px, calc\(\(100svh - 160px\) \/ 2\.2\), 300px\);/, 'computador: o celular cabe inteiro na primeira dobra');
-  assert.match(css, /@media \(min-width: 1800px\) \{ \.cn-pagina \{ --cn-coluna: 1360px; --cn-margem: 80px; \} \}/, 'telas largas: a coluna cresce');
-  assert.match(css, /@media \(max-width: 1023px\) \{ \.cn-acoes--computador\[data-lugar='heroi'\] \{ min-height: 140px; align-content: start; \} \}/, 'o iPad corrigido no navegador não faz a página pular');
+test('a navegação leva às seções na ordem em que a pessoa as encontra depois do convite', () => {
+  const html = desenhar();
+  const ids = [...html.matchAll(/<section id="([^"]+)"/g)].map(([, id]) => id);
+  assert.deepEqual(ids, ['conteudo', 'assuntos', 'como-funciona', 'baixar']);
+  const menu = html.match(/<nav class="cn-menu"[^>]*>([\s\S]*?)<\/nav>/)[1];
+  for (const id of ids.slice(1)) assert.ok(menu.includes(`href="#${id}"`));
+  assert.ok(html.includes('/marca/stu/stu-acolhida-480.webp'), 'o palco traz a versão maior do Stu oficial');
 });
 
-test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o principal e ao lado fica o cartão do QR para /baixar', () => {
+test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o principal e o QR está na seção de instalação', () => {
   const html = desenhar();
   assert.equal(achar(html, 'Baixar para Android').length, 0, 'nenhum botão principal baixa o APK no computador');
   const principais = botoes(html).filter((b) => /botao--primario/.test(b.atributos));
   assert.ok(principais.length >= 2, 'o herói e a chamada final');
   for (const botao of principais) assert.doesNotMatch(botao.atributos, /\.apk|href="https:\/\/expo\.dev/, 'nenhum botão principal leva ao arquivo');
   assert.equal(principais.filter((b) => b.texto === 'Experimentar sem conta').length >= 2, true);
-  // O cartão é um grupo (aparece duas vezes: duas regiões com o mesmo nome confundem os leitores de tela), e o título dele não é um título de seção.
-  assert.match(html, /<div class="cn-qr[^"]*" role="group" aria-labelledby="cn-qr-heroi-titulo"><p id="cn-qr-heroi-titulo" class="cn-qr__titulo">Instale no celular<\/p>/);
+  const heroi = html.match(/<section id="conteudo"[\s\S]*?<\/section>/)[0];
+  assert.doesNotMatch(heroi, /cn-qr__codigo/);
+  assert.ok(heroi.includes('href="#baixar"'));
+  assert.match(html, /role="group" aria-labelledby="cn-qr-s4-titulo"/);
   assert.doesNotMatch(html, /<section[^>]*cn-qr/, 'sem região duplicada');
   assert.doesNotMatch(html, /<h2[^>]*cn-qr__titulo/);
   assert.ok(texto(html).includes('Instale no celular'));
   assert.ok(texto(html).includes('Aponte a câmera do celular'));
-  assert.ok(texto(html).includes('Para instalar no celular, aponte a câmera para o código.'));
   assert.match(html, /role="img" aria-label="Código QR para baixar o Studoo no celular"/);
   // O arquivo só aparece como o link pequeno do cartão, com o tamanho.
   const link = botoes(html).find((b) => /cn-qr__arquivo/.test(b.atributos));
@@ -342,7 +348,7 @@ test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e 
   assert.match(figura[0], /loading="eager" fetchPriority="high"/);
   assert.deepEqual(primeira.avif.map((a) => a.largura), [320, 480, 640]);
   // Cada lugar com o seu sizes (a largura da TELA do celular em cada faixa, sem as bordas): o herói, os momentos, o celular do composto e a janela.
-  assert.equal(TAMANHOS.heroi, '(min-width: 1024px) 320px, (min-width: 768px) 280px, 240px');
+  assert.equal(TAMANHOS.heroi, '(min-width: 1200px) 175px, (min-width: 740px) 14vw, 110px');
   const ocorrencias = (sizes) => [...html.matchAll(/<source type="image\/avif" srcSet="[^"]*" sizes="([^"]*)"\/>/g)].filter((m) => m[1] === sizes).length;
   assert.equal(ocorrencias(TAMANHOS.heroi), 3, 'as três telas do herói');
   assert.equal(ocorrencias(TAMANHOS.momento), 3, 'os momentos 1 a 3');
@@ -425,27 +431,22 @@ test('contraste: os botões de texto da página usam o azul escuro do app (o azu
   assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'e é por isso que o azul da ação não serve ali');
 });
 
-test('o celular preso: as molduras dos momentos 1 a 3 se sobrepõem, e só a do primeiro tem fundo e borda (as outras cobririam a tela que está à vista); a ilha é a da captura à vista', () => {
-  const css = ler('src/app/conheca/conheca.css');
-  const preso = css.slice(css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
-  assert.match(preso, /\.cn-momento \.cn-celular \{ box-shadow: none; background: transparent; border-color: transparent; \}/);
-  assert.match(preso, /\.cn-momento:first-child \.cn-celular \{ background: var\(--cn-marinho\); border-color: var\(--cn-marinho\); box-shadow: 0 24px 48px/);
-  assert.match(preso, /\.cn-momento \.cn-celular__ilha \{ opacity: 0; transition: opacity 300ms linear; \}/);
-  assert.match(preso, /\.cn-momento\[data-ativo\] \.cn-celular__ilha,\n  \.cn-s2__momentos:not\(:has\(\[data-ativo\]\)\) \.cn-momento:first-child \.cn-celular__ilha \{ opacity: 1; \}/);
-  // O momento 4 leva a moldura inteira com ele (o celular dele não está na pilha).
-  assert.match(preso, /\.cn-momento\[data-momento='4'\] \.cn-celular \{ background: var\(--cn-marinho\); border-color: var\(--cn-marinho\); \}/);
+test('cada escolha oferece a captura ampliada correspondente; continuar depois também mostra o site', () => {
+  const html = desenhar();
+  for (let numero = 1; numero <= 4; numero++) {
+    const artigo = html.match(new RegExp(`<article[^>]*id="cn-momento-${numero}"[^>]*>([\\s\\S]*?)</article>`))[1];
+    assert.ok(artigo.includes(`href="${CAPTURAS['momento-' + numero].src2x}">Ampliar tela do app`));
+    assert.equal(artigo.includes(`href="${CAPTURAS['janela-4'].src2x}">Ampliar tela do site`), numero === 4);
+  }
 });
 
-test('o CSS do momento 4: o celular preso cobre só os momentos 1 a 3, o composto é uma linha comum, e tudo respeita o movimento reduzido', () => {
+test('os momentos podem ser escolhidos sem JavaScript e sem depender de animações', () => {
   const css = ler('src/app/conheca/conheca.css');
-  const preso = css.slice(css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
-  assert.match(preso, /grid-row: 1 \/ span 3;\n    position: sticky;/, 'o celular preso termina no momento 3');
-  assert.match(preso, /\.cn-momento__visual--composto \{ grid-row: 4; position: relative;/);
-  assert.match(preso, /\.cn-s2__momentos:has\(\.cn-momento\[data-momento='4'\]\[data-ativo\]\) \.cn-momento__visual:not\(\.cn-momento__visual--composto\) \{ opacity: 0; \}/, 'no momento 4 o celular preso sai, em 300 ms');
-  assert.match(preso, /\.cn-momento\[data-momento='4'\]\[data-ativo\] \.cn-momento__visual--composto \{ opacity: 1; \}/);
-  // Fora do movimento permitido (reduzido ou sem JavaScript) nada fica escondido: o composto só some dentro do bloco de movimento.
-  const fora = css.slice(0, css.indexOf('@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {'));
-  assert.doesNotMatch(fora, /cn-momento__visual--composto[^}]*opacity: 0/);
+  for (let numero = 1; numero <= 4; numero++) {
+    assert.ok(css.includes(`input[value="${numero}"]:checked) .cn-momento:not([data-momento="${numero}"])`));
+  }
+  assert.doesNotMatch(ler('src/app/conheca/ilhas/momentos.tsx'), /use client|useEffect/);
+  assert.match(css, /input:focus-visible \+ span/);
 });
 
 test('o herói escolhe as três telas pela plataforma do aparelho: Android vê as do Android, os outros as do iPhone, e sem as da rodada limpa vale o conjunto provisório', () => {
@@ -491,10 +492,13 @@ test('as molduras seguem a plataforma da captura: ilha no iPhone, ponto de câme
 test('S3: as seis ideias da tela inicial estão UMA vez no código, em grade que quebra linha com todas à vista, com o ícone da área de origem e sem fileira em laço', () => {
   const html = desenhar({ aparelho: 'android' });
   assert.deepEqual([...IDEIAS_DO_S3], [...mensagens.pedido.temas[0].exemplos], 'as mesmas seis, na ordem do app');
-  for (const ideia of IDEIAS_DO_S3) assert.equal(html.split(`>${ideia}</button>`).length - 1, 1, ideia);
+  for (const ideia of IDEIAS_DO_S3) {
+    const [ficha] = achar(html, fichaDaIdeia(ideia).nome);
+    assert.ok(ficha.atributos.includes(`aria-label="${ideia}"`), ideia);
+  }
   for (const ideia of IDEIAS_DO_S3) {
     const origem = mensagens.pedido.temas.find((tema) => tema.id !== 'populares' && tema.exemplos.includes(ideia));
-    assert.equal(iconeDaIdeia(ideia), iconesDosTemas[origem?.id ?? 'populares'], `ícone de "${ideia}"`);
+    assert.equal(fichaDaIdeia(ideia).icone, iconesDosTemas[origem?.id ?? 'populares'], `ícone de "${ideia}"`);
   }
   // Uma lista só, com o nome para o leitor de tela e a marca da entrada uma a uma; nada de cópia escondida nem de fileira que corre.
   const lista = html.match(/<ul class="cn-fichas__lista"[^>]*>([\s\S]*?)<\/ul>/);
@@ -507,7 +511,8 @@ test('S3: as seis ideias da tela inicial estão UMA vez no código, em grade que
   assert.doesNotMatch(fichas, /use client|useEffect|cloneNode|setAttribute\('inert'/, 'a lista é de servidor: não copia nada no navegador');
   const css = ler('src/app/conheca/conheca.css');
   assert.doesNotMatch(css, /cn-correr|data-correndo|cn-fichas__pista|cn-fichas__copia/, 'sem a fileira em laço');
-  assert.match(css, /\.cn-fichas__lista \{ display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;/, 'grade que quebra linha');
+  assert.match(css, /\.cn-fichas__lista \{ display: grid; grid-template-columns: repeat\(6,/);
+  assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
 test('S3: as fichas entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, subindo 8 px), só com movimento permitido; sem movimento, todas à vista', () => {
@@ -522,7 +527,6 @@ test('S3: as fichas entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, su
   // A ilha que revela cuida das duas marcas, e a lista das fichas não tem entrada própria da seção inteira.
   assert.match(ler('src/app/conheca/ilhas/revelar.tsx'), /querySelectorAll<HTMLElement>\('\[data-revelar\], \[data-revelar-itens\]'\)/);
   const html = desenhar({ aparelho: 'android' });
-  assert.match(html, /<div class="cn-s3__cabeca" data-revelar="true">/, 'o Stu, o título e a linha entram com a seção; as fichas, uma a uma');
   assert.doesNotMatch(html, /<section class="cn-secao cn-s3"[^>]*data-revelar/);
 });
 
@@ -585,7 +589,6 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__qr \{ grid-row: 1 \/ span 3; align-self: start; \}/);
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-apoio--painel, \.cn-painel--iphone-com-qr \.cn-painel__acao \{ grid-column: 1; margin-left: calc\(var\(--cn-passo-numero, 32px\) \+ var\(--cn-passo-vao, 14px\)\); \}/, 'na coluna da esquerda, no recuo do texto dos passos');
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__acao \{ width: var\(--cn-botao-principal-computador, 280px\); max-width: 100%; \}/, 'na largura do botão principal, não a coluna toda');
-  assert.match(css, /\.cn-acoes--computador \.cn-botao-principal \{ width: auto; min-width: var\(--cn-botao-principal-computador, 280px\); max-width: none; \}/, 'o botão principal do herói usa a mesma largura');
   assert.match(css, /\.cn-painel \{ position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; \}/);
   // iPhone com o TestFlight: os passos do computador e o cartão do QR no lugar do botão "Instalar no iPhone".
   const comLink = desenhar({ links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
@@ -617,7 +620,7 @@ test('rodapé e metadados: logo, a linha do HackBrasil e os três links; o títu
   assert.match(html, /<a href="\/privacidade">Política de privacidade<\/a>/);
   assert.match(html, /<a href="\/suporte">Suporte<\/a>/);
   const pagina = ler('src/app/conheca/page.tsx');
-  assert.match(ler('src/app/conheca/textos.ts'), /titulo: 'Studoo: aprenda qualquer coisa, uma lição por vez'/);
+  assert.match(ler('src/app/conheca/textos.ts'), /titulo: 'Studoo — Seu assunto. Sua trilha.'/);
   assert.match(ler('src/app/conheca/textos.ts'), /descricao: 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu\.'/);
   assert.doesNotMatch(pagina, /robots\s*:/, 'o noindex do site fica o do layout raiz');
   assert.match(ler('src/app/layout.tsx'), /robots: \{ index: false, follow: false \}/);
@@ -692,11 +695,11 @@ test('animações só dentro de prefers-reduced-motion: no-preference (com a par
   // Fora do bloco "com movimento" só valem: o desligamento (animation: none / transition: none) e a troca de cor do ponto, que não é movimento.
   for (const linha of semMovimento) assert.match(linha, /animation: none|transition: none|transition: background-color 200ms linear/, linha.trim());
   // As animações da página: o laço do herói, a entrada das seções e o pulso do selo (as fichas entram por transição, uma a uma, e não correm).
-  for (const nome of ['cn-entrar', 'cn-pulso']) assert.match(css, new RegExp(`@keyframes ${nome}`));
+  for (const nome of ['cn-entrar', 'cn-aceno']) assert.match(css, new RegExp(`@keyframes ${nome}`));
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.cn-heroi__celular \.cn-tela \{ opacity: 0 !important; transition: none; \}\n  \.cn-heroi__celular \.cn-tela:nth-child\(2\) \{ opacity: 1 !important; \}/);
   assert.match(css, /cubic-bezier\(0\.2, 0\.8, 0\.2, 1\)/);
   assert.match(css, /\[data-revelar\]\[data-oculto\]:not\(\[data-revelado\]\) \{ opacity: 0; transform: translateY\(16px\); \}/);
-  assert.match(css, /transition: opacity 300ms linear/, 'a troca da tela do S2: 300 ms, sumir e aparecer');
+  assert.ok(desenhar().includes('aria-label="Pausar prévia do app"'));
 });
 
 test('a troca de tela do herói não deixa quadro vazio: a nova entra por cima da que sai, que fica inteira por baixo até a nova terminar, e só troca com a próxima captura carregada', () => {

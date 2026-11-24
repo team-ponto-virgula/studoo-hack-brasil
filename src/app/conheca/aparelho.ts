@@ -13,7 +13,7 @@ export function detectarAparelho(userAgent: string | null | undefined): Aparelho
   return 'computador';
 }
 
-/** iPhone e iPad usam o mesmo caminho: TestFlight quando há link público, e a Tela de Início enquanto não há. */
+/** iPhone e iPad começam na aba da Apple; a instalação no iPad usa a Tela de Início. */
 export const ehIos = (aparelho: Aparelho) => aparelho === 'iphone' || aparelho === 'ipad';
 
 /**

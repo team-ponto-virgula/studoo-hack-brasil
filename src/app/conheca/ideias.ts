@@ -14,13 +14,13 @@ export const IDEIAS_DO_S3 = [
   'Fotografia com o celular',
 ] as const;
 
-const ICONES: Record<(typeof IDEIAS_DO_S3)[number], NomeDesenho> = {
-  'Violão do zero: primeiros acordes': 'temaMusica',
-  'Inglês para conversar em viagens': 'temaIdiomas',
-  'Culinária: receitas básicas': 'temaDiaADia',
-  'História do Brasil para a prova': 'temaPopulares',
-  Frações: 'temaMatematica',
-  'Fotografia com o celular': 'temaArtes',
+const FICHAS: Record<(typeof IDEIAS_DO_S3)[number], { icone: NomeDesenho; nome: string }> = {
+  'Violão do zero: primeiros acordes': { icone: 'temaMusica', nome: 'Violão' },
+  'Inglês para conversar em viagens': { icone: 'temaIdiomas', nome: 'Inglês' },
+  'Culinária: receitas básicas': { icone: 'temaDiaADia', nome: 'Culinária' },
+  'História do Brasil para a prova': { icone: 'temaPopulares', nome: 'História' },
+  Frações: { icone: 'temaMatematica', nome: 'Frações' },
+  'Fotografia com o celular': { icone: 'temaArtes', nome: 'Fotografia' },
 };
 
-export const iconeDaIdeia = (ideia: (typeof IDEIAS_DO_S3)[number]): NomeDesenho => ICONES[ideia];
+export const fichaDaIdeia = (ideia: (typeof IDEIAS_DO_S3)[number]) => FICHAS[ideia];

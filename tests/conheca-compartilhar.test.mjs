@@ -30,7 +30,7 @@ const comOrigem = (valor, corpo) => {
 
 test('metadados: o título e a descrição da spec, o cartão grande do Twitter e a base absoluta da origem pública (https), nunca inventada', () => {
   const m = comOrigem('https://studoo.exemplo.test', () => generateMetadata());
-  assert.equal(m.title, 'Studoo: aprenda qualquer coisa, uma lição por vez');
+  assert.equal(m.title, 'Studoo — Seu assunto. Sua trilha.');
   assert.equal(m.description, 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.');
   assert.equal(m.openGraph.title, m.title);
   assert.equal(m.openGraph.description, m.description);
@@ -46,7 +46,7 @@ test('metadados: o título e a descrição da spec, o cartão grande do Twitter 
 test('a imagem de compartilhar: 1200 × 630, PNG, a mesma para todo mundo, e o texto vem da própria página', async () => {
   assert.deepEqual(imagem.size, { width: 1200, height: 630 });
   assert.equal(imagem.contentType, 'image/png');
-  assert.match(imagem.alt, /aprenda qualquer coisa/i);
+  assert.match(imagem.alt, /Seu assunto. Sua trilha./i);
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.titulo/);
   assert.match(fonte, /textos\.heroi\.subtitulo/);
@@ -81,6 +81,6 @@ test('a imagem sai do gerador do servidor como PNG de paleta, leve e do tamanho 
 test('a linha do subtítulo e as duas linhas do título são frases inteiras da spec (nada cortado, nada novo)', () => {
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.subtitulo\.split\('\. '\)\.slice\(-1\)\[0\]/);
-  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Studoo monta lições curtas e, quando você erra, explica de outro jeito.');
-  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Aprenda qualquer coisa.', 'Uma lição por vez.']);
+  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Stu transforma o que você traz em lições curtas para praticar.');
+  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Seu assunto.', 'Sua trilha.']);
 });

@@ -1,7 +1,7 @@
 import { Desenho } from '../../../ui/mundo';
 import { textos } from '../textos';
 import { BotaoVisitante } from './visitante';
-import { IDEIAS_DO_S3, iconeDaIdeia } from '../ideias';
+import { IDEIAS_DO_S3, fichaDaIdeia } from '../ideias';
 
 /**
  * As seis ideias da tela inicial (spec 18, S3 e seção 10): uma grade que quebra linha, com todas à vista. Tocar numa ficha começa a sessão de visitante já com aquela ideia no campo
@@ -14,7 +14,7 @@ export function Fichas({ visitanteAtivo, comSessao }: { visitanteAtivo: boolean;
       <ul className="cn-fichas__lista" aria-label={textos.s3.lista} data-revelar-itens>
         {IDEIAS_DO_S3.map((ideia) => (
           <li key={ideia} className="cn-ficha-item">
-            <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="secundario" className="cn-ficha" ideia={ideia} rotulo={ideia} icone={<Desenho nome={iconeDaIdeia(ideia)} />} />
+            <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="secundario" className="cn-ficha" ideia={ideia} rotulo={fichaDaIdeia(ideia).nome} icone={<span className="cn-ficha__icone"><Desenho nome={fichaDaIdeia(ideia).icone} /></span>} />
           </li>
         ))}
       </ul>

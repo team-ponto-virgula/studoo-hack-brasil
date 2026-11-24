@@ -7,7 +7,7 @@ import { frasesDoTitulo, textos } from './textos';
 export const runtime = 'nodejs';
 export const size = TAMANHO_OG;
 export const contentType = 'image/png';
-export const alt = 'Studoo: aprenda qualquer coisa, uma lição por vez';
+export const alt = textos.pagina.titulo;
 
 /** A frase do subtítulo do herói (spec 18) que cabe na imagem: a segunda, inteira. O título, em duas linhas, uma por frase. */
 const LINHA = textos.heroi.subtitulo.split('. ').slice(-1)[0];

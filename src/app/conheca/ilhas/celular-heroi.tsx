@@ -23,6 +23,7 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
   const [troca, setTroca] = useState<{ ativa: number; anterior: number | null }>({ ativa: 0, anterior: null });
   const ativaAgora = useRef(0);
   const [rodando, setRodando] = useState(false);
+  const [pausada, setPausada] = useState(false);
   const [liberadas, setLiberadas] = useState(false);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
   }, []);
 
   useEffect(() => {
-    if (!rodando) return;
+    if (!rodando || pausada) return;
     // A segunda e a terceira telas só são buscadas DEPOIS de a página carregar (mais 1 s): não disputam a banda com a primeira, que é o LCP, nem com o texto e as fontes. A primeira troca é só
     // aos 3,5 s, então sobra tempo; se a captura ainda não chegou, a troca espera (`pronta`).
     let liberar = 0;
@@ -71,7 +72,7 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
       window.clearTimeout(liberar);
       window.removeEventListener('load', liberarDepois);
     };
-  }, [rodando, telas.length]);
+  }, [rodando, pausada, telas.length]);
 
   /** A tela que saiu só deixa de aparecer quando a nova terminou de entrar (e, por garantia, 1,6 s depois da troca se a aba estiver à vista). */
   const soltarAnterior = useCallback(() => setTroca((atual) => (atual.anterior === null ? atual : { ...atual, anterior: null })), []);
@@ -82,16 +83,22 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
   }, [troca, soltarAnterior]);
 
   return (
-    <div ref={raiz} className="cn-heroi__celular" data-pronto={liberadas || undefined}>
-      <Celular rotulo={rotulo} plataforma={plataforma}>
-        {telas.map((tela, indice) => (
-          <div key={tela.alt} className="cn-tela" data-ativa={indice === troca.ativa || undefined} data-saindo={indice === troca.anterior || undefined}
-            data-entrando={(indice === troca.ativa && troca.anterior !== null) || undefined}
-            onAnimationEnd={(evento) => { if (evento.target === evento.currentTarget && indice === troca.ativa) soltarAnterior(); }}>
-            <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} tamanhos={TAMANHOS.heroi} />
-          </div>
-        ))}
-      </Celular>
-    </div>
+    <>
+      <div ref={raiz} className="cn-heroi__celular" data-pronto={liberadas || undefined}>
+        <Celular rotulo={rotulo} plataforma={plataforma}>
+          {telas.map((tela, indice) => (
+            <div key={tela.alt} className="cn-tela" data-ativa={indice === troca.ativa || undefined} data-saindo={indice === troca.anterior || undefined}
+              data-entrando={(indice === troca.ativa && troca.anterior !== null) || undefined}
+              onAnimationEnd={(evento) => { if (evento.target === evento.currentTarget && indice === troca.ativa) soltarAnterior(); }}>
+              <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} tamanhos={TAMANHOS.heroi} />
+            </div>
+          ))}
+        </Celular>
+      </div>
+      <button type="button" className="cn-previa-controle" aria-label={pausada ? 'Retomar prévia do app' : 'Pausar prévia do app'}
+        data-parada={pausada || undefined} onClick={() => setPausada(!pausada)}>
+        <span aria-hidden="true">{telas.map((tela, indice) => <i key={tela.alt} data-atual={indice === troca.ativa || undefined} />)}</span>
+      </button>
+    </>
   );
 }
