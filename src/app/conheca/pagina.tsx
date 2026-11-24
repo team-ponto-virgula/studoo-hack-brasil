@@ -2,19 +2,22 @@ import { Fragment } from 'react';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
-import { Desenho } from '../../ui/mundo';
 import { Mascote } from '../../ui/mascote';
 import { BotaoSom } from '../som';
 import { detectarAparelho, type Aparelho } from './aparelho';
 import { CartaoQr } from './cartao-qr';
 import { Celular, CapturaDaTela, JanelaDoNavegador, TAMANHOS } from './celular';
 import { CAPTURAS } from './imagens.gerado';
+import type { CapturaOtimizada } from './imagens';
 import { telasDoHeroi } from './heroi';
 import { LogoDaPagina } from './ilhas/logo';
 import { AcoesDeInstalar, SecaoInstalar } from './ilhas/instalar';
 import { CelularDoHeroi } from './ilhas/celular-heroi';
 import { Momentos } from './ilhas/momentos';
 import { Fichas } from './ilhas/fichas';
+import { LicaoDeExemplo } from './ilhas/licao-de-exemplo';
+import { AssuntoProprio } from './ilhas/visitante';
+import { VisualizadorDeCapturas } from './ilhas/visualizador';
 import { Revelar } from './ilhas/revelar';
 import { CarregarPerto } from './ilhas/carregar-perto';
 import { SaidaDoApp } from './ilhas/saida-do-app';
@@ -22,16 +25,22 @@ import { temCookieDeSessao } from './inicio';
 import { linksDoSite, tamanhoDoApk, type LinksDoSite } from './links';
 import { origemPublica } from './origem-publica';
 import { svgDoQr } from './qr';
-import { frasesDoTitulo, textos } from './textos';
+import { linhasDoTitulo, textos } from './textos';
 import './conheca.css';
 
 /** Os `alt` da spec 18 (seção 9). O do momento 1 e o da janela do momento 4 não vêm na lista da spec: são meus, no mesmo tom. */
 const MOMENTOS_DO_S2 = [
-  { captura: CAPTURAS['momento-1'], alt: 'Lição do Studoo com o cartão da fonte, que mostra o trecho do seu material' },
+  { captura: CAPTURAS['momento-1'], alt: 'Lição de fotografia no Android com a explicação do Stu e a referência [1] ao material usado' },
   { captura: CAPTURAS['momento-2'], alt: 'A ponte do Studoo: outro jeito de entender, em 3 passos' },
   { captura: CAPTURAS['momento-3'], alt: 'O retorno do Stu à sua explicação' },
   { captura: CAPTURAS['momento-4'], alt: 'O mapa da trilha no app' },
 ] as const;
+
+function LinkDaCaptura({ captura, alt }: { captura: CapturaOtimizada; alt: string }) {
+  const lugar = captura.plataforma === 'web' ? 'site' : 'app';
+  return <a href={captura.src2x} aria-haspopup="dialog" data-ampliar={`Tela do ${lugar}`} data-descricao={alt}
+    data-largura={2 * captura.largura} data-altura={2 * captura.altura}>Ampliar tela do {lugar}</a>;
+}
 
 export interface ContextoDaPagina {
   /** O aparelho que o servidor viu pelo agente do usuário. */
@@ -65,6 +74,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
       <header className="cn-cabecalho">
         <LogoDaPagina />
         <nav className="cn-menu" aria-label="Nesta página">
+          <a href="#licao-de-exemplo">Lição de exemplo</a>
           <a href="#assuntos">Assuntos</a>
           <a href="#como-funciona">Como funciona</a>
           <a href="#baixar">Instalar</a>
@@ -77,13 +87,15 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 
       <main>
         <section id="conteudo" className="cn-heroi" aria-labelledby="cn-titulo-heroi" tabIndex={-1}>
+          <div className="cn-heroi__texto">
+            <h1 id="cn-titulo-heroi" className="cn-heroi__titulo">
+              {linhasDoTitulo.map((linha, indice) => <Fragment key={linha}>{indice > 0 && ' '}<span className="cn-heroi__frase">{linha}</span></Fragment>)}
+            </h1>
+            <p className="cn-heroi__subtitulo">{textos.heroi.subtitulo}</p>
+            <AcoesDeInstalar {...dados} lugar="heroi" reservarIpad={podeSerIpad} />
+          </div>
           <div className="cn-heroi__palco">
-            <div className="cn-ilha" aria-hidden="true" />
-            <span className="cn-orbita" aria-hidden="true" />
-            <span className="cn-satelite cn-satelite--musica" aria-hidden="true"><Desenho nome="temaMusica" /></span>
-            <span className="cn-satelite cn-satelite--fracao" aria-hidden="true"><i /></span>
-            <span className="cn-faisca cn-faisca--ouro" aria-hidden="true" />
-            <span className="cn-faisca cn-faisca--azul" aria-hidden="true" />
+            <div className="cn-caderno" aria-hidden="true"><span /></div>
             <CelularDoHeroi telas={telasDoCelular} rotulo={textos.heroi.celularRotulo} plataforma={telasDoCelular[0].captura.plataforma} />
             <div className="cn-heroi__stu" aria-hidden="true">
               <img src="/marca/stu/stu-acolhida-320.webp"
@@ -91,32 +103,36 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
                 sizes="(min-width: 1200px) 300px, (min-width: 740px) 24vw, 175px"
                 width={480} height={468} alt="" decoding="async" draggable={false} />
             </div>
-          </div>
-          <div className="cn-heroi__texto">
-            <h1 id="cn-titulo-heroi" className="cn-heroi__titulo">
-              {frasesDoTitulo(textos.heroi.titulo).map((frase, indice) => <Fragment key={frase}>{indice > 0 && ' '}<span className="cn-heroi__frase">{frase}</span></Fragment>)}
-            </h1>
-            <p className="cn-heroi__subtitulo">{textos.heroi.subtitulo}</p>
-            <AcoesDeInstalar {...dados} lugar="heroi" reservarIpad={podeSerIpad} />
+            <a className="cn-heroi__exemplo" href="#licao-de-exemplo">Resolver um exemplo <span aria-hidden="true">↓</span></a>
           </div>
         </section>
 
+        <LicaoDeExemplo />
+
         <section id="assuntos" className="cn-secao cn-s3" aria-labelledby="cn-titulo-s3">
           <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
+          <AssuntoProprio ativo={visitante} comSessao={comSessao} />
           <Fichas visitanteAtivo={visitante} comSessao={comSessao} />
         </section>
 
         <section id="como-funciona" className="cn-secao cn-s2" aria-labelledby="cn-titulo-s2">
           <h2 id="cn-titulo-s2" className="cn-secao__titulo" data-revelar>{textos.s2.titulo}</h2>
-          <Momentos>
+          <VisualizadorDeCapturas><Momentos>
             {textos.s2.momentos.map((momento, indice) => (
               <article key={momento.titulo} className="cn-momento" id={`cn-momento-${indice + 1}`} data-momento={indice + 1} aria-labelledby={`cn-momento-titulo-${indice + 1}`}>
                 <div className="cn-momento__texto">
                   <h3 className="cn-momento__titulo" id={`cn-momento-titulo-${indice + 1}`}>{momento.titulo}</h3>
                   <p className="cn-momento__linha">{momento.linha}</p>
+                  {indice === 0 && (
+                    <figure className="cn-fonte">
+                      <figcaption>Do PDF desta lição · página 1</figcaption>
+                      <blockquote>“Imagine duas linhas horizontais e duas verticais que dividem a imagem em nove partes iguais, como um jogo da velha.”</blockquote>
+                    </figure>
+                  )}
                   <div className="cn-momento__ampliar">
-                    <a href={MOMENTOS_DO_S2[indice].captura.src2x}>Ampliar tela do app</a>
-                    {indice === 3 && <a href={CAPTURAS['janela-4'].src2x}>Ampliar tela do site</a>}
+                    <LinkDaCaptura captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} />
+                    {indice === 0 && <a href="/landing/regra-dos-tercos.pdf" target="_blank" rel="noopener noreferrer" aria-label="Abrir PDF de exemplo em nova aba">Abrir PDF de exemplo</a>}
+                    {indice === 3 && <LinkDaCaptura captura={CAPTURAS['janela-4']} alt={textos.s2.janelaAlt} />}
                   </div>
                 </div>
                 <div className={`cn-momento__visual${indice === 3 ? ' cn-momento__visual--composto' : ''}`}>
@@ -137,7 +153,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
                 </div>
               </article>
             ))}
-          </Momentos>
+          </Momentos></VisualizadorDeCapturas>
         </section>
 
         <section id="baixar" className="cn-secao cn-s4" aria-labelledby="cn-titulo-s4" data-revelar>

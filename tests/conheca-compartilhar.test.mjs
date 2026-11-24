@@ -20,7 +20,7 @@ const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { generateMetadata } = await import('../src/app/conheca/page.tsx');
 const imagem = await import('../src/app/conheca/opengraph-image.tsx');
-const { textos, frasesDoTitulo } = await import('../src/app/conheca/textos.ts');
+const { textos, linhasDoTitulo } = await import('../src/app/conheca/textos.ts');
 
 const comOrigem = (valor, corpo) => {
   const antes = process.env.STUDOO_ORIGEM;
@@ -30,8 +30,8 @@ const comOrigem = (valor, corpo) => {
 
 test('metadados: o título e a descrição da spec, o cartão grande do Twitter e a base absoluta da origem pública (https), nunca inventada', () => {
   const m = comOrigem('https://studoo.exemplo.test', () => generateMetadata());
-  assert.equal(m.title, 'Studoo — Seu assunto. Sua trilha.');
-  assert.equal(m.description, 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.');
+  assert.equal(m.title, 'Studoo — Seu caderno vira lição.');
+  assert.equal(m.description, textos.pagina.descricao);
   assert.equal(m.openGraph.title, m.title);
   assert.equal(m.openGraph.description, m.description);
   assert.equal(m.openGraph.locale, 'pt_BR');
@@ -46,9 +46,9 @@ test('metadados: o título e a descrição da spec, o cartão grande do Twitter 
 test('a imagem de compartilhar: 1200 × 630, PNG, a mesma para todo mundo, e o texto vem da própria página', async () => {
   assert.deepEqual(imagem.size, { width: 1200, height: 630 });
   assert.equal(imagem.contentType, 'image/png');
-  assert.match(imagem.alt, /Seu assunto. Sua trilha./i);
+  assert.equal(imagem.alt, textos.pagina.titulo);
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
-  assert.match(fonte, /textos\.heroi\.titulo/);
+  assert.match(fonte, /imagemDaApresentacao\(\{ linhasDoTitulo,/);
   assert.match(fonte, /textos\.heroi\.subtitulo/);
   assert.match(fonte, /telasDoHeroi\('computador'\)\[1\]\.captura/, 'o celular mostra a trilha pronta do herói (a troca das capturas vale para a imagem)');
   for (const arquivo of ['src/servidor/og/base.tsx', 'src/servidor/og/apresentacao.tsx', 'src/servidor/og/cartao.tsx']) assert.ok(!/stu-oi/.test(ler(arquivo)), `nunca o stu-oi (${arquivo})`);
@@ -78,9 +78,9 @@ test('a imagem sai do gerador do servidor como PNG de paleta, leve e do tamanho 
   assert.ok(r > 225 && g > 232 && b > 245, `o céu claro no canto: ${[r, g, b]}`);
 });
 
-test('a linha do subtítulo e as duas linhas do título são frases inteiras da spec (nada cortado, nada novo)', () => {
+test('o cartão usa o título e uma frase inteira que a pessoa encontra ao abrir a página', () => {
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.subtitulo\.split\('\. '\)\.slice\(-1\)\[0\]/);
-  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Stu transforma o que você traz em lições curtas para praticar.');
-  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Seu assunto.', 'Sua trilha.']);
+  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Stu cria lições curtas e dá uma pista quando você erra.');
+  assert.equal(linhasDoTitulo.join(' '), textos.heroi.titulo);
 });

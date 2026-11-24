@@ -122,7 +122,7 @@ type Aba = 'android' | 'iphone';
  * S4, "Instale em 3 passos": um seletor de duas abas (grupo de abas acessível, com setas, Home e End), que abre no aparelho de quem
  * está vendo (no computador, em Android). `#iphone` abre a aba do iPhone e `#android` a do Android. `#baixar` abre a do aparelho (é para onde o
  * `/baixar` manda). Android: os três passos e o botão (ou, no computador, o cartão do QR no lugar do botão). iPhone: com TestFlight, os
- * três passos dele e "Instalar no iPhone"; sem, os três da Tela de Início, "O app para iPhone chega em breve pelo TestFlight." e
+ * três passos dele e "Instalar no iPhone"; sem, os três da Tela de Início, a disponibilidade do convite público e
  * "Experimentar sem conta".
  */
 export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr, qrIphone = qr }: DadosDeInstalar & { qr: ReactNode | null; /** O cartão do QR da aba do iPhone (o mesmo, sem o link do arquivo do Android). */ qrIphone?: ReactNode | null }) {
@@ -212,7 +212,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
               ? <Passos itens={s4.iphone.passosNoComputador} icones={[null, <IconeCompartilharIos key="c" />, <IconeConfirmarIos key="o" />]} />
               : <PassosDoIphone />}
             {comQrNoIphone && <div className="cn-painel__qr">{qrIphone}</div>}
-            <p className="cn-apoio cn-apoio--painel">{aparelho === 'ipad' ? textos.acoes.ipad.apoio : textos.acoes.iphoneEmBreve.apoio}</p>
+            <p className="cn-apoio cn-apoio--painel">{aparelho === 'ipad' ? textos.acoes.ipad.apoio : textos.acoes.iphoneEmBreve.disponibilidade}</p>
             <div className="cn-painel__acao">
               <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="primario" className="cn-botao-principal" />
             </div>

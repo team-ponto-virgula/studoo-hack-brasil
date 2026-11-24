@@ -31,7 +31,7 @@
   background: white;
 }
 .cn-cabecalho .cn-logo img { display: block; width: clamp(105px, 11vw, 133px); height: auto; }
-.cn-menu { display: flex; align-items: center; gap: 26px; margin-inline: auto; }
+.cn-menu { display: flex; align-items: center; gap: clamp(14px, 2vw, 29px); margin-inline: auto; }
 .cn-menu a, .cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; color: #4e5876; text-decoration: none; font-size: .95rem; font-weight: 800; }
 .cn-menu a:hover, .cn-rodape__links a:hover { color: var(--acao-escura); text-decoration: underline; text-underline-offset: 4px; }
 .cn-cabecalho__acoes { display: flex; align-items: center; gap: 10px; }
@@ -40,17 +40,21 @@
 
 .cn-heroi {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.03fr);
   align-items: center;
   gap: clamp(32px, 5.5vw, 95px);
   padding-block: clamp(28px, 3.8vw, 64px);
-  background: #fdfdfb;
+  background: #fffdf8;
 }
 .cn-heroi:focus { outline: none; }
 .cn-heroi__texto { min-width: 0; }
 .cn-heroi__titulo { font: 850 clamp(3rem, 5.8vw, 5.5rem)/1.01 Nunito, sans-serif; color: var(--cn-marinho); letter-spacing: -.045em; }
 .cn-heroi__frase { display: block; text-wrap: balance; }
-.cn-heroi__frase:last-child { color: #2858ed; }
+.cn-heroi__frase:last-child { position: relative; isolation: isolate; width: fit-content; color: #2454dd; }
+.cn-heroi__frase:last-child::after {
+  content: ''; position: absolute; z-index: -1; left: 0; right: -.035em; bottom: .02em; height: .16em;
+  border-radius: 55% 25% 45% 15%; background: #ffdb81; transform: rotate(-2deg);
+}
 .cn-heroi__subtitulo { max-width: 41ch; margin-top: 20px; font: 650 clamp(1rem, 1.4vw, 1.23rem)/1.5 Nunito, sans-serif; color: #505e77; }
 .cn-acoes { display: grid; gap: 11px; width: 100%; margin-top: 26px; }
 .cn-acoes--computador, .cn-acoes--celular { max-width: 338px; }
@@ -69,30 +73,39 @@
 .cn-pagina .botao[data-enviando] { opacity: .7; pointer-events: none; }
 .cn-botao-principal[data-baixando] { background: var(--sucesso); }
 
-/* O palco usa a captura nativa ao lado do Stu oficial. Tudo escala no mesmo quadro. */
+/* Capa, folha quadriculada, lombada e fita de um caderno. As duas imagens são do Studoo. */
 .cn-heroi__palco { position: relative; width: 100%; max-width: min(590px, 74svh); aspect-ratio: 1.28; margin: 0 auto; isolation: isolate; }
-.cn-ilha { position: absolute; inset: 7% 4% 6%; border-radius: 58% 43% 56% 42% / 55% 52% 48% 46%; background-color: #e9ecff; background-image: radial-gradient(#c9d2f7 1.1px, transparent 1.4px); background-size: 13px 13px; transform: rotate(-8deg); }
-.cn-orbita { position: absolute; inset: 22% 1% 17%; border: 2px dashed #aab8ec; border-radius: 50%; transform: rotate(21deg); }
-.cn-heroi__palco .cn-heroi__celular { position: absolute; top: 4%; left: 17%; width: 33%; transform: rotate(-10deg); }
+.cn-caderno {
+  position: absolute; inset: 10% 4% 13% 4%; transform: rotate(-5deg); border-radius: 5px 22px 18px 5px;
+  background-color: #edf2ff; background-image: linear-gradient(#bccbeb73 1px, transparent 1px), linear-gradient(90deg, #bccbeb73 1px, transparent 1px);
+  background-size: 7% 9%; border: 1px solid #c4ceec; border-left: 8px solid #97ace0;
+  box-shadow: 0 5px #fafbff, 0 7px #bac6e4, 5px 13px #a4b6ee, 4px 20px 30px #35487a14;
+}
+.cn-caderno::before {
+  content: ''; position: absolute; left: -4%; top: 7%; bottom: 4%; width: 8%;
+  background: repeating-linear-gradient(180deg, #52658c 0 3%, transparent 3% 13%); border-radius: 4px;
+}
+.cn-caderno::after { content: ''; position: absolute; top: -4%; right: 8%; width: 28%; height: 10%; background: #f7d57bbd; transform: rotate(12deg); }
+.cn-caderno span { position: absolute; inset: 0 auto 0 11%; border-left: 2px solid #ebadb8; }
+.cn-heroi__palco .cn-heroi__celular { position: absolute; top: 4%; left: 17%; width: 33%; transform: rotate(-9deg); }
 .cn-heroi__celular .cn-celular { --celular: 100%; border-width: clamp(4px, .55vw, 8px); border-radius: 16% / 7.5%; box-shadow: 5px 8px 0 #bdc9ef, 0 15px 21px #12265b22; }
 .cn-heroi__celular .cn-celular__tela { border-radius: 13% / 6%; }
 .cn-heroi__celular .cn-celular__ilha { top: 1.3%; height: 3.3%; }
 .cn-heroi__celular [data-plataforma='android'] .cn-celular__ilha { top: 1%; width: 3.7%; height: 1.7%; }
-.cn-heroi__stu { position: absolute; z-index: 2; width: 54%; left: 40%; bottom: 7%; transform: rotate(4deg); filter: drop-shadow(0 10px 7px #203a8b24); }
+.cn-heroi__stu { position: absolute; z-index: 2; width: 53%; left: 45%; bottom: 16%; transform: rotate(4deg); filter: drop-shadow(0 10px 7px #203a8b24); }
 .cn-heroi__stu img { display: block; width: 100%; height: auto; }
-.cn-satelite { position: absolute; z-index: 3; display: grid; place-items: center; width: 13%; aspect-ratio: 1; border-radius: 28%; }
-.cn-satelite--musica { top: 6%; right: 11%; background: #f1ddff; box-shadow: 2px 5px 0 #b99bdc; transform: rotate(13deg); }
-.cn-satelite--musica svg { width: 68%; height: auto; }
-.cn-satelite--fracao { left: 4%; bottom: 9%; background: #ffedbc; box-shadow: -2px 4px 0 #dfbc6d; transform: rotate(-14deg); }
-.cn-satelite--fracao i { width: 54%; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from -90deg, #f6a435 0 24%, #fff5d7 24% 27%, #f08053 27% 97%, #fff5d7 97%); }
-.cn-faisca { position: absolute; width: 5.8%; aspect-ratio: 1; clip-path: polygon(50% 0, 65% 35%, 100% 50%, 65% 65%, 50% 100%, 35% 65%, 0 50%, 35% 35%); }
-.cn-faisca--ouro { top: 10%; left: 4%; background: #ffb63b; }
-.cn-faisca--azul { right: 1%; bottom: 20%; width: 4.2%; background: #7692f9; }
+.cn-heroi__exemplo {
+  position: absolute; z-index: 3; right: 2%; bottom: 5%; display: inline-flex; align-items: center; gap: 9px; min-height: 44px;
+  padding: 7px 16px; border-radius: 9px; border: 1px solid #d6b761; box-shadow: 0 3px 0 #dec47b;
+  background: #fff0b5; color: #4b370f; font: 850 1rem/1.24 Nunito, sans-serif; text-decoration: none; transform: rotate(-3deg);
+}
+.cn-heroi__exemplo:hover { background: #ffe392; }
+.cn-heroi__exemplo span, .cn-assunto button span { font-size: 1.25em; }
 @media (prefers-reduced-motion: no-preference) {
   .cn-heroi__stu { animation: cn-aceno 900ms ease-out 1; }
 }
 .cn-previa-controle {
-  position: absolute; left: 50%; bottom: -3%; transform: translateX(-50%); display: inline-flex;
+  position: absolute; left: 30%; bottom: -5%; transform: translateX(-50%); display: inline-flex;
   align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 0 9px; border: 0;
   background: transparent; color: #354575; cursor: pointer; border-radius: 12px;
 }
@@ -108,19 +121,24 @@
   .cn-cabecalho { min-height: 58px; }
   .cn-menu { display: none; }
   .cn-cabecalho__acoes { margin-left: auto; }
-  .cn-heroi { grid-template-columns: 1fr; gap: 18px; padding-block: 23px 32px; }
-  .cn-heroi__palco { width: min(100%, 39svh, 360px); }
-  .cn-heroi__texto { text-align: center; }
+  .cn-heroi { grid-template-columns: 1fr; gap: 22px; padding-block: 28px 25px; }
+  .cn-heroi__palco { width: min(96%, 38svh, 350px); }
+  .cn-heroi__texto { text-align: left; }
   .cn-heroi__titulo { font-size: clamp(2.7rem, 10.8vw, 3.9rem); }
-  .cn-heroi__subtitulo { max-width: 38ch; margin: 12px auto 0; }
-  .cn-heroi .cn-acoes { margin: 18px auto 0; }
+  .cn-heroi__subtitulo { max-width: 42ch; margin: 12px 0 0; }
+  .cn-heroi .cn-acoes { max-width: 420px; margin: 18px 0 0; }
+  .cn-heroi__exemplo { right: -2%; bottom: 2%; min-height: 44px; padding-inline: 10px; font-size: .87rem; }
 }
 @media (min-width: 740px) and (max-width: 1039px) {
   .cn-heroi { gap: 28px; padding-block: 50px; }
   .cn-heroi__titulo { font-size: clamp(3.1rem, 6.3vw, 4.1rem); }
 }
+@media (min-width: 1040px) {
+  .cn-heroi .cn-acoes { grid-template-columns: max-content max-content; align-items: start; gap: 12px 14px; max-width: none; }
+  .cn-heroi .cn-apoio, .cn-heroi .cn-erro { grid-column: 1 / -1; max-width: 47ch; }
+}
 @media (orientation: landscape) and (max-height: 520px) and (min-width: 560px) {
-  .cn-heroi { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 26px; padding-block: 24px; }
+  .cn-heroi { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 22px; padding-block: 20px; }
   .cn-heroi__palco { width: min(100%, 78svh); }
   .cn-heroi__texto { text-align: left; }
   .cn-heroi__titulo { font-size: 2.65rem; }
@@ -164,8 +182,7 @@
 .cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
 .cn-celular__ilha { position: absolute; z-index: 3; top: 8px; left: 50%; width: 28%; height: 20px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
 .cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 10px; height: 10px; border-radius: 50%; }
-/* A captura entra INTEIRA e com a proporção que tem (nunca esticada nem achatada): numa tela de outra proporção (o momento 1 é 20:9, 2,5% mais comprido que a moldura) sobra uma faixa fina
-   de cada lado, em branco, que é a cor do fundo do app. O <picture> só escolhe o formato e não cria caixa. */
+/* A captura mantém a proporção e entra inteira na moldura. O <picture> só escolhe o formato. */
 .cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
 /* O atributo hidden VALE: sem esta regra o `display: block` acima passava por cima do display: none do navegador e as telas 2 e 3 do herói (hidden + loading="lazy") eram buscadas na carga, junto com a primeira. */
 .cn-captura[hidden] { display: none; }
@@ -189,12 +206,81 @@
 @keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 
-/* Assuntos: cada ficha preenche o pedido com a ideia completa no app. */
-.cn-s3 {
-  width: 100%; padding: 22px max(var(--cn-margem), calc((100% - var(--cn-coluna)) / 2)) 26px;
-  border-block: 1px solid #e1e5f0; background: #fff;
+/* Uma folha com a fonte e, ao lado, a questão que a pessoa já consegue responder. */
+.cn-licao {
+  background: #183763; color: white;
+  background-image: radial-gradient(ellipse at 14% 120%, #284d79, transparent 54%);
 }
-.cn-s3 .cn-secao__titulo { margin-bottom: 12px; font: 850 1.05rem/1.3 Nunito, sans-serif; letter-spacing: -.02em; }
+.cn-licao__miolo {
+  display: grid; grid-template-columns: minmax(0, .93fr) minmax(0, 1.07fr); align-items: center;
+  gap: clamp(28px, 8vw, 112px); padding-block: clamp(40px, 5.5vw, 76px);
+}
+.cn-licao__origem { min-width: 0; }
+.cn-licao .cn-secao__titulo { max-width: 13ch; color: #fff; }
+.cn-anotacao {
+  position: relative; width: min(94%, 378px); margin: 32px 0 0 5px; padding: 20px 20px 21px 32px;
+  border-radius: 3px 8px 12px 3px; background: #fff6dd; color: #322c25; box-shadow: 3px 5px #c8bc96; transform: rotate(-2deg);
+}
+.cn-anotacao::before { content: ''; position: absolute; inset: 0 auto 0 17px; border-left: 1px solid #dba99d; }
+.cn-anotacao::after { content: ''; position: absolute; top: -8px; right: 15%; width: 56px; height: 17px; background: #f9ce75ce; transform: rotate(7deg); }
+.cn-anotacao figcaption { font-size: .8rem; font-weight: 850; color: #665538; }
+.cn-anotacao blockquote { margin: 6px 0 0; }
+.cn-anotacao strong { display: block; font: 850 1.65rem/1.15 Nunito, sans-serif; letter-spacing: -.03em; }
+.cn-anotacao p { margin-top: 7px; background: repeating-linear-gradient(transparent 0 calc(1.5em - 1px), #dcd4bb calc(1.5em - 1px) 1.5em); font: 650 1.025rem/1.5 Nunito, sans-serif; }
+.cn-questao { min-width: 0; padding: clamp(22px, 3.6vw, 44px); border-radius: 24px; background: #fff; color: var(--cn-marinho); box-shadow: 0 6px 0 #0e284b; }
+.cn-questao h3 { max-width: 24ch; font: 850 clamp(1.4rem, 2.25vw, 2rem)/1.16 Nunito, sans-serif; letter-spacing: -.028em; }
+.cn-fracao {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 260px); gap: 3px;
+  margin-block: 22px; padding: 3px; background: #183968; border-radius: 9px; overflow: hidden;
+}
+.cn-fracao span { aspect-ratio: 1.9; background: #f3f6ff; }
+.cn-fracao span[data-pintada] { background: repeating-linear-gradient(135deg, #245bd1 0 7px, #84adff 7px 10px); }
+.cn-respostas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.cn-respostas button {
+  min-height: 53px; border: 1.5px solid #bac8e3; border-radius: 12px; background: #fff;
+  box-shadow: 0 3px 0 #c4d1e7; color: var(--cn-marinho); font: 850 1.3rem/1 Nunito, sans-serif; cursor: pointer;
+}
+@media (hover: hover) { .cn-respostas button:where(:not([aria-disabled], [data-resultado])):hover { background: #eef3ff; border-color: #6485ca; } }
+.cn-respostas button[data-resultado='acerto'] { border-color: #257051; background: #e0f5e7; box-shadow: 0 3px 0 #257051; color: #195037; }
+.cn-respostas button[data-resultado='pista'] { border-color: #9b6419; background: #fff1cf; box-shadow: 0 3px 0 #9b6419; color: #75480e; }
+.cn-respostas button[aria-disabled] { cursor: default; }
+.cn-questao .cn-retorno { margin-top: 18px; min-height: 1.5em; color: #495c77; font-size: .96rem; line-height: 1.5; }
+.cn-retorno[data-resultado] { padding: 10px 14px; border-left: 3px solid #d69e39; border-radius: 0 9px 9px 0; background: #fff6de; }
+.cn-questao .cn-retorno[data-resultado='acerto'] { background: #e6f6eb; border-color: #35815b; color: #205438; }
+.cn-questao__fim { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 3px; }
+.cn-questao__fim a, .cn-questao__fim button, .cn-questao summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--acao-escura); font: 850 .95rem/1.3 Nunito, sans-serif; cursor: pointer; }
+.cn-questao__fim button { background: none; border: 0; padding: 0; color: #465774; text-decoration: underline; }
+@media (max-width: 739px) {
+  .cn-licao__miolo { grid-template-columns: 1fr; gap: 20px; padding-block: 31px; }
+  .cn-licao .cn-secao__titulo { max-width: none; }
+  .cn-anotacao { width: min(96%, 420px); margin: 18px 0 0 3px; padding: 12px 16px 14px 27px; transform: rotate(-1deg); }
+  .cn-anotacao strong { font-size: 1.22rem; }
+  .cn-anotacao p { font-size: .98rem; margin-top: 3px; }
+  .cn-questao { border-radius: 17px; padding: 21px 17px; }
+  .cn-fracao { margin-block: 16px; }
+  .cn-respostas { gap: 8px; }
+}
+@media (scripting: none) { .cn-respostas, .cn-retorno, .cn-assunto { display: none; } }
+
+/* Um assunto livre ou uma das seis ideias do app, usando o mesmo rascunho. */
+.cn-s3 {
+  padding-block: clamp(44px, 6.7vw, 92px) clamp(36px, 5.2vw, 72px); border-bottom: 1px solid #dce2ee; background: #fff;
+}
+.cn-s3 .cn-secao__titulo { margin-bottom: 20px; }
+.cn-assunto { max-width: 670px; margin-bottom: 17px; }
+.cn-assunto__linha { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.cn-assunto input {
+  flex: 1 1 215px; width: 100%; min-width: 0; min-height: 51px; padding: 10px 16px; border: 1.5px solid #a6b5d0; border-radius: 12px;
+  background: #f8faff; color: #192c4c; font: 650 1.04rem/1.4 Nunito, sans-serif;
+}
+.cn-assunto input::placeholder { color: #5c6a81; }
+.cn-assunto input[aria-invalid] { border-color: #a53121; }
+.cn-assunto .botao { min-height: 51px; gap: 9px; padding-inline: 24px; border-radius: 12px; }
+.cn-assunto .cn-erro { margin-top: 8px; }
+@media (max-width: 480px) {
+  .cn-assunto input { flex-basis: 140px; padding-inline: 10px; font-size: 1rem; }
+  .cn-assunto .botao { padding-inline: 12px; }
+}
 .cn-fichas__lista { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 11px; margin: 0; padding: 0; list-style: none; }
 .cn-ficha-item { min-width: 0; --pastel: #eee5ff; --relevo: #c4b2ec; }
 .cn-ficha-item:nth-child(2) { --pastel: #dcf1ff; --relevo: #a5d5f6; }
@@ -252,8 +338,30 @@
 .cn-momento[data-momento='4'] { --papel: #e9f1ff; --halo: #cedfff; --tinta: #213d7f; }
 .cn-momento__titulo { max-width: 15ch; font: 850 clamp(1.95rem, 4vw, 3.5rem)/1.08 Nunito, sans-serif; letter-spacing: -.035em; color: var(--tinta); }
 .cn-momento__linha { max-width: 38ch; margin-top: 14px; font: 650 clamp(1rem, 1.45vw, 1.21rem)/1.5 Nunito, sans-serif; color: #3f4d66; }
+.cn-fonte { margin: 17px 0 0; padding: 11px 15px; max-width: 37ch; border-left: 3px solid #7763b1; border-radius: 0 11px 11px 0; background: #fffc; color: #403659; }
+.cn-fonte figcaption { font-size: .82rem; font-weight: 850; }
+.cn-fonte blockquote { margin: 5px 0 0; font-size: .97rem; line-height: 1.45; }
 .cn-momento__ampliar { display: flex; flex-wrap: wrap; gap: 0 18px; margin-top: 7px; }
 .cn-momento__ampliar a { display: inline-flex; align-items: center; min-height: 44px; font-size: .91rem; font-weight: 850; color: var(--tinta); text-underline-offset: 4px; }
+.cn-visor {
+  position: fixed; inset: 0; margin: auto; width: min(840px, calc(100% - 24px)); max-width: none;
+  max-height: calc(100svh - 32px); border: 1px solid #c9d4e8; padding: 0; border-radius: 21px;
+  background: #fff; color: var(--cn-marinho); box-shadow: 0 18px 70px #0c1a3b52;
+}
+.cn-visor[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.cn-visor[data-retrato] { width: min(430px, calc(100% - 24px)); }
+.cn-visor::backdrop { background: #101f40b5; }
+.cn-visor__barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 17px 4px; }
+.cn-visor__barra h2 { font: 850 1.37rem/1.2 Nunito, sans-serif; color: var(--cn-marinho); }
+.cn-visor button { min-height: 44px; padding-inline: 12px; border: 1px solid #b9c7e1; border-radius: 12px; background: white; color: #284888; font: 800 .95rem/1.2 Nunito, sans-serif; cursor: pointer; }
+.cn-visor__fechar span { margin-left: 3px; }
+.cn-visor__ferramentas { padding: 0 17px 8px; }
+.cn-visor__ferramentas button { border-color: transparent; padding-inline: 2px; text-decoration: underline; text-underline-offset: 4px; }
+.cn-visor__ferramentas button[aria-pressed='true'] { background: #e6edff; padding-inline: 9px; }
+.cn-visor__imagem { min-height: 0; overflow: auto; overscroll-behavior: contain; background: #eaf0f8; border-top: 1px solid #c9d4e8; }
+.cn-visor__imagem img { display: block; margin-inline: auto; width: 100%; height: auto; }
+.cn-visor__imagem[data-original] img { width: auto; max-width: none; }
+.cn-visor__imagem:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
 .cn-momento__visual { position: relative; isolation: isolate; display: grid; place-items: center; }
 .cn-momento__visual::before { content: ''; position: absolute; z-index: -1; width: min(100%, 360px); aspect-ratio: 1.12; border-radius: 46% 54% 53% 47%; background: var(--halo); transform: rotate(-12deg); }
 .cn-momento__visual .cn-celular { --celular: clamp(156px, 16vw, 202px); border-width: 6px; border-radius: 30px; box-shadow: 3px 5px 0 #17225325, 0 12px 22px #19214e15; }
@@ -318,7 +426,7 @@
   .cn-painel { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 64px; align-items: start; }
   .cn-painel__acao, .cn-painel__qr, .cn-apoio--painel { grid-column: 2; }
   .cn-passos { grid-column: 1; grid-row: 1 / span 3; }
-  /* A aba do iPhone antes do TestFlight, no computador (spec 18, seção 3, conferência de 24/11): a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta" ficam
+  /* A aba do iPhone antes do TestFlight, no computador: o aviso do convite público e o botão "Experimentar sem conta" ficam
      embaixo dos passos, na coluna da esquerda, alinhados ao TEXTO dos passos (depois do número e do vão) e na largura do botão principal do computador (não a coluna toda); o cartão do QR fica
      sozinho à direita, como na aba do Android. */
   .cn-painel--iphone-com-qr .cn-passos { grid-row: 1; }

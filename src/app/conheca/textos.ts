@@ -1,19 +1,17 @@
-export function frasesDoTitulo(titulo: string): string[] {
-  return titulo.split('. ').map((parte, indice, todas) => (indice < todas.length - 1 ? `${parte}.` : parte));
-}
+export const linhasDoTitulo = ['Seu caderno', 'vira lição.'] as const;
 
 export const textos = {
   pagina: {
-    titulo: 'Studoo — Seu assunto. Sua trilha.',
-    descricao: 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.',
+    titulo: `Studoo — ${linhasDoTitulo.join(' ')}`,
+    descricao: 'Transforme uma foto, um PDF ou um assunto em lições curtas. Resolva uma questão com o Stu e descubra como ele ajuda quando você erra.',
   },
   pular: 'Pular para o conteúdo',
   cabecalho: { entrar: 'Entrar', abrir: 'Abrir o Studoo' },
   visitante: 'Experimentar sem conta',
   visitanteIndisponivel: 'Entrar',
   heroi: {
-    titulo: 'Seu assunto. Sua trilha.',
-    subtitulo: 'Escolha um assunto ou mande uma foto do caderno. O Stu transforma o que você traz em lições curtas para praticar.',
+    titulo: linhasDoTitulo.join(' '),
+    subtitulo: 'Mande uma foto, um PDF ou só o assunto que você quer estudar. O Stu cria lições curtas e dá uma pista quando você erra.',
     celularRotulo: 'Telas do Studoo: escolher o que aprender, a trilha pronta e uma lição com o acerto',
   },
   acoes: {
@@ -30,7 +28,8 @@ export const textos = {
     iphoneEmBreve: {
       rotulo: 'Usar no iPhone agora',
       rotuloLeitor: 'Usar no iPhone agora, o Studoo na Tela de Início',
-      apoio: 'O app para iPhone chega em breve pelo TestFlight.',
+      apoio: 'Adicione o Studoo pelo Safari para abrir pela Tela de Início.',
+      disponibilidade: 'O convite público do TestFlight ainda não está disponível.',
     },
     /** O iPad (o app nativo é só de iPhone, supportsTablet: false): o caminho é sempre a Tela de Início pelo Safari, também depois do TestFlight. */
     ipad: {
@@ -81,7 +80,7 @@ export const textos = {
     janelaAlt: 'A mesma trilha no site, aberta no navegador do computador',
   },
   s3: {
-    titulo: 'Comece por um assunto',
+    titulo: 'O que você quer aprender?',
     lista: 'Ideias para começar',
   },
   s4: {

@@ -185,7 +185,7 @@ test('o cookie conta só no formato da sessão (o mesmo da API e da página): va
 test('os metadados da raiz levam a imagem de compartilhar com endereço completo (a convenção só vale em /conheca); em /conheca ela vem da convenção', async () => {
   const comImagem = await comOrigem('https://studoo.exemplo.test', () => metadadosDaApresentacao({ imagem: true }));
   assert.equal(comImagem.metadataBase.origin, 'https://studoo.exemplo.test');
-  assert.equal(comImagem.title, 'Studoo — Seu assunto. Sua trilha.');
+  assert.equal(comImagem.title, 'Studoo — Seu caderno vira lição.');
   assert.equal(comImagem.openGraph.images[0].url, IMAGEM_DE_COMPARTILHAR);
   assert.equal(IMAGEM_DE_COMPARTILHAR, '/conheca/opengraph-image');
   assert.deepEqual([comImagem.openGraph.images[0].width, comImagem.openGraph.images[0].height], [1200, 630]);
@@ -197,7 +197,7 @@ test('os metadados da raiz levam a imagem de compartilhar com endereço completo
   // Com sessão a raiz não traz metadados da apresentação (vale o do layout, o do app).
   assert.deepEqual(await comEntrada('1', () => comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.generateMetadata())), {});
   const sem = await comEntrada('1', () => comCookie({}, () => Pagina.generateMetadata()));
-  assert.equal(sem.title, 'Studoo — Seu assunto. Sua trilha.');
+  assert.equal(sem.title, 'Studoo — Seu caderno vira lição.');
   // Com a entrada desligada a raiz vai ao login: não anuncia a página de apresentação.
   assert.deepEqual(await comEntrada(undefined, () => comCookie({}, () => Pagina.generateMetadata())), {});
 });

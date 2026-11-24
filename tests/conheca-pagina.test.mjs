@@ -23,7 +23,7 @@ const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { PaginaVista } = await import('../src/app/conheca/pagina.tsx');
 const { APK_PADRAO } = await import('../src/app/conheca/links.ts');
 const { svgDoQr } = await import('../src/app/conheca/qr.ts');
-const { textos, frasesDoTitulo } = await import('../src/app/conheca/textos.ts');
+const { textos, linhasDoTitulo } = await import('../src/app/conheca/textos.ts');
 const { IDEIAS_DO_S3, fichaDaIdeia } = await import('../src/app/conheca/ideias.ts');
 const { iconesDosTemas } = await import('../src/app/pedido.tsx');
 const { mensagens } = await import('../src/mensagens/pt-BR.ts');
@@ -52,12 +52,12 @@ test('a página tem o título do herói, o subtítulo da spec, um só h1 e a ord
   assert.match(texto(html), /Com uma conta, a sua trilha é a mesma no site e no app\./, 'o momento 4 diz "com uma conta": o progresso do visitante fica só no aparelho dele');
 });
 
-test('o título do herói é uma frase por linha ("Seu assunto." e "Sua trilha."), cada uma equilibrada por dentro, e continua lendo-se como uma frase só', () => {
+test('o título contém uma única frase com quebra visual e espaço para o leitor de tela', () => {
   const html = desenhar({ aparelho: 'android' });
   const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1];
-  assert.equal(h1, '<span class="cn-heroi__frase">Seu assunto.</span> <span class="cn-heroi__frase">Sua trilha.</span>', 'duas frases, com um espaço entre elas para o leitor de tela e a cópia do texto');
+  assert.equal(h1, '<span class="cn-heroi__frase">Seu caderno</span> <span class="cn-heroi__frase">vira lição.</span>');
   assert.equal(texto(h1).trim(), textos.heroi.titulo);
-  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Seu assunto.', 'Sua trilha.']);
+  assert.deepEqual(linhasDoTitulo, ['Seu caderno', 'vira lição.']);
   assert.match(ler('src/app/conheca/conheca.css'), /\.cn-heroi__frase \{ display: block; text-wrap: balance; \}/);
 });
 
@@ -89,7 +89,7 @@ test('iPhone: sem link do TestFlight, "Usar no iPhone agora" abre a folha; com l
     assert.equal(usar.tag, 'button');
     assert.match(usar.atributos, /aria-haspopup="dialog"/);
     assert.match(usar.atributos, /aria-label="Usar no iPhone agora, o Studoo na Tela de Início"/);
-    assert.ok(texto(sem).includes('O app para iPhone chega em breve pelo TestFlight.'));
+    assert.ok(texto(sem).includes('Adicione o Studoo pelo Safari para abrir pela Tela de Início.'));
     assert.equal(achar(sem, 'Instalar no iPhone').length, 0);
     const com = desenhar({ aparelho, links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
     const [instalar] = achar(com, 'Instalar no iPhone');
@@ -169,10 +169,25 @@ test('fontes: cada família em duas partes complementares (o latim, pré-carrega
 test('a navegação leva às seções na ordem em que a pessoa as encontra depois do convite', () => {
   const html = desenhar();
   const ids = [...html.matchAll(/<section id="([^"]+)"/g)].map(([, id]) => id);
-  assert.deepEqual(ids, ['conteudo', 'assuntos', 'como-funciona', 'baixar']);
+  assert.deepEqual(ids, ['conteudo', 'licao-de-exemplo', 'assuntos', 'como-funciona', 'baixar']);
   const menu = html.match(/<nav class="cn-menu"[^>]*>([\s\S]*?)<\/nav>/)[1];
   for (const id of ids.slice(1)) assert.ok(menu.includes(`href="#${id}"`));
   assert.ok(html.includes('/marca/stu/stu-acolhida-480.webp'), 'o palco traz a versão maior do Stu oficial');
+});
+
+test('a questão e a fonte chegam no HTML, inclusive sem conta ou com o visitante desligado', () => {
+  for (const visitante of [true, false]) {
+    const html = desenhar({ visitante });
+    const questao = html.match(/<section id="licao-de-exemplo"[\s\S]*?<\/section>/)[0];
+    assert.match(questao, /Anotação de exemplo/);
+    assert.match(questao, /role="img" aria-label="Retângulo dividido em oito partes iguais. Três estão pintadas com listras."/);
+    assert.equal((questao.match(/data-pintada=/g) ?? []).length, 3);
+    assert.deepEqual(botoes(questao).map(b => b.texto), ['3/5', '3/8', '5/8']);
+    assert.match(questao, /<noscript><details><summary>Ver a resposta/);
+    assert.match(questao, /role="status" aria-atomic="true"/);
+    assert.match(html, /<label for="cn-assunto-campo"/);
+    assert.ok(html.includes(visitante ? 'Continuar' : 'Continuar no login'));
+  }
 });
 
 test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o principal e o QR está na seção de instalação', () => {
@@ -250,7 +265,7 @@ test('a ideia da ficha vai para o rascunho que o app já lê e apaga (a mesma ch
   const app = ler('src/app/estudo.tsx');
   assert.ok(app.includes(`sessionStorage.getItem('${chave}')`), 'o app lê o rascunho ao abrir');
   assert.ok(app.includes(`sessionStorage.removeItem('${chave}')`), 'e o apaga');
-  assert.match(ilha, /if \(!comSessao\) await cliente\.entrarVisitante\(\)/, 'quem tem sessão não troca o cookie por um de visitante');
+  assert.match(ilha, /if \(!comSessao && ativo\) await entrarComoVisitante\(\)/, 'quem tem sessão não troca o cookie por um de visitante');
   assert.ok(!/studoo:ideia-inicial/.test(ilha), 'sem a chave antiga, que ninguém lia');
 });
 
@@ -374,9 +389,11 @@ test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e 
     const bytesWebp = readFileSync(join(raiz, 'public', captura.src2x)).length;
     assert.ok(bytesAvif <= bytesWebp * 0.65, `${id}: o AVIF de ${captura.avif[1].largura}w (${bytesAvif} B) não é bem menor que o WebP 2x (${bytesWebp} B)`);
   }
-  // O momento 1 (1080×2400, 20:9) entra com a proporção que tem: a tela da moldura a encaixa inteira, sem esticar (object-fit: contain) e sem recorte.
+  // A captura nativa e seu PDF de origem estão acessíveis sem recortar nem esticar a imagem.
   const m1 = CAPTURAS['momento-1'];
-  assert.ok(Math.abs(m1.altura / m1.largura - 2400 / 1080) / (2400 / 1080) < 0.002, `momento 1: ${m1.largura}x${m1.altura}`);
+  assert.ok(Math.abs(m1.altura / m1.largura - 1560 / 720) / (1560 / 720) < 0.002, `momento 1: ${m1.largura}x${m1.altura}`);
+  assert.ok(desenhar().includes('href="/landing/regra-dos-tercos.pdf"'));
+  assert.equal(readFileSync(join(raiz, 'public/landing/regra-dos-tercos.pdf')).subarray(0, 5).toString(), '%PDF-');
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}/, 'a captura é encaixada inteira, nunca esticada (object-fit: fill esticava a do momento 1)');
   assert.doesNotMatch(css, /object-fit: (fill|cover)/);
@@ -435,9 +452,14 @@ test('cada escolha oferece a captura ampliada correspondente; continuar depois t
   const html = desenhar();
   for (let numero = 1; numero <= 4; numero++) {
     const artigo = html.match(new RegExp(`<article[^>]*id="cn-momento-${numero}"[^>]*>([\\s\\S]*?)</article>`))[1];
-    assert.ok(artigo.includes(`href="${CAPTURAS['momento-' + numero].src2x}">Ampliar tela do app`));
-    assert.equal(artigo.includes(`href="${CAPTURAS['janela-4'].src2x}">Ampliar tela do site`), numero === 4);
+    const app = achar(artigo, 'Ampliar tela do app')[0];
+    assert.ok(app.atributos.includes(`href="${CAPTURAS['momento-' + numero].src2x}"`));
+    assert.ok(app.atributos.includes('aria-haspopup="dialog"'));
+    const site = achar(artigo, 'Ampliar tela do site');
+    assert.equal(site.length, numero === 4 ? 1 : 0);
+    if (numero === 4) assert.ok(site[0].atributos.includes(`href="${CAPTURAS['janela-4'].src2x}"`));
   }
+  assert.match(html, /<dialog class="cn-visor"><\/dialog>/, 'a imagem grande só é carregada ao abrir a captura');
 });
 
 test('os momentos podem ser escolhidos sem JavaScript e sem depender de animações', () => {
@@ -556,7 +578,7 @@ test('S4: grupo de abas acessível com Android e iPhone, e os textos dos passos 
   const iphone = desenhar({ aparelho: 'iphone' });
   assert.match(iphone, /id="cn-aba-iphone"[^>]*aria-selected="true"|aria-selected="true"[^>]*id="cn-aba-iphone"/, 'no iPhone abre em iPhone');
   assert.match(iphone, /id="cn-painel-android"[^>]*hidden=""/);
-  assert.ok(texto(iphone).includes('O app para iPhone chega em breve pelo TestFlight.'));
+  assert.ok(texto(iphone).includes(textos.acoes.iphoneEmBreve.disponibilidade));
 });
 
 test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba falam do celular, com o cartão do QR ao lado também na aba do iPhone (sem o arquivo do Android), e só no computador', () => {
@@ -567,18 +589,18 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.deepEqual([...android.matchAll(/<span class="cn-passo__texto">([^<]*)<\/span>/g)].map((m) => m[1].replace(/&quot;/g, '"').replace(/&#x27;/g, "'")), [...textos.s4.android.passosNoComputador]);
   assert.match(android, /id="cn-qr-s4-titulo"/);
   assert.match(android, /class="cn-qr__arquivo"/);
-  // iPhone antes do TestFlight: os passos do computador (a câmera, Compartilhar, Adicionar), o cartão do QR sem o arquivo do Android, a linha "chega em breve" e o botão de visitante.
+  // iPhone antes do TestFlight: os passos do computador, o QR sem o arquivo do Android e o estado do convite público.
   const iphone = painel(computador, 'iphone');
   for (const passo of textos.s4.iphone.passosNoComputador) assert.ok(texto(iphone).includes(passo), passo);
   assert.deepEqual(textos.s4.iphone.passosNoComputador, ['Aponte a câmera do iPhone para o código ao lado e abra a página no Safari.', 'Toque em Compartilhar e escolha “Adicionar à Tela de Início”.', 'Toque em Adicionar. O Studoo fica com os seus apps.']);
   assert.match(iphone, /id="cn-qr-s4-iphone-titulo"/, 'o cartão do QR também na aba do iPhone, ao lado dos passos');
   assert.doesNotMatch(iphone, /cn-qr__arquivo/, 'sem o arquivo do Android no cartão do iPhone');
-  assert.ok(texto(iphone).includes('O app para iPhone chega em breve pelo TestFlight.'));
+  assert.ok(texto(iphone).includes(textos.acoes.iphoneEmBreve.disponibilidade));
   assert.doesNotMatch(texto(iphone), /Toque em Compartilhar, na barra do Safari/, 'os passos da folha (do celular) não aparecem no computador');
   // A âncora #iphone não é item da grade do painel (tomava uma linha e empurrava o cartão do QR para baixo do alinhamento dos passos): fica solta, posicionada no painel.
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /\.cn-ancora \{ position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; \}/);
-  // A aba do iPhone antes do TestFlight, no computador (conferência do Designer de 24/11): a linha "chega em breve" e o botão embaixo dos passos, na coluna da esquerda, alinhados ao texto dos passos e na
+  // A aba do iPhone antes do TestFlight, no computador: o estado do convite e o botão embaixo dos passos, na coluna da esquerda, alinhados ao texto dos passos e na
   // largura do botão principal; o cartão do QR sozinho à direita.
   assert.match(iphone, /<div role="tabpanel" id="cn-painel-iphone"[^>]*class="cn-painel cn-painel--iphone-com-qr"/, 'só a aba do iPhone sem TestFlight e com QR leva a variante');
   assert.doesNotMatch(painel(computador, 'android').slice(0, 300), /cn-painel--iphone-com-qr/);
@@ -620,8 +642,8 @@ test('rodapé e metadados: logo, a linha do HackBrasil e os três links; o títu
   assert.match(html, /<a href="\/privacidade">Política de privacidade<\/a>/);
   assert.match(html, /<a href="\/suporte">Suporte<\/a>/);
   const pagina = ler('src/app/conheca/page.tsx');
-  assert.match(ler('src/app/conheca/textos.ts'), /titulo: 'Studoo — Seu assunto. Sua trilha.'/);
-  assert.match(ler('src/app/conheca/textos.ts'), /descricao: 'O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu\.'/);
+  assert.equal(textos.pagina.titulo, 'Studoo — Seu caderno vira lição.');
+  assert.ok(textos.pagina.descricao.includes('Resolva uma questão com o Stu'));
   assert.doesNotMatch(pagina, /robots\s*:/, 'o noindex do site fica o do layout raiz');
   assert.match(ler('src/app/layout.tsx'), /robots: \{ index: false, follow: false \}/);
 });
