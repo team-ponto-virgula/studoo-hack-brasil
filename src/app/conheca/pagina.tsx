@@ -16,6 +16,7 @@ import { CelularDoHeroi } from './ilhas/celular-heroi';
 import { Momentos } from './ilhas/momentos';
 import { Fichas } from './ilhas/fichas';
 import { Revelar } from './ilhas/revelar';
+import { CarregarPerto } from './ilhas/carregar-perto';
 import { SaidaDoApp } from './ilhas/saida-do-app';
 import { temCookieDeSessao } from './inicio';
 import { linksDoSite, tamanhoDoApk, type LinksDoSite } from './links';
@@ -104,13 +105,13 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
                     <div className="cn-composto">
                       <JanelaDoNavegador captura={CAPTURAS['janela-4']} alt={textos.s2.janelaAlt} />
                       <Celular plataforma={MOMENTOS_DO_S2[indice].captura.plataforma}>
-                        <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} tamanhos={TAMANHOS.celularDoComposto} />
+                        <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} tamanhos={TAMANHOS.celularDoComposto} sobDemanda />
                       </Celular>
                       <p className="cn-selo-sincronia"><span className="cn-selo-sincronia__ponto" aria-hidden="true" />{textos.s2.selo}</p>
                     </div>
                   ) : (
                     <Celular plataforma={MOMENTOS_DO_S2[indice].captura.plataforma}>
-                      <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} />
+                      <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} sobDemanda />
                     </Celular>
                   )}
                 </div>
@@ -146,7 +147,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 
       <footer className="cn-rodape" data-revelar>
         <picture className="logo-quadro">
-          <img src="/marca/logo-com-sorriso.svg" width={140} height={46} alt="Studoo" />
+          <img src="/marca/logo-com-sorriso.svg" width={140} height={46} alt="Studoo" loading="lazy" decoding="async" />
         </picture>
         <p className="cn-rodape__linha">{textos.s6.linha}</p>
         <nav className="cn-rodape__links" aria-label="Links do rodapé">
@@ -156,6 +157,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
         </nav>
       </footer>
       <Revelar />
+      <CarregarPerto />
       {naRaiz && <SaidaDoApp />}
     </div>
   );

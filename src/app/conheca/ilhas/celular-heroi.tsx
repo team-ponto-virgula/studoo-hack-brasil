@@ -5,6 +5,8 @@ import { CapturaDaTela, Celular, TAMANHOS } from '../celular';
 import type { CapturaOtimizada, Plataforma } from '../imagens';
 
 const MS_POR_TELA = 3500;
+/** Depois do evento `load`, quanto esperar para buscar a segunda e a terceira telas. */
+const ESPERA_PARA_LIBERAR_MS = 1000;
 
 export interface TelaDoHeroi { captura: CapturaOtimizada; alt: string }
 
@@ -42,7 +44,12 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
 
   useEffect(() => {
     if (!rodando) return;
-    setLiberadas(true);
+    // A segunda e a terceira telas só são buscadas DEPOIS de a página carregar (mais 1 s): não disputam a banda com a primeira, que é o LCP, nem com o texto e as fontes. A primeira troca é só
+    // aos 3,5 s, então sobra tempo; se a captura ainda não chegou, a troca espera (`pronta`).
+    let liberar = 0;
+    const liberarDepois = () => { liberar = window.setTimeout(() => setLiberadas(true), ESPERA_PARA_LIBERAR_MS); };
+    if (document.readyState === 'complete') liberarDepois();
+    else window.addEventListener('load', liberarDepois, { once: true });
     let relogio = 0;
     /** A captura da tela `indice` já chegou (carregada e com tamanho): só então ela pode entrar. */
     const pronta = (indice: number) => {
@@ -59,7 +66,11 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
       agendar(MS_POR_TELA);
     }
     agendar(MS_POR_TELA);
-    return () => window.clearTimeout(relogio);
+    return () => {
+      window.clearTimeout(relogio);
+      window.clearTimeout(liberar);
+      window.removeEventListener('load', liberarDepois);
+    };
   }, [rodando, telas.length]);
 
   /** A tela que saiu só deixa de aparecer quando a nova terminou de entrar (e, por garantia, 1,6 s depois da troca se a aba estiver à vista). */

@@ -28,12 +28,15 @@ export const TAMANHOS = {
 } as const;
 
 const srcSetDoAvif = (captura: CapturaOtimizada) => captura.avif.map((item) => `${item.src} ${item.largura}w`).join(', ');
+const srcSetDoWebp = (captura: CapturaOtimizada) => `${captura.src1x} ${captura.largura}w, ${captura.src2x} ${captura.largura * 2}w`;
+/** Um pixel transparente: o `src` das capturas que só são buscadas perto da tela (nada a baixar, e o navegador não mostra o texto alternativo no lugar). */
+export const PIXEL_TRANSPARENTE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 /**
  * Uma captura nativa do app, com a proporção que ela tem: AVIF em três larguras (o que os navegadores de hoje baixam) e WebP de reserva, com largura e altura declaradas (nada pula). O `<img>`
  * leva tudo o que o navegador usa (prioridade, carregamento, descrição); o `<picture>` só escolhe o formato.
  */
-export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '', tamanhos = TAMANHOS.momento }: {
+export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '', tamanhos = TAMANHOS.momento, sobDemanda = false }: {
   captura: CapturaOtimizada;
   alt: string;
   /** A primeira do herói: carrega já e com prioridade. As outras só quando chegam perto da tela, e com prioridade baixa (não disputam a banda com a primeira, o texto e as fontes). */
@@ -42,14 +45,39 @@ export function CapturaDaTela({ captura, alt, prioridade = false, escondida = fa
   className?: string;
   /** Veja `TAMANHOS`. */
   tamanhos?: string;
+  /**
+   * Só é buscada quando a página já carregou e a captura chega perto da tela (a ilha `CarregarPerto` troca os `data-` pelos atributos de verdade): as capturas dos momentos do S2 ficam
+   * abaixo da dobra, e o `loading="lazy"` do navegador as buscava logo (cerca de 1250 px de folga), junto com a primeira do herói, que é o LCP. Sem JavaScript, o <noscript> traz a de verdade.
+   */
+  sobDemanda?: boolean;
 }) {
+  const classe = `cn-captura ${className}`.trim();
+  if (!sobDemanda) {
+    return (
+      <picture>
+        <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={tamanhos} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={classe} src={captura.src1x} srcSet={srcSetDoWebp(captura)} sizes={tamanhos} width={captura.largura} height={captura.altura}
+          alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'low'} decoding="async" draggable={false} hidden={escondida || undefined} />
+      </picture>
+    );
+  }
   return (
-    <picture>
-      <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={tamanhos} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} ${captura.largura}w, ${captura.src2x} ${captura.largura * 2}w`} sizes={tamanhos} width={captura.largura} height={captura.altura}
-        alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'low'} decoding="async" draggable={false} hidden={escondida || undefined} />
-    </picture>
+    <>
+      <picture data-carregar-perto="">
+        <source type="image/avif" data-srcset={srcSetDoAvif(captura)} sizes={tamanhos} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={classe} src={PIXEL_TRANSPARENTE} data-src={captura.src1x} data-srcset={srcSetDoWebp(captura)} sizes={tamanhos} width={captura.largura} height={captura.altura}
+          alt={alt} decoding="async" draggable={false} />
+      </picture>
+      <noscript>
+        <picture>
+          <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={tamanhos} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className={classe} src={captura.src1x} srcSet={srcSetDoWebp(captura)} sizes={tamanhos} width={captura.largura} height={captura.altura} alt={alt} draggable={false} />
+        </picture>
+      </noscript>
+    </>
   );
 }
 
@@ -64,17 +92,12 @@ export function JanelaDoNavegador({ captura, alt, className = '' }: { captura: C
         <span className="cn-janela__pontos"><span /><span /><span /></span>
         <span className="cn-janela__aba">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/marca/icone.svg" width={14} height={14} alt="" />
+          <img src="/marca/icone.svg" width={14} height={14} alt="" loading="lazy" decoding="async" />
           {textos.s2.janelaAba}
         </span>
       </div>
       <div className="cn-janela__tela">
-        <picture>
-          <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={TAMANHOS.janela} />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="cn-captura" src={captura.src1x} srcSet={`${captura.src1x} ${captura.largura}w, ${captura.src2x} ${captura.largura * 2}w`} sizes={TAMANHOS.janela} width={captura.largura} height={captura.altura}
-            alt={alt} loading="lazy" fetchPriority="low" decoding="async" draggable={false} />
-        </picture>
+        <CapturaDaTela captura={captura} alt={alt} tamanhos={TAMANHOS.janela} sobDemanda />
       </div>
     </div>
   );

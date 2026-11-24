@@ -185,7 +185,11 @@
 /* A captura entra INTEIRA e com a proporção que tem (nunca esticada nem achatada): numa tela de outra proporção (o momento 1 é 20:9, 2,5% mais comprido que a moldura) sobra uma faixa fina
    de cada lado, em branco, que é a cor do fundo do app. O <picture> só escolhe o formato e não cria caixa. */
 .cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* O atributo hidden VALE: sem esta regra o `display: block` acima passava por cima do display: none do navegador e as telas 2 e 3 do herói (hidden + loading="lazy") eram buscadas na carga, junto com a primeira. */
+.cn-captura[hidden] { display: none; }
 .cn-celular__tela picture, .cn-janela__tela picture { display: contents; }
+/* Sem JavaScript, as capturas que só se buscam perto da tela (<picture data-carregar-perto>) somem e o <noscript> de cada uma traz a de verdade. */
+@media (scripting: none) { .cn-celular__tela picture[data-carregar-perto], .cn-janela__tela picture[data-carregar-perto] { display: none; } }
 .cn-tela { position: absolute; inset: 0; opacity: 0; }
 .cn-tela[data-ativa] { opacity: 1; z-index: 2; }
 /* A tela que sai fica INTEIRA e por baixo até a nova terminar de entrar por cima dela: nenhum quadro vazio na troca (a soma das opacidades nunca cai abaixo de 1). */

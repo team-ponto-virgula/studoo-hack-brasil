@@ -186,34 +186,79 @@ test('o link "Pular para o conteúdo" é o primeiro da página e leva ao herói 
   assert.match(html, /<section id="conteudo" class="cn-heroi"/);
 });
 
-test('as imagens: largura e altura declaradas, só do site, a primeira do herói com prioridade e as outras sem, e nunca o stu-oi', () => {
+test('as imagens: largura e altura declaradas, só do site, a primeira do herói com prioridade, as telas 2 e 3 do herói só no laço, as dos momentos só perto da tela, e nunca o stu-oi', () => {
   const html = desenhar({ aparelho: 'android' });
   const imagens = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
   assert.ok(imagens.length >= 8);
   for (const img of imagens) {
     assert.match(img, /\bwidth="\d+"/, img.slice(0, 80));
     assert.match(img, /\bheight="\d+"/, img.slice(0, 80));
-    const origens = [...img.matchAll(/(?:src|srcSet)="([^"]+)"/g)].flatMap((m) => m[1].split(',').map((p) => p.trim().split(' ')[0]));
+    const origens = [...img.matchAll(/(?:src|srcSet|data-src|data-srcset)="([^"]+)"/g)].flatMap((m) => m[1].replace(/^data:image\/gif;base64,[A-Za-z0-9+/=]+$/, '').split(',').map((p) => p.trim().split(' ')[0])).filter(Boolean);
     for (const origem of origens) assert.match(origem, /^\/(landing|marca)\//, `só do próprio site: ${origem}`);
   }
   assert.doesNotMatch(html, /stu-oi/, 'o Stu "oi" fica de fora');
   const alta = imagens.filter((img) => /fetchPriority="high"|fetchpriority="high"/i.test(img));
   assert.equal(alta.length, 1, 'só uma imagem com prioridade alta');
-  const baixa = imagens.filter((img) => /fetchPriority="low"|fetchpriority="low"/i.test(img) && /\/landing\//.test(img));
-  assert.equal(baixa.length, imagens.filter((img) => /\/landing\//.test(img)).length - 1, 'as outras capturas (herói 2 e 3, momentos e janela) com prioridade baixa: não disputam a banda com a primeira');
   const [primeira, segunda, terceira] = telasDoHeroi('android').map((t) => t.captura);
   assert.match(alta[0], new RegExp(primeira.src1x.replace(/[.]/g, '\\.')), 'e é a primeira do herói');
-  // A segunda e a terceira do herói só entram no carregamento quando o laço começa (hidden + lazy).
+  assert.match(alta[0], /loading="eager"/);
+  // A segunda e a terceira do herói só entram no carregamento quando o laço começa (hidden + lazy + prioridade baixa) e, mesmo então, só depois da carga (a ilha espera o `load` e mais 1 s).
+  const baixa = imagens.filter((img) => /fetchPriority="low"/.test(img));
+  assert.equal(baixa.length, 2, 'só as telas 2 e 3 do herói pedem a rede com prioridade baixa: não disputam a banda com a primeira');
   for (const captura of [segunda, terceira]) {
     const img = imagens.find((i) => i.includes(captura.src1x));
     assert.match(img, /loading="lazy"/, captura.src1x);
     assert.match(img, /\bhidden=""/, captura.src1x);
+    assert.match(img, /fetchPriority="low"/, captura.src1x);
+  }
+  // As capturas dos momentos do S2 e a da janela (5) NÃO são buscadas na carga: pixel transparente no src e o endereço de verdade em data-src/data-srcset (a ilha `CarregarPerto` os passa para
+  // os atributos de verdade quando a página já carregou e a captura chega perto da tela); sem JavaScript, o <noscript> de cada uma traz a de verdade.
+  const adiadas = imagens.filter((img) => /\bdata-srcset=/.test(img));
+  assert.equal(adiadas.length, 5, 'os 3 momentos do celular, o do composto e a janela');
+  for (const img of adiadas) {
+    assert.match(img, /\bsrc="data:image\/gif;base64,[^"]+"/, 'o src é um pixel transparente (nada a baixar)');
+    assert.doesNotMatch(img, /\bloading=|fetchPriority/, 'sem loading nem prioridade: o navegador decide quando a imagem de verdade entrar');
+    assert.match(img, /\bdata-src="\/landing\/[^"]+\.webp"/);
+  }
+  assert.equal([...html.matchAll(/<picture data-carregar-perto="">/g)].length, 5);
+  const semScript = [...html.matchAll(/<noscript>([\s\S]*?)<\/noscript>/g)].map((m) => m[1]).filter((miolo) => miolo.includes('/landing/'));
+  assert.equal(semScript.length, 5, 'cada captura adiada tem o seu <noscript>');
+  for (const miolo of semScript) assert.match(miolo, /<picture><source type="image\/avif" srcSet="[^"]+" sizes="[^"]+"\/><img [^>]*src="\/landing\/[^"]+\.webp" srcSet="[^"]+"/);
+  // Os dois SVG que não são do alto da página (o ícone da aba da janela e o logo do rodapé) não são buscados na carga.
+  for (const svg of ['/marca/icone.svg', '/marca/logo-com-sorriso.svg']) {
+    const achada = imagens.find((img) => img.includes(`src="${svg}"`));
+    assert.ok(achada, svg);
+    assert.match(achada, /loading="lazy"/, `${svg}: preguiçoso`);
   }
   // Nenhuma captura passa de 120 KB em 2x (spec 18, seção 5).
   for (const id of Object.keys(CAPTURAS)) {
     const bytes = readFileSync(join(raiz, 'public', CAPTURAS[id].src2x)).length;
     assert.ok(bytes <= 120 * 1024, `${id}: ${bytes} bytes`);
   }
+});
+
+test('a ilha que busca as capturas perto da tela: só depois da carga, a uns 700 px da tela, trocando os data- pelos atributos (e pelo <source> do AVIF); e o herói libera as telas 2 e 3 só depois da carga', () => {
+  const ilha = ler('src/app/conheca/ilhas/carregar-perto.tsx');
+  assert.match(ilha, /const MARGEM = '700px 0px';/);
+  assert.match(ilha, /document\.readyState === 'complete'/, 'espera a página carregar');
+  assert.match(ilha, /addEventListener\('load', depoisDaCarga, \{ once: true \}\)/);
+  assert.match(ilha, /const ESPERA_DEPOIS_DA_CARGA_MS = 300;/);
+  assert.match(ilha, /source\[data-srcset\]/, 'o <source> do AVIF também');
+  assert.match(ilha, /imagem\.srcset = imagem\.dataset\.srcset/);
+  assert.match(ilha, /imagem\.src = imagem\.dataset\.src/);
+  assert.match(ilha, /new IntersectionObserver/);
+  assert.match(ilha, /observador\?\.unobserve\(entrada\.target\)/, 'cada uma é buscada uma vez só');
+  assert.match(ilha, /return \(\) => \{[\s\S]*observador\?\.disconnect\(\)/, 'limpa ao sair');
+  assert.match(ler('src/app/conheca/pagina.tsx'), /<Revelar \/>\n      <CarregarPerto \/>/);
+  assert.match(ler('src/app/conheca/conheca.css'), /@media \(scripting: none\) \{ \.cn-celular__tela picture\[data-carregar-perto\], \.cn-janela__tela picture\[data-carregar-perto\] \{ display: none; \} \}/, 'sem JavaScript o pixel some e o <noscript> traz a captura');
+  const heroi = ler('src/app/conheca/ilhas/celular-heroi.tsx');
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}\n\/\*[^\n]*\*\/\n\.cn-captura\[hidden\] \{ display: none; \}/, 'o hidden vale: o display: block da captura passava por cima dele e as telas 2 e 3 eram buscadas na carga');
+  assert.match(css, /\.cn-heroi__celular \.cn-tela:nth-child\(2\) \.cn-captura\[hidden\] \{ display: block !important; \}/, 'com movimento reduzido a segunda tela aparece mesmo assim');
+  assert.match(heroi, /const ESPERA_PARA_LIBERAR_MS = 1000;/);
+  assert.match(heroi, /if \(document\.readyState === 'complete'\) liberarDepois\(\);\n    else window\.addEventListener\('load', liberarDepois, \{ once: true \}\);/);
+  assert.match(heroi, /setTimeout\(\(\) => setLiberadas\(true\), ESPERA_PARA_LIBERAR_MS\)/);
+  assert.doesNotMatch(heroi, /rodando\) return;\n\s*setLiberadas\(true\);/, 'não libera na hora em que o laço começa (era o que buscava as telas 2 e 3 junto com a primeira)');
 });
 
 test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e o WebP de reserva, e nenhuma é esticada: a altura segue a proporção da própria captura', async () => {
@@ -278,10 +323,11 @@ test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura 
   assert.match(quatro, /<div class="cn-momento__visual cn-momento__visual--composto"><div class="cn-composto">/);
   const janela = quatro.match(/<div class="cn-janela">[\s\S]*?<div class="cn-janela__tela">([\s\S]*?)<\/div><\/div>/);
   assert.ok(janela, 'a janela e a tela dela');
-  assert.ok(janela[1].includes(CAPTURAS['janela-4'].src1x) && janela[1].includes(CAPTURAS['janela-4'].src2x), 'a captura da web, em 1x e 2x');
+  assert.ok(janela[1].includes(CAPTURAS['janela-4'].src1x) && janela[1].includes(CAPTURAS['janela-4'].src2x), 'a captura da web, em 1x e 2x (WebP de reserva)');
+  assert.ok(CAPTURAS['janela-4'].avif.every((a) => janela[1].includes(a.src)), 'e em AVIF, nas três larguras');
   assert.ok(janela[1].includes(`alt="${textos.s2.janelaAlt}"`));
   assert.equal(CAPTURAS['janela-4'].plataforma, 'web');
-  assert.match(janela[1], /loading="lazy"/);
+  assert.match(janela[1], /<picture data-carregar-perto="">/, 'a captura da web só é buscada perto da tela');
   // A barra é só desenho (escondida do leitor de tela) e não inventa endereço: tem a aba "Studoo" e nada com cara de URL.
   const barra = quatro.match(/<div class="cn-janela__barra" aria-hidden="true">([\s\S]*?)<\/div>/)[1];
   assert.ok(texto(barra).includes('Studoo'));
