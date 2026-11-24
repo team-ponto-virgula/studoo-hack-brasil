@@ -1,0 +1,96 @@
+{
+  "review": "R4",
+  "source": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "reviewer": "revisao_visual_r1",
+  "scores": {
+    "jornada": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 8,
+      "global": null
+    },
+    "caderno": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 8,
+      "global": null
+    },
+    "foco": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 8,
+      "global": null
+    }
+  },
+  "gateDG1": "reprovado",
+  "status": "provisorio",
+  "native": false,
+  "productScore": null,
+  "coverageGap": {
+    "severity": "medium",
+    "families": [
+      "P15 Em alta/Novas e paginacao",
+      "P06 titulos/nos chegando e espera longa",
+      "P05 formato/tamanho e carregando/leitura"
+    ],
+    "origin": "auditoria transversal da rodada comunicada pelo agente root"
+  },
+  "counts": {
+    "main": 570,
+    "targeted": 48,
+    "long": 60,
+    "completed": 24,
+    "motion": 6
+  },
+  "sourceStable": true,
+  "hashesBefore": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "app.html": "c7956ffc2aebf22bec71eaa7915fd8a74bc7c7f9663dffbaf5ee75e4736d3c6e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "hashesAfter": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "app.html": "c7956ffc2aebf22bec71eaa7915fd8a74bc7c7f9663dffbaf5ee75e4736d3c6e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "report": "docs/ux/direcoes-2026-11-24/revisoes/PARECER-VISUAL-R4.md"
+}

@@ -1,0 +1,376 @@
+{
+  "source": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "startedAt": "2026-11-24T20:49:43.018Z",
+  "hashesStart": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "alvo-denuncia-direta",
+      "checks": [
+        {
+          "name": "contexto de denúncia corresponde à prévia",
+          "passed": true,
+          "evidence": {
+            "shown": "SQL sem complicação",
+            "reported": "Trilha: SQL sem complicação"
+          }
+        },
+        {
+          "name": "alvo público correto fica oculto",
+          "passed": true,
+          "evidence": {
+            "hidden": [
+              "SQL sem complicação"
+            ],
+            "visible": [
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ]
+          }
+        },
+        {
+          "name": "estudo privado não vira alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:45.140Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "foto-draft-ida-volta",
+      "checks": [
+        {
+          "name": "foto não exige descarte",
+          "passed": true
+        },
+        {
+          "name": "foto retorna com nome e enquadramento no draft",
+          "passed": true
+        },
+        {
+          "name": "cancelar recorte mantém foto anterior do draft",
+          "passed": true
+        },
+        {
+          "name": "ação final aplica tudo ao perfil",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaurado após reload",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:47.212Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "descricao-por-trilha",
+      "checks": [
+        {
+          "name": "descrição A persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar não muda descrição A",
+          "passed": true
+        },
+        {
+          "name": "nova cópia não herda descrição personalizada de A",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "alternar para A restaura descrição A",
+          "passed": true
+        },
+        {
+          "name": "duas descrições ficam separadas nos registros",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:48.598Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "audio-timer-e-limite-simulado",
+      "checks": [
+        {
+          "name": "estado ativo tem temporizador local",
+          "passed": true
+        },
+        {
+          "name": "Back encerra temporizador",
+          "passed": true
+        },
+        {
+          "name": "Forward conserva texto e não reabre gravação",
+          "passed": true
+        },
+        {
+          "name": "limite lógico simulado entrega texto para revisão",
+          "passed": true,
+          "evidence": {
+            "clock": "Playwright fastForward181000ms, não espera real de180s"
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:50.080Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "alvo-denuncia-direta",
+      "checks": [
+        {
+          "name": "contexto de denúncia corresponde à prévia",
+          "passed": true,
+          "evidence": {
+            "shown": "SQL sem complicação",
+            "reported": "Trilha: SQL sem complicação"
+          }
+        },
+        {
+          "name": "alvo público correto fica oculto",
+          "passed": true,
+          "evidence": {
+            "hidden": [
+              "SQL sem complicação"
+            ],
+            "visible": [
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ]
+          }
+        },
+        {
+          "name": "estudo privado não vira alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:51.472Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "foto-draft-ida-volta",
+      "checks": [
+        {
+          "name": "foto não exige descarte",
+          "passed": true
+        },
+        {
+          "name": "foto retorna com nome e enquadramento no draft",
+          "passed": true
+        },
+        {
+          "name": "cancelar recorte mantém foto anterior do draft",
+          "passed": true
+        },
+        {
+          "name": "ação final aplica tudo ao perfil",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaurado após reload",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:54.330Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "descricao-por-trilha",
+      "checks": [
+        {
+          "name": "descrição A persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar não muda descrição A",
+          "passed": true
+        },
+        {
+          "name": "nova cópia não herda descrição personalizada de A",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "alternar para A restaura descrição A",
+          "passed": true
+        },
+        {
+          "name": "duas descrições ficam separadas nos registros",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:56.646Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "audio-timer-e-limite-simulado",
+      "checks": [
+        {
+          "name": "estado ativo tem temporizador local",
+          "passed": true
+        },
+        {
+          "name": "Back encerra temporizador",
+          "passed": true
+        },
+        {
+          "name": "Forward conserva texto e não reabre gravação",
+          "passed": true
+        },
+        {
+          "name": "limite lógico simulado entrega texto para revisão",
+          "passed": true,
+          "evidence": {
+            "clock": "Playwright fastForward181000ms, não espera real de180s"
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:58.198Z"
+    },
+    {
+      "dir": "foco",
+      "name": "alvo-denuncia-direta",
+      "checks": [
+        {
+          "name": "contexto de denúncia corresponde à prévia",
+          "passed": true,
+          "evidence": {
+            "shown": "SQL sem complicação",
+            "reported": "Trilha: SQL sem complicação"
+          }
+        },
+        {
+          "name": "alvo público correto fica oculto",
+          "passed": true,
+          "evidence": {
+            "hidden": [
+              "SQL sem complicação"
+            ],
+            "visible": [
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ]
+          }
+        },
+        {
+          "name": "estudo privado não vira alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:49:59.595Z"
+    },
+    {
+      "dir": "foco",
+      "name": "foto-draft-ida-volta",
+      "checks": [
+        {
+          "name": "foto não exige descarte",
+          "passed": true
+        },
+        {
+          "name": "foto retorna com nome e enquadramento no draft",
+          "passed": true
+        },
+        {
+          "name": "cancelar recorte mantém foto anterior do draft",
+          "passed": true
+        },
+        {
+          "name": "ação final aplica tudo ao perfil",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaurado após reload",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:50:02.202Z"
+    },
+    {
+      "dir": "foco",
+      "name": "descricao-por-trilha",
+      "checks": [
+        {
+          "name": "descrição A persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar não muda descrição A",
+          "passed": true
+        },
+        {
+          "name": "nova cópia não herda descrição personalizada de A",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "alternar para A restaura descrição A",
+          "passed": true
+        },
+        {
+          "name": "duas descrições ficam separadas nos registros",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:50:04.702Z"
+    },
+    {
+      "dir": "foco",
+      "name": "audio-timer-e-limite-simulado",
+      "checks": [
+        {
+          "name": "estado ativo tem temporizador local",
+          "passed": true
+        },
+        {
+          "name": "Back encerra temporizador",
+          "passed": true
+        },
+        {
+          "name": "Forward conserva texto e não reabre gravação",
+          "passed": true
+        },
+        {
+          "name": "limite lógico simulado entrega texto para revisão",
+          "passed": true,
+          "evidence": {
+            "clock": "Playwright fastForward181000ms, não espera real de180s"
+          }
+        }
+      ],
+      "errors": [],
+      "finishedAt": "2026-11-24T20:50:06.244Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "finishedAt": "2026-11-24T20:50:06.252Z"
+}

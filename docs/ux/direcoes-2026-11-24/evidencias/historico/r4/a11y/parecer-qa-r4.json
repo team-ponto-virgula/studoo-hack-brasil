@@ -1,0 +1,98 @@
+{
+  "candidate": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "sourceStable": true,
+  "canonicalViews": 210,
+  "canonicalScreenshotDPR": 2,
+  "stateViews": 90,
+  "text200Views": 105,
+  "longEmailCases360": {
+    "passed": 18,
+    "total": 18
+  },
+  "technicalTitleCases360": {
+    "passed": 0,
+    "total": 6
+  },
+  "directedKeyboard": {
+    "passed": 186,
+    "total": 186
+  },
+  "photoGuards": {
+    "passed": 36,
+    "total": 42
+  },
+  "openFindings": [
+    {
+      "id": "R4-A1",
+      "severity": "medium",
+      "criteria": [
+        "D3"
+      ],
+      "issue": "Technical plan title without spaces clipped in lesson topbar context"
+    },
+    {
+      "id": "K4b",
+      "severity": "medium",
+      "criteria": [
+        "D6"
+      ],
+      "issue": "During decode, focus on header data-go control is lost after render"
+    }
+  ],
+  "closedFindings": [
+    "long emails in notes",
+    "K1 names/opener",
+    "K2 reorder focus",
+    "K3 record-start focus",
+    "K4 original success/error focus",
+    "standalone selectors44"
+  ],
+  "scores": {
+    "jornada": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    },
+    "caderno": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    },
+    "foco": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    }
+  },
+  "gates": {
+    "DG1": null,
+    "DG3": false,
+    "DG4": false
+  },
+  "globalScore": null,
+  "nativeExecuted": false,
+  "realApiExecuted": false,
+  "actualMicrophoneOpened": false,
+  "realFileChooserValidated": false
+}
