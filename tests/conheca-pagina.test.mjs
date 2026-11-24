@@ -114,6 +114,9 @@ test('iPad: o app nativo é só de iPhone, então o caminho é sempre a Tela de 
     assert.ok(texto(html).includes(textos.acoes.ipad.apoio));
     assert.equal(achar(html, 'Instalar no iPhone').length, 0, 'nenhum caminho do TestFlight no iPad');
     assert.equal(achar(html, 'Usar no iPhone agora').length, 0);
+    const [abrirApp] = achar(html, textos.folhaIphone.abrirApp);
+    assert.equal(abrirApp.tag, 'a');
+    assert.match(abrirApp.atributos, /href="https:\/\/app\.hellostudoo\.com\.br\/"/);
     const abas = [...html.matchAll(/<button[^>]*role="tab"[^>]*>([\s\S]*?)<\/button>/g)].map((m) => texto(m[1]).trim());
     assert.deepEqual(abas, ['Android', 'iPad']);
     assert.doesNotMatch(html, /testflight\.apple\.com/);
@@ -123,6 +126,8 @@ test('iPad: o app nativo é só de iPhone, então o caminho é sempre a Tela de 
   assert.doesNotMatch(desenhar(), /cn-reserva-ipad/);
   assert.doesNotMatch(desenhar({ aparelho: 'ipad', podeSerIpad: true }), /cn-reserva-ipad/);
   assert.equal(textos.folhaIphone.tituloIpad, 'Use o Studoo no iPad hoje');
+  assert.match(achar(desenhar({ aparelho: 'ipad', comSessao: true }), textos.folhaIphone.abrirApp)[0].atributos, /href="\/"/, 'abertura pela sessão do endereço atual');
+  assert.match(achar(desenhar({ aparelho: 'ipad', dominioProprio: true }), textos.folhaIphone.abrirApp)[0].atributos, /href="https:\/\/app\.hellostudoo\.com\.br\/"/, 'instala pelo domínio do app');
   assert.match(ler('src/app/conheca/ilhas/folha-iphone.tsx'), /\{ipad \? t\.tituloIpad : t\.titulo\}/);
   assert.match(ler('apps/mobile/app.json'), /"supportsTablet": false/, 'se o app nativo passar a ter iPad, o caminho do iPad volta a seguir o do iPhone');
 });
@@ -587,7 +592,7 @@ test('S4: grupo de abas acessível com Android e iPhone, e os textos dos passos 
   for (const passo of textos.folhaIphone.passos) assert.ok(texto(semLink).includes(passo), `iPhone sem TestFlight: ${passo}`);
   const comLink = desenhar({ aparelho: 'iphone', links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
   for (const passo of textos.s4.iphone.testflightPassos) assert.ok(texto(comLink).includes(passo), `iPhone com TestFlight: ${passo}`);
-  assert.doesNotMatch(texto(comLink), /Toque em Compartilhar, na barra do Safari/, 'com o TestFlight os passos da Tela de Início saem');
+  assert.doesNotMatch(texto(comLink), /Com o app aberto, toque em Compartilhar/, 'com o TestFlight os passos da Tela de Início saem');
   assert.match(html, /id="cn-painel-iphone"[^>]*hidden=""/, 'o painel do iPhone fica escondido no Android');
   const iphone = desenhar({ aparelho: 'iphone' });
   assert.match(iphone, /id="cn-aba-iphone"[^>]*aria-selected="true"|aria-selected="true"[^>]*id="cn-aba-iphone"/, 'no iPhone abre em iPhone');
@@ -606,11 +611,11 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   // iPhone antes do TestFlight: os passos do computador, o QR sem o arquivo do Android e o estado do convite público.
   const iphone = painel(computador, 'iphone');
   for (const passo of textos.s4.iphone.passosNoComputador) assert.ok(texto(iphone).includes(passo), passo);
-  assert.deepEqual(textos.s4.iphone.passosNoComputador, ['Aponte a câmera do iPhone para o código ao lado e abra a página no Safari.', 'Toque em Compartilhar e escolha “Adicionar à Tela de Início”.', 'Toque em Adicionar. O Studoo fica com os seus apps.']);
+  assert.deepEqual(textos.s4.iphone.passosNoComputador, ['Leia o código com a câmera do iPhone. No Safari, toque em “Abrir o app para adicionar”.', 'Toque em Compartilhar e escolha “Adicionar à Tela de Início”.', 'Toque em Adicionar. O Studoo fica com os seus apps.']);
   assert.match(iphone, /id="cn-qr-s4-iphone-titulo"/, 'o cartão do QR também na aba do iPhone, ao lado dos passos');
   assert.doesNotMatch(iphone, /cn-qr__arquivo/, 'sem o arquivo do Android no cartão do iPhone');
   assert.ok(texto(iphone).includes(textos.acoes.iphoneEmBreve.disponibilidade));
-  assert.doesNotMatch(texto(iphone), /Toque em Compartilhar, na barra do Safari/, 'os passos da folha (do celular) não aparecem no computador');
+  assert.doesNotMatch(texto(iphone), /Com o app aberto, toque em Compartilhar/, 'os passos da folha (do celular) não aparecem no computador');
   // A âncora #iphone não é item da grade do painel (tomava uma linha e empurrava o cartão do QR para baixo do alinhamento dos passos): fica solta, posicionada no painel.
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /\.cn-ancora \{ position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; \}/);
@@ -626,12 +631,12 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-apoio--painel, \.cn-painel--iphone-com-qr \.cn-painel__acao \{ grid-column: 1; margin-left: calc\(var\(--cn-passo-numero, 32px\) \+ var\(--cn-passo-vao, 14px\)\); \}/, 'na coluna da esquerda, no recuo do texto dos passos');
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__acao \{ width: var\(--cn-botao-principal-computador, 280px\); max-width: 100%; \}/, 'na largura do botão principal, não a coluna toda');
   assert.match(css, /\.cn-painel \{ position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; \}/);
-  // iPhone com o TestFlight: os passos do computador e o cartão do QR no lugar do botão "Instalar no iPhone".
+  // iPhone com o TestFlight: QR e alternativa de texto para abrir ou compartilhar o convite.
   const comLink = desenhar({ links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
   const iphoneComLink = painel(comLink, 'iphone');
   assert.deepEqual([...iphoneComLink.matchAll(/<span class="cn-passo__texto">([^<]*)<\/span>/g)].map((m) => m[1].replace(/&quot;/g, '"')), [...textos.s4.iphone.testflightPassosNoComputador]);
   assert.match(iphoneComLink, /id="cn-qr-s4-iphone-titulo"/);
-  assert.doesNotMatch(iphoneComLink, /href="https:\/\/testflight\.apple\.com/, 'o botão que abre o TestFlight não existe no computador: o QR leva o iPhone');
+  assert.match(iphoneComLink, /href="https:\/\/testflight\.apple\.com\/join\/ABC123"[^>]*>Abrir convite do TestFlight<\/a>/);
   assert.doesNotMatch(painel(comLink, 'iphone').slice(0, 300), /cn-painel--iphone-com-qr/, 'com o TestFlight não há linha nem botão embaixo: não leva a variante');
   // No celular nada muda: os passos de sempre, sem cartão de QR, e o botão do TestFlight.
   const noIphone = desenhar({ aparelho: 'iphone', links: { testflight: 'https://testflight.apple.com/join/ABC123' } });

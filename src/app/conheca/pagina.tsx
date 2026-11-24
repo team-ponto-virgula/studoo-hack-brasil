@@ -65,12 +65,13 @@ export interface ContextoDaPagina {
 export function PaginaVista({ aparelho, links, origem, dominioProprio = false, comSessao, visitante, naRaiz = false, podeSerIpad = false }: ContextoDaPagina) {
   const tamanho = tamanhoDoApk(links);
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
-  const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
   const baseDoApp = dominioProprio ? ORIGEM_APP_STUDOO : '';
+  const appParaInstalar = comSessao && !dominioProprio ? '/' : ORIGEM_APP_STUDOO + '/';
+  const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao, appParaInstalar };
   const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: baseDoApp + '/' } : { rotulo: textos.cabecalho.entrar, href: baseDoApp + '/login' };
   const telasDoCelular = telasDoHeroi(aparelho);
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
-  const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo /> : null;
+  const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo testflight={links.testflight} /> : null;
 
   return (
     <div className="cn-pagina" data-na-raiz={naRaiz || undefined} data-sem-musica="">
