@@ -1,0 +1,223 @@
+{
+  "at": "2026-11-24T21:43:01.621Z",
+  "scope": "Author HTTP prototype; synthetic data and intercepted clipboard/download effects; no native/server approval",
+  "hashesBefore": {
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc"
+  },
+  "hashesAfter": {
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc"
+  },
+  "sourceStable": true,
+  "checks": 150,
+  "scenarios": 39,
+  "failed": 9,
+  "errors": [],
+  "rows": [
+    {
+      "d": "jornada",
+      "name": "own-with-other-material-can-explore",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "material-only-link-or-profile",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "material-alternate-approve-url-handlers",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "legacy-material-explicit-recovery",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "not-own-prefix",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "jornada",
+      "name": "not-own-marker",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "jornada",
+      "name": "not-own-none",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "jornada",
+      "name": "confirmation-revalidates-track",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "confirmation-revalidates-material",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "cancel-does-not-restore-other-approval",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "save-does-not-promote-query-status",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "valid-code-qr-copy-download",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "share-afterclose-revalidates",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "own-with-other-material-can-explore",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "material-only-link-or-profile",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "material-alternate-approve-url-handlers",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "legacy-material-explicit-recovery",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "not-own-prefix",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "caderno",
+      "name": "not-own-marker",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "caderno",
+      "name": "not-own-none",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "caderno",
+      "name": "confirmation-revalidates-track",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "confirmation-revalidates-material",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "cancel-does-not-restore-other-approval",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "save-does-not-promote-query-status",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "valid-code-qr-copy-download",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "share-afterclose-revalidates",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "own-with-other-material-can-explore",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "material-only-link-or-profile",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "material-alternate-approve-url-handlers",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "legacy-material-explicit-recovery",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "not-own-prefix",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "foco",
+      "name": "not-own-marker",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "foco",
+      "name": "not-own-none",
+      "pass": false,
+      "error": "nenhum efeito de compartilhamento"
+    },
+    {
+      "d": "foco",
+      "name": "confirmation-revalidates-track",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "confirmation-revalidates-material",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "cancel-does-not-restore-other-approval",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "save-does-not-promote-query-status",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "valid-code-qr-copy-download",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "share-afterclose-revalidates",
+      "pass": true
+    }
+  ]
+}

@@ -1,0 +1,550 @@
+{
+  "source": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "startedAt": "2026-11-24T20:52:34.054Z",
+  "hashesStart": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "descricoes-criada-recebida-existente",
+      "checks": [
+        {
+          "name": "registro A conserva descrição original",
+          "passed": true
+        },
+        {
+          "name": "nova criada não herda descrição privada",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "criada preserva registro e progresso A",
+          "passed": true
+        },
+        {
+          "name": "criada C restaura descrição salva no reload",
+          "passed": true
+        },
+        {
+          "name": "recebida nova começa com descrição de origem do exemplo",
+          "passed": true
+        },
+        {
+          "name": "recebida não altera os dois estudos privados",
+          "passed": true
+        },
+        {
+          "name": "alternar para A restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "cancelar campo A não muda o texto salvo",
+          "passed": true
+        },
+        {
+          "name": "alternar para criada C restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "recebida existente mantém ID descrição e quantidade",
+          "passed": true,
+          "evidence": {
+            "description": "Descrição própria da cópia recebida B.",
+            "tracks": 3
+          }
+        },
+        {
+          "name": "recebida B restaura seu próprio texto no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar não remove metadados de B",
+          "passed": true
+        },
+        {
+          "name": "apagar B preserva A e criada C",
+          "passed": true
+        },
+        {
+          "name": "reload mantém descrições dos dois registros restantes",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/jornada-descricoes-criada-recebida-existente-registros-restantes.png"
+      ],
+      "finishedAt": "2026-11-24T20:52:38.883Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "cinco-licoes-e-home-concluida",
+      "checks": [
+        {
+          "name": "lição 1 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 1 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 1 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 2 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 2 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 2 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 3 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 3 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 3 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 4 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 4 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 4 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 5 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 5 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 5 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "fim da trilha oferece rever sem próxima inexistente",
+          "passed": true
+        },
+        {
+          "name": "mapa completo mostra cinco nós concluídos",
+          "passed": true
+        },
+        {
+          "name": "home mostra concluída e5de5",
+          "passed": true
+        },
+        {
+          "name": "home não inventa6a lição ou pede retomar a última",
+          "passed": true
+        },
+        {
+          "name": "home tem criar e rever como ações explícitas",
+          "passed": true
+        },
+        {
+          "name": "home completa persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "rever abre WHERE e preserva progresso total",
+          "passed": true
+        },
+        {
+          "name": "criar outra abre objetivo sem apagar a concluída",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/jornada-cinco-licoes-e-home-concluida-home5de5.png"
+      ],
+      "finishedAt": "2026-11-24T20:52:44.200Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "descricoes-criada-recebida-existente",
+      "checks": [
+        {
+          "name": "registro A conserva descrição original",
+          "passed": true
+        },
+        {
+          "name": "nova criada não herda descrição privada",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "criada preserva registro e progresso A",
+          "passed": true
+        },
+        {
+          "name": "criada C restaura descrição salva no reload",
+          "passed": true
+        },
+        {
+          "name": "recebida nova começa com descrição de origem do exemplo",
+          "passed": true
+        },
+        {
+          "name": "recebida não altera os dois estudos privados",
+          "passed": true
+        },
+        {
+          "name": "alternar para A restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "cancelar campo A não muda o texto salvo",
+          "passed": true
+        },
+        {
+          "name": "alternar para criada C restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "recebida existente mantém ID descrição e quantidade",
+          "passed": true,
+          "evidence": {
+            "description": "Descrição própria da cópia recebida B.",
+            "tracks": 3
+          }
+        },
+        {
+          "name": "recebida B restaura seu próprio texto no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar não remove metadados de B",
+          "passed": true
+        },
+        {
+          "name": "apagar B preserva A e criada C",
+          "passed": true
+        },
+        {
+          "name": "reload mantém descrições dos dois registros restantes",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/caderno-descricoes-criada-recebida-existente-registros-restantes.png"
+      ],
+      "finishedAt": "2026-11-24T20:52:49.530Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "cinco-licoes-e-home-concluida",
+      "checks": [
+        {
+          "name": "lição 1 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 1 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 1 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 2 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 2 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 2 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 3 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 3 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 3 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 4 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 4 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 4 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 5 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 5 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 5 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "fim da trilha oferece rever sem próxima inexistente",
+          "passed": true
+        },
+        {
+          "name": "mapa completo mostra cinco nós concluídos",
+          "passed": true
+        },
+        {
+          "name": "home mostra concluída e5de5",
+          "passed": true
+        },
+        {
+          "name": "home não inventa6a lição ou pede retomar a última",
+          "passed": true
+        },
+        {
+          "name": "home tem criar e rever como ações explícitas",
+          "passed": true
+        },
+        {
+          "name": "home completa persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "rever abre WHERE e preserva progresso total",
+          "passed": true
+        },
+        {
+          "name": "criar outra abre objetivo sem apagar a concluída",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/caderno-cinco-licoes-e-home-concluida-home5de5.png"
+      ],
+      "finishedAt": "2026-11-24T20:52:56.853Z"
+    },
+    {
+      "dir": "foco",
+      "name": "descricoes-criada-recebida-existente",
+      "checks": [
+        {
+          "name": "registro A conserva descrição original",
+          "passed": true
+        },
+        {
+          "name": "nova criada não herda descrição privada",
+          "passed": true,
+          "evidence": {
+            "description": "Praticar filtros e junções em consultas."
+          }
+        },
+        {
+          "name": "criada preserva registro e progresso A",
+          "passed": true
+        },
+        {
+          "name": "criada C restaura descrição salva no reload",
+          "passed": true
+        },
+        {
+          "name": "recebida nova começa com descrição de origem do exemplo",
+          "passed": true
+        },
+        {
+          "name": "recebida não altera os dois estudos privados",
+          "passed": true
+        },
+        {
+          "name": "alternar para A restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "cancelar campo A não muda o texto salvo",
+          "passed": true
+        },
+        {
+          "name": "alternar para criada C restaura seu próprio texto",
+          "passed": true
+        },
+        {
+          "name": "recebida existente mantém ID descrição e quantidade",
+          "passed": true,
+          "evidence": {
+            "description": "Descrição própria da cópia recebida B.",
+            "tracks": 3
+          }
+        },
+        {
+          "name": "recebida B restaura seu próprio texto no reload",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar não remove metadados de B",
+          "passed": true
+        },
+        {
+          "name": "apagar B preserva A e criada C",
+          "passed": true
+        },
+        {
+          "name": "reload mantém descrições dos dois registros restantes",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/foco-descricoes-criada-recebida-existente-registros-restantes.png"
+      ],
+      "finishedAt": "2026-11-24T20:53:03.249Z"
+    },
+    {
+      "dir": "foco",
+      "name": "cinco-licoes-e-home-concluida",
+      "checks": [
+        {
+          "name": "lição 1 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 1 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 1 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 2 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 2 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 2 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 3 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 3 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 3 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 4 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 4 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 4 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "lição 5 tem cabeçalho e índice corretos",
+          "passed": true
+        },
+        {
+          "name": "lição 5 responde com acerto",
+          "passed": true
+        },
+        {
+          "name": "conclusão 5 avança só até5",
+          "passed": true
+        },
+        {
+          "name": "fim da trilha oferece rever sem próxima inexistente",
+          "passed": true
+        },
+        {
+          "name": "mapa completo mostra cinco nós concluídos",
+          "passed": true
+        },
+        {
+          "name": "home mostra concluída e5de5",
+          "passed": true
+        },
+        {
+          "name": "home não inventa6a lição ou pede retomar a última",
+          "passed": true
+        },
+        {
+          "name": "home tem criar e rever como ações explícitas",
+          "passed": true
+        },
+        {
+          "name": "home completa persiste no reload",
+          "passed": true
+        },
+        {
+          "name": "rever abre WHERE e preserva progresso total",
+          "passed": true
+        },
+        {
+          "name": "criar outra abre objetivo sem apagar a concluída",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r4/foco-cinco-licoes-e-home-concluida-home5de5.png"
+      ],
+      "finishedAt": "2026-11-24T20:53:10.448Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "finishedAt": "2026-11-24T20:53:10.464Z"
+}

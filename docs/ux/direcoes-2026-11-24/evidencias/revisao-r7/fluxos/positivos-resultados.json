@@ -1,0 +1,3680 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "startedAt": "2026-11-24T22:16:29.715Z",
+  "hashesStart": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "valido-comum-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-comum-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:31.312Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-comum-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback comum válido conserva URL e saída",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-comum-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:32.507Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-media-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-media-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:33.483Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-media-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-media-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:34.805Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:28.103Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:28.890Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-valida-download",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "download válido cria um Blob e uma ação",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 1,
+            "downloads": 1
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:37.820Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "folha-valida-cancel",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "cancelar não copia nem baixa",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:38.627Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "revisar-cancelar-confirmar-validos",
+      "checks": [
+        {
+          "name": "cancelar revisão preserva destino sem aprovar",
+          "passed": true
+        },
+        {
+          "name": "cancelar diálogo conserva revisão pendente de decisão",
+          "passed": true
+        },
+        {
+          "name": "confirmação válida envia somente para revisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada válida mantém pendente",
+          "passed": true
+        },
+        {
+          "name": "retirada válida conserva trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-revisar-cancelar-confirmar-validos-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:40.483Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "cancelar-apos-novo-quadro-da-mesma-revisao",
+      "checks": [
+        {
+          "name": "novo toque Cancelar no novo quadro é válido",
+          "passed": true
+        },
+        {
+          "name": "cancelar não inventa aprovação nem perde progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-cancelar-apos-novo-quadro-da-mesma-revisao-cancelado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:41.747Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "cancelar-revisao-nao-altera-outra-propria",
+      "checks": [
+        {
+          "name": "cancelamento antigo não limpa moderação da outra própria",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:42.077Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "retirada-legado-material-permitida",
+      "checks": [
+        {
+          "name": "cancelar legado conserva estado sem expor link",
+          "passed": true
+        },
+        {
+          "name": "retirar próprio legado inválido continua permitido",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva referência de origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-retirada-legado-material-permitida-retirado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:42.868Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "R6-F3-disclosure-unico-material",
+      "checks": [
+        {
+          "name": "não promete ocultar nome contido no título",
+          "passed": true
+        },
+        {
+          "name": "há um disclosure de fonte e dados privados",
+          "passed": true
+        },
+        {
+          "name": "disclosure precede o botão de código",
+          "passed": true
+        },
+        {
+          "name": "não atribui arquivo de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "revisão preserva aviso verdadeiro",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-R6-F3-disclosure-unico-material-base.png",
+        "/workspace/work/revisao-fluxos-r7/jornada-R6-F3-disclosure-unico-material-revisao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:43.525Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:44.238Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:44.679Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:45.180Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:45.673Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:46.347Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:46.931Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:47.422Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:47.898Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:48.354Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:49.109Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-confirmar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:49.617Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:50.120Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:51.512Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:52.051Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:52.571Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:53.136Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:54.141Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:54.633Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:55.186Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:55.868Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:56.405Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "callback-retirar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "retirar mesma própria de material permite destino legado",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "retirado",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:56.868Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-comum-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-comum-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:57.524Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-comum-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback comum válido conserva URL e saída",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-comum-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:58.272Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-media-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-media-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:58.857Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-media-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-media-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:16:59.559Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:29.618Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:30.304Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-valida-download",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "download válido cria um Blob e uma ação",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 1,
+            "downloads": 1
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:01.814Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "folha-valida-cancel",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "cancelar não copia nem baixa",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:02.577Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "revisar-cancelar-confirmar-validos",
+      "checks": [
+        {
+          "name": "cancelar revisão preserva destino sem aprovar",
+          "passed": true
+        },
+        {
+          "name": "cancelar diálogo conserva revisão pendente de decisão",
+          "passed": true
+        },
+        {
+          "name": "confirmação válida envia somente para revisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada válida mantém pendente",
+          "passed": true
+        },
+        {
+          "name": "retirada válida conserva trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-revisar-cancelar-confirmar-validos-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:03.654Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "cancelar-apos-novo-quadro-da-mesma-revisao",
+      "checks": [
+        {
+          "name": "novo toque Cancelar no novo quadro é válido",
+          "passed": true
+        },
+        {
+          "name": "cancelar não inventa aprovação nem perde progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-cancelar-apos-novo-quadro-da-mesma-revisao-cancelado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:04.271Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "cancelar-revisao-nao-altera-outra-propria",
+      "checks": [
+        {
+          "name": "cancelamento antigo não limpa moderação da outra própria",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:05.031Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "retirada-legado-material-permitida",
+      "checks": [
+        {
+          "name": "cancelar legado conserva estado sem expor link",
+          "passed": true
+        },
+        {
+          "name": "retirar próprio legado inválido continua permitido",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva referência de origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-retirada-legado-material-permitida-retirado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:05.725Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "R6-F3-disclosure-unico-material",
+      "checks": [
+        {
+          "name": "não promete ocultar nome contido no título",
+          "passed": true
+        },
+        {
+          "name": "há um disclosure de fonte e dados privados",
+          "passed": true
+        },
+        {
+          "name": "disclosure precede o botão de código",
+          "passed": true
+        },
+        {
+          "name": "não atribui arquivo de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "revisão preserva aviso verdadeiro",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-R6-F3-disclosure-unico-material-base.png",
+        "/workspace/work/revisao-fluxos-r7/caderno-R6-F3-disclosure-unico-material-revisao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:06.196Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:06.509Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:06.851Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:07.271Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:07.585Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:08.049Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:08.376Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:08.681Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:09.019Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:09.430Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:09.833Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-confirmar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:10.221Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:10.776Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:11.219Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:11.601Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:11.945Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:12.302Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:12.656Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:13.233Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:13.650Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:13.986Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:14.342Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "callback-retirar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "retirar mesma própria de material permite destino legado",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "retirado",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:14.699Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-comum-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-comum-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:15.144Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-comum-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback comum válido conserva URL e saída",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-comum-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:15.748Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-media-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-media-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:16.277Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-media-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-media-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:16.739Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:31.009Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:31.715Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-valida-download",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "download válido cria um Blob e uma ação",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 1,
+            "downloads": 1
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:18.850Z"
+    },
+    {
+      "dir": "foco",
+      "name": "folha-valida-cancel",
+      "checks": [
+        {
+          "name": "folha válida fecha",
+          "passed": true
+        },
+        {
+          "name": "cancelar não copia nem baixa",
+          "passed": true,
+          "evidence": {
+            "writes": [],
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha mantém mesma trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:19.515Z"
+    },
+    {
+      "dir": "foco",
+      "name": "revisar-cancelar-confirmar-validos",
+      "checks": [
+        {
+          "name": "cancelar revisão preserva destino sem aprovar",
+          "passed": true
+        },
+        {
+          "name": "cancelar diálogo conserva revisão pendente de decisão",
+          "passed": true
+        },
+        {
+          "name": "confirmação válida envia somente para revisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada válida mantém pendente",
+          "passed": true
+        },
+        {
+          "name": "retirada válida conserva trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-revisar-cancelar-confirmar-validos-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:20.586Z"
+    },
+    {
+      "dir": "foco",
+      "name": "cancelar-apos-novo-quadro-da-mesma-revisao",
+      "checks": [
+        {
+          "name": "novo toque Cancelar no novo quadro é válido",
+          "passed": true
+        },
+        {
+          "name": "cancelar não inventa aprovação nem perde progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-cancelar-apos-novo-quadro-da-mesma-revisao-cancelado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:21.270Z"
+    },
+    {
+      "dir": "foco",
+      "name": "cancelar-revisao-nao-altera-outra-propria",
+      "checks": [
+        {
+          "name": "cancelamento antigo não limpa moderação da outra própria",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:21.552Z"
+    },
+    {
+      "dir": "foco",
+      "name": "retirada-legado-material-permitida",
+      "checks": [
+        {
+          "name": "cancelar legado conserva estado sem expor link",
+          "passed": true
+        },
+        {
+          "name": "retirar próprio legado inválido continua permitido",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva referência de origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-retirada-legado-material-permitida-retirado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:22.178Z"
+    },
+    {
+      "dir": "foco",
+      "name": "R6-F3-disclosure-unico-material",
+      "checks": [
+        {
+          "name": "não promete ocultar nome contido no título",
+          "passed": true
+        },
+        {
+          "name": "há um disclosure de fonte e dados privados",
+          "passed": true
+        },
+        {
+          "name": "disclosure precede o botão de código",
+          "passed": true
+        },
+        {
+          "name": "não atribui arquivo de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "revisão preserva aviso verdadeiro",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-R6-F3-disclosure-unico-material-base.png",
+        "/workspace/work/revisao-fluxos-r7/foco-R6-F3-disclosure-unico-material-revisao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:22.874Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:23.212Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:23.546Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:23.870Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:24.160Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:24.534Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:25.016Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:25.310Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:25.586Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:25.887Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:26.183Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-confirmar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:26.482Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-propria-diferente",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "outra": {
+                "title": "Outra própria",
+                "completed": 3,
+                "visibility": "link",
+                "publicationStatus": "aprovado",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:26.773Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-recebida",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              },
+              "recebida-concorrente": {
+                "title": "Cópia recebida",
+                "completed": 2,
+                "received": true,
+                "visibility": "link",
+                "publicationStatus": "",
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": []
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:27.606Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-sem-plano",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {},
+            "after": {}
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:27.927Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-visitante",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:28.195Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-inativa",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:28.526Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-destino",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "perfil",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:28.918Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-status",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": "pendente"
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:29.655Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-cenario",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:30.205Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-render-novo",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:30.731Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-navegar-voltar",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "callback antigo não modifica registros após invalidação",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "link",
+                "publicationStatus": ""
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:31.186Z"
+    },
+    {
+      "dir": "foco",
+      "name": "callback-retirar-origem",
+      "checks": [
+        {
+          "name": "pedido elegível abriu confirmação original",
+          "passed": true
+        },
+        {
+          "name": "retirar mesma própria de material permite destino legado",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            },
+            "after": {
+              "prova": {
+                "title": "SQL para a prova",
+                "completed": 1,
+                "description": "Praticar filtros e junções em consultas.",
+                "reviewNeeded": [],
+                "visibility": "explorar",
+                "publicationStatus": "retirado",
+                "deMaterial": true,
+                "materialReference": {
+                  "nome": "origem-nova.pdf"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:31.802Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "finishedAt": "2026-11-24T22:18:31.721Z",
+  "recheck": {
+    "history": "positivos-resultados-antes-evento-close.json",
+    "replacements": "positivos-rechecagem-close.json",
+    "scenariosReplaced": 6,
+    "notAddedToTotal": true
+  }
+}

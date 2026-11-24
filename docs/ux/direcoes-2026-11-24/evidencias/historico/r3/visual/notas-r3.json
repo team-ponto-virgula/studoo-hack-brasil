@@ -1,0 +1,71 @@
+{
+  "source": "902eca4e3a8e8ac374d79972677a1ed3edc83859",
+  "reviewer": "revisao_visual_r1",
+  "scope": "targeted design prototype review only",
+  "nativeExecuted": false,
+  "scores": {
+    "jornada": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 9
+    },
+    "caderno": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 9
+    },
+    "foco": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": 9,
+      "D5": 9,
+      "D6": null,
+      "D7": null,
+      "D8": null,
+      "D9": null,
+      "D10": 9
+    }
+  },
+  "globalScores": {
+    "jornada": null,
+    "caderno": null,
+    "foco": null
+  },
+  "findingsClosed": [
+    "V1-R2"
+  ],
+  "findingsOpen": [
+    {
+      "id": "V1-R3",
+      "criterion": "D3",
+      "severity": "medium",
+      "directions": [
+        "jornada",
+        "caderno",
+        "foco"
+      ],
+      "state": "recuperar enviado with 138-character email"
+    }
+  ],
+  "targetedViews": 36,
+  "passedConclusionViews": 12,
+  "passedCodeEmailViews": 12,
+  "failedRecoveryEmailViews": 12,
+  "sourceStable": true,
+  "inheritedUnaffectedEvidence": "R2 31fb427"
+}

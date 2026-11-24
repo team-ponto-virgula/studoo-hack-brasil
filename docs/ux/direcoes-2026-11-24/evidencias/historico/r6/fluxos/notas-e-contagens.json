@@ -1,0 +1,229 @@
+{
+  "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "suites": [
+    {
+      "artifact": "resultado.json",
+      "scenarios": 12,
+      "checks": 147,
+      "passed": 147,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "novos-resultados.json",
+      "scenarios": 33,
+      "checks": 207,
+      "passed": 207,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "integracao-resultados.json",
+      "scenarios": 12,
+      "checks": 51,
+      "passed": 51,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "fronteiras-resultados.json",
+      "scenarios": 6,
+      "checks": 111,
+      "passed": 111,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "riscos-lc-resultados.json",
+      "scenarios": 42,
+      "checks": 372,
+      "passed": 372,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "compartilhar-resultados.json",
+      "scenarios": 42,
+      "checks": 150,
+      "passed": 144,
+      "failed": 6,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "assincronia-resultados.json",
+      "scenarios": 60,
+      "checks": 120,
+      "passed": 69,
+      "failed": 51,
+      "pageerrors": 0,
+      "exceptions": 0
+    }
+  ],
+  "directions": {
+    "jornada": {
+      "scenarios": 69,
+      "checks": 386,
+      "passed": 367,
+      "failed": 19,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 8,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null
+    },
+    "caderno": {
+      "scenarios": 69,
+      "checks": 386,
+      "passed": 367,
+      "failed": 19,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 8,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null
+    },
+    "foco": {
+      "scenarios": 69,
+      "checks": 386,
+      "passed": 367,
+      "failed": 19,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+        "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+        "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 8,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null
+    }
+  },
+  "findings": [
+    {
+      "id": "R6-F1",
+      "severity": "medio",
+      "summary": "Respostas async e afterClose de clipboard/folha atuam após mudança de contexto",
+      "artifacts": [
+        "assincronia-resultados.json",
+        "compartilhar-resultados.json"
+      ]
+    },
+    {
+      "id": "R6-F2",
+      "severity": "medio",
+      "summary": "Retirada iniciada numa trilha modifica publicação de outra cópia ativa",
+      "artifacts": [
+        "compartilhar-resultados.json"
+      ]
+    },
+    {
+      "id": "R6-F3",
+      "severity": "medio",
+      "summary": "Promessa de não publicar nome contradiz título com nome e aviso seguinte",
+      "artifacts": [
+        "material-nome-probe.json"
+      ]
+    }
+  ],
+  "priorFindings": {
+    "R5-F1": "fechado nesta candidata, limites de desenho",
+    "R5-F2": "fechado nesta candidata, limites de desenho"
+  },
+  "globalScore": null,
+  "productScores": {
+    "C1": null,
+    "C2": null,
+    "C3": null,
+    "C4": null,
+    "C5": null,
+    "C6": null,
+    "C7": null,
+    "C8": null,
+    "C9": null,
+    "C10": null
+  },
+  "native": "nao executado",
+  "realUsers": "nao realizado",
+  "totals": {
+    "scenarios": 207,
+    "checks": 1158,
+    "passed": 1101,
+    "failed": 57,
+    "pageerrors": 0,
+    "exceptions": 0
+  }
+}

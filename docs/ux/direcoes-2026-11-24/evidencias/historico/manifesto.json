@@ -1,0 +1,145 @@
+{
+  "scope": "Evidências históricas selecionadas; fontes e falhas originais preservadas. Não são testes adicionais nem a aprovação da candidata posterior.",
+  "files": [
+    {
+      "file": "evidencias/historico/r1/fluxos/resultado.json",
+      "sha256": "3ee77a8e91fd3bd21c41649496ff23ebd0c35f0831fbc887e08d0b157541cd1a",
+      "original": "/workspace/work/revisao-fluxos-r1/resultado.json"
+    },
+    {
+      "file": "evidencias/historico/r1/a11y/resumo.json",
+      "sha256": "c6836090782105d35ddde6bdfb095b3139016b93e6ea21b1872c240b5a2dcec3",
+      "original": "/workspace/work/revisao-a11y-r1/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r2/fluxos/resultado.json",
+      "sha256": "b0a4f44e51b4ed4e8898c1093f09cddb0ae2b12c63907ad00a193ce0f62acf35",
+      "original": "/workspace/work/revisao-fluxos-r2/resultado.json"
+    },
+    {
+      "file": "evidencias/historico/r2/fluxos/novos-resultados.json",
+      "sha256": "0680c0bb273b0e15c1069abb76349c63939f705419e1e2b653b51e8bc49e3fb6",
+      "original": "/workspace/work/revisao-fluxos-r2/novos-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r2/a11y/resumo.json",
+      "sha256": "b6e46c981effd03fe488363fcff440529ea60684db8bb8b180a8c946ccfce827",
+      "original": "/workspace/work/revisao-a11y-r2/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r3/fluxos/resultado.json",
+      "sha256": "9e1d9d3dead888cb2032a99c2e2d346c815a01f6886f65910675b8ef6aed473b",
+      "original": "/workspace/work/revisao-fluxos-r3/resultado.json"
+    },
+    {
+      "file": "evidencias/historico/r3/fluxos/novos-resultados.json",
+      "sha256": "942787f5e95abc75e85a33641ce1afa0c15bde7ea314d9743ebc0a44aa7eae70",
+      "original": "/workspace/work/revisao-fluxos-r3/novos-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r3/fluxos/integracao-resultados.json",
+      "sha256": "be2690f044e35917ab8613ed5951b08dab6d7863928992042a194198e66c0ad5",
+      "original": "/workspace/work/revisao-fluxos-r3/integracao-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r3/a11y/resumo.json",
+      "sha256": "7a958bd7ab38893b27c792184f4f71d02bffd980434424a56edd3804a3c18a5c",
+      "original": "/workspace/work/revisao-a11y-r3/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r3/a11y/parecer-qa-r3.json",
+      "sha256": "b7e099a82d614cbcd2317ef17c030ccd63686a53023e6ec5e6751bf0281c63c6",
+      "original": "/workspace/work/revisao-a11y-r3/parecer-qa-r3.json"
+    },
+    {
+      "file": "evidencias/historico/r3/visual/notas-r3.json",
+      "sha256": "de45273639ce08c8429d0c867712af64a4ac5a754727f138b116180bdf0d3d01",
+      "original": "/workspace/work/revisao-visual-r3/notas-r3.json"
+    },
+    {
+      "file": "evidencias/historico/r4/fluxos/resultado.json",
+      "sha256": "3922ba7ede01144cee6ebd449e04d59c1dd18475a21f8c3fb57ae91e2ddb03e5",
+      "original": "/workspace/work/revisao-fluxos-r4/resultado.json"
+    },
+    {
+      "file": "evidencias/historico/r4/fluxos/novos-resultados.json",
+      "sha256": "b6cc76d28763d75e1792d31c0bfc50d870aafae386c0c925ae48c04e96b97346",
+      "original": "/workspace/work/revisao-fluxos-r4/novos-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r4/fluxos/integracao-resultados.json",
+      "sha256": "41553cc8e9f08df2ed8e8a07b9d5b6cb9a44b60cb7392d76149243fc4bcbedf0",
+      "original": "/workspace/work/revisao-fluxos-r4/integracao-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r4/a11y/resumo.json",
+      "sha256": "b3ddf75bbcee1d5c2688350824eab26466c052305f0c8158d63274e04bc67654",
+      "original": "/workspace/work/revisao-a11y-r4/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r4/visual/notas-r4.json",
+      "sha256": "56168d8288c05887bbe3ff44c0e58dd4d86bf1f755ac152f163b88d4c489ad47",
+      "original": "/workspace/work/revisao-visual-r4/notas-r4.json"
+    },
+    {
+      "file": "evidencias/historico/r4/arte/jornada-conclusao-390.png",
+      "sha256": "c1ff22dd82b6a97b914915c1e92b8c5d3aa944edc22adf56c5d63c63e20e074e",
+      "original": "/workspace/work/revisao-arte-craft-r4/jornada-conclusao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r4/arte/caderno-conclusao-390.png",
+      "sha256": "ee9b235087eefa30accd615f04b989e85a6f11c22d42c8cca7812edbbdc84c8e",
+      "original": "/workspace/work/revisao-arte-craft-r4/caderno-conclusao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r4/arte/jornada-licao-390.png",
+      "sha256": "6e575ec7363db7856eaea27eefd0f4af6267862cb65c696bbe095ee2a3a331fd",
+      "original": "/workspace/work/revisao-arte-craft-r4/jornada-licao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r3/arte/jornada-conclusao-390.png",
+      "sha256": "6ae2bc6c7bb4907eb98c4538b8ad2363c949ff1e4f3ef2e81ec102b60cdb356e",
+      "original": "/workspace/work/revisao-a11y-r3/jornada-conclusao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r3/arte/caderno-conclusao-390.png",
+      "sha256": "5abc53b319d41a640dfdd6cccfe6d274cc03788fe728e59ebdb8399e056b1157",
+      "original": "/workspace/work/revisao-a11y-r3/caderno-conclusao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r3/arte/jornada-licao-390.png",
+      "sha256": "70533d8da50865b29a58fd33c04a38d5a0642c662e1a393d19356d9bace3076f",
+      "original": "/workspace/work/revisao-a11y-r3/jornada-licao-390.png"
+    },
+    {
+      "file": "evidencias/historico/r4/arte/evidencias.json",
+      "sha256": "356b058c134f6cbceeea9447cabca5cfa6bd37b208cf7b156b677928bc53eb94",
+      "original": "/workspace/work/revisao-arte-craft-r4/evidencias.json"
+    },
+    {
+      "file": "evidencias/historico/r4/fluxos/fronteiras-resultados.json",
+      "sha256": "9372e99e6a5366331e4ce2ef81e38c763d1121d8d67a93fe7b8e3350426507ce",
+      "original": "/workspace/work/revisao-fluxos-r4/fronteiras-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r4/a11y/parecer-qa-r4.json",
+      "sha256": "92ab7f9f407829a2755776e9b013a03f2f0a7e1705e286cee76b9fd390e43d9f",
+      "original": "/workspace/work/revisao-a11y-r4/parecer-qa-r4.json"
+    },
+    {
+      "file": "evidencias/historico/r4/a11y/titulo-cabecalho.json",
+      "sha256": "14a005e4adade12b0a31686d5d8bf1d45b84d24df1c455c977f7006f0a28a541",
+      "original": "/workspace/work/revisao-a11y-r4/titulo-cabecalho.json"
+    },
+    {
+      "file": "evidencias/historico/r4/a11y/teclado/resumo.json",
+      "sha256": "0d86922c5306dda2a1809da3c998f2ffe2738d878815fcc71f13f5535ceb7e25",
+      "original": "/workspace/work/revisao-a11y-r4/teclado/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r4/a11y/teclado/foto-guards.json",
+      "sha256": "ed696e753d86787c52ffcef0e8d3f10cca54cf493ff452bb526f869ca2baf71b",
+      "original": "/workspace/work/revisao-a11y-r4/teclado/foto-guards.json"
+    }
+  ]
+}

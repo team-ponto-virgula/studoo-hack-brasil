@@ -1,0 +1,2342 @@
+{
+  "source": "5ad1225f586af063d58f694d4ebe705fcabca081",
+  "surface": "Protótipo HTML, Chromium 360×800; dados e eventos locais",
+  "startedAt": "2026-11-24T21:32:00.351Z",
+  "hashesStart": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "LC02-sessao-visita-restauracao",
+      "lc": [
+        "LC02"
+      ],
+      "checks": [
+        {
+          "name": "expiração informa preservação e exige reentrada",
+          "passed": true
+        },
+        {
+          "name": "quadro expirado não revela conteúdo privado",
+          "passed": true
+        },
+        {
+          "name": "visita separa conta trilhas material tentativas",
+          "passed": true
+        },
+        {
+          "name": "snapshot conserva rascunho da conta",
+          "passed": true
+        },
+        {
+          "name": "visita pode estudar com registro próprio",
+          "passed": true
+        },
+        {
+          "name": "ações de visita não substituem snapshot",
+          "passed": true
+        },
+        {
+          "name": "reentrada restaura conta sem estudo visitante",
+          "passed": true
+        },
+        {
+          "name": "tentativa privada restaurada",
+          "passed": true
+        },
+        {
+          "name": "explicação da conta restaurada",
+          "passed": true
+        },
+        {
+          "name": "restauração pendente tem destino verificável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC02-sessao-visita-restauracao-conta-restaurada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:07.124Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC06-eventos-cancelamento-erros",
+      "lc": [
+        "LC06"
+      ],
+      "checks": [
+        {
+          "name": "começo não antecipa lições",
+          "passed": true
+        },
+        {
+          "name": "título chega antes dos nós",
+          "passed": true
+        },
+        {
+          "name": "dois nós chegam antes da proposta",
+          "passed": true
+        },
+        {
+          "name": "cancelar invalida próximos eventos",
+          "passed": true
+        },
+        {
+          "name": "cinco nós precedem proposta",
+          "passed": true
+        },
+        {
+          "name": "proposta só chega depois do evento",
+          "passed": true
+        },
+        {
+          "name": "rede explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "rede cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "limite explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "limite cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "espera longa conserva dois nós e permite sair",
+          "passed": true
+        },
+        {
+          "name": "espera longa cancelada não cria trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC06-eventos-cancelamento-erros-cancelada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:08.826Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC07-aceite-cancelavel-e-falhas",
+      "lc": [
+        "LC07"
+      ],
+      "checks": [
+        {
+          "name": "pendente não cria registro e bloqueia toque duplicado",
+          "passed": true
+        },
+        {
+          "name": "cancelar aceite conserva proposta sem criar cópia",
+          "passed": true
+        },
+        {
+          "name": "confirmar conclui localmente só após pendência",
+          "passed": true
+        },
+        {
+          "name": "duplicada abre confirmação com progresso preservado",
+          "passed": true
+        },
+        {
+          "name": "cancelar duplicada fica na proposta",
+          "passed": true
+        },
+        {
+          "name": "longa contém cinco lições e capítulos coerentes",
+          "passed": true
+        },
+        {
+          "name": "falha de aceite tem repetir e saída",
+          "passed": true
+        },
+        {
+          "name": "falha ao abrir recupera primeira lição",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC07-aceite-cancelavel-e-falhas-primeira.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:12.741Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC05-material-confirmado-e-cancelamentos",
+      "lc": [
+        "LC05"
+      ],
+      "checks": [
+        {
+          "name": "cancelar seletor não confirma arquivo",
+          "passed": true
+        },
+        {
+          "name": "leitura prepara sem confirmar",
+          "passed": true
+        },
+        {
+          "name": "cancelar leitura invalida eventos e conserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "prévia inclui páginas e citações antes do uso",
+          "passed": true
+        },
+        {
+          "name": "citação corresponde à página dois",
+          "passed": true
+        },
+        {
+          "name": "uso explícito confirma material no pedido",
+          "passed": true
+        },
+        {
+          "name": "arquivo excedido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "manter anterior conserva objetivo e material",
+          "passed": true
+        },
+        {
+          "name": "cancelar câmera mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "descartar imagem conserva PDF confirmado",
+          "passed": true
+        },
+        {
+          "name": "cancelar remoção mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "remoção confirmada limpa só entrada",
+          "passed": true
+        },
+        {
+          "name": "CSV tem tabela e limite UTF8",
+          "passed": true
+        },
+        {
+          "name": "CSV é confirmado com origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC05-material-confirmado-e-cancelamentos-csv.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:22.295Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC08-biblioteca-carga-erro-retorno",
+      "lc": [
+        "LC08"
+      ],
+      "checks": [
+        {
+          "name": "carregando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "carregando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "sincronizando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "sincronizando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "erro preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "erro recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "recuperação não retorna ao quadro de erro",
+          "passed": true
+        },
+        {
+          "name": "biblioteca retoma próximo conteúdo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC08-biblioteca-carga-erro-retorno-retomada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:23.215Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC10-tentativas-por-trilha-licao-reinicio",
+      "lc": [
+        "LC10"
+      ],
+      "checks": [
+        {
+          "name": "nova recebida não herda resposta A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura seleção A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura texto A",
+          "passed": true
+        },
+        {
+          "name": "lição um não herda WHERE",
+          "passed": true
+        },
+        {
+          "name": "cancelar reinício preserva WHERE",
+          "passed": true
+        },
+        {
+          "name": "reinício confirmado limpa apenas tentativa atual",
+          "passed": true
+        },
+        {
+          "name": "reinício não apaga outra lição nem outra trilha",
+          "passed": true
+        },
+        {
+          "name": "reload mantém separação de tentativas",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC10-tentativas-por-trilha-licao-reinicio-reiniciada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:27.359Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC11-parcial-preserva-acertos",
+      "lc": [
+        "LC11"
+      ],
+      "checks": [
+        {
+          "name": "parcial explica dois pares corretos",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva pares corretos desativados",
+          "passed": true
+        },
+        {
+          "name": "reload conserva acertos parciais",
+          "passed": true
+        },
+        {
+          "name": "corrigir só restante produz acerto",
+          "passed": true
+        },
+        {
+          "name": "aberta parcial informa critérios atendido e rever",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva resposta aberta",
+          "passed": true
+        },
+        {
+          "name": "completar segundo critério gera acerto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC11-parcial-preserva-acertos-aberta-correta.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:28.392Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC09-12-baloes-ponte-vitoria-retorno",
+      "lc": [
+        "LC09",
+        "LC12"
+      ],
+      "checks": [
+        {
+          "name": "nó bloqueado explica condição sem avançar",
+          "passed": true
+        },
+        {
+          "name": "nó atual nomeia próximo passo",
+          "passed": true
+        },
+        {
+          "name": "vitória fica estável antes de retorno",
+          "passed": true
+        },
+        {
+          "name": "reler reabre primeiro passo sem perder original",
+          "passed": true
+        },
+        {
+          "name": "retorno conserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "ponte pertence à trilha e lição",
+          "passed": true
+        },
+        {
+          "name": "reabrir após reload conserva vitória",
+          "passed": true
+        },
+        {
+          "name": "ponte reaberta devolve resposta preservada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC09-12-baloes-ponte-vitoria-retorno-vencido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:30.654Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC13-envio-cancelamento-erro",
+      "lc": [
+        "LC13"
+      ],
+      "checks": [
+        {
+          "name": "envio pendente mostra texto e bloqueia duplicação",
+          "passed": true
+        },
+        {
+          "name": "cancelar envio evita retorno e mantém texto",
+          "passed": true
+        },
+        {
+          "name": "erro de envio não perde texto",
+          "passed": true
+        },
+        {
+          "name": "repetir mantém campo editável sem alterar texto",
+          "passed": true
+        },
+        {
+          "name": "novo envio chega ao retorno e preserva autoria",
+          "passed": true
+        },
+        {
+          "name": "permissão negada não começa áudio nem perde texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC13-envio-cancelamento-erro-sem-permissao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:31.617Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC15-ordem-paginacao-historico",
+      "lc": [
+        "LC15"
+      ],
+      "checks": [
+        {
+          "name": "ordem altera trilhas e reseta página",
+          "passed": true,
+          "evidence": {
+            "alta": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "novas": [
+              "SQL: condições que incluem o limite",
+              "Juntando tabelas com SQL",
+              "Consultas de SQL no dia a dia"
+            ]
+          }
+        },
+        {
+          "name": "paginar acrescenta sem duplicação",
+          "passed": true
+        },
+        {
+          "name": "prévia usa título do item escolhido",
+          "passed": true
+        },
+        {
+          "name": "Back restaura busca ordem e paginação",
+          "passed": true
+        },
+        {
+          "name": "Back restaura rolagem da lista",
+          "passed": true,
+          "evidence": {
+            "scroll": 461,
+            "backScroll": 461
+          }
+        },
+        {
+          "name": "trocar ordem repõe primeira página",
+          "passed": true
+        },
+        {
+          "name": "Seguindo vazio tem retorno",
+          "passed": true
+        },
+        {
+          "name": "Todos recupera lista com busca",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC15-ordem-paginacao-historico-lista.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:32.782Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC16-postagem-moderacao-retirada-desfazer",
+      "lc": [
+        "LC16"
+      ],
+      "checks": [
+        {
+          "name": "postagem pede confirmação de visibilidade",
+          "passed": true
+        },
+        {
+          "name": "cancelar não posta",
+          "passed": true
+        },
+        {
+          "name": "postagem normal fica pendente e não pública",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva revisão",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva cópia progresso e moderação",
+          "passed": true
+        },
+        {
+          "name": "desfazer restaura destino e moderação",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-aprovado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-recusado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-retirado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "cópia recebida não aparece na seleção de postagem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC16-postagem-moderacao-retirada-desfazer-so-proprias.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:34.414Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC17-capa-tema-drafts-isolados",
+      "lc": [
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "galeria mostra treze capas e doze temas",
+          "passed": true
+        },
+        {
+          "name": "cancelar capa preserva rascunho textual e aparência salva",
+          "passed": true
+        },
+        {
+          "name": "aplicar capa salva só aparência sem comprometer título",
+          "passed": true
+        },
+        {
+          "name": "salvar texto mantém aparência",
+          "passed": true
+        },
+        {
+          "name": "nova recebida não herda aparência A",
+          "passed": true
+        },
+        {
+          "name": "alternar A mantém capa tema e texto próprios",
+          "passed": true
+        },
+        {
+          "name": "Back descarta e persiste descarte do draft de aparência",
+          "passed": true
+        },
+        {
+          "name": "descrição pública rejeita email sem apagar valor",
+          "passed": true
+        },
+        {
+          "name": "corrigir salva sem afetar cópia B",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC17-capa-tema-drafts-isolados-isolamento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:37.045Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC10-16-17-material-origem-por-trilha",
+      "lc": [
+        "LC05",
+        "LC10",
+        "LC16",
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "aceite copia origem para registro da trilha",
+          "passed": true
+        },
+        {
+          "name": "lição cita PDF comprometido e página",
+          "passed": true
+        },
+        {
+          "name": "pedido posterior não altera origem da lição",
+          "passed": true
+        },
+        {
+          "name": "postar trilha de material informa exatamente exposição",
+          "passed": true
+        },
+        {
+          "name": "material não pode ser enviado ao Explorar",
+          "passed": false,
+          "evidence": {
+            "track": {
+              "title": "SQL para a prova",
+              "completed": 0,
+              "objective": "SQL com origem PDF para testar citações da trilha.",
+              "deMaterial": true,
+              "materialReference": {
+                "nome": "revisao-sql.pdf",
+                "pagina": 1,
+                "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+                "leitura": "demonstracao"
+              },
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "explorar",
+              "publicationStatus": "pendente"
+            },
+            "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+          }
+        },
+        {
+          "name": "remover entrada não apaga citação salva",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC10-16-17-material-origem-por-trilha-citacao-preservada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:46.217Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "LC18-consentimento-destinatarios-revogacao",
+      "lc": [
+        "LC18"
+      ],
+      "checks": [
+        {
+          "name": "pedido solicita consentimento demonstrativo",
+          "passed": true
+        },
+        {
+          "name": "destinatário antes de consentir é simulador sem envio",
+          "passed": true
+        },
+        {
+          "name": "recusar não concede consentimento",
+          "passed": true
+        },
+        {
+          "name": "consentimento local não muda flags de produção",
+          "passed": true
+        },
+        {
+          "name": "privacidade informa quem recebe sem prometer provedor",
+          "passed": true
+        },
+        {
+          "name": "cancelar revogação conserva permissão",
+          "passed": true
+        },
+        {
+          "name": "revogar conserva trilhas e bloqueia geração sem novo consentimento",
+          "passed": true
+        },
+        {
+          "name": "novo pedido pede permissão novamente",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/jornada-LC18-consentimento-destinatarios-revogacao-novo-consentimento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:47.782Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC02-sessao-visita-restauracao",
+      "lc": [
+        "LC02"
+      ],
+      "checks": [
+        {
+          "name": "expiração informa preservação e exige reentrada",
+          "passed": true
+        },
+        {
+          "name": "quadro expirado não revela conteúdo privado",
+          "passed": true
+        },
+        {
+          "name": "visita separa conta trilhas material tentativas",
+          "passed": true
+        },
+        {
+          "name": "snapshot conserva rascunho da conta",
+          "passed": true
+        },
+        {
+          "name": "visita pode estudar com registro próprio",
+          "passed": true
+        },
+        {
+          "name": "ações de visita não substituem snapshot",
+          "passed": true
+        },
+        {
+          "name": "reentrada restaura conta sem estudo visitante",
+          "passed": true
+        },
+        {
+          "name": "tentativa privada restaurada",
+          "passed": true
+        },
+        {
+          "name": "explicação da conta restaurada",
+          "passed": true
+        },
+        {
+          "name": "restauração pendente tem destino verificável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC02-sessao-visita-restauracao-conta-restaurada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:53.465Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC06-eventos-cancelamento-erros",
+      "lc": [
+        "LC06"
+      ],
+      "checks": [
+        {
+          "name": "começo não antecipa lições",
+          "passed": true
+        },
+        {
+          "name": "título chega antes dos nós",
+          "passed": true
+        },
+        {
+          "name": "dois nós chegam antes da proposta",
+          "passed": true
+        },
+        {
+          "name": "cancelar invalida próximos eventos",
+          "passed": true
+        },
+        {
+          "name": "cinco nós precedem proposta",
+          "passed": true
+        },
+        {
+          "name": "proposta só chega depois do evento",
+          "passed": true
+        },
+        {
+          "name": "rede explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "rede cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "limite explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "limite cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "espera longa conserva dois nós e permite sair",
+          "passed": true
+        },
+        {
+          "name": "espera longa cancelada não cria trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC06-eventos-cancelamento-erros-cancelada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:54.692Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC07-aceite-cancelavel-e-falhas",
+      "lc": [
+        "LC07"
+      ],
+      "checks": [
+        {
+          "name": "pendente não cria registro e bloqueia toque duplicado",
+          "passed": true
+        },
+        {
+          "name": "cancelar aceite conserva proposta sem criar cópia",
+          "passed": true
+        },
+        {
+          "name": "confirmar conclui localmente só após pendência",
+          "passed": true
+        },
+        {
+          "name": "duplicada abre confirmação com progresso preservado",
+          "passed": true
+        },
+        {
+          "name": "cancelar duplicada fica na proposta",
+          "passed": true
+        },
+        {
+          "name": "longa contém cinco lições e capítulos coerentes",
+          "passed": true
+        },
+        {
+          "name": "falha de aceite tem repetir e saída",
+          "passed": true
+        },
+        {
+          "name": "falha ao abrir recupera primeira lição",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC07-aceite-cancelavel-e-falhas-primeira.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:32:57.679Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC05-material-confirmado-e-cancelamentos",
+      "lc": [
+        "LC05"
+      ],
+      "checks": [
+        {
+          "name": "cancelar seletor não confirma arquivo",
+          "passed": true
+        },
+        {
+          "name": "leitura prepara sem confirmar",
+          "passed": true
+        },
+        {
+          "name": "cancelar leitura invalida eventos e conserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "prévia inclui páginas e citações antes do uso",
+          "passed": true
+        },
+        {
+          "name": "citação corresponde à página dois",
+          "passed": true
+        },
+        {
+          "name": "uso explícito confirma material no pedido",
+          "passed": true
+        },
+        {
+          "name": "arquivo excedido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "manter anterior conserva objetivo e material",
+          "passed": true
+        },
+        {
+          "name": "cancelar câmera mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "descartar imagem conserva PDF confirmado",
+          "passed": true
+        },
+        {
+          "name": "cancelar remoção mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "remoção confirmada limpa só entrada",
+          "passed": true
+        },
+        {
+          "name": "CSV tem tabela e limite UTF8",
+          "passed": true
+        },
+        {
+          "name": "CSV é confirmado com origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC05-material-confirmado-e-cancelamentos-csv.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:05.777Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC08-biblioteca-carga-erro-retorno",
+      "lc": [
+        "LC08"
+      ],
+      "checks": [
+        {
+          "name": "carregando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "carregando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "sincronizando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "sincronizando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "erro preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "erro recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "recuperação não retorna ao quadro de erro",
+          "passed": true
+        },
+        {
+          "name": "biblioteca retoma próximo conteúdo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC08-biblioteca-carga-erro-retorno-retomada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:06.699Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC10-tentativas-por-trilha-licao-reinicio",
+      "lc": [
+        "LC10"
+      ],
+      "checks": [
+        {
+          "name": "nova recebida não herda resposta A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura seleção A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura texto A",
+          "passed": true
+        },
+        {
+          "name": "lição um não herda WHERE",
+          "passed": true
+        },
+        {
+          "name": "cancelar reinício preserva WHERE",
+          "passed": true
+        },
+        {
+          "name": "reinício confirmado limpa apenas tentativa atual",
+          "passed": true
+        },
+        {
+          "name": "reinício não apaga outra lição nem outra trilha",
+          "passed": true
+        },
+        {
+          "name": "reload mantém separação de tentativas",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC10-tentativas-por-trilha-licao-reinicio-reiniciada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:10.902Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC11-parcial-preserva-acertos",
+      "lc": [
+        "LC11"
+      ],
+      "checks": [
+        {
+          "name": "parcial explica dois pares corretos",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva pares corretos desativados",
+          "passed": true
+        },
+        {
+          "name": "reload conserva acertos parciais",
+          "passed": true
+        },
+        {
+          "name": "corrigir só restante produz acerto",
+          "passed": true
+        },
+        {
+          "name": "aberta parcial informa critérios atendido e rever",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva resposta aberta",
+          "passed": true
+        },
+        {
+          "name": "completar segundo critério gera acerto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC11-parcial-preserva-acertos-aberta-correta.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:11.690Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC09-12-baloes-ponte-vitoria-retorno",
+      "lc": [
+        "LC09",
+        "LC12"
+      ],
+      "checks": [
+        {
+          "name": "nó bloqueado explica condição sem avançar",
+          "passed": true
+        },
+        {
+          "name": "nó atual nomeia próximo passo",
+          "passed": true
+        },
+        {
+          "name": "vitória fica estável antes de retorno",
+          "passed": true
+        },
+        {
+          "name": "reler reabre primeiro passo sem perder original",
+          "passed": true
+        },
+        {
+          "name": "retorno conserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "ponte pertence à trilha e lição",
+          "passed": true
+        },
+        {
+          "name": "reabrir após reload conserva vitória",
+          "passed": true
+        },
+        {
+          "name": "ponte reaberta devolve resposta preservada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC09-12-baloes-ponte-vitoria-retorno-vencido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:13.725Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC13-envio-cancelamento-erro",
+      "lc": [
+        "LC13"
+      ],
+      "checks": [
+        {
+          "name": "envio pendente mostra texto e bloqueia duplicação",
+          "passed": true
+        },
+        {
+          "name": "cancelar envio evita retorno e mantém texto",
+          "passed": true
+        },
+        {
+          "name": "erro de envio não perde texto",
+          "passed": true
+        },
+        {
+          "name": "repetir mantém campo editável sem alterar texto",
+          "passed": true
+        },
+        {
+          "name": "novo envio chega ao retorno e preserva autoria",
+          "passed": true
+        },
+        {
+          "name": "permissão negada não começa áudio nem perde texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC13-envio-cancelamento-erro-sem-permissao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:14.629Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC15-ordem-paginacao-historico",
+      "lc": [
+        "LC15"
+      ],
+      "checks": [
+        {
+          "name": "ordem altera trilhas e reseta página",
+          "passed": true,
+          "evidence": {
+            "alta": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "novas": [
+              "SQL: condições que incluem o limite",
+              "Juntando tabelas com SQL",
+              "Consultas de SQL no dia a dia"
+            ]
+          }
+        },
+        {
+          "name": "paginar acrescenta sem duplicação",
+          "passed": true
+        },
+        {
+          "name": "prévia usa título do item escolhido",
+          "passed": true
+        },
+        {
+          "name": "Back restaura busca ordem e paginação",
+          "passed": true
+        },
+        {
+          "name": "Back restaura rolagem da lista",
+          "passed": true,
+          "evidence": {
+            "scroll": 397,
+            "backScroll": 397
+          }
+        },
+        {
+          "name": "trocar ordem repõe primeira página",
+          "passed": true
+        },
+        {
+          "name": "Seguindo vazio tem retorno",
+          "passed": true
+        },
+        {
+          "name": "Todos recupera lista com busca",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC15-ordem-paginacao-historico-lista.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:15.682Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC16-postagem-moderacao-retirada-desfazer",
+      "lc": [
+        "LC16"
+      ],
+      "checks": [
+        {
+          "name": "postagem pede confirmação de visibilidade",
+          "passed": true
+        },
+        {
+          "name": "cancelar não posta",
+          "passed": true
+        },
+        {
+          "name": "postagem normal fica pendente e não pública",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva revisão",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva cópia progresso e moderação",
+          "passed": true
+        },
+        {
+          "name": "desfazer restaura destino e moderação",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-aprovado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-recusado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-retirado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "cópia recebida não aparece na seleção de postagem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC16-postagem-moderacao-retirada-desfazer-so-proprias.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:17.173Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC17-capa-tema-drafts-isolados",
+      "lc": [
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "galeria mostra treze capas e doze temas",
+          "passed": true
+        },
+        {
+          "name": "cancelar capa preserva rascunho textual e aparência salva",
+          "passed": true
+        },
+        {
+          "name": "aplicar capa salva só aparência sem comprometer título",
+          "passed": true
+        },
+        {
+          "name": "salvar texto mantém aparência",
+          "passed": true
+        },
+        {
+          "name": "nova recebida não herda aparência A",
+          "passed": true
+        },
+        {
+          "name": "alternar A mantém capa tema e texto próprios",
+          "passed": true
+        },
+        {
+          "name": "Back descarta e persiste descarte do draft de aparência",
+          "passed": true
+        },
+        {
+          "name": "descrição pública rejeita email sem apagar valor",
+          "passed": true
+        },
+        {
+          "name": "corrigir salva sem afetar cópia B",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC17-capa-tema-drafts-isolados-isolamento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:19.694Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC10-16-17-material-origem-por-trilha",
+      "lc": [
+        "LC05",
+        "LC10",
+        "LC16",
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "aceite copia origem para registro da trilha",
+          "passed": true
+        },
+        {
+          "name": "lição cita PDF comprometido e página",
+          "passed": true
+        },
+        {
+          "name": "pedido posterior não altera origem da lição",
+          "passed": true
+        },
+        {
+          "name": "postar trilha de material informa exatamente exposição",
+          "passed": true
+        },
+        {
+          "name": "material não pode ser enviado ao Explorar",
+          "passed": false,
+          "evidence": {
+            "track": {
+              "title": "SQL para a prova",
+              "completed": 0,
+              "objective": "SQL com origem PDF para testar citações da trilha.",
+              "deMaterial": true,
+              "materialReference": {
+                "nome": "revisao-sql.pdf",
+                "pagina": 1,
+                "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+                "leitura": "demonstracao"
+              },
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "explorar",
+              "publicationStatus": "pendente"
+            },
+            "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+          }
+        },
+        {
+          "name": "remover entrada não apaga citação salva",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC10-16-17-material-origem-por-trilha-citacao-preservada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:28.629Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "LC18-consentimento-destinatarios-revogacao",
+      "lc": [
+        "LC18"
+      ],
+      "checks": [
+        {
+          "name": "pedido solicita consentimento demonstrativo",
+          "passed": true
+        },
+        {
+          "name": "destinatário antes de consentir é simulador sem envio",
+          "passed": true
+        },
+        {
+          "name": "recusar não concede consentimento",
+          "passed": true
+        },
+        {
+          "name": "consentimento local não muda flags de produção",
+          "passed": true
+        },
+        {
+          "name": "privacidade informa quem recebe sem prometer provedor",
+          "passed": true
+        },
+        {
+          "name": "cancelar revogação conserva permissão",
+          "passed": true
+        },
+        {
+          "name": "revogar conserva trilhas e bloqueia geração sem novo consentimento",
+          "passed": true
+        },
+        {
+          "name": "novo pedido pede permissão novamente",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/caderno-LC18-consentimento-destinatarios-revogacao-novo-consentimento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:30.158Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC02-sessao-visita-restauracao",
+      "lc": [
+        "LC02"
+      ],
+      "checks": [
+        {
+          "name": "expiração informa preservação e exige reentrada",
+          "passed": true
+        },
+        {
+          "name": "quadro expirado não revela conteúdo privado",
+          "passed": true
+        },
+        {
+          "name": "visita separa conta trilhas material tentativas",
+          "passed": true
+        },
+        {
+          "name": "snapshot conserva rascunho da conta",
+          "passed": true
+        },
+        {
+          "name": "visita pode estudar com registro próprio",
+          "passed": true
+        },
+        {
+          "name": "ações de visita não substituem snapshot",
+          "passed": true
+        },
+        {
+          "name": "reentrada restaura conta sem estudo visitante",
+          "passed": true
+        },
+        {
+          "name": "tentativa privada restaurada",
+          "passed": true
+        },
+        {
+          "name": "explicação da conta restaurada",
+          "passed": true
+        },
+        {
+          "name": "restauração pendente tem destino verificável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC02-sessao-visita-restauracao-conta-restaurada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:35.646Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC06-eventos-cancelamento-erros",
+      "lc": [
+        "LC06"
+      ],
+      "checks": [
+        {
+          "name": "começo não antecipa lições",
+          "passed": true
+        },
+        {
+          "name": "título chega antes dos nós",
+          "passed": true
+        },
+        {
+          "name": "dois nós chegam antes da proposta",
+          "passed": true
+        },
+        {
+          "name": "cancelar invalida próximos eventos",
+          "passed": true
+        },
+        {
+          "name": "cinco nós precedem proposta",
+          "passed": true
+        },
+        {
+          "name": "proposta só chega depois do evento",
+          "passed": true
+        },
+        {
+          "name": "rede explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "rede cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "ia-indisponivel cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "limite explica erro e oferece repetir/cancelar",
+          "passed": true
+        },
+        {
+          "name": "limite cancela preservando pedido",
+          "passed": true
+        },
+        {
+          "name": "espera longa conserva dois nós e permite sair",
+          "passed": true
+        },
+        {
+          "name": "espera longa cancelada não cria trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC06-eventos-cancelamento-erros-cancelada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:36.692Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC07-aceite-cancelavel-e-falhas",
+      "lc": [
+        "LC07"
+      ],
+      "checks": [
+        {
+          "name": "pendente não cria registro e bloqueia toque duplicado",
+          "passed": true
+        },
+        {
+          "name": "cancelar aceite conserva proposta sem criar cópia",
+          "passed": true
+        },
+        {
+          "name": "confirmar conclui localmente só após pendência",
+          "passed": true
+        },
+        {
+          "name": "duplicada abre confirmação com progresso preservado",
+          "passed": true
+        },
+        {
+          "name": "cancelar duplicada fica na proposta",
+          "passed": true
+        },
+        {
+          "name": "longa contém cinco lições e capítulos coerentes",
+          "passed": true
+        },
+        {
+          "name": "falha de aceite tem repetir e saída",
+          "passed": true
+        },
+        {
+          "name": "falha ao abrir recupera primeira lição",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC07-aceite-cancelavel-e-falhas-primeira.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:39.526Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC05-material-confirmado-e-cancelamentos",
+      "lc": [
+        "LC05"
+      ],
+      "checks": [
+        {
+          "name": "cancelar seletor não confirma arquivo",
+          "passed": true
+        },
+        {
+          "name": "leitura prepara sem confirmar",
+          "passed": true
+        },
+        {
+          "name": "cancelar leitura invalida eventos e conserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "prévia inclui páginas e citações antes do uso",
+          "passed": true
+        },
+        {
+          "name": "citação corresponde à página dois",
+          "passed": true
+        },
+        {
+          "name": "uso explícito confirma material no pedido",
+          "passed": true
+        },
+        {
+          "name": "arquivo excedido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "manter anterior conserva objetivo e material",
+          "passed": true
+        },
+        {
+          "name": "cancelar câmera mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "descartar imagem conserva PDF confirmado",
+          "passed": true
+        },
+        {
+          "name": "cancelar remoção mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "remoção confirmada limpa só entrada",
+          "passed": true
+        },
+        {
+          "name": "CSV tem tabela e limite UTF8",
+          "passed": true
+        },
+        {
+          "name": "CSV é confirmado com origem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC05-material-confirmado-e-cancelamentos-csv.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:47.560Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC08-biblioteca-carga-erro-retorno",
+      "lc": [
+        "LC08"
+      ],
+      "checks": [
+        {
+          "name": "carregando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "carregando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "sincronizando preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "sincronizando recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "erro preserva registros e oferece recuperação",
+          "passed": true
+        },
+        {
+          "name": "erro recupera lista sem duplicar",
+          "passed": true
+        },
+        {
+          "name": "recuperação não retorna ao quadro de erro",
+          "passed": true
+        },
+        {
+          "name": "biblioteca retoma próximo conteúdo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC08-biblioteca-carga-erro-retorno-retomada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:34:59.795Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC10-tentativas-por-trilha-licao-reinicio",
+      "lc": [
+        "LC10"
+      ],
+      "checks": [
+        {
+          "name": "nova recebida não herda resposta A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura seleção A",
+          "passed": true
+        },
+        {
+          "name": "trocar para A restaura texto A",
+          "passed": true
+        },
+        {
+          "name": "lição um não herda WHERE",
+          "passed": true
+        },
+        {
+          "name": "cancelar reinício preserva WHERE",
+          "passed": true
+        },
+        {
+          "name": "reinício confirmado limpa apenas tentativa atual",
+          "passed": true
+        },
+        {
+          "name": "reinício não apaga outra lição nem outra trilha",
+          "passed": true
+        },
+        {
+          "name": "reload mantém separação de tentativas",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC10-tentativas-por-trilha-licao-reinicio-reiniciada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:52.373Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC11-parcial-preserva-acertos",
+      "lc": [
+        "LC11"
+      ],
+      "checks": [
+        {
+          "name": "parcial explica dois pares corretos",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva pares corretos desativados",
+          "passed": true
+        },
+        {
+          "name": "reload conserva acertos parciais",
+          "passed": true
+        },
+        {
+          "name": "corrigir só restante produz acerto",
+          "passed": true
+        },
+        {
+          "name": "aberta parcial informa critérios atendido e rever",
+          "passed": true
+        },
+        {
+          "name": "repetir conserva resposta aberta",
+          "passed": true
+        },
+        {
+          "name": "completar segundo critério gera acerto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC11-parcial-preserva-acertos-aberta-correta.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:53.156Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC09-12-baloes-ponte-vitoria-retorno",
+      "lc": [
+        "LC09",
+        "LC12"
+      ],
+      "checks": [
+        {
+          "name": "nó bloqueado explica condição sem avançar",
+          "passed": true
+        },
+        {
+          "name": "nó atual nomeia próximo passo",
+          "passed": true
+        },
+        {
+          "name": "vitória fica estável antes de retorno",
+          "passed": true
+        },
+        {
+          "name": "reler reabre primeiro passo sem perder original",
+          "passed": true
+        },
+        {
+          "name": "retorno conserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "ponte pertence à trilha e lição",
+          "passed": true
+        },
+        {
+          "name": "reabrir após reload conserva vitória",
+          "passed": true
+        },
+        {
+          "name": "ponte reaberta devolve resposta preservada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC09-12-baloes-ponte-vitoria-retorno-vencido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:55.128Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC13-envio-cancelamento-erro",
+      "lc": [
+        "LC13"
+      ],
+      "checks": [
+        {
+          "name": "envio pendente mostra texto e bloqueia duplicação",
+          "passed": true
+        },
+        {
+          "name": "cancelar envio evita retorno e mantém texto",
+          "passed": true
+        },
+        {
+          "name": "erro de envio não perde texto",
+          "passed": true
+        },
+        {
+          "name": "repetir mantém campo editável sem alterar texto",
+          "passed": true
+        },
+        {
+          "name": "novo envio chega ao retorno e preserva autoria",
+          "passed": true
+        },
+        {
+          "name": "permissão negada não começa áudio nem perde texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC13-envio-cancelamento-erro-sem-permissao.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:55.975Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC15-ordem-paginacao-historico",
+      "lc": [
+        "LC15"
+      ],
+      "checks": [
+        {
+          "name": "ordem altera trilhas e reseta página",
+          "passed": true,
+          "evidence": {
+            "alta": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "novas": [
+              "SQL: condições que incluem o limite",
+              "Juntando tabelas com SQL",
+              "Consultas de SQL no dia a dia"
+            ]
+          }
+        },
+        {
+          "name": "paginar acrescenta sem duplicação",
+          "passed": true
+        },
+        {
+          "name": "prévia usa título do item escolhido",
+          "passed": true
+        },
+        {
+          "name": "Back restaura busca ordem e paginação",
+          "passed": true
+        },
+        {
+          "name": "Back restaura rolagem da lista",
+          "passed": true,
+          "evidence": {
+            "scroll": 318,
+            "backScroll": 318
+          }
+        },
+        {
+          "name": "trocar ordem repõe primeira página",
+          "passed": true
+        },
+        {
+          "name": "Seguindo vazio tem retorno",
+          "passed": true
+        },
+        {
+          "name": "Todos recupera lista com busca",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC15-ordem-paginacao-historico-lista.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:57.110Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC16-postagem-moderacao-retirada-desfazer",
+      "lc": [
+        "LC16"
+      ],
+      "checks": [
+        {
+          "name": "postagem pede confirmação de visibilidade",
+          "passed": true
+        },
+        {
+          "name": "cancelar não posta",
+          "passed": true
+        },
+        {
+          "name": "postagem normal fica pendente e não pública",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva revisão",
+          "passed": true
+        },
+        {
+          "name": "retirada conserva cópia progresso e moderação",
+          "passed": true
+        },
+        {
+          "name": "desfazer restaura destino e moderação",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-aprovado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-recusado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "fixture perfil-retirado coerente e identificada",
+          "passed": true
+        },
+        {
+          "name": "cópia recebida não aparece na seleção de postagem",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC16-postagem-moderacao-retirada-desfazer-so-proprias.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:33:58.694Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC17-capa-tema-drafts-isolados",
+      "lc": [
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "galeria mostra treze capas e doze temas",
+          "passed": true
+        },
+        {
+          "name": "cancelar capa preserva rascunho textual e aparência salva",
+          "passed": true
+        },
+        {
+          "name": "aplicar capa salva só aparência sem comprometer título",
+          "passed": true
+        },
+        {
+          "name": "salvar texto mantém aparência",
+          "passed": true
+        },
+        {
+          "name": "nova recebida não herda aparência A",
+          "passed": true
+        },
+        {
+          "name": "alternar A mantém capa tema e texto próprios",
+          "passed": true
+        },
+        {
+          "name": "Back descarta e persiste descarte do draft de aparência",
+          "passed": true
+        },
+        {
+          "name": "descrição pública rejeita email sem apagar valor",
+          "passed": true
+        },
+        {
+          "name": "corrigir salva sem afetar cópia B",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC17-capa-tema-drafts-isolados-isolamento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:34:01.191Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC10-16-17-material-origem-por-trilha",
+      "lc": [
+        "LC05",
+        "LC10",
+        "LC16",
+        "LC17"
+      ],
+      "checks": [
+        {
+          "name": "aceite copia origem para registro da trilha",
+          "passed": true
+        },
+        {
+          "name": "lição cita PDF comprometido e página",
+          "passed": true
+        },
+        {
+          "name": "pedido posterior não altera origem da lição",
+          "passed": true
+        },
+        {
+          "name": "postar trilha de material informa exatamente exposição",
+          "passed": true
+        },
+        {
+          "name": "material não pode ser enviado ao Explorar",
+          "passed": false,
+          "evidence": {
+            "track": {
+              "title": "SQL para a prova",
+              "completed": 0,
+              "objective": "SQL com origem PDF para testar citações da trilha.",
+              "deMaterial": true,
+              "materialReference": {
+                "nome": "revisao-sql.pdf",
+                "pagina": 1,
+                "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+                "leitura": "demonstracao"
+              },
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "explorar",
+              "publicationStatus": "pendente"
+            },
+            "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+          }
+        },
+        {
+          "name": "remover entrada não apaga citação salva",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC10-16-17-material-origem-por-trilha-citacao-preservada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:34:10.036Z"
+    },
+    {
+      "dir": "foco",
+      "name": "LC18-consentimento-destinatarios-revogacao",
+      "lc": [
+        "LC18"
+      ],
+      "checks": [
+        {
+          "name": "pedido solicita consentimento demonstrativo",
+          "passed": true
+        },
+        {
+          "name": "destinatário antes de consentir é simulador sem envio",
+          "passed": true
+        },
+        {
+          "name": "recusar não concede consentimento",
+          "passed": true
+        },
+        {
+          "name": "consentimento local não muda flags de produção",
+          "passed": true
+        },
+        {
+          "name": "privacidade informa quem recebe sem prometer provedor",
+          "passed": true
+        },
+        {
+          "name": "cancelar revogação conserva permissão",
+          "passed": true
+        },
+        {
+          "name": "revogar conserva trilhas e bloqueia geração sem novo consentimento",
+          "passed": true
+        },
+        {
+          "name": "novo pedido pede permissão novamente",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r5/foco-LC18-consentimento-destinatarios-revogacao-novo-consentimento.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:34:11.467Z"
+    }
+  ],
+  "failures": [
+    {
+      "dir": "jornada",
+      "scenario": "LC10-16-17-material-origem-por-trilha",
+      "name": "material não pode ser enviado ao Explorar",
+      "passed": false,
+      "evidence": {
+        "track": {
+          "title": "SQL para a prova",
+          "completed": 0,
+          "objective": "SQL com origem PDF para testar citações da trilha.",
+          "deMaterial": true,
+          "materialReference": {
+            "nome": "revisao-sql.pdf",
+            "pagina": 1,
+            "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+            "leitura": "demonstracao"
+          },
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "explorar",
+          "publicationStatus": "pendente"
+        },
+        "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+      }
+    },
+    {
+      "dir": "caderno",
+      "scenario": "LC10-16-17-material-origem-por-trilha",
+      "name": "material não pode ser enviado ao Explorar",
+      "passed": false,
+      "evidence": {
+        "track": {
+          "title": "SQL para a prova",
+          "completed": 0,
+          "objective": "SQL com origem PDF para testar citações da trilha.",
+          "deMaterial": true,
+          "materialReference": {
+            "nome": "revisao-sql.pdf",
+            "pagina": 1,
+            "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+            "leitura": "demonstracao"
+          },
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "explorar",
+          "publicationStatus": "pendente"
+        },
+        "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+      }
+    },
+    {
+      "dir": "foco",
+      "scenario": "LC10-16-17-material-origem-por-trilha",
+      "name": "material não pode ser enviado ao Explorar",
+      "passed": false,
+      "evidence": {
+        "track": {
+          "title": "SQL para a prova",
+          "completed": 0,
+          "objective": "SQL com origem PDF para testar citações da trilha.",
+          "deMaterial": true,
+          "materialReference": {
+            "nome": "revisao-sql.pdf",
+            "pagina": 1,
+            "trecho": "WHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.",
+            "leitura": "demonstracao"
+          },
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "explorar",
+          "publicationStatus": "pendente"
+        },
+        "screen": "COMPARTILHAR\nSua escolha está em revisão.\n\nA prévia abaixo representa o estado de exemplo.\n\nEm revisão\n\nEm revisão pela equipe do Studoo. Por enquanto, só você vê.\n\nSQL para a prova\nSó o conteúdo da trilha. Sem respostas ou progresso pessoal.\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nPode ser encontrada pela comunidade.\n\nEnquanto não estiver aprovada, esta publicação não oferece link nem código para outras pessoas.\n\nSalvar visibilidade do exemplo\nParar de compartilhar\nVoltar à trilha"
+      }
+    }
+  ],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "finishedAt": "2026-11-24T21:34:59.809Z",
+  "recheck": {
+    "reason": "LC08 C tem composição própria: título de lição no cartão, sem título da trilha. Troca do assert visual por integridade de activeTrack/title/completed/CTA; nenhum assert de dados removido.",
+    "history": "riscos-lc-resultados-antes-lc08.json",
+    "artifact": "riscos-lc-rechecagem-lc08.json",
+    "replacementChecks": 8,
+    "notAddedToTotal": true
+  }
+}

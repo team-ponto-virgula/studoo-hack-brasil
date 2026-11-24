@@ -1,0 +1,91 @@
+{
+  "sourceCandidate": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "scope": "Resultados independentes R7. Provas históricas mantêm suas fontes, conforme equivalências. Contagens não são somadas entre recortes.",
+  "files": [
+    {
+      "file": "evidencias/revisao-r7/fluxos/notas-e-contagens.json",
+      "sha256": "31deefaee7649daea82021a111b06a6eef1729b9095bd004aab97b7b6c54a70d",
+      "original": "/workspace/work/revisao-fluxos-r7/notas-e-contagens.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/equivalencia-r6.json",
+      "sha256": "34a4d600736fcef4108a22457e26b76a1098b9eae9d4127038854387f707ea42",
+      "original": "/workspace/work/revisao-fluxos-r7/equivalencia-r6.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/a11y/parecer-qa-r7.json",
+      "sha256": "3039499de4986ba968e6dca0ae28df4f2e1dc5f3951a952c8995e3a44c516907",
+      "original": "/workspace/work/revisao-a11y-r7/parecer-qa-r7.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/a11y/matriz.json",
+      "sha256": "bcbbc322a69500ff576bfddcf57356d7a89453405d93b50e39df07409c6c46a8",
+      "original": "/workspace/work/revisao-a11y-r7/matriz.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/a11y/http-source.json",
+      "sha256": "443acab33ce2b718a5a27742a55b13fca87b0404e06436380bd35364f8b134b4",
+      "original": "/workspace/work/revisao-a11y-r7/http-source.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/visual/notas-r7.json",
+      "sha256": "80e4a58b0375bea6ac576ce7fce52939a2b670d938f9608da43e01f3ccbafd39",
+      "original": "/workspace/work/revisao-visual-r7/notas-r7.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/visual/equivalencia-r6.json",
+      "sha256": "e921255037e150f72ab41d79f5efbc4476b4bd472c94cd21d648a9309a17d47f",
+      "original": "/workspace/work/revisao-visual-r7/equivalencia-r6.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/visual/conferencia-final.json",
+      "sha256": "1c4c5015a0ee69b934ed6c1b5e816fe4ec470247e008a655dcdcba2a36dac1ca",
+      "original": "/workspace/work/revisao-visual-r7/conferencia-final.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/arte-craft/evidencias.json",
+      "sha256": "c5d4d72e361cd721ac7335aa0e9cbf124b2378b2b63a3d0d9e323c7936d4bc21",
+      "original": "/workspace/work/revisao-arte-craft-r7/evidencias.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/arte-craft/rechecagem-legado.json",
+      "sha256": "52122e66486c7db835ac3e570c415b3989d9db5c828e6f461502e4cdaf0a882f",
+      "original": "/workspace/work/revisao-arte-craft-r7/rechecagem-legado.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/assincronia-resultados.json",
+      "sha256": "776c5445a60f47623fc8b37dd23c68ab7f6a6aef0899d957f2c407e4c45ee41d",
+      "original": "/workspace/work/revisao-fluxos-r7/assincronia-resultados.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/compartilhar-resultados.json",
+      "sha256": "e6f5a7c725bba010bd5468f68c7c4d332f7047de24982d983ccbb49f6f2600fc",
+      "original": "/workspace/work/revisao-fluxos-r7/compartilhar-resultados.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/positivos-resultados.json",
+      "sha256": "d6ec63cd6304f3ba93929c5ebe73b3c1f14c1f999b73904bc9217a4f70f39ce7",
+      "original": "/workspace/work/revisao-fluxos-r7/positivos-resultados.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/compartilhar-resultados-antes-render-explicito.json",
+      "sha256": "ff88c39104aaa61fb0873249dc5cd5fd986398eddbdbde2667b8af0168636fb2",
+      "original": "/workspace/work/revisao-fluxos-r7/compartilhar-resultados-antes-render-explicito.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/compartilhar-rechecagem-render.json",
+      "sha256": "37bdd6c3df5084be713530120db500380b72ceb2809f22909b1c6f8162b7a082",
+      "original": "/workspace/work/revisao-fluxos-r7/compartilhar-rechecagem-render.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/positivos-resultados-antes-evento-close.json",
+      "sha256": "a3b174e33a4eea96fdd7b9c68261b821759726b115eecb31ab2bcd1b9733175f",
+      "original": "/workspace/work/revisao-fluxos-r7/positivos-resultados-antes-evento-close.json"
+    },
+    {
+      "file": "evidencias/revisao-r7/fluxos/positivos-rechecagem-close.json",
+      "sha256": "970bc5b3e8f976265c24dc793dd9c497103f207ccecba305c6bb4362a1f436c7",
+      "original": "/workspace/work/revisao-fluxos-r7/positivos-rechecagem-close.json"
+    }
+  ]
+}

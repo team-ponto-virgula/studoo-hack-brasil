@@ -1,0 +1,5 @@
+STUDOO — três direções mobile
+
+Fontes, assets e código estão incluídos nos arquivos direcao-a.html, direcao-b.html e direcao-c.html. Abra-os em um navegador que permita scripts de arquivo local, ou sirva esta pasta por HTTP. A validação Cloud usa HTTP; a política local pode impedir file://. A barra superior escolhe página/direção. As ações são locais; não há login, IA, gravação ou salvamento em servidor. O personagem é o kit provisório atual, não o novo Stu caderno. Testes nativos permanecem pendentes.
+
+Critérios e resultados: ../RESULTADOS.md no repositório desta tarefa.

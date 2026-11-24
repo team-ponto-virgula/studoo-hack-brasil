@@ -1,0 +1,909 @@
+{
+  "source": "31fb42736d15d75ed75d7c1cf046f01d81a9251d",
+  "startedAt": "2026-11-24T20:20:05.263Z",
+  "sourceHashStart": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+  "surface": "protótipo HTML mobile em Chromium; sem API/nativo",
+  "cases": [
+    {
+      "direction": "jornada",
+      "name": "percurso-central",
+      "checks": [
+        {
+          "name": "cinco cenas distintas e interesses",
+          "passed": true,
+          "evidence": [
+            "Seu ponto de partida.",
+            "Um caminho que faz sentido.",
+            "Errar abre outro caminho.",
+            "Ensine para entender.",
+            "Continue de onde parou."
+          ]
+        },
+        {
+          "name": "email inválido recuperável",
+          "passed": true,
+          "evidence": "cadastro"
+        },
+        {
+          "name": "código incorreto preserva email",
+          "passed": true
+        },
+        {
+          "name": "senha curta bloqueia avanço",
+          "passed": true
+        },
+        {
+          "name": "conta exemplo leva ao pedido",
+          "passed": true
+        },
+        {
+          "name": "material de exemplo selecionado",
+          "passed": true
+        },
+        {
+          "name": "consentimento antes da geração",
+          "passed": true
+        },
+        {
+          "name": "cancelamento preserva pedido e material",
+          "passed": true
+        },
+        {
+          "name": "aceite abre WHERE",
+          "passed": true
+        },
+        {
+          "name": "resposta incompleta orienta",
+          "passed": true
+        },
+        {
+          "name": "resposta errada retorna feedback",
+          "passed": true
+        },
+        {
+          "name": "reforço errado permite recuperação",
+          "passed": true
+        },
+        {
+          "name": "retorno do reforço preserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "correção produz acerto",
+          "passed": true
+        },
+        {
+          "name": "áudio de exemplo só começa após gesto",
+          "passed": true
+        },
+        {
+          "name": "cancelar áudio de exemplo preserva texto",
+          "passed": true
+        },
+        {
+          "name": "retorno identifica ausência de IA",
+          "passed": true
+        },
+        {
+          "name": "conclusão local 1 de 5",
+          "passed": true
+        },
+        {
+          "name": "reload restaura progresso local",
+          "passed": true
+        },
+        {
+          "name": "retomada abre INNER JOIN coerente",
+          "passed": true
+        },
+        {
+          "name": "INNER JOIN usa sua pergunta",
+          "passed": true
+        },
+        {
+          "name": "cancelar saída fica na lição",
+          "passed": true
+        },
+        {
+          "name": "pausar volta ao mapa sem apagar progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-percurso-central-erro.png",
+        "/workspace/work/revisao-fluxos-r2/jornada-percurso-central-conclusao.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:13.230Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "recuperacao-e-perfil",
+      "checks": [
+        {
+          "name": "recuperação mostra redefinição",
+          "passed": true
+        },
+        {
+          "name": "redefinir retorna à entrada",
+          "passed": true
+        },
+        {
+          "name": "cancelamento de edição pede decisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar descarte mantém draft",
+          "passed": true
+        },
+        {
+          "name": "descartar mantém nome salvo",
+          "passed": true
+        },
+        {
+          "name": "salvar perfil atualiza nome",
+          "passed": true
+        },
+        {
+          "name": "voltar do navegador protege edição",
+          "passed": true,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-recuperacao-e-perfil-voltar-navegador.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:15.201Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "comunidade-e-seguranca",
+      "checks": [
+        {
+          "name": "Seguindo reflete ausência de seguidos",
+          "passed": true,
+          "evidence": {
+            "before": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "after": [],
+            "chipTexts": "Todos\nSeguindo\nTecnologia"
+          }
+        },
+        {
+          "name": "seguir tem retorno",
+          "passed": true
+        },
+        {
+          "name": "cancelar bloqueio não altera estado",
+          "passed": true
+        },
+        {
+          "name": "bloqueio registrado localmente",
+          "passed": true
+        },
+        {
+          "name": "perfil bloqueado não permite seguir",
+          "passed": true,
+          "evidence": {
+            "button": null
+          }
+        },
+        {
+          "name": "desbloquear remove da lista",
+          "passed": true
+        },
+        {
+          "name": "adicionar cópia preserva anterior",
+          "passed": true,
+          "evidence": {
+            "prova": {
+              "title": "SQL para a prova",
+              "completed": 1,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "recebida-sql-sem-complica--o": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        },
+        {
+          "name": "adicionar novamente reutiliza cópia",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar preserva trilha",
+          "passed": true
+        },
+        {
+          "name": "apagar confirmado mantém outra trilha",
+          "passed": true
+        },
+        {
+          "name": "exclusão exige texto correto",
+          "passed": true
+        },
+        {
+          "name": "cancelar exclusão preserva trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-comunidade-e-seguranca-seguindo.png",
+        "/workspace/work/revisao-fluxos-r2/jornada-comunidade-e-seguranca-bloqueado.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:18.177Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "recuperacao-de-cenarios",
+      "checks": [
+        {
+          "name": "expiração volta ao pedido",
+          "passed": true
+        },
+        {
+          "name": "recuperação de proposta sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "page": "pedido",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=jornada&p=pedido"
+          }
+        },
+        {
+          "name": "código expirado recupera entrada",
+          "passed": true
+        },
+        {
+          "name": "novo código sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "text": "CONFERIR EMAIL\nOlhe sua caixa de entrada.\n\nEnviamos um código para nina@example.test.\n\nCódigo de 6 dígitos\n\nCódigo de exemplo nesta proposta: 123456.\n\nReenviar código\nUsar outro email\nConfirmar código",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=jornada&p=codigo"
+          }
+        },
+        {
+          "name": "erro de salvar não exibe sucesso",
+          "passed": true
+        },
+        {
+          "name": "tentar salvar mostra sucesso local",
+          "passed": true
+        },
+        {
+          "name": "salvamento recuperado não volta a erro",
+          "passed": true,
+          "evidence": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=jornada&p=conclusao"
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-recuperacao-de-cenarios-expirada-reload.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:18.990Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "percurso-central",
+      "checks": [
+        {
+          "name": "cinco cenas distintas e interesses",
+          "passed": true,
+          "evidence": [
+            "Seu ponto de partida.",
+            "Um caminho que faz sentido.",
+            "Errar abre outro caminho.",
+            "Ensine para entender.",
+            "Continue de onde parou."
+          ]
+        },
+        {
+          "name": "email inválido recuperável",
+          "passed": true,
+          "evidence": "cadastro"
+        },
+        {
+          "name": "código incorreto preserva email",
+          "passed": true
+        },
+        {
+          "name": "senha curta bloqueia avanço",
+          "passed": true
+        },
+        {
+          "name": "conta exemplo leva ao pedido",
+          "passed": true
+        },
+        {
+          "name": "material de exemplo selecionado",
+          "passed": true
+        },
+        {
+          "name": "consentimento antes da geração",
+          "passed": true
+        },
+        {
+          "name": "cancelamento preserva pedido e material",
+          "passed": true
+        },
+        {
+          "name": "aceite abre WHERE",
+          "passed": true
+        },
+        {
+          "name": "resposta incompleta orienta",
+          "passed": true
+        },
+        {
+          "name": "resposta errada retorna feedback",
+          "passed": true
+        },
+        {
+          "name": "reforço errado permite recuperação",
+          "passed": true
+        },
+        {
+          "name": "retorno do reforço preserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "correção produz acerto",
+          "passed": true
+        },
+        {
+          "name": "áudio de exemplo só começa após gesto",
+          "passed": true
+        },
+        {
+          "name": "cancelar áudio de exemplo preserva texto",
+          "passed": true
+        },
+        {
+          "name": "retorno identifica ausência de IA",
+          "passed": true
+        },
+        {
+          "name": "conclusão local 1 de 5",
+          "passed": true
+        },
+        {
+          "name": "reload restaura progresso local",
+          "passed": true
+        },
+        {
+          "name": "retomada abre INNER JOIN coerente",
+          "passed": true
+        },
+        {
+          "name": "INNER JOIN usa sua pergunta",
+          "passed": true
+        },
+        {
+          "name": "cancelar saída fica na lição",
+          "passed": true
+        },
+        {
+          "name": "pausar volta ao mapa sem apagar progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-percurso-central-erro.png",
+        "/workspace/work/revisao-fluxos-r2/caderno-percurso-central-conclusao.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:26.494Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "recuperacao-e-perfil",
+      "checks": [
+        {
+          "name": "recuperação mostra redefinição",
+          "passed": true
+        },
+        {
+          "name": "redefinir retorna à entrada",
+          "passed": true
+        },
+        {
+          "name": "cancelamento de edição pede decisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar descarte mantém draft",
+          "passed": true
+        },
+        {
+          "name": "descartar mantém nome salvo",
+          "passed": true
+        },
+        {
+          "name": "salvar perfil atualiza nome",
+          "passed": true
+        },
+        {
+          "name": "voltar do navegador protege edição",
+          "passed": true,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-recuperacao-e-perfil-voltar-navegador.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:28.401Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "comunidade-e-seguranca",
+      "checks": [
+        {
+          "name": "Seguindo reflete ausência de seguidos",
+          "passed": true,
+          "evidence": {
+            "before": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "after": [],
+            "chipTexts": "Todos\nSeguindo\nTecnologia"
+          }
+        },
+        {
+          "name": "seguir tem retorno",
+          "passed": true
+        },
+        {
+          "name": "cancelar bloqueio não altera estado",
+          "passed": true
+        },
+        {
+          "name": "bloqueio registrado localmente",
+          "passed": true
+        },
+        {
+          "name": "perfil bloqueado não permite seguir",
+          "passed": true,
+          "evidence": {
+            "button": null
+          }
+        },
+        {
+          "name": "desbloquear remove da lista",
+          "passed": true
+        },
+        {
+          "name": "adicionar cópia preserva anterior",
+          "passed": true,
+          "evidence": {
+            "prova": {
+              "title": "SQL para a prova",
+              "completed": 1,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "recebida-sql-sem-complica--o": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        },
+        {
+          "name": "adicionar novamente reutiliza cópia",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar preserva trilha",
+          "passed": true
+        },
+        {
+          "name": "apagar confirmado mantém outra trilha",
+          "passed": true
+        },
+        {
+          "name": "exclusão exige texto correto",
+          "passed": true
+        },
+        {
+          "name": "cancelar exclusão preserva trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-comunidade-e-seguranca-seguindo.png",
+        "/workspace/work/revisao-fluxos-r2/caderno-comunidade-e-seguranca-bloqueado.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:31.125Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "recuperacao-de-cenarios",
+      "checks": [
+        {
+          "name": "expiração volta ao pedido",
+          "passed": true
+        },
+        {
+          "name": "recuperação de proposta sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "page": "pedido",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=caderno&p=pedido"
+          }
+        },
+        {
+          "name": "código expirado recupera entrada",
+          "passed": true
+        },
+        {
+          "name": "novo código sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "text": "CONFERIR EMAIL\nOlhe sua caixa de entrada.\n\nEnviamos um código para nina@example.test.\n\nCódigo de 6 dígitos\n\nCódigo de exemplo nesta proposta: 123456.\n\nReenviar código\nUsar outro email\nConfirmar código",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=caderno&p=codigo"
+          }
+        },
+        {
+          "name": "erro de salvar não exibe sucesso",
+          "passed": true
+        },
+        {
+          "name": "tentar salvar mostra sucesso local",
+          "passed": true
+        },
+        {
+          "name": "salvamento recuperado não volta a erro",
+          "passed": true,
+          "evidence": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=caderno&p=conclusao"
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-recuperacao-de-cenarios-expirada-reload.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:31.899Z"
+    },
+    {
+      "direction": "foco",
+      "name": "percurso-central",
+      "checks": [
+        {
+          "name": "cinco cenas distintas e interesses",
+          "passed": true,
+          "evidence": [
+            "Seu ponto de partida.",
+            "Um caminho que faz sentido.",
+            "Errar abre outro caminho.",
+            "Ensine para entender.",
+            "Continue de onde parou."
+          ]
+        },
+        {
+          "name": "email inválido recuperável",
+          "passed": true,
+          "evidence": "cadastro"
+        },
+        {
+          "name": "código incorreto preserva email",
+          "passed": true
+        },
+        {
+          "name": "senha curta bloqueia avanço",
+          "passed": true
+        },
+        {
+          "name": "conta exemplo leva ao pedido",
+          "passed": true
+        },
+        {
+          "name": "material de exemplo selecionado",
+          "passed": true
+        },
+        {
+          "name": "consentimento antes da geração",
+          "passed": true
+        },
+        {
+          "name": "cancelamento preserva pedido e material",
+          "passed": true
+        },
+        {
+          "name": "aceite abre WHERE",
+          "passed": true
+        },
+        {
+          "name": "resposta incompleta orienta",
+          "passed": true
+        },
+        {
+          "name": "resposta errada retorna feedback",
+          "passed": true
+        },
+        {
+          "name": "reforço errado permite recuperação",
+          "passed": true
+        },
+        {
+          "name": "retorno do reforço preserva tentativa original",
+          "passed": true
+        },
+        {
+          "name": "correção produz acerto",
+          "passed": true
+        },
+        {
+          "name": "áudio de exemplo só começa após gesto",
+          "passed": true
+        },
+        {
+          "name": "cancelar áudio de exemplo preserva texto",
+          "passed": true
+        },
+        {
+          "name": "retorno identifica ausência de IA",
+          "passed": true
+        },
+        {
+          "name": "conclusão local 1 de 5",
+          "passed": true
+        },
+        {
+          "name": "reload restaura progresso local",
+          "passed": true
+        },
+        {
+          "name": "retomada abre INNER JOIN coerente",
+          "passed": true
+        },
+        {
+          "name": "INNER JOIN usa sua pergunta",
+          "passed": true
+        },
+        {
+          "name": "cancelar saída fica na lição",
+          "passed": true
+        },
+        {
+          "name": "pausar volta ao mapa sem apagar progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-percurso-central-erro.png",
+        "/workspace/work/revisao-fluxos-r2/foco-percurso-central-conclusao.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:39.636Z"
+    },
+    {
+      "direction": "foco",
+      "name": "recuperacao-e-perfil",
+      "checks": [
+        {
+          "name": "recuperação mostra redefinição",
+          "passed": true
+        },
+        {
+          "name": "redefinir retorna à entrada",
+          "passed": true
+        },
+        {
+          "name": "cancelamento de edição pede decisão",
+          "passed": true
+        },
+        {
+          "name": "cancelar descarte mantém draft",
+          "passed": true
+        },
+        {
+          "name": "descartar mantém nome salvo",
+          "passed": true
+        },
+        {
+          "name": "salvar perfil atualiza nome",
+          "passed": true
+        },
+        {
+          "name": "voltar do navegador protege edição",
+          "passed": true,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-recuperacao-e-perfil-voltar-navegador.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:41.706Z"
+    },
+    {
+      "direction": "foco",
+      "name": "comunidade-e-seguranca",
+      "checks": [
+        {
+          "name": "Seguindo reflete ausência de seguidos",
+          "passed": true,
+          "evidence": {
+            "before": [
+              "SQL sem complicação",
+              "Consultas de SQL no dia a dia",
+              "Primeiros filtros e joins"
+            ],
+            "after": [],
+            "chipTexts": "Todos\nSeguindo\nTecnologia"
+          }
+        },
+        {
+          "name": "seguir tem retorno",
+          "passed": true
+        },
+        {
+          "name": "cancelar bloqueio não altera estado",
+          "passed": true
+        },
+        {
+          "name": "bloqueio registrado localmente",
+          "passed": true
+        },
+        {
+          "name": "perfil bloqueado não permite seguir",
+          "passed": true,
+          "evidence": {
+            "button": null
+          }
+        },
+        {
+          "name": "desbloquear remove da lista",
+          "passed": true
+        },
+        {
+          "name": "adicionar cópia preserva anterior",
+          "passed": true,
+          "evidence": {
+            "prova": {
+              "title": "SQL para a prova",
+              "completed": 1,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "recebida-sql-sem-complica--o": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        },
+        {
+          "name": "adicionar novamente reutiliza cópia",
+          "passed": true
+        },
+        {
+          "name": "cancelar apagar preserva trilha",
+          "passed": true
+        },
+        {
+          "name": "apagar confirmado mantém outra trilha",
+          "passed": true
+        },
+        {
+          "name": "exclusão exige texto correto",
+          "passed": true
+        },
+        {
+          "name": "cancelar exclusão preserva trilha",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-comunidade-e-seguranca-seguindo.png",
+        "/workspace/work/revisao-fluxos-r2/foco-comunidade-e-seguranca-bloqueado.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:45.127Z"
+    },
+    {
+      "direction": "foco",
+      "name": "recuperacao-de-cenarios",
+      "checks": [
+        {
+          "name": "expiração volta ao pedido",
+          "passed": true
+        },
+        {
+          "name": "recuperação de proposta sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "page": "pedido",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=foco&p=pedido"
+          }
+        },
+        {
+          "name": "código expirado recupera entrada",
+          "passed": true
+        },
+        {
+          "name": "novo código sobrevive reload",
+          "passed": true,
+          "evidence": {
+            "text": "CONFERIR EMAIL\nOlhe sua caixa de entrada.\n\nEnviamos um código para nina@example.test.\n\nCódigo de 6 dígitos\n\nCódigo de exemplo nesta proposta: 123456.\n\nReenviar código\nUsar outro email\nConfirmar código",
+            "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=foco&p=codigo"
+          }
+        },
+        {
+          "name": "erro de salvar não exibe sucesso",
+          "passed": true
+        },
+        {
+          "name": "tentar salvar mostra sucesso local",
+          "passed": true
+        },
+        {
+          "name": "salvamento recuperado não volta a erro",
+          "passed": true,
+          "evidence": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=foco&p=conclusao"
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-recuperacao-de-cenarios-expirada-reload.png"
+      ],
+      "finished": true,
+      "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+      "finishedAt": "2026-11-24T20:20:46.492Z"
+    }
+  ],
+  "findings": [],
+  "browser": "156.0.8078.79",
+  "sourceHashEnd": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+  "finishedAt": "2026-11-24T20:20:46.508Z"
+}

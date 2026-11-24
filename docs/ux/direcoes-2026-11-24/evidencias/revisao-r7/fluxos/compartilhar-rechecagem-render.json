@@ -1,0 +1,228 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "startedAt": "2026-11-24T22:17:51.245Z",
+  "hashesStart": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "surface": "Chromium360x800, API interna de protótipo capturada por wrapper do factory, sem alteração de fonte",
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:52.451Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:53.204Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:53.986Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:54.702Z"
+    },
+    {
+      "dir": "foco",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:55.368Z"
+    },
+    {
+      "dir": "foco",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "novo quadro bloqueado não reutiliza QR nem folha antigos",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:17:56.204Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "finishedAt": "2026-11-24T22:17:56.213Z"
+}

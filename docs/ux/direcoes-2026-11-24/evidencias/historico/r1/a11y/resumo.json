@@ -1,0 +1,70 @@
+{
+  "sourceStable": true,
+  "canonical": 192,
+  "stateCases": 48,
+  "expandedCases": 54,
+  "canonicalProblems": [],
+  "stateProblems": [],
+  "expandedProblems": [
+    {
+      "dir": "jornada",
+      "page": "explorar",
+      "s": "longa",
+      "w": 360,
+      "smallTargets": [],
+      "primaryOutside": [],
+      "contrast": [],
+      "font": 24,
+      "overflow": false,
+      "clips": [
+        "Demonstração"
+      ],
+      "errors": []
+    },
+    {
+      "dir": "jornada",
+      "page": "perfil",
+      "s": "longa",
+      "w": 360,
+      "smallTargets": [],
+      "primaryOutside": [],
+      "contrast": [],
+      "font": 24,
+      "overflow": false,
+      "clips": [
+        "trilhas públicas"
+      ],
+      "errors": []
+    },
+    {
+      "dir": "caderno",
+      "page": "explorar",
+      "s": "longa",
+      "w": 360,
+      "smallTargets": [],
+      "primaryOutside": [],
+      "contrast": [],
+      "font": 24,
+      "overflow": false,
+      "clips": [
+        "Demonstração"
+      ],
+      "errors": []
+    },
+    {
+      "dir": "caderno",
+      "page": "perfil",
+      "s": "longa",
+      "w": 360,
+      "smallTargets": [],
+      "primaryOutside": [],
+      "contrast": [],
+      "font": 24,
+      "overflow": false,
+      "clips": [
+        "trilhas públicas"
+      ],
+      "errors": []
+    }
+  ]
+}
