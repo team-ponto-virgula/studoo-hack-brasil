@@ -194,7 +194,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
         )}
       </div>
 
-      <div role="tabpanel" id="cn-painel-iphone" aria-labelledby="cn-aba-iphone" hidden={aba !== 'iphone'} className="cn-painel" tabIndex={0}>
+      <div role="tabpanel" id="cn-painel-iphone" aria-labelledby="cn-aba-iphone" hidden={aba !== 'iphone'} className={`cn-painel${comQrNoIphone && !testflight ? ' cn-painel--iphone-com-qr' : ''}`} tabIndex={0}>
         <span id="iphone" className="cn-ancora" aria-hidden="true" />
         {testflight ? (
           <>

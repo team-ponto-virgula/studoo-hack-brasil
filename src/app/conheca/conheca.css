@@ -10,6 +10,10 @@
   --cn-coluna: 1160px;
   --cn-marinho: #0b1b5c;
   --cn-borda-cartao: #e1e7fa;
+  /* O número de cada passo e o vão até o texto; o texto dos passos começa depois dos dois (o que fica embaixo dos passos se alinha a ele). A largura do botão principal no computador. */
+  --cn-passo-numero: 32px;
+  --cn-passo-vao: 14px;
+  --cn-botao-principal-computador: 280px;
   position: relative;
   overflow-x: clip;
   background: var(--fundo);
@@ -134,7 +138,7 @@
 @media (min-width: 1024px) {
   .cn-acoes--computador .cn-acoes__linha { display: flex; align-items: flex-start; gap: 24px; }
   .cn-acoes--computador .cn-acoes__botoes { flex: 0 0 auto; min-width: 280px; }
-  .cn-acoes--computador .cn-botao-principal { width: auto; min-width: 280px; max-width: none; }
+  .cn-acoes--computador .cn-botao-principal { width: auto; min-width: var(--cn-botao-principal-computador, 280px); max-width: none; }
   .cn-acoes--computador .cn-instalar-celular--sem-qr { display: none; }
   .cn-acoes--computador[data-lugar='final'] .cn-instalar-celular--sem-qr { display: inline-flex; }
   .cn-qr { display: grid; }
@@ -357,8 +361,8 @@
 .cn-ancora { position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; }
 .cn-apoio--painel { max-width: 420px; }
 .cn-passos { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; width: 100%; max-width: 560px; }
-.cn-passo { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: start; gap: 14px; font-size: 1.0625rem; line-height: 26px; font-weight: 600; color: var(--texto); }
-.cn-passo__numero { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--lavanda); color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
+.cn-passo { display: grid; grid-template-columns: var(--cn-passo-numero, 32px) minmax(0, 1fr) auto; align-items: start; gap: var(--cn-passo-vao, 14px); font-size: 1.0625rem; line-height: 26px; font-weight: 600; color: var(--texto); }
+.cn-passo__numero { display: grid; place-items: center; width: var(--cn-passo-numero, 32px); height: var(--cn-passo-numero, 32px); border-radius: 50%; background: var(--lavanda); color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
 .cn-passo__texto { padding-top: 3px; }
 .cn-passo__icone { display: grid; place-items: center; width: 32px; height: 32px; color: var(--acao-escura); }
 .cn-icone--passo { width: 24px; height: 24px; }
@@ -367,6 +371,13 @@
   .cn-painel { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 64px; align-items: start; }
   .cn-painel__acao, .cn-painel__qr, .cn-apoio--painel { grid-column: 2; }
   .cn-passos { grid-column: 1; grid-row: 1 / span 3; }
+  /* A aba do iPhone antes do TestFlight, no computador (spec 18, seção 3, conferência de 24/11): a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta" ficam
+     embaixo dos passos, na coluna da esquerda, alinhados ao TEXTO dos passos (depois do número e do vão) e na largura do botão principal do computador (não a coluna toda); o cartão do QR fica
+     sozinho à direita, como na aba do Android. */
+  .cn-painel--iphone-com-qr .cn-passos { grid-row: 1; }
+  .cn-painel--iphone-com-qr .cn-painel__qr { grid-row: 1 / span 3; align-self: start; }
+  .cn-painel--iphone-com-qr .cn-apoio--painel, .cn-painel--iphone-com-qr .cn-painel__acao { grid-column: 1; margin-left: calc(var(--cn-passo-numero, 32px) + var(--cn-passo-vao, 14px)); }
+  .cn-painel--iphone-com-qr .cn-painel__acao { width: var(--cn-botao-principal-computador, 280px); max-width: 100%; }
 }
 
 /* ---------- A folha do iPhone (usa a folha do Studoo, spec 11) ---------- */
