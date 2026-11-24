@@ -569,7 +569,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     aoConfirmar: () => void } | null>(null);
 
   /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
-  function pedirParaSair(paraEntrar = false) {
+  function pedirParaSair(paraEntrar: boolean) {
     const m = mensagens.sessaoVisitante;
     setConfirmacao({
       mensagem: visitante ? (paraEntrar ? m.entrarTitulo : m.sairTitulo) : mensagens.sairPergunta,
@@ -809,12 +809,12 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
     if (etapa.tipo === 'perfil' && !compartilhar) {
       return <PerfilSemSocial cliente={cliente} visitante={visitante} acoes={acoes} desativado={ocupado}
-        sair={pedirParaSair} entrar={() => pedirParaSair(true)} aoSessaoTerminada={() => void expirarGuardando()} />;
+        sair={() => pedirParaSair(false)} entrar={() => pedirParaSair(true)} aoSessaoTerminada={() => void expirarGuardando()} />;
     }
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
-        sair={pedirParaSair} entradaDaConta={() => pedirParaSair(true)} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
+        sair={() => pedirParaSair(false)} entradaDaConta={() => pedirParaSair(true)} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
         aoSessaoTerminada={() => void expirarGuardando()} novaTrilha={() => abrir({ tipo: 'objetivo' })} focarNome={etapa.focarNome} />;
     }
