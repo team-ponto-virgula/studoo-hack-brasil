@@ -138,6 +138,19 @@ O momento 4 diz "com uma conta", porque o progresso do visitante fica só no apa
   2. "Abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador."
   3. "Abra o Studoo e entre com a sua conta, ou experimente sem conta."
   Embaixo, o botão "Baixar para Android". No computador, no lugar do botão, fica o cartão do QR (1.6), com o link pequeno do arquivo.
+- **No computador** (o cartão do QR fica ao lado dos passos), os passos falam do celular:
+  - **Android:**
+    1. "Aponte a câmera do Android para o código ao lado."
+    2. "Toque no link que aparecer e abra o arquivo baixado. Se o Android pedir, permita instalar deste navegador."
+    3. "Abra o Studoo e entre com a sua conta, ou experimente sem conta."
+  - **iPhone, antes do TestFlight:**
+    1. "Aponte a câmera do iPhone para o código ao lado e abra a página no Safari."
+    2. "Toque em Compartilhar e escolha “Adicionar à Tela de Início”."
+    3. "Toque em Adicionar. O Studoo fica com os seus apps."
+  - **iPhone, com o TestFlight:**
+    1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
+    2. "Aponte a câmera do iPhone para o código ao lado e toque em “Instalar no iPhone”."
+    3. "No TestFlight, toque em Instalar e abra o Studoo."
 - **iPhone, antes do TestFlight:** os três passos da folha da seção 1.5, com a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta".
 - **iPhone, com o TestFlight:**
   1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
