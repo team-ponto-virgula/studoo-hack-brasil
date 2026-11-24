@@ -1,6 +1,6 @@
 {
   "tipo": "modelo",
-  "versaoMetodo": "1.0",
+  "versaoMetodo": "1.1",
   "metodo": "docs/ux/METODO-AVALIACAO.md",
   "estado": "nao_avaliado",
   "meta": {
@@ -11,12 +11,13 @@
   },
   "fluxo": {
     "id": "F01",
-    "nome": "Assinatura de abertura da marca no boot",
-    "objetivoDaPessoa": "Abrir o Studoo e alcançar a tela de destino sem espera artificial ou interferência em callbacks, foco e ações.",
-    "entrada": "Novo boot elegível; callbacks e links diretos fazem bypass.",
+    "nome": "Assinatura de abertura da marca no boot mobile",
+    "objetivoDaPessoa": "Abrir o app Studoo em iOS/Android e alcançar a tela de destino sem espera artificial ou interferência em callbacks, foco e ações.",
+    "entrada": "Novo boot elegível do app; callbacks e links diretos fazem bypass.",
     "saidaEsperada": "Tela de destino utilizável, assinatura encerrada e sem repetição em navegação ou foreground.",
-    "escopoDaRodada": "Somente assinatura de abertura no boot (startup/splash), conforme @studoo/contratos/abertura. Não é o tutorial Apresentacao.",
+    "escopoDaRodada": "F01 somente nos apps iOS/Android, por ordem de 24/11/2026. RN Web é complementar; web é não aplicável. Não é o tutorial Apresentacao.",
     "foraDoEscopo": [
+      "Intro no site e notas da implementação web histórica",
       "Redesenhar o onboarding/tutorial existente de cinco cenas",
       "Repaginação da UI e propostas visuais dos demais fluxos"
     ]
@@ -32,7 +33,6 @@
     "flagsPublicas": {}
   },
   "superficiesObrigatorias": [
-    "web",
     "ios_nativo",
     "android_nativo"
   ],
@@ -40,15 +40,16 @@
     "app_previa_web"
   ],
   "variantesPlanejadas": [
-    "Boot frio e quente, com cache local identificado",
+    "Boot frio e quente em iOS/Android; identificar processo, cache e build",
+    "Launch screen estática e camada React medidas separadamente do tempo anterior do sistema",
     "Prontidão local imediata e tardia: fontes, imagem e primeiro frame",
     "Fonte ou imagem indisponível; API lenta e offline",
     "Movimento permitido confirmado, desconhecido, reduzido e falha da preferência",
-    "Interação por toque ou tecla antes/depois de ready",
-    "Segundo plano e retorno; navegação entre rotas sem repetição",
-    "Callbacks OAuth, links diretos, consultas/fragmentos e preservação do destino",
-    "Web sem JavaScript, foco e conteúdo da próxima tela",
-    "Paridade em 390x844 e 360x800; nativo somente quando executado"
+    "Interação por toque e controles de acesso aplicáveis antes/depois de ready",
+    "Segundo plano e retorno; navegação entre rotas sem repetição no processo",
+    "Callbacks OAuth, links diretos e preservação do destino/sessão/parâmetros",
+    "VoiceOver no iOS, TalkBack e Voltar no Android; foco e conteúdo da próxima tela",
+    "Paridade iOS/Android em medidas lógicas comparáveis a 390x844 e 360x800; RN Web apenas complementar"
   ],
   "orcamentosPlanejados": [
     {
@@ -163,59 +164,62 @@
     "porSuperficie": [
       {
         "superficie": "web",
-        "estado": "nao_avaliado",
+        "estado": "nao_aplicavel",
         "nota": null,
-        "pesoAplicavel": null,
-        "pesoNaoAplicavel": null,
+        "pesoAplicavel": 0,
+        "pesoNaoAplicavel": 100,
         "pesoComEvidencia": 0,
         "coberturaEvidenciaPercentual": null,
         "criterios": [],
-        "entraNaNotaEntregaMultiplataforma": true,
-        "entraNaNotaRevisaoInterna": true,
+        "entraNaNotaEntregaMultiplataforma": false,
+        "entraNaNotaRevisaoInterna": false,
         "gates": [
           {
             "id": "G1",
             "nome": "Acesso",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           },
           {
             "id": "G2",
             "nome": "Movimento",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           },
           {
             "id": "G3",
             "nome": "Latência",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           },
           {
             "id": "G4",
             "nome": "Foco e acesso assistivo",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           },
           {
             "id": "G5",
             "nome": "Erros e integridade",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           },
           {
             "id": "G6",
             "nome": "Paridade",
-            "estado": "pendente",
+            "estado": "nao_aplicavel",
             "evidencias": [],
-            "justificativa": null
+            "justificativa": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
           }
-        ]
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "nao_aplicavel",
+        "motivoNaoAplicavel": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
       },
       {
         "superficie": "app_previa_web",
@@ -227,6 +231,65 @@
         "coberturaEvidenciaPercentual": null,
         "criterios": [],
         "entraNaNotaEntregaMultiplataforma": false,
+        "entraNaNotaRevisaoInterna": false,
+        "gates": [
+          {
+            "id": "G1",
+            "nome": "Acesso",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G2",
+            "nome": "Movimento",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G3",
+            "nome": "Latência",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G4",
+            "nome": "Foco e acesso assistivo",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G5",
+            "nome": "Erros e integridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          },
+          {
+            "id": "G6",
+            "nome": "Paridade",
+            "estado": "pendente",
+            "evidencias": [],
+            "justificativa": null
+          }
+        ],
+        "evidenciaComplementar": true,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
+      },
+      {
+        "superficie": "ios_nativo",
+        "estado": "nao_avaliado",
+        "nota": null,
+        "pesoAplicavel": null,
+        "pesoNaoAplicavel": null,
+        "pesoComEvidencia": 0,
+        "coberturaEvidenciaPercentual": null,
+        "criterios": [],
+        "entraNaNotaEntregaMultiplataforma": true,
         "entraNaNotaRevisaoInterna": true,
         "gates": [
           {
@@ -271,63 +334,10 @@
             "evidencias": [],
             "justificativa": null
           }
-        ]
-      },
-      {
-        "superficie": "ios_nativo",
-        "estado": "nao_avaliado",
-        "nota": null,
-        "pesoAplicavel": null,
-        "pesoNaoAplicavel": null,
-        "pesoComEvidencia": 0,
-        "coberturaEvidenciaPercentual": null,
-        "criterios": [],
-        "entraNaNotaEntregaMultiplataforma": true,
-        "entraNaNotaRevisaoInterna": false,
-        "gates": [
-          {
-            "id": "G1",
-            "nome": "Acesso",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          },
-          {
-            "id": "G2",
-            "nome": "Movimento",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          },
-          {
-            "id": "G3",
-            "nome": "Latência",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          },
-          {
-            "id": "G4",
-            "nome": "Foco e acesso assistivo",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          },
-          {
-            "id": "G5",
-            "nome": "Erros e integridade",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          },
-          {
-            "id": "G6",
-            "nome": "Paridade",
-            "estado": "pendente",
-            "evidencias": [],
-            "justificativa": null
-          }
-        ]
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
       },
       {
         "superficie": "android_nativo",
@@ -339,7 +349,7 @@
         "coberturaEvidenciaPercentual": null,
         "criterios": [],
         "entraNaNotaEntregaMultiplataforma": true,
-        "entraNaNotaRevisaoInterna": false,
+        "entraNaNotaRevisaoInterna": true,
         "gates": [
           {
             "id": "G1",
@@ -383,7 +393,10 @@
             "evidencias": [],
             "justificativa": null
           }
-        ]
+        ],
+        "evidenciaComplementar": false,
+        "aplicabilidade": "aplicavel",
+        "motivoNaoAplicavel": null
       }
     ],
     "criteriosAbaixoDe9": [],
@@ -392,14 +405,17 @@
     "lacunas": [],
     "resumoDoQueFoiExecutado": null,
     "proximoPasso": null,
-    "escopo": "entrega_multiplataforma",
+    "escopo": "entrega_mobile_F01",
     "revisaoInterna": {
       "superficiesAvaliadas": [],
       "variantesAvaliadas": [],
       "estado": "nao_avaliado",
       "nota": null,
       "metaAtingida": false,
-      "limites": [],
+      "limites": [
+        "Aceite mobile de F01 depende das duas superfícies nativas obrigatórias; sem prova, notas permanecem null.",
+        "Não usar notas web históricas ou revisão complementar RN Web para completar iOS/Android."
+      ],
       "validacaoEmpirica": "nao_realizada",
       "gates": [
         {
@@ -447,7 +463,18 @@
       ]
     },
     "notaEntregaMultiplataforma": null,
-    "metaEntregaMultiplataformaAtingida": false
+    "metaEntregaMultiplataformaAtingida": false,
+    "revisaoComplementar": {
+      "superficies": [
+        "app_previa_web"
+      ],
+      "estado": "nao_avaliado",
+      "nota": null,
+      "evidencias": [],
+      "limites": [
+        "Não integra a nota de entrega nem o aceite mobile de F01."
+      ]
+    }
   },
   "modelos": {
     "evidencia": {
@@ -767,7 +794,7 @@
     }
   },
   "preenchimento": {
-    "instrucoes": "Copiar os objetos de modelos para as listas reais, preencher o contexto e manter modelos como referência; objetos em modelos não contam como revisão ou execução. Não preencher notas sem evidência. Registrar só dados e flags públicos permitidos.",
+    "instrucoes": "Copiar os objetos de modelos para as listas reais e preencher o contexto; modelos não contam como execução. Este modelo está preparado para F01 mobile-only por ordem de 24/11/2026. Para outro fluxo, definir suas superfícies aplicáveis antes da avaliação. Não preencher notas sem evidência nem copiar notas web históricas para o app. Registrar só dados e flags públicos permitidos.",
     "papel": [
       "visual",
       "fluxo_acessibilidade",
@@ -818,12 +845,15 @@
     ],
     "lembretes": [
       "Meta 9,5 depende dos gates e da cobertura no escopo declarado, não apenas da soma ponderada.",
+      "F01 é somente iOS/Android por ordem expressa de 24/11/2026; web é não aplicável à intro.",
+      "O método geral e o enum web continuam disponíveis para os outros fluxos web/app.",
+      "RN Web é evidência complementar do código mobile, não uma intro do site e não prova nativa.",
+      "Notas e medições da implementação web histórica não migram para o mobile.",
       "Revisão especializada interna e validação empírica com pessoas/produção têm estados separados.",
       "Não há recrutamento ou tamanho de amostra universal obrigatório para aceitar a revisão interna.",
-      "Prévia React Native Web não substitui execução nativa.",
       "Critério aplicável sem prova permanece nota null; não excluir seu peso para elevar a nota.",
-      "Nota interna é o mínimo entre superfícies do seu escopo completo; a nota da entrega usa apenas web/iOS/Android aplicáveis e permanece null quando faltar prova.",
-      "Nativo aplicável sem prova mantém a entrega completa Provisória; publicar notas web/prévia somente com esses nomes.",
+      "A nota de F01 considera somente iOS/Android obrigatórios; se faltar prova de um deles, permanece null e a entrega mobile Provisória.",
+      "A revisão complementar RN Web tem nota própria quando sustentada e não completa o aceite mobile.",
       "Sem observação com pessoas, declarar validação empírica não realizada; não alegar comportamento universal.",
       "Não incluir chaves, tokens, sessões, senhas ou dados pessoais em evidências compartilhadas."
     ],
@@ -831,16 +861,30 @@
       "pendente",
       "nao_examinado_pelo_revisor",
       "examinado"
+    ],
+    "estadoPorSuperficie": [
+      "nao_avaliado",
+      "em_revisao",
+      "bloqueado",
+      "provisorio",
+      "fora_da_meta",
+      "aprovado_no_escopo",
+      "nao_aplicavel"
     ]
   },
   "escopoRevisaoInterna": {
     "superficies": [
-      "web",
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "superficiesComplementares": [
       "app_previa_web"
     ],
     "variantes": [],
     "limitesDeclarados": [
-      "Preencher antes da revisão; não transferir nota da prévia para execução nativa."
+      "Preencher antes da revisão; F01 exige prova de iOS/Android para aceite mobile.",
+      "RN Web pode ter revisão complementar própria, sem substituir notas/gates nativos.",
+      "Web é não aplicável a F01; notas web históricas não são herdadas pelo app."
     ]
   },
   "contratoAbertura": {
@@ -881,14 +925,33 @@
       "C3": "Marca em 180 por aproximadamente 59,14, proporção correta, fundo branco e sem cortes.",
       "C4": "Assinatura da marca consistente; nenhuma obrigação de acrescentar mascote ou cenas.",
       "C5": "Uma acomodação opcional somente com movimento permitido confirmado; reduções/interrupções encerram.",
-      "C6": "Marca decorativa não cria etapa de foco ou anúncio indevido; tela seguinte permanece acessível.",
+      "C6": "Marca decorativa não cria etapa de foco ou anúncio indevido; conferir VoiceOver/TalkBack e tela seguinte no nativo.",
       "C7": "Ready local libera sem mínimo de exposição/API; durações configuradas e teto de 900 ms conferidos.",
       "C8": "Falhas de fonte/imagem/preferência não retêm; callbacks/links e interações preservados.",
       "C9": "Não repetir em navegação ou foreground; não criar dado de estudo ou preferência de onboarding.",
-      "C10": "Comparar web/prévia no mesmo estado e medir nativo apenas se realmente executado."
-    }
+      "C10": "Comparar iOS/Android realmente executados; RN Web apenas complementa. Não exigir intro no site nem herdar sua nota histórica."
+    },
+    "superficiesAlvo": [
+      "ios_nativo",
+      "android_nativo"
+    ],
+    "consumo": "Processo do app; não repetir em rota ou foreground.",
+    "launchScreenDoSistema": "Estática; medir separadamente da camada React e do tempo anterior ao módulo JavaScript."
   },
   "regressoesAdjacentesPlanejadas": [
-    "Smoke do onboarding Apresentacao existente: abrir pelo caminho atual e sair/continuar sem alterar cenas, interesses, ações ou preferência de visto."
+    "Smoke do onboarding Apresentacao mobile existente: abrir pelo caminho atual e sair/continuar sem alterar cenas, interesses, ações ou preferência de visto.",
+    "Ausência de intro no site pode ser conferida separadamente como regressão da remoção; não compõe a nota mobile de F01."
+  ],
+  "decisaoDeEscopo": {
+    "data": "2026-11-24",
+    "origem": "Instrução expressa do dono nesta tarefa; exceção P33 da spec 07",
+    "regra": "F01 é somente mobile iOS/Android. O site não tem intro. React Native Web é evidência complementar do app.",
+    "notasWebHistoricasTransferiveisAoMobile": false
+  },
+  "superficiesNaoAplicaveis": [
+    {
+      "superficie": "web",
+      "motivo": "O dono determinou em 24/11/2026 que a intro é somente mobile; P33 da spec 07."
+    }
   ]
 }

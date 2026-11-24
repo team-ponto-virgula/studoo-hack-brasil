@@ -1,12 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { permiteAbertura } from "@studoo/contratos/abertura";
 import { lerCookieSessao, origemStudoo } from "@/servidor/acesso/origem";
 
 export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === "/" && !lerCookieSessao(request)) {
-    const destino = new URL("/login", request.url);
-    destino.search = request.nextUrl.search;
-    const redirect = NextResponse.redirect(destino);
+    const redirect = NextResponse.redirect(new URL("/login", request.url));
     redirect.headers.set("Cache-Control", "no-store");
     return redirect;
   }
@@ -36,9 +33,6 @@ export function proxy(request: NextRequest) {
 
   const headers = new Headers(request.headers);
   headers.set("Content-Security-Policy", politica);
-  // Estes valores são internos e sempre sobrescrevem eventuais cabeçalhos recebidos do cliente.
-  headers.set("x-studoo-abertura", permiteAbertura(request.nextUrl.pathname, request.nextUrl.search) ? "1" : "0");
-  headers.set("x-studoo-nonce", nonce);
   const resposta = NextResponse.next({ request: { headers } });
   resposta.headers.set("Content-Security-Policy", politica);
   resposta.headers.set("Cache-Control", "no-store");

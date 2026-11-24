@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import './globals.css';
@@ -7,10 +6,6 @@ import { SegurancaComunidade } from './seguranca-comunidade';
 import { AmbienteSom } from './ambiente-som';
 import { AmbienteAceiteIa } from './aceite-ia';
 import { AmbienteMovimento } from '../ui/movimento';
-import { Abertura } from '../ui/abertura';
-
-// Código fixo, sem dados de rota interpolados. A memória desta aba não contém dados de sessão ou autenticação.
-const prepararAbertura = "(()=>{let dispensada=Boolean(location.hash);try{dispensada=dispensada||sessionStorage.getItem('studoo.abertura.v1')==='1';sessionStorage.setItem('studoo.abertura.v1','1')}catch{}if(dispensada)document.documentElement.dataset.aberturaDispensada='true'})()";
 
 export const metadata: Metadata = {
   title: mensagens.nome,
@@ -31,18 +26,14 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default async function Layout({ children }: { children: ReactNode }) {
-  const cabecalhos = await headers();
-  const permitidaInicial = cabecalhos.get('x-studoo-abertura') === '1';
-  const nonce = cabecalhos.get('x-studoo-nonce') ?? undefined;
+export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang="pt-BR">
       <head>
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: prepararAbertura }} />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
       </head>
-      <body><Abertura permitidaInicial={permitidaInicial}><AmbienteMovimento /><AmbienteSom /><SegurancaComunidade>{children}</SegurancaComunidade><AmbienteAceiteIa /></Abertura></body>
+      <body><AmbienteMovimento /><AmbienteSom /><SegurancaComunidade>{children}</SegurancaComunidade><AmbienteAceiteIa /></body>
     </html>
   );
 }
