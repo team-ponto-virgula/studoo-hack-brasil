@@ -1,7 +1,7 @@
 # Perfil, Privacidade (Apple 5.1.2(i)) e Excluir conta (5.1.1(v)) na conta sintética. Com IA=falsa no piloto nada sai do
-# servidor: a seção mostra a frase da IA simulada, a política e "Excluir conta" (como na web). A exclusão abre o cartão destrutivo
-# (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois). O fluxo cancela: a conta sintética serve aos
-# outros fluxos e não pode ser apagada.
+# servidor: a seção Privacidade e dados mostra a frase da IA simulada. A política fica em Ajuda e é conferida no fluxo 63.
+# Em Conta, a exclusão abre o cartão destrutivo (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois).
+# O fluxo cancela: a conta sintética serve aos outros fluxos e não pode ser apagada.
 appId: host.exp.Exponent
 name: 55-privacidade
 ---
@@ -16,7 +16,7 @@ name: 55-privacidade
     timeout: 30000
 - scrollUntilVisible:
     element:
-      id: privacidade-politica
+      id: privacidade-estado
     direction: DOWN
     timeout: 120000
     speed: 50
