@@ -26,7 +26,8 @@
       "distribution": "internal",
       "node": "24.22.3",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "autoIncrement": true
       },
       "env": {
         "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
