@@ -505,6 +505,18 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   // A âncora #iphone não é item da grade do painel (tomava uma linha e empurrava o cartão do QR para baixo do alinhamento dos passos): fica solta, posicionada no painel.
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /\.cn-ancora \{ position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; \}/);
+  // A aba do iPhone antes do TestFlight, no computador (conferência do Designer de 24/11): a linha "chega em breve" e o botão embaixo dos passos, na coluna da esquerda, alinhados ao texto dos passos e na
+  // largura do botão principal; o cartão do QR sozinho à direita.
+  assert.match(iphone, /<div role="tabpanel" id="cn-painel-iphone"[^>]*class="cn-painel cn-painel--iphone-com-qr"/, 'só a aba do iPhone sem TestFlight e com QR leva a variante');
+  assert.doesNotMatch(painel(computador, 'android').slice(0, 300), /cn-painel--iphone-com-qr/);
+  assert.doesNotMatch(desenhar({ aparelho: 'iphone' }), /cn-painel--iphone-com-qr/, 'no celular nada muda');
+  assert.match(css, /--cn-passo-numero: 32px;\n  --cn-passo-vao: 14px;\n  --cn-botao-principal-computador: 280px;/);
+  assert.match(css, /\.cn-passo \{ display: grid; grid-template-columns: var\(--cn-passo-numero, 32px\) minmax\(0, 1fr\) auto; align-items: start; gap: var\(--cn-passo-vao, 14px\);/);
+  assert.match(css, /\.cn-painel--iphone-com-qr \.cn-passos \{ grid-row: 1; \}/);
+  assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__qr \{ grid-row: 1 \/ span 3; align-self: start; \}/);
+  assert.match(css, /\.cn-painel--iphone-com-qr \.cn-apoio--painel, \.cn-painel--iphone-com-qr \.cn-painel__acao \{ grid-column: 1; margin-left: calc\(var\(--cn-passo-numero, 32px\) \+ var\(--cn-passo-vao, 14px\)\); \}/, 'na coluna da esquerda, no recuo do texto dos passos');
+  assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__acao \{ width: var\(--cn-botao-principal-computador, 280px\); max-width: 100%; \}/, 'na largura do botão principal, não a coluna toda');
+  assert.match(css, /\.cn-acoes--computador \.cn-botao-principal \{ width: auto; min-width: var\(--cn-botao-principal-computador, 280px\); max-width: none; \}/, 'o botão principal do herói usa a mesma largura');
   assert.match(css, /\.cn-painel \{ position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; \}/);
   // iPhone com o TestFlight: os passos do computador e o cartão do QR no lugar do botão "Instalar no iPhone".
   const comLink = desenhar({ links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
@@ -512,6 +524,7 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.deepEqual([...iphoneComLink.matchAll(/<span class="cn-passo__texto">([^<]*)<\/span>/g)].map((m) => m[1].replace(/&quot;/g, '"')), [...textos.s4.iphone.testflightPassosNoComputador]);
   assert.match(iphoneComLink, /id="cn-qr-s4-iphone-titulo"/);
   assert.doesNotMatch(iphoneComLink, /href="https:\/\/testflight\.apple\.com/, 'o botão que abre o TestFlight não existe no computador: o QR leva o iPhone');
+  assert.doesNotMatch(painel(comLink, 'iphone').slice(0, 300), /cn-painel--iphone-com-qr/, 'com o TestFlight não há linha nem botão embaixo: não leva a variante');
   // No celular nada muda: os passos de sempre, sem cartão de QR, e o botão do TestFlight.
   const noIphone = desenhar({ aparelho: 'iphone', links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
   for (const passo of textos.s4.iphone.testflightPassos) assert.ok(texto(noIphone).includes(passo), passo);
