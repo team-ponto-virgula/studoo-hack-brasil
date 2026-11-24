@@ -1,0 +1,109 @@
+{
+  "productCommit": "0888c4c44b1023b7fa2a331bda92e1ebe98d43a1",
+  "web": {
+    "checks": 9,
+    "allPassed": true,
+    "pageErrors": 0,
+    "synthetic": true
+  },
+  "rnweb": {
+    "nativeExecuted": false,
+    "synthetic": true,
+    "steps": 9,
+    "sourceHashesStable": true,
+    "runtimeNotes": "localStorage, API HTTPS proxy bridge and accessibility API fallbacks for RNWeb only; not a native device or validation of Keychain, TLS, CORS, streaming, reader, keyboard or performance",
+    "transportErrorsObserved": 1,
+    "privacyAfterReloadValidated": false
+  },
+  "webTypecheck": true,
+  "webProductionBuild": true,
+  "ci": {
+    "run": 45456523616,
+    "conclusion": "success"
+  },
+  "nativeScore": null,
+  "files": {
+    "checks-mobile.json": "dec09341037a3759b31ddbb2c22a776d0f7da4316176dfb7c0c2dcfe6f48d8e1",
+    "proposta-alinhada/LEITURA.md": "4ef9b907ea03a8ed976a667ffa5263717fd768b8bffbecbc4d3348abb400bb1f",
+    "proposta-alinhada/limpeza.json": "a032f5f4538ab30faada14d50b5752098404b7a1cef5e8fc102911db743acbce",
+    "proposta-alinhada/proposta-natural-360x800.png": "1d52e9c3a8b97adc2392c92a350033adc0059c596a7eecb76f79e49d5b0bbf50",
+    "proposta-alinhada/proposta-natural-390x844.png": "87484472b3eae70b5b0f4394896496a7bb6779159cb1a1271f729b8912f61f2e",
+    "proposta-alinhada/proposta-topo-360x800.png": "85c4d6e6490a7414506cdcca9899e9e2307aeb81c64ce4f8fe0ead1276b7e930",
+    "proposta-alinhada/proposta-topo-390x844.png": "ec4c040514ceb2f24d73de92d27758ef39f222a01b35503cf274db3978e70f99",
+    "proposta-alinhada/resultado.json": "1257a405fb4f513e3394b3e612589e7e1ea1f8f33932ef37afcf110c01c6e3db",
+    "proposta-alinhada/resumo.json": "f2965d8bc0d8e3dc7ff75bab7d3f48d80f945b8c99f2de84e245178f13558772",
+    "rnweb/01-pedido-360x800.png": "96ddd1c0ac707ec44306480f73ec764b9196646c6858188c2bf987e14058618b",
+    "rnweb/01-pedido-390x844.png": "56b776e465731ceee067721df8ea23f06ed3fd01e4dfae07f515cc7c1262087f",
+    "rnweb/02-proposta-360x800.png": "35e3294f19a52b66a2a1c82c39b1989ea3d06f26e801a3b0d823f0846f5e2ed0",
+    "rnweb/02-proposta-390x844.png": "c278495b9ee96874199b95788b691b9ed1e422f21ef533e4a95077578f407c27",
+    "rnweb/03-licao-conceito-360x800.png": "4e74dc0243e8f6aa262cef818fa8863d9fae8e8a3171975df36db154b3ec8d17",
+    "rnweb/03-licao-conceito-390x844.png": "9444a570f639ecfdaea167a4fea5db1a00cac5833dbb23695b32479a2e115d62",
+    "rnweb/04-primeiro-exercicio-360x800.png": "a4d49bbf020740c66d83096afe19d7c6a25babbf3c72efeb9c41e7212269bf5e",
+    "rnweb/04-primeiro-exercicio-390x844.png": "2eecf4951e8a2f1d17d7f8780a65308aa0f377c5460b539968d0b73cb299ec79",
+    "rnweb/05-feedback-erro-360x800.png": "554fa256cfa39476bce2e83948f5b56243732b7b29a7123f07cdc5f31ba0185b",
+    "rnweb/05-feedback-erro-390x844.png": "9e1e0cd5480eefe8f2ee2d52f930ca45357e4e0d4274aa067bc9736f6fe6e9a4",
+    "rnweb/06-conclusao-360x800.png": "b65475ceb4053b67381005e5193d0c47e1d6101c6672bc6b9929b4fb10311ee9",
+    "rnweb/06-conclusao-390x844.png": "71a5f55026af916c090a074d0082d26c8b90ad57850af95d64dd7fd5956ec71d",
+    "rnweb/07-mapa-progresso-360x800.png": "89d9f3a2509db375ec19634fbc7a9ff9b0580f791dac20ff23e29d2cc86be421",
+    "rnweb/07-mapa-progresso-390x844.png": "e8af9a49e22a9db081c98b47bf6e74536e69691a13e74e4c8f6a53fe177bb078",
+    "rnweb/08-retomada-licao2-360x800.png": "8c42319239db70f41e75f3ca8fbf7f7c17d0d3433bb04af13678d86f72352064",
+    "rnweb/08-retomada-licao2-390x844.png": "c433ac0d0e01dcbdf290d3496dfbcb64c9e4161454507f09f7e0e19b6ae11f16",
+    "rnweb/classificacao-transporte.json": "d2d45fe147671c0e187aed4a062ca1e48d1f8eb71df49885c7f94e48d5053df1",
+    "rnweb/resultado.json": "792e4b444825213686ea4fc445718c92b5dc7d74bcc1ee63e7b72ceda16442c6",
+    "web/conclusao-360.png": "94c26af345cab77fa300e6abbb4bd842e347aa226ef3fbec22e9042e2e411d65",
+    "web/conclusao-390.png": "2be8ae58c831a7f952ca13c50f120a2990591bbd6a71ba0b18592685916942ab",
+    "web/correcao-360.png": "00ec340e13fa6a35258273480680eca5bf22b5e430c0bbf13e7c8caec08e9bef",
+    "web/correcao-390.png": "34d0822516ef7159a063802fbed8c141aea9c79cd36258d7d63e687b47f31b99",
+    "web/geracao-360.png": "a6130ad8dade4a30b0b673b5ba6d6e945121250d707c9a231e644a033b035e3c",
+    "web/geracao-390.png": "035954f9a0621ad2e7137742bc147391d086fc8059771dc82b45ed7faf947eae",
+    "web/licao-360.png": "081233355961d132e6a4b0f2ca81b2dc031ced5b49b5e34c433cbc3355b935ae",
+    "web/licao-390.png": "0b99f8740584e8c9bb9ab1a1144f19ee93d08a07752ad0d649163fd2711e3f28",
+    "web/mapa-360.png": "78c8779354435c5b0670bdda0ed6c03842fee8002f727d26cf83db6b189669b8",
+    "web/mapa-390.png": "e2218b0d112737c29eaa900d1fe1fce5c52012ecdad072b04ea2996f36449fd3",
+    "web/pedido-360.png": "2b622b183623be13fea15ca28cb1750861cfac368405aa8d8484b9f35a83c8e2",
+    "web/pedido-390.png": "c232e47f3a16a9f303a8544db96d70f1174c45e660bc3838807017a6f9667b53",
+    "web/percurso.json": "32e4d616013c4f58c348b2dba2fc59037d59cb21f7c75df6232463e0aa9e1a48",
+    "web/proposta-360.png": "ef9b74214ecc953b6e054875b09962b9e7aabe2e285afe7e7194012833993981",
+    "web/proposta-390.png": "11ecb529c40191d5b0d8f3df668f6c64029204806883a00c59dec647e2f8f019",
+    "web/retomada-360.png": "07cea3b82db444fa2f4c8b1a6f784c643616ab736f0640214102fe3cc4dfa1fc",
+    "web/retomada-390.png": "37ced1c6e06e181dbcd0a586d5a338d57e396f654ff3ae89b700d5063296c85b",
+    "web/retomar-licao-360.png": "0de7edc42fa30ea4fac9f46dcd4f115db7803b2ba05b1d45172ecb266a130131",
+    "web/retomar-licao-390.png": "53cdfd270fec8c5d5efabd0c8cd3a09b4e064e222a954814bb297f9c73ae6737"
+  },
+  "functionalFlowsCommit": "f33ae5ec04275959ec556531c8bbe14708409f4c",
+  "interfaceIntegratedTests": 604,
+  "footerFocusedTests": {
+    "passed": 38,
+    "total": 38,
+    "productCommit": "0453a72c6de7ef0149a4f0d07382acbf0d5b8d59",
+    "sourceHash": "a12734b5bdc1eeefb2dd0505967fae6442eff8584685772997bb91adec4337a2"
+  },
+  "footerCapture": {
+    "viewports": [
+      [
+        390,
+        844
+      ],
+      [
+        360,
+        800
+      ]
+    ],
+    "primaryRects": [
+      [
+        20,
+        722,
+        350,
+        52
+      ],
+      [
+        20,
+        678,
+        320,
+        52
+      ]
+    ],
+    "globalParityApproved": false,
+    "streamAbortRecordedInEachContext": true
+  }
+}

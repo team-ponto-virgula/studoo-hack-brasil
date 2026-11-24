@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-24T18:30:36.746599+00:00",
+  "qaPortsClosed": [
+    8091,
+    3011
+  ],
+  "terminatedVerifiedQaProcesses": [
+    {
+      "port": 8091,
+      "pid": 32070
+    },
+    {
+      "port": 3011,
+      "pid": 32098
+    }
+  ],
+  "temporarySymlinkAbsent": true,
+  "symlinkRemovedByWrapper": true,
+  "root3010Changed": false,
+  "rawReportPreserved": true,
+  "harnessPreserved": true
+}

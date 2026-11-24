@@ -1,0 +1,231 @@
+{
+  "scope": "Somente gutter/CTA da Proposta mobile em RN Web; sem paridade global.",
+  "productCommit": "0453a72",
+  "sourceHashBefore": "a12734b5bdc1eeefb2dd0505967fae6442eff8584685772997bb91adec4337a2",
+  "sourceHashAfter": "a12734b5bdc1eeefb2dd0505967fae6442eff8584685772997bb91adec4337a2",
+  "sourceUnchanged": true,
+  "focusedGeometryPassed": true,
+  "surfaces": [
+    {
+      "width": 390,
+      "height": 844,
+      "states": [
+        {
+          "state": "natural-after-ready",
+          "primaryRect": {
+            "x": 20,
+            "y": 722,
+            "width": 350,
+            "height": 52,
+            "right": 370,
+            "bottom": 774
+          },
+          "secondaryRect": {
+            "x": 20,
+            "y": 784,
+            "width": 350,
+            "height": 44,
+            "right": 370,
+            "bottom": 828
+          },
+          "gutterLeft": 20,
+          "gutterRight": 20,
+          "visualGap": 10,
+          "windowOffsets": {
+            "x": 0,
+            "y": 0
+          },
+          "scrollViewOffsets": [
+            {
+              "scrollTop": 155,
+              "scrollLeft": 0,
+              "height": 704,
+              "scrollHeight": 1806
+            }
+          ],
+          "cartaoDeVoltaInferredFromCard": true,
+          "faixaHeaderPresent": false,
+          "cardRect": {
+            "x": 20,
+            "y": -71,
+            "width": 350,
+            "height": 157,
+            "right": 370,
+            "bottom": 86
+          },
+          "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/proposta-padding-0453a72/proposta-natural-390x844.png"
+        },
+        {
+          "state": "after-explicit-scroll-to-top",
+          "primaryRect": {
+            "x": 20,
+            "y": 722,
+            "width": 350,
+            "height": 52,
+            "right": 370,
+            "bottom": 774
+          },
+          "secondaryRect": {
+            "x": 20,
+            "y": 784,
+            "width": 350,
+            "height": 44,
+            "right": 370,
+            "bottom": 828
+          },
+          "gutterLeft": 20,
+          "gutterRight": 20,
+          "visualGap": 10,
+          "windowOffsets": {
+            "x": 0,
+            "y": 0
+          },
+          "scrollViewOffsets": [
+            {
+              "scrollTop": 0,
+              "scrollLeft": 0,
+              "height": 704,
+              "scrollHeight": 1806
+            }
+          ],
+          "cartaoDeVoltaInferredFromCard": true,
+          "faixaHeaderPresent": false,
+          "cardRect": {
+            "x": 20,
+            "y": 84,
+            "width": 350,
+            "height": 157,
+            "right": 370,
+            "bottom": 241
+          },
+          "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/proposta-padding-0453a72/proposta-topo-390x844.png"
+        }
+      ],
+      "brandHeaderVisibleInNormalizedPng": true,
+      "brandHeaderEvidenceKind": "Inspeção visual do PNG salvo; não métrica DOM separada.",
+      "pageErrors": [],
+      "requestFailures": [
+        {
+          "path": "/api/aprendizado/propostas/ao-vivo",
+          "error": "net::ERR_ABORTED",
+          "phase": "generate-proposal",
+          "at": "2026-11-24T18:28:24.315Z"
+        }
+      ],
+      "noPlanAcceptedOrLessonRun": true
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "states": [
+        {
+          "state": "natural-after-ready",
+          "primaryRect": {
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 52,
+            "right": 340,
+            "bottom": 730
+          },
+          "secondaryRect": {
+            "x": 20,
+            "y": 740,
+            "width": 320,
+            "height": 44,
+            "right": 340,
+            "bottom": 784
+          },
+          "gutterLeft": 20,
+          "gutterRight": 20,
+          "visualGap": 10,
+          "windowOffsets": {
+            "x": 0,
+            "y": 0
+          },
+          "scrollViewOffsets": [
+            {
+              "scrollTop": 177,
+              "scrollLeft": 0,
+              "height": 660,
+              "scrollHeight": 1806
+            }
+          ],
+          "cartaoDeVoltaInferredFromCard": true,
+          "faixaHeaderPresent": false,
+          "cardRect": {
+            "x": 20,
+            "y": -93,
+            "width": 320,
+            "height": 157,
+            "right": 340,
+            "bottom": 64
+          },
+          "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/proposta-padding-0453a72/proposta-natural-360x800.png"
+        },
+        {
+          "state": "after-explicit-scroll-to-top",
+          "primaryRect": {
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 52,
+            "right": 340,
+            "bottom": 730
+          },
+          "secondaryRect": {
+            "x": 20,
+            "y": 740,
+            "width": 320,
+            "height": 44,
+            "right": 340,
+            "bottom": 784
+          },
+          "gutterLeft": 20,
+          "gutterRight": 20,
+          "visualGap": 10,
+          "windowOffsets": {
+            "x": 0,
+            "y": 0
+          },
+          "scrollViewOffsets": [
+            {
+              "scrollTop": 0,
+              "scrollLeft": 0,
+              "height": 660,
+              "scrollHeight": 1806
+            }
+          ],
+          "cartaoDeVoltaInferredFromCard": true,
+          "faixaHeaderPresent": false,
+          "cardRect": {
+            "x": 20,
+            "y": 84,
+            "width": 320,
+            "height": 157,
+            "right": 340,
+            "bottom": 241
+          },
+          "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/proposta-padding-0453a72/proposta-topo-360x800.png"
+        }
+      ],
+      "brandHeaderVisibleInNormalizedPng": true,
+      "brandHeaderEvidenceKind": "Inspeção visual do PNG salvo; não métrica DOM separada.",
+      "pageErrors": [],
+      "requestFailures": [
+        {
+          "path": "/api/aprendizado/propostas/ao-vivo",
+          "error": "net::ERR_ABORTED",
+          "phase": "generate-proposal",
+          "at": "2026-11-24T18:28:29.938Z"
+        }
+      ],
+      "noPlanAcceptedOrLessonRun": true
+    }
+  ],
+  "nativeOrC6Validated": false,
+  "privacyAfterReloadValidated": false,
+  "globalC10Approved": false,
+  "rawReportSha256": "1257a405fb4f513e3394b3e612589e7e1ea1f8f33932ef37afcf110c01c6e3db",
+  "priorQaF33Preserved": true
+}
