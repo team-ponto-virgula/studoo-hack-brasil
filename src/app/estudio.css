@@ -39,6 +39,12 @@
   gap: 12px;
   margin-top: 20px;
 }
+/* Spec 16, item 35: "Criar trilha deste material" é a ação presa da prévia (globals.css) só até 767 px e com o teclado fechado. No tablet, no computador e com o teclado aberto o envoltório
+   não é uma caixa e o botão fica na linha, ao lado de "Remover material", como era antes da ação presa. */
+@media (min-width: 768px) {
+  .estudio-acoes > .acao-principal { display: contents; }
+}
+html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; }
 @media (min-width: 601px) {
   .estudio-acoes .ensino-gravando {
     order: 3;
@@ -186,6 +192,10 @@
   }
   .estudio-acoes > * {
     width: 100%;
+  }
+  /* A ação principal da prévia é a presa (globals.css): a largura dela vem das margens da ilha, não de 100%. */
+  .estudio-acoes > .acao-principal {
+    width: auto;
   }
   .estudio-cabeca {
     align-items: flex-start;

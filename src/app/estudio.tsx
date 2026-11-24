@@ -19,7 +19,8 @@ import {
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Stu } from '../ui';
+import { AcaoPrincipal, Botao, Stu } from '../ui';
+import { medirAcaoFixa } from '../ui/rodape-movel';
 import {
   iniciarControladorVozAoVivo,
   type ControladorVozAoVivo,
@@ -248,21 +249,25 @@ export function MaterialParaTrilha({
               </article>
             ))}
           </div>
-          <div className="estudio-acoes">
-            <Botao
-              disabled={ocupado}
-              onClick={() =>
-                void executar(async () => {
-                  const p = await cliente.proporMaterial(
-                    material.id,
-                    objetivo.trim() || m.objetivo,
-                  );
-                  if (vivo.current) onProposta(p);
-                })
-              }
-            >
-              {m.gerar}
-            </Botao>
+          {/* Spec 16, item 35: com o material lido, "Criar trilha deste material" é a ação presa da tela (no celular, até 767 px: 12 px acima da cápsula, sempre à vista, e o fim da rolagem reserva a
+              altura dela mais 12 px); "Remover material" fica no fim do conteúdo, no fluxo. Do tablet para cima a ação fica no fluxo, como as outras ações principais. */}
+          <div className="estudio-acoes estudio-acoes--previa">
+            <AcaoPrincipal ref={medirAcaoFixa}>
+              <Botao
+                disabled={ocupado}
+                onClick={() =>
+                  void executar(async () => {
+                    const p = await cliente.proporMaterial(
+                      material.id,
+                      objetivo.trim() || m.objetivo,
+                    );
+                    if (vivo.current) onProposta(p);
+                  })
+                }
+              >
+                {m.gerar}
+              </Botao>
+            </AcaoPrincipal>
             <Botao
               variante="texto"
               disabled={ocupado}
