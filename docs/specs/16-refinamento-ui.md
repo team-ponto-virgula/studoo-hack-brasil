@@ -363,3 +363,25 @@ Capturas antes e depois no Chromium, com servidor local e IA falsa (não é o si
 - **28:** botões secundários comuns até 767 px e a área tracejada a partir de 768.
 
 O item 29 (o texto do convite do "Explique", sem "o mascote do Studoo") ainda aparece com o texto antigo nas capturas. Ele é do contrato.
+
+## Item 35 (P1, para o build depois da página): a ação principal da tela do material escondida (24/11)
+
+**Achado do Mobile & QA:** na tela do material do app (APK do build 4, Android 1080 × 2400), "Criar trilha deste material" fica inteiro atrás da barra de baixo, que é opaca, na primeira vista. O botão está em [106, 2152]–[976, 2289], e a barra em [42, 2153]–[1038, 2316]. Ele só aparece rolando até o fim, sem nenhuma pista. Antes de escolher o material, "Experimentar com frações" tem o mesmo caso. Na web em 390, "Criar trilha deste material" também só aparece depois das três páginas da prévia, sem pista. Ele não fica atrás da cápsula, porque a web tem a reserva do fim da rolagem. Antes de escolher, a web mostra as três opções na primeira vista.
+
+**Regra geral** (vale para todas as telas, nas três plataformas): nenhum elemento tocável fica inteiro atrás da cápsula ou da barra de baixo na primeira vista. Quando a ação principal de uma tela fica abaixo da dobra, ou ela vira ação presa (spec 05, "Ações presas das telas de topo"), ou aparece a pílula "Ver mais abaixo", que já existe na aula.
+
+**Na tela do material:**
+- **Com o material lido (a prévia):** "Criar trilha deste material" é a ação presa da tela.
+  - Ela fica 12 px acima da cápsula, com as margens de 16, até 480 px de largura, e sempre à vista enquanto a prévia está na tela.
+  - "Remover material" continua no fim do conteúdo, no fluxo.
+  - O fim da rolagem reserva a altura da ação presa mais 12, para a última página da prévia não ficar atrás dela.
+  - Com o teclado aberto (quando houver campo), a ação volta ao fluxo, como nas outras telas.
+- **Antes de escolher o material:** "Escolher arquivo", "Usar a câmera" e "Experimentar com frações" cabem na primeira vista em 390 × 844.
+  - O alto da tela fica mais compacto: o Stu com 56, o título em 24/30 e o subtítulo em 15/22.
+  - O aviso "Uma IA vai ler seu material…" fica numa linha, com "Saiba mais".
+  - Em telas mais baixas (360 × 640), se a última opção ficar abaixo da dobra, entra a pílula "Ver mais abaixo".
+- **Onde:** app e web, iguais (a web ganha a ação presa na prévia); nada muda na spec 07.
+- **Aceite:** em 390 × 844, no Android, no iPhone e na web:
+  - antes de escolher, as três opções à vista;
+  - com a prévia, "Criar trilha deste material" à vista sem rolar, acima da barra;
+  - em 360 × 640, a pílula aparece quando algo tocável fica abaixo da dobra.
