@@ -97,6 +97,8 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
             {textos.s2.momentos.map((momento, indice) => (
               <article key={momento.titulo} className="cn-momento" data-momento={indice + 1} data-revelar>
                 <div className="cn-momento__texto">
+                  {/* O número do momento (1 a 4): marca a sequência e acende no momento que se lê. Só desenho: o leitor de tela já tem o título. */}
+                  <span className="cn-momento__numero" aria-hidden="true">{indice + 1}</span>
                   <h3 className="cn-momento__titulo">{momento.titulo}</h3>
                   <p className="cn-momento__linha">{momento.linha}</p>
                 </div>

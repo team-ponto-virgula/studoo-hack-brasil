@@ -102,21 +102,24 @@ export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, v
     );
   }
 
-  // iPhone e iPad.
+  // iPhone e iPad. O app nativo é só de iPhone (supportsTablet: false): no iPad, o caminho é sempre a Tela de Início pelo Safari, em tela cheia, também com o TestFlight.
+  const ipad = aparelho === 'ipad';
+  const testflightAqui = ipad ? null : testflight;
+  const telaDeInicio = ipad ? textos.acoes.ipad : textos.acoes.iphoneEmBreve;
   return (
     <div className="cn-acoes cn-acoes--celular" data-lugar={lugar}>
-      {testflight ? (
-        <a className="botao botao--primario cn-botao-principal" href={testflight} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
+      {testflightAqui ? (
+        <a className="botao botao--primario cn-botao-principal" href={testflightAqui} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
           <IconeBaixar />{textos.acoes.iphoneTestflight.rotulo}
         </a>
       ) : (
-        <button type="button" className="botao botao--primario cn-botao-principal" aria-haspopup="dialog" aria-label={textos.acoes.iphoneEmBreve.rotuloLeitor} onClick={abrirFolha}>
-          <IconeCelular />{textos.acoes.iphoneEmBreve.rotulo}
+        <button type="button" className="botao botao--primario cn-botao-principal" aria-haspopup="dialog" aria-label={telaDeInicio.rotuloLeitor} onClick={abrirFolha}>
+          <IconeCelular />{telaDeInicio.rotulo}
         </button>
       )}
       {textoVisitante('texto')}
-      <p className="cn-apoio">{testflight ? textos.acoes.iphoneTestflight.apoio : textos.acoes.iphoneEmBreve.apoio}</p>
-      {folha && <FolhaIphone aoFechar={fecharFolha} visitanteAtivo={visitanteAtivo} comSessao={comSessao} />}
+      <p className="cn-apoio">{testflightAqui ? textos.acoes.iphoneTestflight.apoio : telaDeInicio.apoio}</p>
+      {folha && <FolhaIphone aoFechar={fecharFolha} visitanteAtivo={visitanteAtivo} comSessao={comSessao} ipad={ipad} />}
     </div>
   );
 }
@@ -170,6 +173,8 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
   }
 
   const s4 = textos.s4;
+  // Quem está num iPad vê a aba "iPad" com os passos da Tela de Início, mesmo com o TestFlight (o app nativo é só de iPhone).
+  const testflightNoPainel = aparelho === 'ipad' ? null : testflight;
   const comQr = aparelho === 'computador' && qr;
   const comQrNoIphone = aparelho === 'computador' && qrIphone;
   return (
@@ -178,7 +183,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
         {abas.map((id) => (
           <button key={id} type="button" role="tab" id={`cn-aba-${id}`} aria-selected={aba === id} aria-controls={`cn-painel-${id}`} tabIndex={aba === id ? 0 : -1}
             ref={(el) => { botoes.current[id] = el; }} className="cn-aba" onClick={() => setAba(id)} onKeyDown={aoTeclar}>
-            {id === 'android' ? s4.android.aba : s4.iphone.aba}
+            {id === 'android' ? s4.android.aba : aparelho === 'ipad' ? s4.ipad.aba : s4.iphone.aba}
           </button>
         ))}
       </div>
@@ -194,14 +199,14 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
         )}
       </div>
 
-      <div role="tabpanel" id="cn-painel-iphone" aria-labelledby="cn-aba-iphone" hidden={aba !== 'iphone'} className={`cn-painel${comQrNoIphone && !testflight ? ' cn-painel--iphone-com-qr' : ''}`} tabIndex={0}>
+      <div role="tabpanel" id="cn-painel-iphone" aria-labelledby="cn-aba-iphone" hidden={aba !== 'iphone'} className={`cn-painel${comQrNoIphone && !testflightNoPainel ? ' cn-painel--iphone-com-qr' : ''}`} tabIndex={0}>
         <span id="iphone" className="cn-ancora" aria-hidden="true" />
-        {testflight ? (
+        {testflightNoPainel ? (
           <>
             <Passos itens={comQrNoIphone ? s4.iphone.testflightPassosNoComputador : s4.iphone.testflightPassos} />
             {comQrNoIphone ? <div className="cn-painel__qr">{qrIphone}</div> : (
               <div className="cn-painel__acao">
-                <a className="botao botao--primario cn-botao-principal" href={testflight} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
+                <a className="botao botao--primario cn-botao-principal" href={testflightNoPainel} aria-label={textos.acoes.iphoneTestflight.rotuloLeitor}>
                   <IconeBaixar />{textos.acoes.iphoneTestflight.rotulo}
                 </a>
                 <p className="cn-apoio">{textos.acoes.iphoneTestflight.apoio}</p>
@@ -214,7 +219,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
               ? <Passos itens={s4.iphone.passosNoComputador} icones={[null, <IconeCompartilharIos key="c" />, <IconeConfirmarIos key="o" />]} />
               : <PassosDoIphone />}
             {comQrNoIphone && <div className="cn-painel__qr">{qrIphone}</div>}
-            <p className="cn-apoio cn-apoio--painel">{textos.acoes.iphoneEmBreve.apoio}</p>
+            <p className="cn-apoio cn-apoio--painel">{aparelho === 'ipad' ? textos.acoes.ipad.apoio : textos.acoes.iphoneEmBreve.apoio}</p>
             <div className="cn-painel__acao">
               <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="primario" className="cn-botao-principal" />
             </div>

@@ -3,7 +3,7 @@
 // (laço, troca de tela, fichas que correm) está nas capturas e nas medidas do navegador (refino/site... da entrega).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { register } from 'node:module';
 import { join, resolve } from 'node:path';
 import { createElement } from 'react';
@@ -81,8 +81,8 @@ test('Android com o link trocado pela variável: a frase sai sem o tamanho', () 
   assert.match(achar(html, 'Baixar para Android')[0].atributos, /href="https:\/\/exemplo\.test\/novo\.apk"/);
 });
 
-test('iPhone e iPad: sem link do TestFlight, "Usar no iPhone agora" abre a folha; com link, "Instalar no iPhone" leva ao TestFlight', () => {
-  for (const aparelho of ['iphone', 'ipad']) {
+test('iPhone: sem link do TestFlight, "Usar no iPhone agora" abre a folha; com link, "Instalar no iPhone" leva ao TestFlight', () => {
+  for (const aparelho of ['iphone']) {
     const sem = desenhar({ aparelho });
     const [usar] = achar(sem, 'Usar no iPhone agora');
     assert.ok(usar, aparelho);
@@ -99,6 +99,75 @@ test('iPhone e iPad: sem link do TestFlight, "Usar no iPhone agora" abre a folha
     assert.ok(texto(com).includes('Versão de teste pelo TestFlight, o app de testes da Apple.'));
     assert.equal(achar(com, 'Usar no iPhone agora').length, 0, 'com o link público a página troca sozinha, sem mexer nela');
   }
+});
+
+test('iPad: o app nativo é só de iPhone, então o caminho é sempre a Tela de Início ("Usar no iPad agora"), com ou sem o TestFlight; o S4 abre na aba "iPad"', () => {
+  for (const testflight of [null, 'https://testflight.apple.com/join/ABC123']) {
+    const html = desenhar({ aparelho: 'ipad', links: { testflight } });
+    const usar = achar(html, 'Usar no iPad agora');
+    assert.ok(usar.length >= 1, String(testflight));
+    for (const botao of usar) {
+      assert.equal(botao.tag, 'button');
+      assert.match(botao.atributos, /aria-haspopup="dialog"/);
+      assert.match(botao.atributos, /aria-label="Usar no iPad agora, o Studoo na Tela de Início"/);
+    }
+    assert.ok(texto(html).includes(textos.acoes.ipad.apoio));
+    assert.equal(achar(html, 'Instalar no iPhone').length, 0, 'nenhum caminho do TestFlight no iPad');
+    assert.equal(achar(html, 'Usar no iPhone agora').length, 0);
+    const abas = [...html.matchAll(/<button[^>]*role="tab"[^>]*>([\s\S]*?)<\/button>/g)].map((m) => texto(m[1]).trim());
+    assert.deepEqual(abas, ['Android', 'iPad']);
+    assert.doesNotMatch(html, /testflight\.apple\.com/);
+  }
+  assert.equal(textos.folhaIphone.tituloIpad, 'Use o Studoo no iPad hoje');
+  assert.match(ler('src/app/conheca/ilhas/folha-iphone.tsx'), /\{ipad \? t\.tituloIpad : t\.titulo\}/);
+  assert.match(ler('apps/mobile/app.json'), /"supportsTablet": false/, 'se o app nativo passar a ter iPad, o caminho do iPad volta a seguir o do iPhone');
+});
+
+test('S2: cada momento leva o seu número (1 a 4), só desenho (aria-hidden), e o número acende no momento que se lê (troca de cor só no bloco "com movimento")', () => {
+  const html = desenhar();
+  const numeros = [...html.matchAll(/<span class="cn-momento__numero" aria-hidden="true">(\d)<\/span>/g)].map((m) => m[1]);
+  assert.deepEqual(numeros, ['1', '2', '3', '4']);
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-momento\[data-ativo\] \.cn-momento__numero \{ background: var\(--acao\); color: #fff; \}/);
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{ \.cn-momento__numero \{ transition: background-color 200ms linear, color 200ms linear; \} \}/);
+});
+
+test('fontes: cada família em duas partes complementares (o latim, pré-carregado e com menos de 60% do tamanho, e a fonte inteira para o resto), e o latim tem todos os caracteres especiais do texto do app', async () => {
+  const { CARACTERES_ESPECIAIS_DO_TEXTO } = await import('@studoo/contratos');
+  const css = ler('src/app/globals.css');
+  const faces = [...css.matchAll(/@font-face \{([^}]*)\}/g)].map((m) => ({ familia: m[1].match(/font-family: ([^;]+);/)[1], arquivo: m[1].match(/url\('([^']+)'\)/)[1], faixa: m[1].match(/unicode-range: ([^;]+);/)?.[1] ?? '' }));
+  const faixas = (txt) => txt.split(',').map((p) => p.trim().replace(/^U\+/, '').split('-').map((h) => parseInt(h, 16))).map(([a, b = a]) => [a, b]);
+  const cobre = (lista, c) => lista.some(([a, b]) => c >= a && c <= b);
+  for (const [familia, nome] of [['Quicksand', 'quicksand-wght'], ['Nunito', 'nunito-wght']]) {
+    const daFamilia = faces.filter((f) => f.familia === familia);
+    assert.deepEqual(daFamilia.map((f) => f.arquivo), [`/marca/${nome}.woff2`, `/marca/${nome}-latim.woff2`], 'a inteira primeiro e o latim por último (o navegador tenta primeiro a última declarada)');
+    const [inteira, latim] = daFamilia.map((f) => faixas(f.faixa));
+    const todas = [...inteira, ...latim].sort((x, y) => x[0] - y[0]);
+    let proximo = 0;
+    for (const [a, b] of todas) { assert.equal(a, proximo, `${familia}: sem buraco nem sobreposição em U+${a.toString(16)}`); proximo = b + 1; }
+    assert.equal(proximo, 0x110000, 'as duas partes cobrem todos os pontos de código');
+    for (const ch of CARACTERES_ESPECIAIS_DO_TEXTO + 'Aprenda qualquer coisa. Uma lição por vez. “—…”ÁÉÍÓÚÂÊÔÃÕÇàáâãéêíóôõúüç→') assert.ok(cobre(latim, ch.codePointAt(0)), `${ch} no latim`);
+    const inteiraBytes = statSync(join(raiz, 'public/marca', `${nome}.woff2`)).size;
+    const latimBytes = statSync(join(raiz, 'public/marca', `${nome}-latim.woff2`)).size;
+    assert.ok(latimBytes < inteiraBytes * 0.6, `${nome}: ${latimBytes} de ${inteiraBytes} bytes`);
+  }
+  const layout = ler('src/app/layout.tsx');
+  assert.match(layout, /href="\/marca\/nunito-wght-latim\.woff2"/);
+  assert.match(layout, /href="\/marca\/quicksand-wght-latim\.woff2"/);
+  assert.doesNotMatch(layout, /href="\/marca\/(nunito|quicksand)-wght\.woff2"/, 'a fonte inteira não é pré-carregada');
+});
+
+test('responsivo: o celular com uma frase por linha, o tablet centrado e com título maior, o celular deitado em duas colunas, celulares desenhados que cabem na altura da tela e o computador que cresce com a tela', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-heroi__titulo \{ font: 700 clamp\(1\.75rem, 7\.9vw, 2rem\)\/1\.19 Quicksand/, 'no celular cada frase do título cabe numa linha de 360 a 430 px');
+  assert.match(css, /@media \(min-width: 600px\) \{\n  \.cn-heroi \{ padding-top: 32px; \}\n  \.cn-heroi__texto \{ width: 100%; max-width: 560px; margin-inline: auto; text-align: center; \}/, 'o tablet centra a primeira dobra');
+  assert.match(css, /@media \(orientation: landscape\) and \(max-height: 520px\) and \(min-width: 560px\) and \(max-width: 1023px\) \{\n  \.cn-heroi \{ grid-template-columns: minmax\(0, 1fr\) auto;/, 'celular deitado: o herói em duas colunas');
+  assert.match(css, /\.cn-heroi__celular \.cn-celular \{ --celular: min\(260px, calc\(\(100svh - 72px\) \/ 2\.18\)\); \}/, 'o celular do herói cabe na altura da tela');
+  assert.match(css, /\.cn-momento__visual \.cn-celular \{ --celular: min\(240px, calc\(\(100svh - 96px\) \/ 2\.2\)\); \}/);
+  assert.match(css, /\.cn-momento:nth-child\(even\) \.cn-momento__texto \{ order: 2; \}/, 'tablet: linhas alternadas');
+  assert.match(css, /\.cn-heroi__palco \.cn-heroi__celular \.cn-celular \{ --celular: clamp\(240px, calc\(\(100svh - 160px\) \/ 2\.2\), 300px\);/, 'computador: o celular cabe inteiro na primeira dobra');
+  assert.match(css, /@media \(min-width: 1800px\) \{ \.cn-pagina \{ --cn-coluna: 1360px; --cn-margem: 80px; \} \}/, 'telas largas: a coluna cresce');
+  assert.match(css, /@media \(max-width: 1023px\) \{ \.cn-acoes--computador\[data-lugar='heroi'\] \{ min-height: 140px; align-content: start; \} \}/, 'o iPad corrigido no navegador não faz a página pular');
 });
 
 test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o principal e ao lado fica o cartão do QR para /baixar', () => {

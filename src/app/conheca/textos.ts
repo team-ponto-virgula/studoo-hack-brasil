@@ -38,6 +38,12 @@ export const textos = {
       rotuloLeitor: 'Usar no iPhone agora, o Studoo na Tela de Início',
       apoio: 'O app para iPhone chega em breve pelo TestFlight.',
     },
+    /** O iPad (o app nativo é só de iPhone, supportsTablet: false): o caminho é sempre a Tela de Início pelo Safari, também depois do TestFlight. */
+    ipad: {
+      rotulo: 'Usar no iPad agora',
+      rotuloLeitor: 'Usar no iPad agora, o Studoo na Tela de Início',
+      apoio: 'No iPad, o Studoo fica na Tela de Início e abre em tela cheia, como um app.',
+    },
     iphoneTestflight: {
       rotulo: 'Instalar no iPhone',
       rotuloLeitor: 'Instalar no iPhone, pelo TestFlight',
@@ -56,6 +62,7 @@ export const textos = {
   },
   folhaIphone: {
     titulo: 'Use o Studoo no iPhone hoje',
+    tituloIpad: 'Use o Studoo no iPad hoje',
     texto: 'No Safari, o Studoo abre como um app, em tela cheia.',
     foraDoSafari: 'Abra esta página no Safari para adicionar à Tela de Início.',
     passos: [
@@ -102,6 +109,8 @@ export const textos = {
         'Abra o Studoo e entre com a sua conta, ou experimente sem conta.',
       ],
     },
+    /** A aba do iOS para quem está num iPad: os passos da Tela de Início. */
+    ipad: { aba: 'iPad' },
     iphone: {
       aba: 'iPhone',
       testflightPassos: [

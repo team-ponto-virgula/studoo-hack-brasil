@@ -21,7 +21,7 @@ export function foraDoSafariNoIphone(userAgent: string): boolean {
  * Esc e toque fora fecham, e o foco volta ao botão que a abriu. Sai do herói e entra na raiz da página (portal): lá dentro o contexto de empilhamento do texto
  * do herói (z-index 1) deixava o celular do herói, que vem depois, passar por cima da folha e do escurecimento.
  */
-export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { aoFechar: () => void; visitanteAtivo: boolean; comSessao: boolean }) {
+export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao, ipad = false }: { aoFechar: () => void; visitanteAtivo: boolean; comSessao: boolean; /** No iPad, o título fala do iPad (os passos são os mesmos). */ ipad?: boolean }) {
   const caixa = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const idTitulo = useId();
@@ -66,7 +66,7 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { a
             <svg className="cn-icone" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
-        <h2 id={idTitulo} ref={titulo} tabIndex={-1} className="folha-titulo">{t.titulo}</h2>
+        <h2 id={idTitulo} ref={titulo} tabIndex={-1} className="folha-titulo">{ipad ? t.tituloIpad : t.titulo}</h2>
         <p className="folha-texto">{t.texto}</p>
         {foraDoSafari && <p className="folha-texto cn-folha__aviso" role="note">{t.foraDoSafari}</p>}
         <PassosDoIphone />
