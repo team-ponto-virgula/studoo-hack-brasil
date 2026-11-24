@@ -200,7 +200,9 @@ Atrás de proxy reverso (ex.: Traefik/Dokploy), `STUDOO_VISITANTE=1` exige `STUD
 
 ## Página de apresentação na raiz (`STUDOO_ENTRADA_APRESENTACAO=1`)
 
-A página de apresentação (`/conheca`, spec 18) e o redirecionamento de aparelhos (`/baixar`) ficam sempre no ar. A variável `STUDOO_ENTRADA_APRESENTACAO` só decide o que é de quem **não tem sessão** na raiz `/`, e é lida a cada pedido (ligar ou desligar não pede novo build):
+A página de apresentação (`/conheca`, spec 18) e o redirecionamento de aparelhos (`/baixar`) ficam sempre no ar. Em produção, `hellostudoo.com.br` e `www.hellostudoo.com.br` abrem a apresentação. `app.hellostudoo.com.br` abre o app com sessão ou o login. Cada endereço do app mantém suas próprias sessões. O endereço anterior do Dokploy continua sendo a `STUDOO_ORIGEM` usada pelos aplicativos já instalados e pelo retorno do Google.
+
+No endereço anterior e no ambiente local, a variável `STUDOO_ENTRADA_APRESENTACAO` controla a raiz para quem chega sem sessão. O servidor lê a variável a cada pedido.
 
 | Variável | `/` sem sessão | `/` com sessão (visitante incluído) |
 |---|---|---|
