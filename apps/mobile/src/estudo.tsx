@@ -1708,7 +1708,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           {nomeNoAlto}
         </Text>
       </View>
-      {/* A placa fica presa no alto do mapa, por cima dele (16 das laterais e 10 abaixo da faixa). */}
+      {/* A placa fica presa no alto do mapa, com a folga compartilhada abaixo da faixa. */}
       <View pointerEvents="none" style={[estudoEstilos.placaGeracaoLugar, { top: alturaFaixaGeracao + FOLGA_PLACA_GERACAO }]} onLayout={(evento) => {
         const medida = Math.round(evento.nativeEvent.layout.height);
         setAlturaPlaca((anterior) => anterior === medida ? anterior : medida);
@@ -2516,8 +2516,8 @@ function formatarTempo(segundos: number) {
 }
 
 /**
- * Lição concluída, como na web: chuva de confete, raios girando atrás do Stu, que pula, o resumo da lição (tempo,
- * acerto e etapas), a lição liberada e o progresso do plano, que enche a partir de onde estava.
+ * Conclusão Clareza: uma reação do Stu, progresso confirmado, próximo passo e objetivo;
+ * os detalhes da sessão permanecem abaixo do núcleo, sem camadas decorativas em loop.
  */
 function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }: {
   etapa: Extract<Etapa, { tipo: 'concluida' }>;
@@ -2959,8 +2959,8 @@ const estudoEstilos = StyleSheet.create({
   esqueletoOrigem: { width: '48%', maxWidth: 256, height: 12, marginTop: 10, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoRodape: { gap: 8 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  geracaoAcoesEmpilhadas: { gap: 8 },
-  geracaoRodapeEstreito: { paddingHorizontal: 16 },
+  geracaoAcoesEmpilhadas: { gap: 10 },
+  geracaoRodapeEstreito: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
   geracaoLugarSecundario: { minHeight: 44, justifyContent: 'center' },
   geracaoEsperaEmpilhada: { justifyContent: 'center' },
   geracaoBotaoSecundario: { minHeight: 44 },
