@@ -31,6 +31,7 @@ import { iniciarGeracao } from "./geracao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, semCifraoSolto, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
+import { demoPelaChave } from "@/servidor/ia/demos";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
 /** Lições escritas ao mesmo tempo no aceite (`STUDOO_GERACAO_PARALELA`, de 1 a 10; padrão 10, todas juntas). */
@@ -340,7 +341,18 @@ export async function buscarLicao(
   usuarioId: string, id: string, opcoes: { capacidades?: Capacidades; desenharPng?: boolean } = {},
 ): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
-  const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;
+  const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso: recursoSalvo, falas, pratica, referencias } = licao.conteudo;
+  // Cópias antigas da trilha exemplo de Violão tiveram a ilustração numerada removida por `conteudoParaCopia`:
+  // restaura a figura pública do catálogo de forma confiável (nunca em lições de material privado).
+  const licaoViolaoCatalogo = demoPelaChave("violao")?.plano.fluxos[0]?.licoes[0];
+  const recurso = recursoSalvo ?? (
+    !referencias?.length &&
+    licaoViolaoCatalogo?.recurso &&
+    licao.titulo === licaoViolaoCatalogo.titulo &&
+    exemplo === licaoViolaoCatalogo.exemplo
+      ? licaoViolaoCatalogo.recurso
+      : undefined
+  );
   const exercicios = [exercicio, ...(extras ?? [])].map(apresentarExercicio);
   const detalhe: LicaoDetalhe = {
     id: licao.id,

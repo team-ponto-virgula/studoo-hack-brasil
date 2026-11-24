@@ -187,6 +187,7 @@ export const mensagens = {
     tentarNovamente: 'Tentar novamente',
     sair: 'Sair',
     sairPergunta: 'Sair da sua conta? Para voltar, você vai precisar entrar de novo.',
+    sairVisitantePergunta: 'Sair da sessão de visitante? Como visitante não há e-mail nem senha: as trilhas e o progresso desta sessão não passam para uma conta e deixam de ficar disponíveis neste navegador.',
     ficar: 'Ficar',
     acesso: {
         google: 'Continuar com Google',
@@ -575,6 +576,8 @@ export const mensagens = {
         email: 'E\u2060-\u2060mail',
         soVoceVe: 'Só você vê',
         visitante: 'Conta temporária: para ter um perfil e compartilhar trilhas, entre com uma conta.',
+        entrarOuCriar: 'Entrar ou criar conta',
+        visitanteAvisoTroca: 'As trilhas e o progresso desta sessão de visitante não passam para a conta.',
         // Página pública /p/<id>
         paginaTitulo: (nome: string) => `Trilhas de ${nome}`,
         paginaDescricao: (nome: string, n: number) => `${n === 1 ? '1 trilha compartilhada' : `${n} trilhas compartilhadas`} por ${nome} no Studoo`,
@@ -813,6 +816,16 @@ export const mensagens = {
         vazioSeguindoTitulo: 'Você ainda não segue ninguém',
         vazioSeguindoTexto: 'Siga quem publica trilhas do seu interesse: use o botão “Seguir” no perfil da pessoa. As trilhas novas dela aparecem aqui.',
         vazioSeguindoAcao: 'Ver todas as trilhas',
+        voltarComunidade: 'Voltar à Comunidade',
+        entrarOuCriar: 'Entrar ou criar conta',
+        seguindoVisitanteTitulo: 'Para seguir pessoas, entre com uma conta',
+        seguindoVisitanteTexto: 'Como visitante, você pode explorar e estudar qualquer trilha. Para seguir quem publica trilhas, entre ou crie uma conta — as trilhas desta sessão não passam para a conta.',
+        seguirVisitanteAviso: 'Para seguir este perfil, entre ou crie uma conta. As trilhas desta sessão de visitante não passam para a conta.',
+        buscaRotulo: 'Buscar trilhas no Explorar',
+        buscaPlaceholder: 'Buscar por assunto, título ou pessoa',
+        buscaLimpar: 'Limpar busca',
+        buscaVazio: (termo: string) => `Nenhuma trilha encontrada para “${termo}”.`,
+        buscaResultados: (total: number, termo: string) => `${total === 1 ? '1 trilha' : `${total} trilhas`} para “${termo}”`,
         seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
         // Novidades (etapa C2)
         novidadesTitulo: 'Novidades',
@@ -1190,6 +1203,8 @@ export const mensagens = {
             ensinoTitulo: 'Você ensinou ao Stu',
             ensinoTexto: 'Você explicou a ideia com suas palavras e testou seu entendimento.',
             sincronia: 'Progresso salvo na sua conta · pronto para continuar em outro dispositivo',
+            sincroniaVisitante: 'Sessão de visitante · seu progresso fica por até 24 h a partir da entrada neste navegador',
+            sincroniaVisitanteApp: 'Sessão de visitante · seu progresso fica por até 24 h a partir da entrada neste aparelho',
         },
         novoAssunto: 'Começar um assunto novo',
         falta: {

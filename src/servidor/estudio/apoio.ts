@@ -87,6 +87,71 @@ const PALAVRAS_COMUNS = new Set([
   'estou', 'estava', 'estar', 'estamos', 'tenho', 'temos', 'quero', 'queria', 'fazer', 'dizer', 'falar', 'usar', 'serve',
 ]);
 
+const PALAVRAS_GENERICAS_COERENCIA = new Set([
+  ...PALAVRAS_COMUNS,
+  'voce', 'explicacao', 'explicou', 'explicar', 'explica', 'definicao', 'definiu', 'definir', 'define',
+  'licao', 'conceito', 'ideia', 'ideias', 'exemplo', 'exemplos', 'palavra', 'palavras', 'ponto', 'pontos',
+  'faltou', 'falta', 'faltam', 'revisar', 'revisao', 'incluir', 'inclua', 'mencionar', 'mencionou', 'citar', 'citou',
+  'entender', 'entendeu', 'mostrou', 'mostrar', 'correto', 'correta', 'corretamente', 'claro', 'clara', 'clareza',
+  'melhor', 'bom', 'boa', 'bem', 'importante', 'importantes', 'principal', 'central', 'assunto', 'tema', 'recorte',
+  'lacuna', 'nenhuma', 'identificou', 'identifiquei', 'identificada', 'tente', 'tenta', 'tentar', 'proximo', 'passo',
+  'situacao', 'concreto', 'concreta', 'aplicacao', 'aplicar', 'pratica', 'pratico', 'pratica', 'relacao', 'ligacao',
+  'dica', 'amigo', 'alguem', 'pessoa', 'pessoas', 'frase', 'texto', 'resposta', 'respostas', 'proprias', 'suas', 'seus',
+  'ficar', 'completa', 'completo', 'completar', 'acrescentar', 'acrescente', 'escreva', 'escrever', 'releia', 'reler',
+  'agora', 'deixou', 'deixar', 'precisa', 'precisar', 'ajuda', 'ajudam', 'lembrar', 'esclarecer', 'detalhar',
+]);
+
+const normalizarPalavraCoerencia = (palavra: string) => {
+  const limpa = palavra.normalize('NFD').replace(/\p{M}+/gu, '').toLocaleLowerCase('pt-BR');
+  if (limpa.length >= 5 && /[rznl]es$/.test(limpa)) return limpa.slice(0, -2);
+  if (limpa.length >= 4 && limpa.endsWith('s')) return limpa.slice(0, -1);
+  return limpa;
+};
+
+function radicaisDeDominio(textoBruto: string): Set<string> {
+  const palavras = textoBruto.match(/\p{L}{4,}/gu) ?? [];
+  const radicais = new Set<string>();
+  for (const palavra of palavras) {
+    const base = normalizarPalavraCoerencia(palavra);
+    if (base.length >= 4 && !PALAVRAS_GENERICAS_COERENCIA.has(base)) radicais.add(base);
+  }
+  return radicais;
+}
+
+const PEDE_AUSENTE = /\b(?:faltou|falta(?:m)?\s+(?:explicar|definir|dizer|falar|incluir|mencionar|citar|trazer)|n[aã]o\s+(?:explicou|definiu|disse|falou|mencionou|citou|trouxe|deixou\s+claro)|vale\s+(?:incluir|definir|explicar|esclarecer|revisar)|que\s+tal\s+incluir|fale\s+tamb[eé]m|precisa\s+(?:explicar|definir)|esclarecer\s+o\s+que|revisar\s+o\s+que|definir\s+(?:melhor\s+)?o\s+que)\b/iu;
+const APONTA_ERRO = /\b(?:incorret|errad|equivoc|confund|trocou|ao\s+contr[aá]rio|na\s+verdade|n[aã]o\s+[eé]\s+verdade|n[aã]o\s+significa|inverteu)\b/iu;
+
+/**
+ * Garante coerência entre `acertos` ("O que fez sentido") e `lacuna` ("O que revisar"):
+ * se `lacuna` cobrar a definição ou inclusão de um conceito que já foi elogiado em `acertos` e aparece na explicação
+ * da pessoa (sem apontar erro factual), troca a cobrança repetida por um convite a uma aplicação prática.
+ */
+export function revisarCoerenciaEnsino(feedback: FeedbackEnsino, explicacao: string): FeedbackEnsino {
+  if (feedback.acertos.length === 0) return feedback;
+  if (APONTA_ERRO.test(feedback.lacuna) || !PEDE_AUSENTE.test(feedback.lacuna)) return feedback;
+  const elogiados = radicaisDeDominio(feedback.acertos.join(' '));
+  const naExplicacao = radicaisDeDominio(explicacao);
+  const cobrados = radicaisDeDominio(feedback.lacuna);
+  if (cobrados.size === 0) return feedback;
+
+  const repetidos = [...cobrados].filter((r) => elogiados.has(r) && naExplicacao.has(r));
+  const realmenteNovos = [...cobrados].filter((r) => !naExplicacao.has(r));
+  if (repetidos.length === 0 || realmenteNovos.length > 0) return feedback;
+
+  const lacunaCoerente = 'Você já explicou bem esses conceitos. Para ir além, aplique a ideia em uma situação nova ou em um exemplo concreto do dia a dia.';
+  const passoCobrados = radicaisDeDominio(feedback.proximoPasso);
+  const passoRepete = PEDE_AUSENTE.test(feedback.proximoPasso) ||
+    ([...passoCobrados].some((r) => repetidos.includes(r)) && /releia|reescreva|inclu|defin/iu.test(feedback.proximoPasso));
+
+  return {
+    ...feedback,
+    lacuna: lacunaCoerente,
+    proximoPasso: passoRepete
+      ? 'Teste a ideia numa aplicação prática: crie um exemplo rápido e identifique cada elemento na prática.'
+      : feedback.proximoPasso,
+  };
+}
+
 /**
  * As palavras da explicação da lição (5 letras ou mais, sem as muito comuns nem as do título, como “violão”) que também
  * aparecem no texto da pessoa: são as ideias que ela trouxe, não o nome do assunto.
@@ -285,9 +350,15 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
   const comExemplo = marcouExemplo || citou || frasesUsadas.length > 0;
   const termos = termosDaLicao(conteudo);
   const trouxe = termosPresentes(explicacao, termos);
-  const faltou = termos.filter((termo) => !trouxe.includes(termo));
+  const radicaisExplicacao = radicaisDeDominio(explicacao);
+  const faltou = termos.filter((termo) => {
+    if (trouxe.includes(termo)) return false;
+    // Evita cobrar um termo no plural/singular se todos os seus radicais já estão na explicação da pessoa.
+    const radicaisTermo = radicaisDeDominio(termo);
+    return radicaisTermo.size === 0 || ![...radicaisTermo].every((r) => radicaisExplicacao.has(r));
+  });
   // Trouxe a maior parte das ideias: o que falta vira um complemento opcional, não um "que tal incluir".
-  const cobriu = termos.length > 0 && trouxe.length * 2 > termos.length;
+  const cobriu = termos.length > 0 && (termos.length - faltou.length) * 2 > termos.length;
   // Um erro comum no próprio texto (“I here”, sem o verbo) vem antes de tudo no "O que revisar".
   const armadilha = armadilhaNoTexto(conteudo, explicacao);
   const lista = (itens: string[]) => {
@@ -298,7 +369,7 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
   // quando não são as respostas dos exercícios.
   const doConceito = palavrasDoConceito(licao.conceito, explicacao, licao.titulo)
     .filter((palavra) => !trouxe.some((termo) => termo.toLocaleLowerCase('pt-BR').includes(palavra.toLocaleLowerCase('pt-BR'))));
-  return {
+  return revisarCoerenciaEnsino({
     acertos: [
       ...(trouxe.length > 0
         ? [`Você falou de ${lista(trouxe)}, ${trouxe.length === 1 ? 'uma ideia-chave' : 'ideias-chave'} desta lição.`]
@@ -337,7 +408,7 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
       ? (conteudo.falas?.length ? 'Escreva uma frase sua no idioma da lição, numa situação real, e leia em voz alta.' : 'Escreva uma situação sua em que você usaria isso, em uma frase.')
       : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
     simulado: true,
-  };
+  }, explicacao);
 }
 
 /** O retorno do "Explique com suas palavras" pela IA. Formato fora do esperado é falha. */
@@ -376,7 +447,7 @@ async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<Feed
       pergunta: texto,
       proximoPasso: texto,
     }),
-    `A tarefa da pessoa é explicar a ideia desta lição com as próprias palavras, como se ensinasse um amigo; não é responder a um exercício. Avalie a explicação em relação à ideia da lição (título, objetivo, conceito e exemplo). Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna na compreensão da ideia ou diga que não identificou lacuna neste recorte. A lacuna e o próximo passo falam da ideia da lição, nunca de uma questão de exercício. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres. ${PEDIDO_DE_TEXTO_SIMPLES}`,
+    `A tarefa da pessoa é explicar a ideia desta lição com as próprias palavras, como se ensinasse um amigo; não é responder a um exercício. Avalie a explicação em relação à ideia da lição (título, objetivo, conceito e exemplo). Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Regra de coerência obrigatória: nunca peça em lacuna ou proximoPasso que a pessoa defina ou inclua algo que você já elogiou em acertos ou que ela já explicou corretamente na explicacao (por exemplo, se ela já definiu vértice ou outro termo central, não peça de novo a definição — peça uma aplicação prática ou diga que não identificou lacuna neste recorte). A lacuna e o próximo passo falam da ideia da lição, nunca de uma questão de exercício. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres. ${PEDIDO_DE_TEXTO_SIMPLES}`,
     { licao: recorteDeEnsino(licao), explicacao },
   );
   const x = result as FeedbackEnsino;
@@ -392,13 +463,13 @@ async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<Feed
     )
   )
     throw new FalhaApi('ia_indisponivel');
-  return {
+  return revisarCoerenciaEnsino({
     acertos: x.acertos,
     lacuna: x.lacuna,
     pergunta: x.pergunta,
     proximoPasso: x.proximoPasso,
     simulado: false,
-  };
+  }, explicacao);
 }
 
 export async function ensinarStu(

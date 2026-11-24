@@ -16,6 +16,7 @@ import {
   type ResultadoValeu,
   type Tema,
 } from "@studoo/contratos";
+import { mensagens } from "@studoo/contratos/experiencia";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
@@ -211,34 +212,74 @@ function lerCursor(cursor: string): { em: Date; codigo: string } {
   return { em, codigo };
 }
 
-/** GET /api/explorar: "Em alta" (primeira página) e "Novas" (20 por página, por cursor), com filtro de tema. */
-export async function explorar(quem: string | null, filtro: { tema?: string | null; cursor?: string | null; seguindo?: boolean }): Promise<PaginaExplorar> {
+const BUSCA_MAX = 80;
+const normalizarBusca = (texto: string) =>
+  texto.normalize("NFD").replace(/\p{M}+/gu, "").toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").trim();
+
+/** GET /api/explorar: "Em alta" (primeira página) e "Novas" (20 por página, por cursor), com filtro de tema e busca textual (`q`). */
+export async function explorar(
+  quem: string | null,
+  filtro: { tema?: string | null; cursor?: string | null; seguindo?: boolean; busca?: string | null },
+): Promise<PaginaExplorar> {
   const tema = filtro.tema || null;
   if (tema !== null && !ehTema(tema)) throw new FalhaApi("invalido");
+  const buscaBruta = typeof filtro.busca === "string" ? filtro.busca.trim() : "";
+  if (buscaBruta.length > BUSCA_MAX) throw new FalhaApi("invalido");
+  const termosBusca = normalizarBusca(buscaBruta).split(" ").filter(Boolean);
   const cursor = filtro.cursor ? lerCursor(filtro.cursor) : null;
   // Aba "Seguindo": as trilhas publicadas por quem a pessoa segue, das mais novas para as mais antigas (sem Em alta).
   if (filtro.seguindo && !quem) throw new FalhaApi("nao_autenticado");
   const seguidos = filtro.seguindo && quem ? await seguidosPor(quem) : null;
   const publico = await filtroPublico(quem);
-  const pagina = await banco.linkTrilha.findMany({
-    where: {
-      AND: [publico],
-      noExplorar: true,
-      oculta: false,
-      publicadaEm: { not: null },
-      ...semDemonstracao(),
-      ...(tema ? { tema } : {}),
-      ...(seguidos ? { usuarioId: { in: seguidos } } : {}),
-      ...(cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {}),
-    },
-    orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
-    take: LIMITES_COMUNIDADE.porPagina + 1,
-    select: camposLink,
-  });
-  const temMais = pagina.length > LIMITES_COMUNIDADE.porPagina;
-  const novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
+  const whereBase = {
+    AND: [publico],
+    noExplorar: true,
+    oculta: false,
+    publicadaEm: { not: null },
+    ...semDemonstracao(),
+    ...(tema ? { tema } : {}),
+    ...(seguidos ? { usuarioId: { in: seguidos } } : {}),
+    ...(cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {}),
+  };
+
+  let novas: LinkDoCartao[];
+  let temMais: boolean;
+  if (termosBusca.length > 0) {
+    // Busca acento-insensível sobre título, legenda, autor e rótulo do tema (em lotes para manter paginação estável).
+    const candidatas = await banco.linkTrilha.findMany({
+      where: whereBase,
+      orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
+      take: 500,
+      select: {
+        ...camposLink,
+        plano: { select: { titulo: true, usuario: { select: { perfilNome: true } } } },
+      },
+    });
+    const filtradas = candidatas.filter((link) => {
+      const rotuloTema = ehTema(link.tema) ? mensagens.temas[link.tema] : "";
+      const alvo = normalizarBusca([
+        link.plano.titulo,
+        link.legenda ?? "",
+        link.plano.usuario.perfilNome ?? "",
+        rotuloTema,
+      ].join(" "));
+      return termosBusca.every((termo) => alvo.includes(termo));
+    });
+    temMais = filtradas.length > LIMITES_COMUNIDADE.porPagina;
+    novas = filtradas.slice(0, LIMITES_COMUNIDADE.porPagina);
+  } else {
+    const pagina = await banco.linkTrilha.findMany({
+      where: whereBase,
+      orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
+      take: LIMITES_COMUNIDADE.porPagina + 1,
+      select: camposLink,
+    });
+    temMais = pagina.length > LIMITES_COMUNIDADE.porPagina;
+    novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
+  }
+
   let emAlta: CartaoTrilha[] = [];
-  if (!cursor && !seguidos) {
+  if (!cursor && !seguidos && termosBusca.length === 0) {
     const top = (await classificacaoDaSemana()).filter((item) => !tema || item.tema === tema);
     const linksTop = top.length === 0 ? [] : await banco.linkTrilha.findMany({ where: { AND: [publico], codigo: { in: top.map((item) => item.codigo) }, noExplorar: true, oculta: false }, select: camposLink });
     const porCodigo = new Map(linksTop.map((link) => [link.codigo, link]));
