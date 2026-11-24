@@ -64,8 +64,8 @@ test('até 600 px, a ação principal ocupa a largura e vem antes do ajuste; o e
   assert.match(geracao, /const empilhar = pronta && width <= 600;/);
   assert.match(geracao, /\{empilhar && principal\}\s*\{empilhar && erroDaCriacao\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>/);
   assert.match(geracao, /marginTop: -alturaDoAjuste, minHeight: alturaDoAjuste/, 'a espera ocupa o espaço do ajuste e pode crescer');
-  assert.match(estudo, /geracaoAcoesEmpilhadas: \{ gap: 8 \}/);
-  assert.match(estudo, /geracaoRodapeEstreito: \{ paddingHorizontal: 16 \}/);
+  assert.match(estudo, /geracaoAcoesEmpilhadas: \{ gap: 10 \}/);
+  assert.match(estudo, /geracaoRodapeEstreito: \{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 \}/);
   assert.match(estudo, /geracaoLugarSecundario: \{ minHeight: 44, justifyContent: 'center' \}/);
   assert.match(geracao, /pointerEvents=\{salvando \? 'none' : undefined\} accessibilityElementsHidden=\{salvando\}/);
 });
