@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import { banco } from '@/servidor/banco/cliente';
 import { cabecalhosSeguros, FalhaApi } from './http';
-import { cookieSessao, origemStudoo } from './origem';
+import { cookieSessao, origemStudoo, origemWebDaRequisicao } from './origem';
 import { criarSessao, hashToken } from './sessao';
 import { consumirLimite, emailPermitido, iguais } from './seguranca';
 import { normalizarEmail } from './credenciais';
@@ -39,10 +39,21 @@ function redirecionar(url: URL | string, cookie?: string) {
   return new Response(null, { status: 303, headers: { ...cabecalhosSeguros, Location: String(url), ...(cookie ? { 'Set-Cookie': cookie } : {}) } });
 }
 export async function iniciarGoogle(request: Request) {
+  const origemRequisicao = origemWebDaRequisicao(request);
   const config = configuracaoGoogle();
-  if (!config) return redirecionar(new URL('/login?erro=google_indisponivel', origemStudoo()!));
+  if (!config) {
+    const destino = origemRequisicao ?? origemStudoo();
+    if (!destino) throw new FalhaApi('google_indisponivel');
+    return redirecionar(new URL('/login?erro=google_indisponivel', destino));
+  }
   const params = new URL(request.url).searchParams;
   const mobile = params.get('mobile') === '1';
+  const origemCanonica = origemStudoo()!;
+  // O callback cadastrado no Google e o cookie __Host-studoo-google pertencem à origem canônica (STUDOO_ORIGEM).
+  // Ao iniciar a partir de outro host web aceito, redireciona para o início canônico antes de gravar cookie/estado.
+  if (!mobile && origemRequisicao && origemRequisicao !== origemCanonica) {
+    return redirecionar(new URL('/api/auth/google/iniciar', origemCanonica));
+  }
   const desafioMobile = mobile ? params.get('desafio') : null;
   if (mobile) {
     if (process.env.STUDOO_SESSAO_MOBILE_PILOTO !== '1' || !origemStudoo()?.startsWith('https:')) throw new FalhaApi('google_indisponivel');

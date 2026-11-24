@@ -31,7 +31,7 @@ const hashCodigo = (email: string, codigo: string) => assinatura(`cadastro\0${em
  * Pede o código de posse. A resposta é sempre `{ enviado: true }` (exista ou não a conta). E-mail com conta recebe só
  * um aviso para entrar ou recuperar a senha. Limites: 3 por e-mail a cada 15 min, 10 por rede a cada 15 min, 200 por hora.
  */
-export async function pedirCodigoCadastro(entrada: unknown, rede: string) {
+export async function pedirCodigoCadastro(entrada: unknown, rede: string, origem?: string | null) {
   if (!cadastroAtivo()) throw new FalhaApi('cadastro_indisponivel');
   const email = normalizarEmail(entrada);
   if (!email || emailInterno(email)) throw new FalhaApi('invalido');
@@ -56,7 +56,7 @@ export async function pedirCodigoCadastro(entrada: unknown, rede: string) {
   if (resultado.limitado) throw new FalhaApi('limite_cadastro');
   try {
     if (resultado.codigo) await enviarCodigoCadastro(email, codigo);
-    else if (resultado.existente) await enviarAvisoContaExistente(email);
+    else if (resultado.existente) await enviarAvisoContaExistente(email, origem);
   } catch {
     if (resultado.codigo) await banco.verificacaoCadastro.deleteMany({ where: { chave, codigoHash: hashCodigo(email, codigo) } });
     // Resposta neutra também quando o provedor falha: não revela se o e-mail existe nem o motivo.
