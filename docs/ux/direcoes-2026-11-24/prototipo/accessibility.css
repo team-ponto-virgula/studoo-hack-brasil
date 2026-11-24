@@ -51,6 +51,7 @@ body[data-direction=caderno] .screen[data-page=conclusao] .stats{grid-template-c
 .study-details>.stack{padding:0 16px 16px}
 .study-details small,.study-details p{overflow-wrap:anywhere}
 .source-card>div{min-width:0;flex:1}
+.source-card strong,.source-card small,.dialog p{overflow-wrap:anywhere;white-space:normal}
 .source-card .quiet{justify-content:flex-start;padding-left:0}
 .chapter-bridge{display:flex;gap:10px;align-items:flex-start;padding:14px 12px;margin:12px 0;background:var(--soft);border-radius:14px;color:var(--muted);font-size:.875rem}
 .chapter-bridge span{min-width:0;overflow-wrap:anywhere}
