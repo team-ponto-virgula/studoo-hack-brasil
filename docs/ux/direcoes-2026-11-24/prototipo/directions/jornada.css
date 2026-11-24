@@ -1,0 +1,25 @@
+body[data-direction=jornada]{--bg:#fff;--ink:#15275b;--muted:#50607a;--primary:#2457dd;--soft:#edf3ff;--line:#dfe7f2;--radius:24px}
+body[data-direction=jornada] .primary{border-bottom:4px solid #173b9c;padding-top:10px;padding-bottom:10px;box-shadow:0 2px 0 #173b9c;letter-spacing:.015em}
+body[data-direction=jornada] .primary:active{border-bottom-width:2px;transform:translateY(2px);box-shadow:none}
+body[data-direction=jornada] .hero{padding:22px;background:#edf3ff;border:1.5px solid #d5e3ff}
+body[data-direction=jornada] .hero-copy h2{font-size:1.5rem}
+body[data-direction=jornada] .current-lesson{background:#2457dd;color:#fff;border-radius:24px;padding:22px;display:flex;gap:16px;align-items:center}
+body[data-direction=jornada] .current-lesson .row-icon{background:#fff;color:#2457dd}
+body[data-direction=jornada] .current-lesson small{display:block;color:#fff}
+body[data-direction=jornada] .current-lesson h2{font-size:1.25rem;margin:4px 0}
+body[data-direction=jornada] .map-node .node-dot{border-bottom-width:5px;box-shadow:0 3px 0 #dbe4f2}
+body[data-direction=jornada] .map-node.current .node-dot{box-shadow:0 4px 0 #173b9c;outline:5px solid #e6edff;outline-offset:4px}
+body[data-direction=jornada] .map-node:nth-of-type(2n){padding-left:38px}
+body[data-direction=jornada] .map-node:nth-of-type(2n):not(:last-child)::after{left:70px}
+body[data-direction=jornada] .map-node .node-copy{padding-left:2px}
+body[data-direction=jornada] .map-node:not(:last-child)::after{width:4px;transform:rotate(-20deg);transform-origin:top;height:55px;top:72px}
+body[data-direction=jornada] .map-node:nth-of-type(2n):not(:last-child)::after{transform:rotate(20deg)}
+body[data-direction=jornada] .chapter{background:#e8f0ff;border:1px solid #d4e2ff}
+body[data-direction=jornada] .screen[data-page=conclusao] .stats{padding:18px;background:#f1f5ff;border-radius:20px}
+body[data-direction=jornada] .choice{border-width:2px;border-bottom-width:4px}
+body[data-direction=jornada] .choice.selected{background:#edf3ff;border-color:#2457dd}
+body[data-direction=jornada] .cover{box-shadow:inset 5px 0 0 #cbdcff;border:1px solid #d5e3ff}
+body[data-direction=jornada] .screen[data-page=explorar] .row{padding:16px;border:1px solid #dfe7f2;border-bottom-width:3px;border-radius:20px;margin-bottom:10px}
+body[data-direction=jornada] .tag{border:1px solid #d5e3ff}
+body[data-direction=jornada] .feedback{border:1px solid currentColor}
+@media(prefers-reduced-motion:reduce){body[data-direction=jornada] .primary:active{transform:none}}

@@ -1,0 +1,11 @@
+/* Correções compartilhadas depois dos temas: sem alterar o foco dos controles. */
+h1[tabindex="-1"]:focus{outline:none}
+.toggle{min-width:56px;min-height:44px;width:56px;height:44px;padding:0;border:0;background:transparent!important;position:relative;flex-shrink:0}
+.toggle::before{content:'';position:absolute;left:4px;top:8px;width:48px;height:28px;border-radius:20px;background:#6b7891}
+.toggle::after{content:'';position:absolute;left:7px;top:11px;width:22px;height:22px;border-radius:50%;background:#fff;transform:none}
+.toggle[aria-checked=true]::before{background:var(--primary)}
+.toggle[aria-checked=true]::after{transform:translateX(20px)}
+.row .quiet{width:auto;flex-shrink:0}
+.danger-action{background:var(--error);color:#fff;border-bottom-color:var(--error)!important}
+html[data-reduced=true] *,html[data-reduced=true] *::before,html[data-reduced=true] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html[data-reduced=true] .primary:active{transform:none}
