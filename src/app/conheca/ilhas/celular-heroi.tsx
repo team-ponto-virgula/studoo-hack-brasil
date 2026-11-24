@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CapturaDaTela, Celular } from '../celular';
+import { CapturaDaTela, Celular, TAMANHOS } from '../celular';
 import type { CapturaOtimizada, Plataforma } from '../imagens';
 
 const MS_POR_TELA = 3500;
@@ -77,7 +77,7 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
           <div key={tela.alt} className="cn-tela" data-ativa={indice === troca.ativa || undefined} data-saindo={indice === troca.anterior || undefined}
             data-entrando={(indice === troca.ativa && troca.anterior !== null) || undefined}
             onAnimationEnd={(evento) => { if (evento.target === evento.currentTarget && indice === troca.ativa) soltarAnterior(); }}>
-            <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} />
+            <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} tamanhos={TAMANHOS.heroi} />
           </div>
         ))}
       </Celular>

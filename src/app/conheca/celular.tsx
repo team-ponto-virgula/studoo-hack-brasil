@@ -16,19 +16,40 @@ export function Celular({ children, className = '', rotulo, plataforma = 'iphone
   );
 }
 
-/** Uma captura nativa do app: WebP em 1x e 2x, com largura e altura declaradas (nada pula). */
-export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '' }: {
+/**
+ * A largura, em px do CSS, em que a captura aparece em cada lugar (a TELA do celular, sem as bordas de 10 px, por faixa de largura da janela): é o `sizes` que o navegador usa, junto com a
+ * densidade da tela, para escolher entre as larguras do AVIF (320, 480 e 640). Em 390 px com tela de 2x, por exemplo, o herói pede 480 e não os 640 de antes.
+ */
+export const TAMANHOS = {
+  heroi: '(min-width: 1024px) 320px, (min-width: 768px) 280px, 240px',
+  momento: '(min-width: 1024px) 300px, (min-width: 768px) 260px, 220px',
+  celularDoComposto: '(min-width: 1024px) 230px, 180px',
+  janela: '(min-width: 1024px) 480px, 380px',
+} as const;
+
+const srcSetDoAvif = (captura: CapturaOtimizada) => captura.avif.map((item) => `${item.src} ${item.largura}w`).join(', ');
+
+/**
+ * Uma captura nativa do app, com a proporção que ela tem: AVIF em três larguras (o que os navegadores de hoje baixam) e WebP de reserva, com largura e altura declaradas (nada pula). O `<img>`
+ * leva tudo o que o navegador usa (prioridade, carregamento, descrição); o `<picture>` só escolhe o formato.
+ */
+export function CapturaDaTela({ captura, alt, prioridade = false, escondida = false, className = '', tamanhos = TAMANHOS.momento }: {
   captura: CapturaOtimizada;
   alt: string;
   /** A primeira do herói: carrega já e com prioridade. As outras só quando chegam perto da tela, e com prioridade baixa (não disputam a banda com a primeira, o texto e as fontes). */
   prioridade?: boolean;
   escondida?: boolean;
   className?: string;
+  /** Veja `TAMANHOS`. */
+  tamanhos?: string;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
-      alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'low'} decoding="async" draggable={false} hidden={escondida || undefined} />
+    <picture>
+      <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={tamanhos} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className={`cn-captura ${className}`.trim()} src={captura.src1x} srcSet={`${captura.src1x} ${captura.largura}w, ${captura.src2x} ${captura.largura * 2}w`} sizes={tamanhos} width={captura.largura} height={captura.altura}
+        alt={alt} loading={prioridade ? 'eager' : 'lazy'} fetchPriority={prioridade ? 'high' : 'low'} decoding="async" draggable={false} hidden={escondida || undefined} />
+    </picture>
   );
 }
 
@@ -48,9 +69,12 @@ export function JanelaDoNavegador({ captura, alt, className = '' }: { captura: C
         </span>
       </div>
       <div className="cn-janela__tela">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="cn-captura" src={captura.src1x} srcSet={`${captura.src1x} 1x, ${captura.src2x} 2x`} width={captura.largura} height={captura.altura}
-          alt={alt} loading="lazy" fetchPriority="low" decoding="async" draggable={false} />
+        <picture>
+          <source type="image/avif" srcSet={srcSetDoAvif(captura)} sizes={TAMANHOS.janela} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="cn-captura" src={captura.src1x} srcSet={`${captura.src1x} ${captura.largura}w, ${captura.src2x} ${captura.largura * 2}w`} sizes={TAMANHOS.janela} width={captura.largura} height={captura.altura}
+            alt={alt} loading="lazy" fetchPriority="low" decoding="async" draggable={false} />
+        </picture>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import { Mascote } from '../../ui/mascote';
 import { BotaoSom } from '../som';
 import { detectarAparelho, type Aparelho } from './aparelho';
 import { CartaoQr } from './cartao-qr';
-import { Celular, CapturaDaTela, JanelaDoNavegador } from './celular';
+import { Celular, CapturaDaTela, JanelaDoNavegador, TAMANHOS } from './celular';
 import { CAPTURAS } from './imagens.gerado';
 import { telasDoHeroi } from './heroi';
 import { LogoDaPagina } from './ilhas/logo';
@@ -104,7 +104,7 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
                     <div className="cn-composto">
                       <JanelaDoNavegador captura={CAPTURAS['janela-4']} alt={textos.s2.janelaAlt} />
                       <Celular plataforma={MOMENTOS_DO_S2[indice].captura.plataforma}>
-                        <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} />
+                        <CapturaDaTela captura={MOMENTOS_DO_S2[indice].captura} alt={MOMENTOS_DO_S2[indice].alt} tamanhos={TAMANHOS.celularDoComposto} />
                       </Celular>
                       <p className="cn-selo-sincronia"><span className="cn-selo-sincronia__ponto" aria-hidden="true" />{textos.s2.selo}</p>
                     </div>

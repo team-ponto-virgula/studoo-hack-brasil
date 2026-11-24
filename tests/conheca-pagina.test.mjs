@@ -30,6 +30,8 @@ const { mensagens } = await import('../src/mensagens/pt-BR.ts');
 const { foraDoSafariNoIphone } = await import('../src/app/conheca/ilhas/folha-iphone.tsx');
 const { CAPTURAS } = await import('../src/app/conheca/imagens.gerado.ts');
 const { telasDoHeroi, escolherTelasDoHeroi, ALTS_DO_HEROI } = await import('../src/app/conheca/heroi.ts');
+const { TAMANHOS } = await import('../src/app/conheca/celular.tsx');
+const sharp = (await import('sharp')).default;
 
 const ORIGEM = 'https://studoo.exemplo.test';
 const base = { aparelho: 'computador', links: { apk: APK_PADRAO, testflight: null }, origem: ORIGEM, comSessao: false, visitante: true };
@@ -212,6 +214,57 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
     const bytes = readFileSync(join(raiz, 'public', CAPTURAS[id].src2x)).length;
     assert.ok(bytes <= 120 * 1024, `${id}: ${bytes} bytes`);
   }
+});
+
+test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e o WebP de reserva, e nenhuma é esticada: a altura segue a proporção da própria captura', async () => {
+  const html = desenhar({ aparelho: 'android' });
+  // O herói (a imagem do LCP): o AVIF em 320, 480 e 640 com o sizes do herói e, dentro do mesmo <picture>, o <img> com o WebP de reserva, a prioridade alta e o carregamento já.
+  const [primeira] = telasDoHeroi('android').map((t) => t.captura);
+  const srcSetAvif = primeira.avif.map((a) => `${a.src} ${a.largura}w`).join(', ');
+  const figura = html.match(new RegExp(`<picture><source type="image/avif" srcSet="${srcSetAvif.replace(/[.]/g, '\\.')}" sizes="[^"]*"/><img [^>]*>`));
+  assert.ok(figura, 'a primeira captura do herói vem num <picture> com o AVIF');
+  assert.ok(figura[0].includes(`sizes="${TAMANHOS.heroi}"/><img`), 'o herói usa o sizes do herói');
+  assert.match(figura[0], new RegExp(`<img [^>]*src="${primeira.src1x.replace(/[.]/g, '\\.')}" srcSet="${primeira.src1x.replace(/[.]/g, '\\.')} ${primeira.largura}w, ${primeira.src2x.replace(/[.]/g, '\\.')} ${primeira.largura * 2}w" sizes="${TAMANHOS.heroi.replace(/[().]/g, '\\$&')}"`), 'o WebP de reserva leva o mesmo sizes');
+  assert.match(figura[0], /loading="eager" fetchPriority="high"/);
+  assert.deepEqual(primeira.avif.map((a) => a.largura), [320, 480, 640]);
+  // Cada lugar com o seu sizes (a largura da TELA do celular em cada faixa, sem as bordas): o herói, os momentos, o celular do composto e a janela.
+  assert.equal(TAMANHOS.heroi, '(min-width: 1024px) 320px, (min-width: 768px) 280px, 240px');
+  const ocorrencias = (sizes) => [...html.matchAll(/<source type="image\/avif" srcSet="[^"]*" sizes="([^"]*)"\/>/g)].filter((m) => m[1] === sizes).length;
+  assert.equal(ocorrencias(TAMANHOS.heroi), 3, 'as três telas do herói');
+  assert.equal(ocorrencias(TAMANHOS.momento), 3, 'os momentos 1 a 3');
+  assert.equal(ocorrencias(TAMANHOS.celularDoComposto), 1, 'o celular do momento 4');
+  assert.equal(ocorrencias(TAMANHOS.janela), 1, 'a janela do navegador');
+  // Os arquivos: AVIF de verdade, bem menor que o WebP do dobro, e com a MESMA proporção do WebP e da largura/altura declaradas (nada esticado nem achatado).
+  for (const [id, captura] of Object.entries(CAPTURAS)) {
+    assert.deepEqual(captura.avif.map((a) => a.largura), captura.plataforma === 'web' ? [440, 640, 880] : [320, 480, 640], id);
+    const proporcao = captura.altura / captura.largura;
+    for (const arquivo of captura.avif) {
+      const dados = readFileSync(join(raiz, 'public', arquivo.src));
+      assert.equal(dados.subarray(4, 12).toString('latin1'), 'ftypavif', `${id}: ${arquivo.src} é AVIF`);
+      const meta = await sharp(dados).metadata();
+      assert.equal(meta.width, arquivo.largura, arquivo.src);
+      assert.ok(Math.abs(meta.height / meta.width - proporcao) / proporcao < 0.005, `${id} ${arquivo.largura}w: ${meta.width}x${meta.height} não tem a proporção declarada (${captura.largura}x${captura.altura})`);
+    }
+    for (const [src, largura] of [[captura.src1x, captura.largura], [captura.src2x, captura.largura * 2]]) {
+      const meta = await sharp(readFileSync(join(raiz, 'public', src))).metadata();
+      assert.equal(meta.width, largura, src);
+      assert.ok(Math.abs(meta.height / meta.width - proporcao) / proporcao < 0.005, `${id} WebP ${largura}: ${meta.width}x${meta.height}`);
+    }
+    const bytesAvif = readFileSync(join(raiz, 'public', captura.avif[1].src)).length;
+    const bytesWebp = readFileSync(join(raiz, 'public', captura.src2x)).length;
+    assert.ok(bytesAvif <= bytesWebp * 0.65, `${id}: o AVIF de ${captura.avif[1].largura}w (${bytesAvif} B) não é bem menor que o WebP 2x (${bytesWebp} B)`);
+  }
+  // O momento 1 (1080×2400, 20:9) entra com a proporção que tem: a tela da moldura a encaixa inteira, sem esticar (object-fit: contain) e sem recorte.
+  const m1 = CAPTURAS['momento-1'];
+  assert.ok(Math.abs(m1.altura / m1.largura - 2400 / 1080) / (2400 / 1080) < 0.002, `momento 1: ${m1.largura}x${m1.altura}`);
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}/, 'a captura é encaixada inteira, nunca esticada (object-fit: fill esticava a do momento 1)');
+  assert.doesNotMatch(css, /object-fit: (fill|cover)/);
+  assert.match(css, /\.cn-celular__tela picture, \.cn-janela__tela picture \{ display: contents; \}/);
+  // O roteiro que gera as imagens: a largura manda e a altura acompanha (nada de esticar para a proporção da plataforma).
+  const roteiro = ler('scripts/otimizar-capturas-landing.mjs');
+  assert.match(roteiro, /const alturaPara = \(largura\) => Math\.round\(largura \* proporcao\);/);
+  assert.doesNotMatch(roteiro, /Math\.round\(largura \/ razao\)/, 'a altura não vem mais da proporção da plataforma');
 });
 
 test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura real da web) ao lado do app, e nenhuma prévia web dentro de moldura de celular', () => {

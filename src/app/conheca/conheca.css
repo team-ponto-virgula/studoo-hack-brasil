@@ -182,7 +182,10 @@
 .cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
 .cn-celular__ilha { position: absolute; z-index: 3; top: 8px; left: 50%; width: 28%; height: 20px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
 .cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 10px; height: 10px; border-radius: 50%; }
-.cn-captura { display: block; width: 100%; height: 100%; object-fit: fill; }
+/* A captura entra INTEIRA e com a proporção que tem (nunca esticada nem achatada): numa tela de outra proporção (o momento 1 é 20:9, 2,5% mais comprido que a moldura) sobra uma faixa fina
+   de cada lado, em branco, que é a cor do fundo do app. O <picture> só escolhe o formato e não cria caixa. */
+.cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
+.cn-celular__tela picture, .cn-janela__tela picture { display: contents; }
 .cn-tela { position: absolute; inset: 0; opacity: 0; }
 .cn-tela[data-ativa] { opacity: 1; z-index: 2; }
 /* A tela que sai fica INTEIRA e por baixo até a nova terminar de entrar por cima dela: nenhum quadro vazio na troca (a soma das opacidades nunca cai abaixo de 1). */
