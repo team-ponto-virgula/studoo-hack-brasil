@@ -35,6 +35,11 @@ const VALIDADE_EFEITO_MS = 80;
 
 type OuvinteEstado = (estado: EstadoSomSnapshot) => void;
 
+// O endereço cobre a primeira carga; a marca cobre a apresentação servida na raiz.
+function paginaSemMusicaNoDocumento(): boolean {
+  return window.location.pathname === '/conheca' || document.querySelector('[data-sem-musica]') !== null;
+}
+
 class TocaSonsWeb {
   private estado = new MaquinaEstadoSom();
   private ctx: AudioContext | null = null;
@@ -126,6 +131,7 @@ class TocaSonsWeb {
     if (this.gestosRegistrados || typeof window === 'undefined') return;
     this.gestosRegistrados = true;
     const desbloquear = () => {
+      if (!this.estado.areaPermitida || paginaSemMusicaNoDocumento()) return;
       const eraBloqueado = !this.desbloqueado;
       this.desbloqueado = true;
       const ctx = this.garantirContexto();
@@ -302,7 +308,14 @@ class TocaSonsWeb {
     }
   }
 
+  definirAreaPermitida(permitida: boolean): void {
+    if (this.estado.areaPermitida === permitida) return;
+    this.estado.definirAreaPermitida(permitida);
+    void this.atualizarEstadoFundo();
+  }
+
   prepararFundo(): void {
+    if (!this.estado.areaPermitida || paginaSemMusicaNoDocumento()) return;
     if (this.lerPreferencias().fundo !== 'mudo' && document.visibilityState === 'visible') {
       void this.carregarBuffer(arquivoSonoro('fundos', lofi.arquivo), TIMEOUT_CARREGAMENTO_MS);
     }
@@ -398,7 +411,7 @@ class TocaSonsWeb {
         const decorrido = this.ctx.currentTime - this.origemTemporalFundo - fonte.loopStart;
         this.retomarEm = fonte.loopStart + Math.max(0, decorrido) % (fonte.loopEnd - fonte.loopStart);
       }
-      const imediato = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano;
+      const imediato = !this.estado.areaPermitida || !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano;
       this.pararComRampa(imediato ? 0 : 400);
       this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
       this.notificar();
@@ -416,6 +429,8 @@ class TocaSonsWeb {
       }
     }
 
+    // A tela pode ter mudado enquanto o navegador retomava o contexto de áudio.
+    if (!this.estado.areaPermitida) return;
     const alvoGanho = () => def.volume * (this.estado.estadoFundo() === 'atenuado' ? 0.2 : this.folhaAberta ? 0.6 : 1);
 
     if (this.fonteFundo && this.fundoTocandoId === id) {

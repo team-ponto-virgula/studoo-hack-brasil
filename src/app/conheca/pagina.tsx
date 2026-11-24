@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
 import { Mascote } from '../../ui/mascote';
-import { BotaoSom } from '../som';
+import { SemMusica } from './ilhas/sem-musica';
 import { detectarAparelho, type Aparelho } from './aparelho';
 import { CartaoQr } from './cartao-qr';
 import { Celular, CapturaDaTela, JanelaDoNavegador, TAMANHOS } from './celular';
@@ -69,7 +69,8 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
   const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo /> : null;
 
   return (
-    <div className="cn-pagina" data-na-raiz={naRaiz || undefined} data-fundo-so-no-gesto="">
+    <div className="cn-pagina" data-na-raiz={naRaiz || undefined} data-sem-musica="">
+      <SemMusica />
       <a className="pular" href="#conteudo">{textos.pular}</a>
       <header className="cn-cabecalho">
         <LogoDaPagina />
@@ -80,7 +81,6 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
           <a href="#baixar">Instalar</a>
         </nav>
         <div className="cn-cabecalho__acoes">
-          <BotaoSom />
           <Link className="botao botao--texto cn-entrar" href={entrar.href}>{entrar.rotulo}</Link>
         </div>
       </header>

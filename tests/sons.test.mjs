@@ -183,7 +183,9 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
   const origDoc = globalThis.document;
   const origFetch = globalThis.fetch;
 
+  let apresentacaoNaRaiz = false;
   globalThis.window = {
+    location: { pathname: '/conheca' },
     webkitAudioContext: FakeAudioContext,
     localStorage: { getItem: () => null, setItem() {} },
     addEventListener(tipo, fn) {
@@ -191,6 +193,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
     },
   };
   globalThis.document = {
+    querySelector: seletor => apresentacaoNaRaiz && seletor === '[data-sem-musica]' ? {} : null,
     visibilityState: 'visible',
     addEventListener() {},
   };
@@ -204,6 +207,18 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
     const mod = await import(`../src/app/sons.ts?t=${Date.now()}`);
     const { tocaSons } = mod;
 
+    // Página direta e apresentação na raiz, inclusive antes da hidratação.
+    for (const caminho of ['/conheca', '/']) {
+      window.location.pathname = caminho;
+      apresentacaoNaRaiz = caminho === '/';
+      tocaSons.prepararFundo();
+      for (const evento of ['pointerdown', 'touchend', 'click', 'keydown']) {
+        for (const fn of ouvintesWin.get(evento)) fn();
+      }
+      assert.equal(requisicoes.length, 0, caminho);
+      assert.equal(tocaSons.obterEstado().desbloqueado, false);
+    }
+    apresentacaoNaRaiz = false;
     // Caso 2: sem gesto nenhum, nada é pedido nem enfileirado.
     await tocaSons.tocarEfeito('aviso');
     assert.equal(requisicoes.length, 0, 'sem gesto, nenhuma requisição deve ser feita');
@@ -230,6 +245,14 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
     assert.equal(iniciosFundo, 1, 'a música única iniciou no primeiro gesto');
     assert.equal(paradasFundo, 0, 'acerto e os demais efeitos não interrompem o fundo');
     assert.deepEqual(requisicoes.filter(u => u.includes('/fundos/')), ['/sons/fundos/lofi-estudo.mp3?v=9b1e28811362']);
+    tocaSons.definirAreaPermitida(false);
+    assert.equal(paradasFundo, 1, 'entrar na apresentação interrompe imediatamente a música do app');
+    assert.equal(tocaSons.obterEstado().motivoPausa, 'fora_do_app');
+    for (const fn of ouvintesWin.get('click')) fn();
+    assert.equal(iniciosFundo, 1, 'interagir na apresentação não retoma a faixa');
+    tocaSons.definirAreaPermitida(true);
+    await new Promise(ok => setImmediate(ok));
+    assert.equal(iniciosFundo, 2, 'sair da apresentação retoma a música do app');
     const escopo = tocaSons.sinalDosEfeitos;
     tocaSons.entrarEmGravacaoOuVoz();
     await tocaSons.tocarEfeito('erro');

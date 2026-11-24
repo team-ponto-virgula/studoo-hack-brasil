@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { mensagens } from '../mensagens/pt-BR';
 import { tocaSons } from './sons';
-import { BALAO_DO_NO, CABECALHOS_DO_ALTO, MARCA_DA_TELA, PAGINA_DE_APRESENTACAO, avisoPodeFicar, cabecalhoDoAlto, chaveDaTela, criarEspacoDoAviso, lugarDoAviso, quemDesce, reservaDoAviso, type Retangulo } from './aviso-musica-regras';
+import { BALAO_DO_NO, CABECALHOS_DO_ALTO, MARCA_DA_TELA, cabecalhoDoAlto, chaveDaTela, criarEspacoDoAviso, lugarDoAviso, quemDesce, reservaDoAviso, type Retangulo } from './aviso-musica-regras';
 import '../ui/aviso.css';
 
 const chaveAviso = 'studoo.sons.avisoMusica';
@@ -29,9 +29,6 @@ function soltarEspaco(elemento: HTMLElement) {
 /** A tela de agora: o endereço e a marca `data-tela` do cabeçalho do app. */
 const telaDeAgora = () => chaveDaTela(window.location.pathname, document.querySelector(MARCA_DA_TELA)?.getAttribute('data-tela') ?? null);
 
-/** A página de apresentação está na tela (e não o app): nela o aviso só fica com a página no alto. */
-const naApresentacao = () => document.querySelector(PAGINA_DE_APRESENTACAO) !== null;
-
 /** O layout conserva a fonte de áudio e o aviso durante a navegação, inclusive ao entrar como visitante. */
 export function AmbienteSom() {
   const [visivel, mostrar] = useState(false);
@@ -42,39 +39,17 @@ export function AmbienteSom() {
   /** O espaço que o aviso abriu: fica depois que o aviso sai, até a pessoa trocar de tela. */
   const espaco = useRef(criarEspacoDoAviso<HTMLElement>({ marcar: marcarEspaco, soltar: soltarEspaco, vivo: (elemento) => elemento.isConnected })).current;
   useEffect(() => {
-    // A página de apresentação costuma ser a primeira visita, no celular e com dados móveis: nela a música (cerca de 0,9 MB) só é baixada no primeiro gesto, e não
-    // ao abrir a página. O som já sabe começar do frio: o estado vira "carregando" e a música toca quando chega.
-    if (!naApresentacao()) tocaSons.prepararFundo();
-    /** O aviso aparece de fato (uma vez só): só aí a marca de "já mostrei" vai para o armazenamento local. */
-    let esperando: (() => void) | null = null;
-    function exibir() {
-      esperando?.();
+    tocaSons.prepararFundo();
+    return tocaSons.assinarEstado(estado => {
+      if (estado.motivoPausa === 'fora_do_app' || estado.fundo === 'mudo') { mostrar(false); return; }
+      if (estado.estadoFundo !== 'tocando' || jaMostrou.current) return;
       jaMostrou.current = true;
       try {
         if (localStorage.getItem(chaveAviso) === '1') return;
         localStorage.setItem(chaveAviso, '1');
       } catch { /* O aviso continua aparecendo só uma vez nesta sessão. */ }
       mostrar(true);
-    }
-    /** A música já toca e o aviso espera (primeiro gesto com a página de apresentação rolada): volta quando a página volta ao alto ou quando ela sai (a próxima tela do app). */
-    function tentar() {
-      if (jaMostrou.current || tocaSons.obterEstado().estadoFundo !== 'tocando') return;
-      if (avisoPodeFicar(naApresentacao(), window.scrollY)) exibir();
-    }
-    function esperar() {
-      if (esperando) return;
-      window.addEventListener('scroll', tentar, { passive: true });
-      const mudanca = new MutationObserver(tentar);
-      mudanca.observe(document.body, { childList: true, subtree: true });
-      esperando = () => { window.removeEventListener('scroll', tentar); mudanca.disconnect(); esperando = null; };
-    }
-    const desassinar = tocaSons.assinarEstado(estado => {
-      if (estado.fundo === 'mudo') { mostrar(false); esperando?.(); return; }
-      if (estado.estadoFundo !== 'tocando' || jaMostrou.current) return;
-      if (!avisoPodeFicar(naApresentacao(), window.scrollY)) { esperar(); return; }
-      exibir();
     });
-    return () => { desassinar(); esperando?.(); };
   }, []);
   useEffect(() => {
     if (!visivel || emFoco) return;
@@ -95,8 +70,6 @@ export function AmbienteSom() {
     function posicionar(evento?: Event) {
       const el = aviso.current;
       if (!el) return;
-      // Na página de apresentação o aviso só fica com a página no alto: rolada, ele cobriria os botões que passam por baixo (some; o espaço que abriu fica até a troca de tela).
-      if (!avisoPodeFicar(naApresentacao(), scrollY)) { mostrar(false); return; }
       // Se a pessoa toca num nó e o balão abre com o aviso à vista, o aviso fecha na hora, sem animação (spec 16, item 14).
       if (document.querySelector(BALAO_DO_NO)) { mostrar(false); return; }
       const elementos = [...document.querySelectorAll<HTMLElement>(CABECALHOS_DO_ALTO)];

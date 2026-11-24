@@ -206,9 +206,9 @@ const base = { aparelho: 'android', links: { apk: APK_PADRAO, testflight: null }
 
 test('servida na raiz, a página leva a marca que o CSS usa para sumir no app instalado e a ilha que o leva ao login; em /conheca, não', () => {
   const naRaiz = renderToStaticMarkup(createElement(PaginaVista, { ...base, naRaiz: true }));
-  assert.match(naRaiz, /<div class="cn-pagina" data-na-raiz="true" data-fundo-so-no-gesto="">/);
+  assert.match(naRaiz, /<div class="cn-pagina" data-na-raiz="true" data-sem-musica="">/);
   const emConheca = renderToStaticMarkup(createElement(PaginaVista, base));
-  assert.match(emConheca, /<div class="cn-pagina" data-fundo-so-no-gesto="">/);
+  assert.match(emConheca, /<div class="cn-pagina" data-sem-musica="">/);
   assert.ok(!/data-na-raiz/.test(emConheca));
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /@media \(display-mode: standalone\) \{ \.cn-pagina\[data-na-raiz\] \{ visibility: hidden; \} \}/);

@@ -648,28 +648,22 @@ test('rodapé e metadados: logo, a linha do HackBrasil e os três links; o títu
   assert.match(ler('src/app/layout.tsx'), /robots: \{ index: false, follow: false \}/);
 });
 
-test('sem selos de loja, sem framer-motion, GSAP nem Lottie, e o cabeçalho entra na lista do aviso da música', () => {
+test('sem selos de loja, sem framer-motion, GSAP nem Lottie', () => {
   const arquivos = (pasta) => readdirSync(join(raiz, pasta), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? arquivos(join(pasta, e.name)) : [join(pasta, e.name)]));
   const fontes = arquivos('src/app/conheca').filter((f) => /\.(tsx?|css)$/.test(f)).map((f) => [f, ler(f)]);
   for (const [arquivo, conteudo] of fontes) {
     assert.doesNotMatch(conteudo, /framer-motion|gsap|lottie/i, arquivo);
     assert.doesNotMatch(conteudo, /app-store|play\.google|apple\.com\/app|badge|Download on the App Store|GET IT ON/i, `${arquivo}: sem selos oficiais de loja`);
   }
-  assert.match(ler('src/app/aviso-musica-regras.ts'), /export const CABECALHOS_DO_ALTO = '[^']*\.cn-cabecalho'/);
   assert.match(ler('src/proxy.ts'), /"\/conheca"/, 'a política de segurança vale para a página');
 });
 
-test('a música de fundo (cerca de 0,9 MB) não é baixada ao abrir a página: só no primeiro gesto; no resto do app continua preparada como antes', () => {
-  const html = desenhar({ aparelho: 'android' });
-  assert.match(html, /<div class="cn-pagina"[^>]* data-fundo-so-no-gesto=""/);
-  const som = ler('src/app/ambiente-som.tsx');
-  assert.match(som, /if \(!naApresentacao\(\)\) tocaSons\.prepararFundo\(\);/);
-  assert.match(som, /const naApresentacao = \(\) => document\.querySelector\(PAGINA_DE_APRESENTACAO\) !== null;/);
-  assert.equal((som.match(/prepararFundo\(\)/g) ?? []).length, 1, 'uma única chamada, a protegida');
-  // O som já começa do frio no primeiro gesto (mostra "carregando" e toca quando chega): a rotina que o gesto dispara carrega o arquivo se faltar.
-  const sons = ler('src/app/sons.ts');
-  assert.match(sons, /if \(!this\.cacheBuffers\.has\(arquivoSonoro\('fundos', def\.arquivo\)\)\) \{\n      this\.estadoFundo = 'carregando';/);
-  assert.match(sons, /const buf = await this\.carregarBuffer\(arquivoSonoro\('fundos', def\.arquivo\), TIMEOUT_CARREGAMENTO_MS\);/);
+test('a apresentação é silenciosa em qualquer aparelho e só oferece o controle de som no app', () => {
+  for (const aparelho of ['android', 'iphone', 'ipad', 'computador']) {
+    const html = desenhar({ aparelho });
+    assert.match(html, /<div class="cn-pagina"[^>]* data-sem-musica=""/);
+    assert.doesNotMatch(html, /class="aula-som"|Música de fundo ligada/);
+  }
 });
 
 test('a página não importa o banco ao carregar (o módulo do visitante abre o cliente do banco): só na hora do pedido; por isso a suíte roda sem DATABASE_URL', () => {

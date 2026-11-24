@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { BALAO_DO_NO, CABECALHOS_DO_ALTO, PAGINA_DE_APRESENTACAO, RESPIRO_DO_AVISO, TOPO_DA_PAGINA, avisoPodeFicar, cabecalhoDoAlto, lugarDoAviso } from '../src/app/aviso-musica-regras.ts';
+import { BALAO_DO_NO, CABECALHOS_DO_ALTO, RESPIRO_DO_AVISO, cabecalhoDoAlto, lugarDoAviso } from '../src/app/aviso-musica-regras.ts';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
@@ -32,14 +32,14 @@ test('o aviso fica 8 px abaixo do cabeçalho mais baixo que está à vista no al
   assert.equal(lugarDoAviso(retangulo(0, 52, 100, 700), 1280).left, '450px', 'centrado no cabeçalho');
 });
 
-test('os cabeçalhos que o aviso respeita são os das telas do app (entrada, app, mapa, aula, tour e geração) e o da página de apresentação', () => {
-  for (const classe of ['.som-marca', '.recuperar-topo', '.estudo-cabecalho', '.trilha-topo', '.aula-topo', '.apresentacao-topo', '.previa-cabecalho', '.previa-placa', '.cn-cabecalho']) {
+test('os cabeçalhos que o aviso respeita são os das telas do app (entrada, app, mapa, aula, tour e geração)', () => {
+  for (const classe of ['.som-marca', '.recuperar-topo', '.estudo-cabecalho', '.trilha-topo', '.aula-topo', '.apresentacao-topo', '.previa-cabecalho', '.previa-placa']) {
     assert.ok(CABECALHOS_DO_ALTO.split(', ').includes(classe), classe);
   }
   assert.equal(BALAO_DO_NO, '.caminho-balao');
   // Cada classe existe de verdade na tela que ela nomeia.
   for (const [arquivo, classe] of [['src/app/login/entrada.tsx', 'som-marca'], ['src/app/cadastro/cadastro.tsx', 'recuperar-topo'], ['src/app/estudo.tsx', 'estudo-cabecalho'], ['src/app/estudo.tsx', 'trilha-topo'],
-    ['src/app/aula.tsx', 'aula-topo'], ['src/app/apresentacao.tsx', 'apresentacao-topo'], ['src/app/previa-trilha.tsx', 'previa-cabecalho'], ['src/app/previa-trilha.tsx', 'previa-placa'], ['src/app/conheca/pagina.tsx', 'cn-cabecalho']]) {
+    ['src/app/aula.tsx', 'aula-topo'], ['src/app/apresentacao.tsx', 'apresentacao-topo'], ['src/app/previa-trilha.tsx', 'previa-cabecalho'], ['src/app/previa-trilha.tsx', 'previa-placa']]) {
     assert.match(ler(arquivo), new RegExp(`className="${classe}[" ]`), `${classe} em ${arquivo}`);
   }
   assert.match(ler('src/ui/caminho.tsx'), /caminho-balao/, 'o balão do nó existe');
@@ -68,27 +68,11 @@ test('o CSS: o aviso é do alto; o contêiner não recebe toque e só o botão "
   assert.doesNotMatch(css, /\.aviso-musica \{ bottom: max\(/, 'a posição no pé da tela saiu');
 });
 
-test('na página de apresentação o aviso só fica com a página no alto (rolada, cobriria os botões); no app vale a regra de sempre (spec 18, seção 10)', () => {
-  assert.equal(PAGINA_DE_APRESENTACAO, '[data-fundo-so-no-gesto]');
-  assert.equal(avisoPodeFicar(true, 0), true);
-  assert.equal(avisoPodeFicar(true, TOPO_DA_PAGINA - 1), true);
-  assert.equal(avisoPodeFicar(true, TOPO_DA_PAGINA), false);
-  assert.equal(avisoPodeFicar(true, 900), false);
-  for (const rolagem of [0, TOPO_DA_PAGINA, 900]) assert.equal(avisoPodeFicar(false, rolagem), true, `no app, rolado ${rolagem}`);
-});
-
-test('o componente: com o primeiro gesto rolado a música toca e o aviso espera a volta ao alto ou a saída da página; o "já mostrei" só vale quando ele aparece', () => {
+test('o aviso só é consumido quando a música já toca fora da apresentação', () => {
   const fonte = ler('src/app/ambiente-som.tsx');
-  // Rolada, ao tocar a música: espera (não marca nada).
-  assert.match(fonte, /if \(!avisoPodeFicar\(naApresentacao\(\), window\.scrollY\)\) \{ esperar\(\); return; \}/);
-  // A espera: a rolagem (a volta ao alto) e a mudança do DOM (a página sai, vem a próxima tela do app); some quando o aviso aparece ou a música é desligada.
-  assert.match(fonte, /window\.addEventListener\('scroll', tentar, \{ passive: true \}\);\n      const mudanca = new MutationObserver\(tentar\);/);
-  assert.match(fonte, /if \(estado\.fundo === 'mudo'\) \{ mostrar\(false\); esperando\?\.\(\); return; \}/);
-  assert.match(fonte, /function exibir\(\) \{\n      esperando\?\.\(\);\n      jaMostrou\.current = true;/);
-  // Com o aviso à vista e a página rolando para baixo, ele sai (o espaço que abriu fica, como sempre).
-  assert.match(fonte, /if \(!avisoPodeFicar\(naApresentacao\(\), scrollY\)\) \{ mostrar\(false\); return; \}/);
-  // A marca "já mostrei" do armazenamento local só é gravada dentro de `exibir` (nunca na espera).
-  assert.equal((fonte.match(/localStorage\.setItem\(chaveAviso/g) ?? []).length, 1);
-  assert.ok(fonte.indexOf("localStorage.setItem(chaveAviso") > fonte.indexOf('function exibir()'));
-  assert.ok(fonte.indexOf("localStorage.setItem(chaveAviso") < fonte.indexOf('function tentar()'));
+  const silencio = fonte.indexOf("if (estado.motivoPausa === 'fora_do_app' || estado.fundo === 'mudo') { mostrar(false); return; }");
+  const tocando = fonte.indexOf("if (estado.estadoFundo !== 'tocando' || jaMostrou.current) return;");
+  const marcar = fonte.indexOf('jaMostrou.current = true;');
+  assert.ok(silencio >= 0 && silencio < tocando && tocando < marcar);
+  assert.ok(fonte.indexOf("localStorage.setItem(chaveAviso") > marcar);
 });
