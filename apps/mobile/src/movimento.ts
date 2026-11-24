@@ -40,3 +40,11 @@ function assinar(ouvinte: () => void) {
 export function useMovimentoReduzido() {
   return useSyncExternalStore(assinar, () => !visivel ? true : preferencia, () => true);
 }
+
+/** Preferência real, sem confundir o boot/segundo plano com uma escolha de acessibilidade.
+ * A abertura decide o seu próprio ciclo de foreground; as animações decorativas
+ * continuam usando useMovimentoReduzido e pausando quando o app não está ativo.
+ */
+export function usePreferenciaMovimentoReduzido() {
+  return useSyncExternalStore(assinar, () => preferencia, () => null);
+}

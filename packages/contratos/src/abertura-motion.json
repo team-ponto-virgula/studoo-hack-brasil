@@ -1,5 +1,5 @@
 {
-  "versao": 2,
+  "versao": 3,
   "direcao": "Óculos em foco",
   "largura": 210,
   "fundo": "#FFFFFF",
@@ -9,6 +9,8 @@
   "margemQuadroMs": 48,
   "saidaMs": 160,
   "limiteMs": 1400,
+  "limitePreparacaoMs": 2000,
+  "limiteNativoMs": 5000,
   "curva": [0.42, 0, 0.58, 1],
   "fonte": { "largura": 560, "altura": 184, "divisao": 348, "linhaSorriso": 134 },
   "marcos": [0, 0.26, 0.4, 0.56, 0.9, 1],

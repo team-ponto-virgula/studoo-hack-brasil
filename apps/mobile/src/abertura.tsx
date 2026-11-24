@@ -1,4 +1,4 @@
-import { abertura, criarControleAbertura, duracaoDaCoreografia, permiteAbertura, progressoDaCoreografia, type FaseAbertura, type MotivoDaAbertura } from '@studoo/contratos/abertura';
+import { abertura, criarControleAbertura, criarJanelaVisualAbertura, decidirInicioAbertura, dispensarAberturaPorContexto, duracaoDaCoreografia, permiteAbertura, progressoDaCoreografia, type EstadoAppAbertura, type FaseAbertura, type MotivoDaAbertura } from '@studoo/contratos/abertura';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { useGlobalSearchParams, usePathname } from 'expo-router';
 import { isRunningInExpoGo } from 'expo';
@@ -7,14 +7,16 @@ import {
   AccessibilityInfo, Animated, AppState, BackHandler, Easing, Image, Platform, StyleSheet, View,
   type GestureResponderEvent, type ViewStyle,
 } from 'react-native';
-import { useMovimentoReduzido } from './movimento';
+import { usePreferenciaMovimentoReduzido } from './movimento';
 import { cores } from './tema';
 
 const agoraMonotono = typeof performance !== 'undefined' && typeof performance.now === 'function'
   ? performance.now.bind(performance) : Date.now;
-const inicioDaAbertura = agoraMonotono();
-const prazoDaAbertura = inicioDaAbertura + abertura.limiteMs;
-const tempoRestanteDaAbertura = () => Math.max(0, prazoDaAbertura - agoraMonotono());
+function estadoDoApp(estado: string | null | undefined): EstadoAppAbertura {
+  if (estado == null) return null;
+  if (estado === 'active' || estado === 'inactive' || estado === 'background' || estado === 'extension') return estado;
+  return 'unknown';
+}
 
 // A identidade visual já existe antes das fontes. Expo Go usa a própria launch screen;
 // a composição nativa abaixo depende de um novo build com o plugin configurado.
@@ -43,7 +45,7 @@ if (Platform.OS !== 'web') {
     try { SplashScreen.setOptions({ fade: false, duration: 0 }); } catch { /* O fallback visual continua disponível. */ }
   }
   // Proteção também se a raiz falhar antes de instalar seus efeitos.
-  segurancaNativa = setTimeout(ocultarSplashNativo, tempoRestanteDaAbertura());
+  segurancaNativa = setTimeout(ocultarSplashNativo, abertura.limiteNativoMs);
 }
 
 let aberturaConsumida = false;
@@ -66,21 +68,33 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
   const consultaWeb = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.search : consulta;
   const permitida = permiteAbertura(caminho, consultaWeb, fragmento);
   // Só lê no render. O mesmo mount do StrictMode conserva esta decisão nos dois setups de efeito.
-  const [iniciar] = useState(() => !aberturaConsumida && permitida && tempoRestanteDaAbertura() > 0);
+  const [iniciar] = useState(() => !aberturaConsumida && permitida);
   const [fase, setFase] = useState<FaseAbertura>(iniciar ? 'visivel' : 'concluida');
   const [layoutPronto, setLayoutPronto] = useState(false);
   const [imagensProntas, setImagensProntas] = useState(false);
   const partesProntas = useRef(new Set<ParteDaMarca>());
   const [splashLiberado, setSplashLiberado] = useState(splashOculto);
   const controle = useRef<Controle | null>(null);
+  const encerrada = useRef(!iniciar);
+  const preparacao = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const prazoDaPreparacao = useRef<number | null>(null);
+  const janela = useMemo(() => criarJanelaVisualAbertura(agoraMonotono), []);
+  const [janelaAtiva, setJanelaAtiva] = useState(false);
+  const [estadoApp, setEstadoApp] = useState<EstadoAppAbertura>(() => estadoDoApp(AppState.currentState));
+  const jaEsteveAtivo = useRef(AppState.currentState === 'active');
+  const [leitorDeTela, setLeitorDeTela] = useState<boolean | null>(Platform.OS === 'web' ? false : null);
   const conteudo = useRef<ComponentRef<typeof View>>(null);
   const progresso = useRef(new Animated.Value(0)).current;
   const opacidade = useRef(new Animated.Value(1)).current;
-  const movimentoReduzido = useMovimentoReduzido();
+  const movimentoReduzido = usePreferenciaMovimentoReduzido();
   const ativa = fase !== 'concluida';
 
   function pular(motivo: Exclude<MotivoDaAbertura, 'pronto'> = 'interacao') {
-    controle.current?.pular(motivo);
+    if (encerrada.current) return;
+    encerrada.current = true;
+    clearTimeout(preparacao.current);
+    if (controle.current) controle.current.pular(motivo);
+    else setFase('concluida');
   }
 
   function carregouImagem(parte: ParteDaMarca) {
@@ -90,11 +104,16 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
 
   useEffect(() => {
     aberturaConsumida = true;
-    if (!iniciar) return;
-    // A ocultação nativa acontece no efeito de layout/imagem, depois de este estado chegar à árvore visual.
-    const atual = criarControleAbertura((proximaFase) => setFase(proximaFase), undefined, tempoRestanteDaAbertura());
-    controle.current = atual;
-    return () => { atual.destruir(); if (controle.current === atual) controle.current = null; };
+    if (!iniciar || encerrada.current) return;
+    // Preparação limitada, sem gastar a assinatura enquanto o iOS ainda está
+    // inactive/unknown ou responde às consultas nativas de acessibilidade.
+    if (prazoDaPreparacao.current === null) prazoDaPreparacao.current = agoraMonotono() + abertura.limitePreparacaoMs;
+    preparacao.current = setTimeout(() => pular('limite'), Math.max(0, prazoDaPreparacao.current - agoraMonotono()));
+    return () => {
+      clearTimeout(preparacao.current);
+      controle.current?.destruir();
+      controle.current = null;
+    };
   }, [iniciar]);
 
   useEffect(() => {
@@ -110,18 +129,35 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
 
   useEffect(() => {
     if (falha) { pular('falha'); return; }
-    if (movimentoReduzido === true) { pular('preferencia'); return; }
-    if (!pronta || !layoutPronto || !imagensProntas) return;
+    const decisao = decidirInicioAbertura({
+      estadoApp, jaEsteveAtivo: jaEsteveAtivo.current, movimentoReduzido, leitorDeTela,
+      layoutPronto, imagensProntas, splashLiberado,
+    });
+    if (decisao === 'preferencia' || decisao === 'contexto') { pular(decisao); return; }
+    if (decisao !== 'iniciar' || encerrada.current || controle.current) return;
+    clearTimeout(preparacao.current);
+    janela.iniciar();
+    controle.current = criarControleAbertura((proximaFase) => {
+      if (proximaFase === 'concluida') encerrada.current = true;
+      setFase(proximaFase);
+    }, undefined, janela.restante());
+    setJanelaAtiva(true);
+  }, [falha, estadoApp, movimentoReduzido, leitorDeTela, layoutPronto, imagensProntas, splashLiberado, janela]);
+
+  useEffect(() => {
+    // Preferência desconhecida nunca é convertida em pronto(false), que
+    // encerrava o controlador antes de o iOS responder reduceMotion=false.
+    if (!janelaAtiva || !pronta || encerrada.current) return;
     let segundaMoldura: number | undefined;
     // A prontidão local é independente da coreografia; o controlador junta os dois sinais sem esperar a API.
     const primeiraMoldura = requestAnimationFrame(() => {
-      segundaMoldura = requestAnimationFrame(() => controle.current?.pronto(movimentoReduzido === false));
+      segundaMoldura = requestAnimationFrame(() => controle.current?.pronto(true));
     });
     return () => {
       cancelAnimationFrame(primeiraMoldura);
       if (segundaMoldura !== undefined) cancelAnimationFrame(segundaMoldura);
     };
-  }, [pronta, falha, layoutPronto, imagensProntas, movimentoReduzido]);
+  }, [pronta, janelaAtiva]);
 
   useEffect(() => {
     if (!ativa) return;
@@ -129,31 +165,39 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
     // O navegador não informa leitor de tela; o RN Web retorna true fixo nessa API.
     if (Platform.OS !== 'web') {
       void AccessibilityInfo.isScreenReaderEnabled().then((ligado) => {
-        if (presente && ligado) pular('preferencia');
+        if (!presente) return;
+        setLeitorDeTela(ligado);
+        if (ligado) pular('preferencia');
       }).catch(() => { if (presente) pular('preferencia'); });
     }
     const leitor = Platform.OS !== 'web'
-      ? AccessibilityInfo.addEventListener('screenReaderChanged', (ligado) => { if (ligado) pular('preferencia'); })
+      ? AccessibilityInfo.addEventListener('screenReaderChanged', (ligado) => { setLeitorDeTela(ligado); if (ligado) pular('preferencia'); })
       : null;
-    const app = AppState.addEventListener('change', (estado) => { if (estado !== 'active') pular('contexto'); });
+    const observarEstado = (estadoNativo: string | null | undefined) => {
+      const estado = estadoDoApp(estadoNativo);
+      if (dispensarAberturaPorContexto(estado, jaEsteveAtivo.current)) pular('contexto');
+      if (estado === 'active') jaEsteveAtivo.current = true;
+      setEstadoApp(estado);
+    };
+    const app = AppState.addEventListener('change', observarEstado);
     const voltar = Platform.OS === 'android' ? BackHandler.addEventListener('hardwareBackPress', () => {
       if (fase !== 'visivel') return false;
       pular(); return true;
     }) : null;
-    if (AppState.currentState && AppState.currentState !== 'active') pular('contexto');
+    observarEstado(AppState.currentState);
     return () => { presente = false; leitor?.remove(); app.remove(); voltar?.remove(); };
   }, [ativa, fase]);
 
   useEffect(() => {
-    if (fase !== 'visivel' || movimentoReduzido !== false || !layoutPronto || !imagensProntas || !splashLiberado) return;
+    if (fase !== 'visivel' || !janelaAtiva) return;
     const atual = controle.current;
     let presente = true;
     let animacao: ReturnType<typeof Animated.timing> | undefined;
     progresso.setValue(0);
     // O easing conserva os trechos em um único timing, sem voltar ao JS a cada marco da coreografia.
     const primeiraMoldura = requestAnimationFrame(() => {
-      if (!presente) return;
-      const duracao = duracaoDaCoreografia(tempoRestanteDaAbertura());
+      if (!presente || encerrada.current) return;
+      const duracao = duracaoDaCoreografia(janela.restante());
       // Decide antes do primeiro movimento: se o saldo não comporta a assinatura, dispensa o PNG inteiro.
       if (duracao === 0) { atual?.pular('limite'); return; }
       animacao = Animated.timing(progresso, {
@@ -169,7 +213,7 @@ export function Abertura({ pronta, falha = false, children }: { pronta: boolean;
       cancelAnimationFrame(primeiraMoldura);
       animacao?.stop();
     };
-  }, [fase, movimentoReduzido, layoutPronto, imagensProntas, splashLiberado, progresso]);
+  }, [fase, janelaAtiva, janela, progresso]);
 
   useEffect(() => {
     if (fase !== 'saindo') return;

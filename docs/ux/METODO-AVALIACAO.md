@@ -1,8 +1,10 @@
 # Método de avaliação de UX do Studoo
 
-Versão 1.2 · 24/11/2026 · escala de 0 a 10 · meta do dono: **mínimo 9,5 por fluxo**, nas superfícies aplicáveis.
+Versão 1.3 · 24/11/2026 · escala de 0 a 10 · meta do dono: **mínimo 9,5 por fluxo**, nas superfícies aplicáveis.
 
 Este método avalia uma tarefa completa, seus estados e suas saídas, não apenas uma captura bonita. **Por instrução expressa do dono em 24/11/2026, F01 é somente a assinatura de abertura no boot dos apps iOS e Android. A intro não existe no site.** React Native Web é prévia complementar do código mobile, não uma implementação da intro para a web. A assinatura não é o tutorial de cinco cenas de `Apresentacao`: o onboarding existente continua como está e recebe somente conferência de regressão adjacente. O método geral continua aplicável aos fluxos web/app do inventário; o inventário não autoriza implementá-los.
+
+**Emenda v3 de cold start — 24/11/2026:** após o relato de que a assinatura não aparece no build 6, o [hotfix de boot](HOTFIX-INTRO-BOOT.md) substitui as regras v2 de origem do prazo e preferência pendente: preparação React até 2000 ms; guarda nativa independente de 5000 ms; janela visual única de 1400 ms iniciada depois do primeiro active, recursos/splash e consultas reais de acessibilidade false. `inactive`/unknown/null iniciais aguardam; ready com preferência desconhecida não chama `pronto(false)`. O ritmo 880+160, a geometria, os dez critérios, pesos e meta 9,5 permanecem. As referências seguintes à contagem desde importação e ao encerramento por preferência desconhecida descrevem a v2 histórica; não aprovam nem governam o hotfix v3. Notas nativas continuam null sem execução identificada.
 
 O [modelo de ficha](FICHA-AVALIACAO.modelo.json) começa sem notas e sem testes declarados como executados. Esta documentação, por si só, não atribui nota à intro, ao app nativo ou ao produto inteiro.
 
