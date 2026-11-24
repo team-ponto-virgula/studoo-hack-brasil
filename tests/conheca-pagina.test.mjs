@@ -276,6 +276,20 @@ test('o link "Pular para o conteúdo" é o primeiro da página e leva ao herói 
   assert.match(html, /<section id="conteudo" class="cn-heroi"/);
 });
 
+test('no domínio próprio a entrada e o assunto vão ao app, inclusive com acentos e símbolos', async () => {
+  const html = desenhar({ origem: 'https://hellostudoo.com.br', dominioProprio: true });
+  assert.ok(html.includes('href="https://app.hellostudoo.com.br/login"'));
+  const { enderecoParaExperimentar, lerContinuacao } = await import('../src/app/conheca/continuacao.ts');
+  const ideia = 'Frações, 100% & razões #2';
+  const destino = new URL(enderecoParaExperimentar(ideia));
+  assert.equal(destino.origin, 'https://app.hellostudoo.com.br');
+  assert.equal(destino.pathname, '/conheca/continuar');
+  assert.equal(destino.search, '');
+  assert.deepEqual(lerContinuacao(destino.hash), { ideia });
+  assert.deepEqual(lerContinuacao(new URL(enderecoParaExperimentar()).hash), { ideia: undefined });
+  assert.equal(lerContinuacao('#assunto=irrelevante'), null);
+});
+
 test('as imagens: largura e altura declaradas, só do site, a primeira do herói com prioridade, as telas 2 e 3 do herói só no laço, as dos momentos só perto da tela, e nunca o stu-oi', () => {
   const html = desenhar({ aparelho: 'android' });
   const imagens = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);

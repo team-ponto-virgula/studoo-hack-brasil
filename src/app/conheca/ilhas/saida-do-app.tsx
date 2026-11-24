@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ehHostDaApresentacao, ORIGEM_APP_STUDOO } from '@/enderecos-publicos';
 
 /**
  * O Studoo instalado na tela de início (PWA em `display: standalone`) abre em "/" e, sem sessão, sempre foi levado à entrada: a página de
@@ -13,7 +14,9 @@ export function SaidaDoApp() {
   useEffect(() => {
     const instalado = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-    if (instalado) roteador.replace('/login');
+    if (!instalado) return;
+    if (ehHostDaApresentacao(window.location.host)) window.location.replace(ORIGEM_APP_STUDOO + '/');
+    else roteador.replace('/login');
   }, [roteador]);
   return null;
 }

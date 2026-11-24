@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { ErroStudoo, LIMITES_GERACAO } from '@studoo/contratos';
+import { ehHostDaApresentacao } from '@/enderecos-publicos';
 import { clienteStudooWeb as cliente } from '../../../contratos/cliente-web';
 import { textoErro } from '../../../mensagens/pt-BR';
 import { textos } from '../textos';
+import { enderecoParaExperimentar } from '../continuacao';
 
 /**
  * A ideia escolhida numa ficha da página vai para o rascunho que o app já lê e apaga ao abrir (`estudo.tsx`): a primeira tela do app abre o campo
@@ -26,6 +28,12 @@ function entrarComoVisitante() {
   return sessaoPendente;
 }
 
+export async function prepararEntrada(ativo: boolean, comSessao: boolean, ideia?: string) {
+  if (!comSessao && ativo) await entrarComoVisitante();
+  guardarIdeia(ideia);
+  return ativo || comSessao ? '/' : '/login';
+}
+
 function useEntrada(ativo: boolean, comSessao: boolean) {
   const roteador = useRouter();
   const [enviando, setEnviando] = useState(false);
@@ -34,13 +42,15 @@ function useEntrada(ativo: boolean, comSessao: boolean) {
 
   async function entrar(ideia?: string) {
     if (emEnvio.current) return;
+    if (ehHostDaApresentacao(window.location.host)) {
+      window.location.assign(enderecoParaExperimentar(ideia));
+      return;
+    }
     emEnvio.current = true;
     setEnviando(true);
     setErro(null);
     try {
-      if (!comSessao && ativo) await entrarComoVisitante();
-      guardarIdeia(ideia);
-      roteador.replace(ativo || comSessao ? '/' : '/login');
+      roteador.replace(await prepararEntrada(ativo, comSessao, ideia));
     } catch (falha) {
       setErro(textoErro(falha instanceof ErroStudoo ? falha.codigo : 'rede'));
       setEnviando(false);

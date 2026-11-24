@@ -93,7 +93,11 @@ test('entrada DESLIGADA (sem a variável, 0, true, vazia, " 1", 2): o proxy tamb
 
 test('o proxy não decide a raiz: não reescreve, não redireciona (um Location relativo vindo dele dá 500 no Next) e não lê o cookie nem a variável da entrada', () => {
   const fonte = ler('src/proxy.ts');
-  assert.doesNotMatch(fonte, /NextResponse\.(rewrite|redirect)\b|status: 30\d|Location/, 'o proxy não reescreve nem redireciona');
+  for (const host of ['hellostudoo.com.br', 'www.hellostudoo.com.br', 'app.hellostudoo.com.br', 'studoo.exemplo.com']) {
+    const resposta = proxy(pedido('/', { host, 'x-forwarded-proto': 'https' }));
+    assert.equal(resposta.headers.get('location'), null);
+    assert.equal(resposta.headers.get('x-middleware-rewrite'), null);
+  }
   assert.doesNotMatch(fonte, /x-studoo-na-raiz|acesso\/raiz|lerCookieSessao|entradaPelaApresentacao|escolherInicio/, 'nada do cabeçalho antigo, nem do cookie, nem da variável da entrada');
   assert.ok(config.matcher.includes('/') && config.matcher.includes('/conheca'), 'continua cobrindo a raiz (o nonce do CSP) e /conheca');
 });
@@ -159,10 +163,38 @@ test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (v
 
 test('a raiz carrega a página de apresentação e o app de forma estática e só decide qual desenha (a "/conheca" continua sem "naRaiz")', () => {
   const fonte = ler('src/app/page.tsx');
-  assert.match(fonte, /escolherInicio\(\(await cookies\(\)\)\.get\(nomeCookieSessao\(\)\)\?\.value, entradaPelaApresentacao\(\)\)/);
   assert.match(fonte, /if \(inicio === 'login'\) redirect\('\/login'\);/);
   assert.match(fonte, /inicio === 'app' \? <Estudo \/> : <PaginaDeApresentacao naRaiz \/>/);
   assert.match(ler('src/app/conheca/page.tsx'), /return <PaginaDeApresentacao \/>;/);
+});
+
+test('a raiz dos domínios públicos encaminha ao produto certo e preserva sessões no endereço antigo', async () => {
+  const anterior = globalThis.__cabecalhos;
+  try {
+    for (const host of ['hellostudoo.com.br', 'www.hellostudoo.com.br', 'HELLOSTUDOO.COM.BR:443']) {
+      globalThis.__cabecalhos = { host };
+      await comEntrada(undefined, async () => {
+        assert.equal((await comCookie({}, () => Pagina.default())).type, PaginaDeApresentacao);
+        assert.equal((await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.default())).type, PaginaDeApresentacao);
+        assert.equal((await Pagina.generateMetadata()).metadataBase.origin, 'https://hellostudoo.com.br');
+      });
+      const login = proxy(pedido('/login?motivo=teste', { host }));
+      assert.equal(login.headers.get('location'), 'https://app.hellostudoo.com.br/login?motivo=teste');
+    }
+    globalThis.__cabecalhos = { host: 'app.hellostudoo.com.br' };
+    await comEntrada('1', async () => {
+      await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/login');
+      assert.equal((await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.default())).type, Estudo);
+    });
+    for (const host of ['studoo-web.exemplo.test','hellostudoo.com.br.exemplo.test']) {
+      globalThis.__cabecalhos = { host, 'x-forwarded-host': 'hellostudoo.com.br' };
+      await comEntrada(undefined, async () => {
+        await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/login');
+        assert.equal((await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.default())).type, Estudo);
+      });
+      assert.equal(proxy(pedido('/login', { host })).headers.has('location'), false);
+    }
+  } finally { globalThis.__cabecalhos = anterior; }
 });
 
 test('o cookie conta só no formato da sessão (o mesmo da API e da página): vazio, curto, longo ou com caracteres de fora não é sessão', () => {

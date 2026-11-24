@@ -1,7 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { ehHostDaApresentacao, ORIGEM_APP_STUDOO } from "@/enderecos-publicos";
 import { origemStudoo } from "@/servidor/acesso/origem";
 
 export function proxy(request: NextRequest) {
+  // Um link de login, recuperação ou trilha aberto no domínio da landing pertence ao app.
+  const caminho = request.nextUrl.pathname;
+  if (ehHostDaApresentacao(request.headers.get('host')) && /^\/(?:login|cadastro|recuperar|equipe|t|p|explorar)(?:\/|$)/.test(caminho)) {
+    const destino = new URL(ORIGEM_APP_STUDOO);
+    destino.pathname = caminho;
+    destino.search = request.nextUrl.search;
+    return NextResponse.redirect(destino);
+  }
   // A raiz "/" não é mais redirecionada nem reescrita aqui: quem não tem sessão vê a página de apresentação e quem tem vê o app, e quem decide é a própria página (src/app/page.tsx),
   // pelo cookie, no servidor. Uma reescrita no proxy dependia da URL que o Next monta atrás de um proxy HTTPS (o Traefik do Dokploy manda X-Forwarded-Proto) e podia virar 500.
 

@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
+import { ehHostDaApresentacao, ORIGEM_APRESENTACAO, ORIGEM_APP_STUDOO } from '@/enderecos-publicos';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
 import { Mascote } from '../../ui/mascote';
 import { SemMusica } from './ilhas/sem-musica';
@@ -48,6 +49,8 @@ export interface ContextoDaPagina {
   links: LinksDoSite;
   /** A origem pública (https, nunca local) para o QR; null = sem QR. */
   origem: string | null;
+  /** No domínio de apresentação, o login e a sessão ficam no subdomínio do app. */
+  dominioProprio?: boolean;
   /** A pessoa já tem sessão (o "Entrar" vira "Abrir o Studoo"). */
   comSessao: boolean;
   /** O servidor liga o modo visitante. */
@@ -59,11 +62,12 @@ export interface ContextoDaPagina {
 }
 
 /** A página já com tudo decidido: pura, sem ler o pedido (por isso se testa com `renderToStaticMarkup`). */
-export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naRaiz = false, podeSerIpad = false }: ContextoDaPagina) {
+export function PaginaVista({ aparelho, links, origem, dominioProprio = false, comSessao, visitante, naRaiz = false, podeSerIpad = false }: ContextoDaPagina) {
   const tamanho = tamanhoDoApk(links);
   const svg = origem && aparelho === 'computador' ? svgDoQr(`${origem}/baixar`) : null;
   const dados = { aparelho, apk: links.apk, testflight: links.testflight, tamanho, visitanteAtivo: visitante, comSessao };
-  const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: '/' } : { rotulo: textos.cabecalho.entrar, href: '/login' };
+  const baseDoApp = dominioProprio ? ORIGEM_APP_STUDOO : '';
+  const entrar = comSessao ? { rotulo: textos.cabecalho.abrir, href: baseDoApp + '/' } : { rotulo: textos.cabecalho.entrar, href: baseDoApp + '/login' };
   const telasDoCelular = telasDoHeroi(aparelho);
   const qrDoS4 = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4" /> : null;
   const qrDoS4Iphone = svg ? <CartaoQr svg={svg} apk={links.apk} tamanho={tamanho} idBase="cn-qr-s4-iphone" semArquivo /> : null;
@@ -198,6 +202,7 @@ export async function PaginaDeApresentacao({ naRaiz = false }: { naRaiz?: boolea
   const cabecalhos = await headers();
   const biscoitos = await cookies();
   const agente = cabecalhos.get('user-agent') ?? '';
+  const dominioProprio = ehHostDaApresentacao(cabecalhos.get('host'));
   // O módulo do visitante abre o cliente do banco ao ser importado: aqui, só na hora do pedido, a página (e o teste dela) não depende do banco.
   const { visitanteAtivo } = await import('@/servidor/acesso/visitante');
   return (
@@ -205,8 +210,9 @@ export async function PaginaDeApresentacao({ naRaiz = false }: { naRaiz?: boolea
       aparelho={detectarAparelho(agente)}
       podeSerIpad={/Macintosh/.test(agente)}
       links={linksDoSite()}
-      origem={origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
-      comSessao={temCookieDeSessao(biscoitos.get(nomeCookieSessao())?.value)}
+      dominioProprio={dominioProprio}
+      origem={dominioProprio ? ORIGEM_APRESENTACAO : origemPublica({ protocolo: cabecalhos.get('x-forwarded-proto'), host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host') })}
+      comSessao={!dominioProprio && temCookieDeSessao(biscoitos.get(nomeCookieSessao())?.value)}
       visitante={visitanteAtivo()}
       naRaiz={naRaiz}
     />
