@@ -19,6 +19,24 @@
       return !!document.querySelector('.screen[data-page="foto"]');
     }
 
+    function photoFocusIsLost() {
+      const active = document.activeElement;
+      return !active || active === document.body || active === document.documentElement || active.id === 'media-photo-file';
+    }
+
+    function renderPhotoFileResult(token) {
+      if (token !== photoLoadToken || !editingPhoto || !photoVisible()) return;
+      const recoverFocus = photoFocusIsLost();
+      api.render(false);
+      // Replacing the hidden file input must not send the next Tab to the header.
+      // Keep a focus restored by the renderer, or a control chosen during decoding.
+      if (!recoverFocus || token !== photoLoadToken || !editingPhoto || !photoVisible() || !photoFocusIsLost() || !document.hasFocus()) return;
+      const chooser = document.querySelector('[data-action="media-photo-choose"]:not(:disabled)');
+      const zoom = document.getElementById('media-photo-zoom');
+      const target = chooser || (zoom && !zoom.disabled ? zoom : null);
+      target?.focus({ preventScroll: true });
+    }
+
     function beginPhoto() {
       const state = api.getState();
       const draft = state.profileDraft || {};
@@ -199,20 +217,21 @@
     }
 
     async function readPhotoFile(event) {
-      if (event.target.id !== 'media-photo-file') return;
+      if (event.target.id !== 'media-photo-file' || !editingPhoto || !photoVisible()) return;
       const file = event.target.files && event.target.files[0];
       if (!file) return;
+      const token = ++photoLoadToken;
+      photoLoading = false;
       if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
         photoError = 'Escolha uma imagem PNG, JPEG ou WebP.';
-        api.render(false);
+        renderPhotoFileResult(token);
         return;
       }
       if (file.size > 2 * 1024 * 1024) {
         photoError = 'Use uma imagem de até 2 MB nesta proposta.';
-        api.render(false);
+        renderPhotoFileResult(token);
         return;
       }
-      const token = ++photoLoadToken;
       photoLoading = true;
       photoError = '';
       api.render(false);
@@ -230,13 +249,13 @@
         draftPhoto = data;
         draftZoom = 1;
         photoLoading = false;
-        api.render(false);
+        renderPhotoFileResult(token);
         api.notify('Imagem pronta para conferir o enquadramento.');
       } catch (_) {
         if (token !== photoLoadToken || !photoVisible()) return;
         photoLoading = false;
         photoError = 'Não foi possível abrir essa imagem. Tente outro arquivo.';
-        api.render(false);
+        renderPhotoFileResult(token);
       }
     }
 

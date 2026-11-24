@@ -40,3 +40,5 @@ body[data-direction=jornada] .map-node:has(+.route-section)::after{display:none}
 .lead,.flow-description{overflow-wrap:anywhere}
 body[data-direction=caderno] .screen[data-page=conclusao] .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,6rem),1fr))}
 .completion-next>div{min-width:0;overflow-wrap:anywhere}
+.note{min-width:0;max-width:100%}
+.note>span{min-width:0;overflow-wrap:anywhere;flex:1}

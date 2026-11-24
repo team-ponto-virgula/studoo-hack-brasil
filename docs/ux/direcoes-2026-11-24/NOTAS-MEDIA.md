@@ -27,3 +27,13 @@ Carregar `vendor/qrcode.js` e `media-pages.js` antes do `app.js`, e `media-pages
 O harness em `/workspace/work/revisao-media-r2/` verificou **67/67 casos**, com zero exceções: 12 vistas (duas páginas × três direções × duas larguras), CTA e alvos, overflow, seis vistas de texto a 200%, zoom por range e teclado, seleção/erro/tamanho/leitura de imagem, cancelamento sem alteração, confirmação em rascunho, contrato de aplicar o rascunho ao salvar, QR decodificado por `jsQR` 1.4.0 e fallback de cópia/diálogo/foco. A rasterização do SVG em 330×330 decodificou a URL exata acima.
 
 Essa prova é da **factory isolada com helpers do contrato**, não da integração final do renderer. O `save-profile` do harness é um stub explícito para verificar o contrato dos campos; o salvamento integrado deve ser conferido novamente na R2. Não houve execução de câmera, leitor de tela, iPhone/Android, escaneamento por aparelho ou avaliação com pessoas. Nenhuma nota 9 é atribuída por este documento.
+
+## Correção R4 — foco após seleção de imagem (K4)
+
+A revisão integrada da candidata R3 `902eca4e3a8e8ac374d79972677a1ed3edc83859` encontrou o foco em `BODY` depois de carregar uma fixture WebP em 6/6 pares de tema/largura. O próximo Tab voltava ao cabeçalho. Esse achado D6 não estava coberto pelos 67 checks isolados anteriores; a medição histórica foi preservada.
+
+O resultado de `readPhotoFile` agora restitui foco ao seletor de imagem somente quando o editor segue aberto, o token da leitura continua atual e o foco já estava perdido em `BODY`/raiz/input oculto antes do render e continua perdido depois dele. Não substitui um controle focado pela pessoa, não recupera foco após navegação/cancelamento e não atua com o documento em segundo plano. Sucesso, tipo inválido, tamanho excessivo e erro de decodificação usam a mesma rotina. Nova seleção invalida também uma leitura anterior ainda pendente.
+
+O harness de regressão em `/workspace/work/revisao-media-r4/` passou **145/145 checks**, zero exceções. Desses, **78** tratam o foco e as corridas de leitura: quatro resultados × três temas × duas larguras, sequência de Tab no editor, preservação de outro controle durante decode, cancelamento/navegação e token antigo versus seleção nova. Os 78 fazem parte dos 145, não são um total adicional. O teste usa arquivo próprio por `setInputFiles` e `Image.decode` real, com atraso controlado nos cenários de concorrência; não valida o seletor ou teclado nativo do sistema.
+
+O renderer do harness restaura controles por `id`/`data-action` conforme seu contrato. Portanto, essa prova é de regressão da factory; a confirmação integrada da candidata R4 permanece com a revisão independente do app da bancada.
