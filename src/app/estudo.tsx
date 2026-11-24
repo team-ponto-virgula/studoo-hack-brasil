@@ -51,6 +51,14 @@ import { PostarNoPerfil, usePostarNoPerfil } from './postar-no-perfil';
 import { perfilComLink } from './postar-estado';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
+import {
+  lerFiltroExplorarDaUrl,
+  lerRotaDaUrl,
+  tituloDaTelaWeb,
+  urlDaTelaWeb,
+  type EstadoRotaWeb,
+  type FiltroExplorarUrl,
+} from './navegacao-web';
 import { useAtualizacaoComunidade } from './seguranca-comunidade';
 import { tocaSons } from './sons';
 import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
@@ -104,16 +112,39 @@ function voltarAoTopo() {
   window.requestAnimationFrame(() => window.scrollTo(0, 0));
 }
 
-export function ExplorarComSessao() {
+export function ExplorarComSessao({ filtroInicial }: { filtroInicial?: FiltroExplorarUrl } = {}) {
   const { versao } = useAtualizacaoComunidade();
-  return <Estudo key={versao} abrirNoExplorar />;
+  return <Estudo key={versao} abrirNoExplorar filtroExplorarInicial={filtroInicial} />;
 }
 
-export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean }) {
+function rotaDaTela(tela: Tela, filtroExplorar: FiltroExplorarUrl): EstadoRotaWeb | null {
+  switch (tela.tipo) {
+    case 'planos': return { tipo: 'planos' };
+    case 'objetivo': return { tipo: 'objetivo' };
+    case 'perfil': return { tipo: 'perfil' };
+    case 'explorar': return { tipo: 'explorar', filtro: filtroExplorar };
+    case 'plano': return { tipo: 'plano', planoId: tela.plano.id };
+    case 'configuracoes': return { tipo: 'configuracoes', planoId: tela.planoId };
+    default: return null;
+  }
+}
+
+export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abrirNoExplorar?: boolean; filtroExplorarInicial?: FiltroExplorarUrl }) {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
+  const [filtroExplorar, setFiltroExplorar] = useState<FiltroExplorarUrl>(() =>
+    filtroExplorarInicial ?? (typeof window !== 'undefined' && window.location.pathname === '/explorar'
+      ? lerFiltroExplorarDaUrl(window.location.search)
+      : { aba: 'todos', tema: null, busca: '' }),
+  );
+  const telaRef = useRef(tela);
+  telaRef.current = tela;
+  const filtroExplorarRef = useRef(filtroExplorar);
+  filtroExplorarRef.current = filtroExplorar;
+  const navegandoPorHistorico = useRef(false);
+  const ultimaUrlSincronizada = useRef('');
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
   const [puloVazio, setPuloVazio] = useState(0);
@@ -135,6 +166,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   const [confirmacao, setConfirmacao] = useState<{
     mensagem: string;
     confirmarRotulo: string;
+    cancelarRotulo?: string;
     destrutivo?: boolean;
     aoConfirmar: () => Promise<void>;
   } | null>(null);
@@ -235,6 +267,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         }
       }
       if (abrirNoExplorar && config?.comunidade) {
+        const filtro = filtroExplorarInicial ?? lerFiltroExplorarDaUrl(window.location.search);
+        setFiltroExplorar(filtro);
         setTela({ tipo: 'explorar' });
         setInicio('pronto');
         return;
@@ -251,6 +285,48 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           return;
         } catch {
           // A trilha não existe mais: segue o caminho de sempre.
+        }
+      }
+      // Recarregar a página (F5) ou abrir link interno mantém a tela e os filtros que estão na URL.
+      const rota = lerRotaDaUrl(window.location.pathname, window.location.search);
+      if (rota && !abriuComRascunho.current) {
+        if (rota.tipo === 'explorar' && config?.comunidade) {
+          setFiltroExplorar(rota.filtro);
+          setTela({ tipo: 'explorar' });
+          setInicio('pronto');
+          return;
+        }
+        if (rota.tipo === 'planos' || rota.tipo === 'objetivo' || rota.tipo === 'perfil') {
+          setTela({ tipo: rota.tipo });
+          setInicio('pronto');
+          return;
+        }
+        if (rota.tipo === 'configuracoes') {
+          setTela({ tipo: 'configuracoes', planoId: rota.planoId, volta: 'planos' });
+          setInicio('pronto');
+          return;
+        }
+        if (rota.tipo === 'plano') {
+          try {
+            const plano = await cliente.obterPlano(rota.planoId);
+            if (cancelado()) return;
+            setTela({ tipo: 'plano', plano });
+            setInicio('pronto');
+            return;
+          } catch {
+            // Trilha não existe mais: cai no caminho padrão abaixo.
+          }
+        }
+        if (rota.tipo === 'licao') {
+          try {
+            const [plano, licao] = await Promise.all([cliente.obterPlano(rota.planoId), cliente.obterLicao(rota.licaoId)]);
+            if (cancelado()) return;
+            setTela({ tipo: 'licao', plano, licao });
+            setInicio('pronto');
+            return;
+          } catch {
+            // Lição não existe mais: cai no caminho padrão abaixo.
+          }
         }
       }
       // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
@@ -280,7 +356,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
       setInicio('falha');
     }
-  }, [abrirNoExplorar, irParaLogin, router]);
+  }, [abrirNoExplorar, filtroExplorarInicial, irParaLogin, router]);
 
   const sincronizarAgora = useCallback(async () => {
     if (emExecucao.current || inicio !== 'pronto') return;
@@ -349,6 +425,82 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       window.removeEventListener('pageshow', aoExibir);
     };
   }, [carregar]);
+
+  useEffect(() => {
+    if (inicio !== 'pronto') return;
+    document.title = tituloDaTelaWeb(tela.tipo, {
+      planoTitulo: 'plano' in tela ? tela.plano.titulo : tela.tipo === 'configuracoes' ? planos.find((p) => p.id === tela.planoId)?.titulo : undefined,
+      licaoTitulo: 'licao' in tela ? tela.licao.titulo : undefined,
+      tema: tela.tipo === 'explorar' ? filtroExplorar.tema : null,
+      aba: tela.tipo === 'explorar' ? filtroExplorar.aba : undefined,
+    });
+  }, [inicio, tela, planos, filtroExplorar]);
+
+  useEffect(() => {
+    if (inicio !== 'pronto') return;
+    const rota = rotaDaTela(tela, filtroExplorar);
+    if (!rota) return;
+    const destino = urlDaTelaWeb(rota);
+    const atual = `${window.location.pathname}${window.location.search}`;
+    if (navegandoPorHistorico.current) {
+      navegandoPorHistorico.current = false;
+      ultimaUrlSincronizada.current = atual;
+      return;
+    }
+    if (atual !== destino) {
+      // Na abertura inicial em "/" sem parâmetros, só substitui a URL para não criar um passo extra antes da entrada.
+      if (atual === '/') window.history.replaceState(window.history.state, '', destino);
+      else if (window.location.pathname === '/explorar' && destino.startsWith('/explorar')) window.history.replaceState(window.history.state, '', destino);
+      else window.history.pushState(window.history.state, '', destino);
+    }
+    ultimaUrlSincronizada.current = destino;
+  }, [inicio, tela, filtroExplorar]);
+
+  useEffect(() => {
+    if (inicio !== 'pronto') return;
+    function aoNavegarHistorico(evento: PopStateEvent) {
+      const atual = `${window.location.pathname}${window.location.search}`;
+      // A aula controla o próprio passo de histórico (`studooLicao`) e o desempilha ao concluir; se a URL não mudou,
+      // não derruba a tela atual (como a celebração de `concluida`).
+      if (
+        telaRef.current.tipo === 'licao' ||
+        (evento.state as { studooLicao?: string } | null)?.studooLicao ||
+        (telaRef.current.tipo === 'concluida' && atual === ultimaUrlSincronizada.current)
+      ) {
+        return;
+      }
+      const rota = lerRotaDaUrl(window.location.pathname, window.location.search);
+      if (!rota) return;
+      navegandoPorHistorico.current = true;
+      ultimaUrlSincronizada.current = atual;
+      if (rota.tipo === 'explorar') {
+        if (!comunidade) { navegandoPorHistorico.current = false; return; }
+        setFiltroExplorar(rota.filtro);
+        setTela({ tipo: 'explorar' });
+        return;
+      }
+      if (rota.tipo === 'planos' || rota.tipo === 'objetivo' || rota.tipo === 'perfil') {
+        setTela({ tipo: rota.tipo });
+        return;
+      }
+      if (rota.tipo === 'configuracoes') {
+        setTela({ tipo: 'configuracoes', planoId: rota.planoId, volta: 'planos' });
+        return;
+      }
+      if (rota.tipo === 'plano') {
+        void cliente.obterPlano(rota.planoId)
+          .then((plano) => {
+            if (!montado.current) return;
+            setTela({ tipo: 'plano', plano });
+          })
+          .catch(() => {
+            navegandoPorHistorico.current = false;
+          });
+      }
+    }
+    window.addEventListener('popstate', aoNavegarHistorico);
+    return () => window.removeEventListener('popstate', aoNavegarHistorico);
+  }, [inicio, comunidade]);
 
   useEffect(() => {
     const vaiFocarCampo = tela.tipo === 'objetivo' && (tela.focarCampo || window.innerWidth >= 1024 || Boolean(objetivoRef.current.trim()));
@@ -642,8 +794,9 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
     // Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão.
     origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConfirmacao({
-      mensagem: mensagens.sairPergunta,
+      mensagem: visitante ? mensagens.sairVisitantePergunta : mensagens.sairPergunta,
       confirmarRotulo: mensagens.sair,
+      cancelarRotulo: mensagens.ficar,
       aoConfirmar: async () => {
         const resultado = await executar('sair', () => cliente.logout());
         if (resultado.ok) irParaLogin();
@@ -758,6 +911,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
+              aoDesconectar={() => irParaLogin(true)}
               porLink={compartilhar ? <>
                 <AdicionarPorLink ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPlano={(id) => void abrirPlano(id)} />
                 {comunidade && <button type="button" className="por-link__abrir" disabled={ocupado} onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.irAoExplorar}</button>}
@@ -849,11 +1003,15 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
           )}
           {visivel && tela.tipo === 'explorar' && comunidade && (
-            <Explorar logado aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}
+            <Explorar logado visitante={visitante} aoSair={() => void sair()}
+              temaInicial={filtroExplorar.tema} abaInicial={filtroExplorar.aba} buscaInicial={filtroExplorar.busca}
+              aoMudarFiltro={setFiltroExplorar}
+              aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}
               aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
           )}
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
+              aoDesconectar={() => irParaLogin(true)}
               avaliar={async (resposta, indice) => {
                 const resultado = await executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta, indice));
                 return resultado.ok ? resultado.dados : null;
@@ -863,7 +1021,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               responderSuaVez={(escolha) => responderSuaVez(tela.licao.id, escolha)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
-            <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
+            <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado} visitante={visitante}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })}
               novoAssunto={() => navegar({ tipo: 'objetivo' })}
@@ -889,6 +1047,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         <ConfirmacaoModal
           mensagem={confirmacao.mensagem}
           confirmarRotulo={confirmacao.confirmarRotulo}
+          cancelarRotulo={confirmacao.cancelarRotulo}
           destrutivo={confirmacao.destrutivo}
           ocupado={ocupado}
           aoCancelar={() => {
@@ -1337,13 +1496,14 @@ function Contador({ valor, formatar }: { valor: number; formatar: (valor: number
  * Lição concluída: chuva de confete, o Stu pulando, o resumo da lição (tempo, acerto e etapas), a lição liberada e o
  * progresso do plano, que enche a partir de onde estava. Tela inteira, como a aula.
  */
-function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrirLicao, voltar, novoAssunto, compartilhar }: {
+function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visitante, abrirLicao, voltar, novoAssunto, compartilhar }: {
   plano: PlanoDetalhe;
   antes: Progresso;
   licao: LicaoDetalhe;
   liberadas: string[];
   resumo?: ResumoLicao;
   ocupado: boolean;
+  visitante: boolean;
   abrirLicao: (id: string) => void;
   voltar: () => void;
   novoAssunto: () => void;
@@ -1421,7 +1581,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           </li>
         )}
       </ul>
-      <p className="conclusao-sincronia">{mensagens.licao.historia.sincronia}</p>
+      <p className="conclusao-sincronia">{visitante ? mensagens.licao.historia.sincroniaVisitante : mensagens.licao.historia.sincronia}</p>
       {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
       {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
@@ -1442,9 +1602,10 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
 }
 
 /** Diálogo de confirmação no próprio produto: foco preso, Esc cancela e devolve o foco ao botão de origem. */
-function ConfirmacaoModal({ mensagem, confirmarRotulo, destrutivo = false, ocupado, aoCancelar, aoConfirmar }: {
+function ConfirmacaoModal({ mensagem, confirmarRotulo, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado, aoCancelar, aoConfirmar }: {
   mensagem: string;
   confirmarRotulo: string;
+  cancelarRotulo?: string;
   destrutivo?: boolean;
   ocupado: boolean;
   aoCancelar: () => void;
@@ -1486,7 +1647,7 @@ function ConfirmacaoModal({ mensagem, confirmarRotulo, destrutivo = false, ocupa
         <p id={tituloId} className="modal-mensagem">{mensagem}</p>
         <div className="modal-acoes" ref={acoesRef}>
           <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>
-            {mensagens.geracao.cancelar}
+            {cancelarRotulo}
           </Botao>
           <Botao variante={destrutivo ? 'secundario' : 'primario'} className={destrutivo ? 'modal-confirmar--destrutivo' : undefined} disabled={ocupado} onClick={aoConfirmar}>
             {confirmarRotulo}

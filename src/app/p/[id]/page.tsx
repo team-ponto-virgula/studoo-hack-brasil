@@ -10,7 +10,7 @@ import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { CabecalhoPublico } from '../../perfil';
 import { CartoesPublicos, VoltarDaPagina } from '../../comunidade';
-import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
+import { PaginaPublica, baseDoSite, redeDaPagina, sessaoDaPagina, usuarioDaPagina } from '../../publico';
 
 import { MenuPublicacao, PerfilBloqueado } from '../../seguranca-comunidade';
 import { banco } from '@/servidor/banco/cliente';
@@ -19,9 +19,10 @@ export const dynamic = 'force-dynamic';
 const p = mensagens.perfil;
 
 /** O perfil público, uma leitura por abertura (página e metadados usam o mesmo resultado). */
-const carregar = cache(async (id: string): Promise<{ perfil: PerfilPublico; logado: boolean } | 'inativo' | 'limite' | null> => {
+const carregar = cache(async (id: string): Promise<{ perfil: PerfilPublico; logado: boolean; visitante: boolean } | 'inativo' | 'limite' | null> => {
   if (!compartilharAtivo()) return null;
-  const usuarioId = await usuarioDaPagina();
+  const sessao = await sessaoDaPagina();
+  const usuarioId = sessao?.usuarioId ?? null;
   try {
     await limitarPublico(await redeDaPagina());
   } catch {
@@ -29,7 +30,11 @@ const carregar = cache(async (id: string): Promise<{ perfil: PerfilPublico; loga
   }
   try {
     // Com a comunidade, as trilhas vêm como cartões (e, com sessão, a situação de cada uma).
-    return { perfil: comunidadeAtiva() ? await perfilPublicoComCartoes(id, usuarioId) : await perfilPublico(id, usuarioId), logado: Boolean(usuarioId) };
+    return {
+      perfil: comunidadeAtiva() ? await perfilPublicoComCartoes(id, usuarioId) : await perfilPublico(id, usuarioId),
+      logado: Boolean(usuarioId),
+      visitante: Boolean(sessao?.visitante),
+    };
   } catch (erro) {
     if (erro instanceof FalhaApi && erro.codigo === 'nao_encontrado') return 'inativo';
     throw erro;
@@ -58,6 +63,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
   const resultado = await carregar(id);
   const perfil = resultado && typeof resultado !== 'string' ? resultado.perfil : resultado;
   const logado = Boolean(resultado && typeof resultado !== 'string' && resultado.logado);
+  const visitante = Boolean(resultado && typeof resultado !== 'string' && resultado.visitante);
   if (perfil === null) notFound();
   if (perfil === 'inativo') {
     const quem = await usuarioDaPagina();
@@ -79,7 +85,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
   return (
     <PaginaPublica>
       {logado && <VoltarDaPagina destino={comunidadeAtiva() ? '/explorar' : '/'} />}
-      <CabecalhoPublico perfil={perfil} perfilId={id} logado={logado} />
+      <CabecalhoPublico perfil={perfil} perfilId={id} logado={logado} visitante={visitante} />
       {!perfil.cartoes?.some(t => t.situacao === 'sua') && <div className="seguranca-publica">
         {logado ? <MenuPublicacao tipo="perfil" alvo={id} nome={perfil.nome} titulo={perfil.nome} logado />
           : <Link href={mensagens.seguranca.rotaDenunciaSemSessao('perfil', id)}>{mensagens.comunidade.denunciar}</Link>}</div>}
