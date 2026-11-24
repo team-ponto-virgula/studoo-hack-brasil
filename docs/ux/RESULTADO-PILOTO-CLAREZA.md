@@ -45,7 +45,7 @@ O parecer identificou o rodapé da Proposta com 16 px contra 20 px da web. O aju
 
 O Stu exibido é o asset atual do kit, usado em escala contida. Os originais do novo Stu caderno continuam sendo as [referências de branding](REFERENCIAS-DO-STU.md); esta rodada não redesenhou um substituto nem afirma que essa integração terminou. Referências públicas e inspeção visual não aprovam toda a UX com 9,5. O método mantém pesos e gates, e exige evidência por fluxo/superfície.
 
-A intro é a [versão suave de 1,04 s](RESULTADO-INTRO.md), exclusiva mobile. Sua conferência anterior à integração do piloto está identificada separadamente. O [registro do build 0.1.0 (6)](../beta/BUILD-6-INTRO-CLAREZA.md) identifica fonte, auditoria do IPA e distribuição, sem usar `--latest` nem confundir compilação com disponibilidade.
+A intro é a [versão suave de 1,04 s](RESULTADO-INTRO.md), exclusiva mobile. Sua conferência anterior à integração do piloto está identificada separadamente. O **build 0.1.0 (6)** está disponível no **Studoo Beta Interno**, com `VALID` + `IN_BETA_TESTING` confirmados e leitura independente às 19:26 UTC de 24/11. O [registro de distribuição](../beta/BUILD-6-INTRO-CLAREZA.md) identifica fonte, checksums, auditoria e vínculo real ao grupo; disponibilidade interna não equivale a execução nativa, aprovação global de UX ou revisão externa.
 
 ## Reabrir no Cloud
 
