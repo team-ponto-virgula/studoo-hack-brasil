@@ -1,4 +1,4 @@
-import { TIPOS_TRECHO, encurtarConceito, repararBarrasDoJson, type Recurso, type TipoTrecho } from "@studoo/contratos";
+import { TIPOS_TRECHO, encurtarConceito, repararBarrasDoJson, tirarRotuloDoConceito, type Recurso, type TipoTrecho } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import {
   LIMITES_ESQUELETO,
@@ -258,6 +258,7 @@ export const esquemaDaLicaoDeMatematica = objetoEstrito({
 export const instrucoesDaLicao = [
   "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo. O assunto pode ser qualquer coisa: idioma, música, culinária, história, ciência, esporte, programação.",
   "A lição tem: objetivo (uma frase que começa com um verbo), conceito (é o balão “O Stu explica”: no máximo 3 frases simples e cerca de 50 palavras, com um único conceito novo; na primeira lição da trilha, no máximo 2 frases), exemplo (um caso concreto e resolvido) e 2 ou 3 exercícios com feedback.",
+  "O conceito é só a explicação: não o comece com “O Stu explica:” nem com outro título, porque o app já mostra “O Stu explica” acima do balão.",
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
   "- outroJeito: a mesma ideia central por outro caminho, para quem errou um exercício: uma analogia do dia a dia ou uma regra prática, em 1 a 3 frases, sem repetir o conceito com outras palavras.",
@@ -523,6 +524,8 @@ export type LicaoNormalizada = {
   descartados: string[];
   /** O conceito passou do balão do Stu (3 frases, 2 na primeira lição, cerca de 50 palavras) e foi cortado na última frase que cabe. */
   conceitoCortado?: true;
+  /** A IA repetiu o título do balão no começo do conceito ("O Stu explica: …") e o rótulo foi tirado. */
+  rotuloDoConceitoTirado?: true;
   /** A dica depois do erro de uma lacuna dizia a resposta (spec 17, B5): a frase foi tirada (ou, sem nenhuma que sirva, entrou a dica padrão). */
   dicaDaLacunaAparada?: true;
   /** O tipo do extra que virou principal quando o principal não fechou. */
@@ -659,7 +662,10 @@ export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDa
   // O balão "O Stu explica" é curto (spec 17, mudança 6): até 3 frases e cerca de 50 palavras, e 2 frases na primeira lição da trilha. O que passa disso é cortado na última frase
   // que cabe (nunca no meio de uma frase, e a lição segue válida: nada aqui derruba o aceite de uma trilha).
   const encurtar = (texto: string) => encurtarConceito(texto, { primeiraLicao: opcoes.primeiraLicao });
-  const conceitoCurto = encurtar(aspas(textoDe(dado.conceito)));
+  // O título do balão ("O Stu explica") é do app: se a IA o repetiu no começo do conceito ("O Stu explica: …"), sai (antes de contar frases e palavras). Só o conceito vazio recusa a lição, como sempre.
+  const conceitoEscrito = textoDe(dado.conceito);
+  const conceitoDito = tirarRotuloDoConceito(conceitoEscrito);
+  const conceitoCurto = encurtar(aspas(conceitoDito));
   const conteudo: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
     conceito: conceitoCurto.conceito,
@@ -679,6 +685,7 @@ export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDa
     conteudo: valido,
     descartados,
     ...(conceitoCurto.cortou ? { conceitoCortado: true as const } : {}),
+    ...(conceitoDito !== conceitoEscrito ? { rotuloDoConceitoTirado: true as const } : {}),
     ...(lidos.some((lido) => lido.exercicio && lido.dicaAparada) ? { dicaDaLacunaAparada: true as const } : {}),
     ...(promovido ? { promovido } : {}),
     ...(relato ? { matematica: relato } : {}),
@@ -687,7 +694,7 @@ export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDa
   // Se algo opcional não fechou, a lição ainda vale só com o essencial.
   const essencial: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
-    conceito: encurtar(textoDe(dado.conceito)).conceito,
+    conceito: encurtar(conceitoDito).conceito,
     exemplo: textoDe(dado.exemplo),
     origem,
     exercicio: principal,
@@ -695,6 +702,6 @@ export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDa
     ...matematica,
   };
   if (conteudoValido(essencial)) return resultado(essencial);
-  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: encurtar(textoDe(dado.conceito)).conceito, exemplo: textoDe(dado.exemplo), origem, exercicio: principal, ...matematica };
+  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: encurtar(conceitoDito).conceito, exemplo: textoDe(dado.exemplo), origem, exercicio: principal, ...matematica };
   return conteudoValido(soPrincipal) ? resultado(soPrincipal) : { conteudo: null, motivo: "licao", descartados: [] };
 }

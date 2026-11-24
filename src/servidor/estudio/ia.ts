@@ -1,4 +1,4 @@
-import { embaralharComSemente } from '@studoo/contratos';
+import { embaralharComSemente, tirarRotuloDoConceito } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
 import { configuracaoDeepSeek, pedirJsonDeepSeek, type OpcoesDoPedidoJson } from '../ia/deepseek';
 import { configuracaoOpenAi } from '../ia/openai';
@@ -64,6 +64,8 @@ export function licaoGeradaValida(v: unknown): v is LicaoGerada {
         String(x[k as keyof LicaoGerada]).trim().length > 0 &&
         String(x[k as keyof LicaoGerada]).length <= 1800,
     ) &&
+    // Um conceito que é só o rótulo "O Stu explica:" não tem explicação: vale como vazio.
+    tirarRotuloDoConceito(x.conceito).trim().length > 0 &&
     x.titulo.length <= 120 &&
     Array.isArray(x.opcoes) &&
     x.opcoes.length === 3 &&
@@ -171,7 +173,8 @@ export function conteudoDaGeradaComRelato(x: LicaoGerada, origem: string, figura
   return {
     conteudo: {
       objetivo: x.objetivo,
-      conceito: x.conceito,
+      // O título do balão ("O Stu explica") é do app: se a IA o repetiu no começo do conceito, sai.
+      conceito: tirarRotuloDoConceito(x.conceito),
       exemplo: x.exemplo,
       origem,
       exercicio: {

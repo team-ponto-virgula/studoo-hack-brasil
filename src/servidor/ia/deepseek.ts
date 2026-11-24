@@ -145,7 +145,7 @@ async function* textoDoStreamingChat(resposta: Response, sinal: AbortSignal): As
 
 const exemploJsonLicao = JSON.stringify({
   objetivo: "Identificar e usar a forma correta em uma frase simples.",
-  conceito: "Explicação clara e direta do conceito em até 3 frases (2 na primeira lição da trilha).",
+  conceito: "Explicação clara e direta do conceito em até 3 frases (2 na primeira lição da trilha), sem começar com “O Stu explica:”.",
   exemplo: "Exemplo concreto e resolvido.",
   exemploTipo: "exemplo",
   passos: null,
@@ -457,7 +457,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         }
         const lida = normalizarLicaoSegura(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
-          const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
+          const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.rotuloDoConceitoTirado ? ["conceito:rotulo_tirado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
           if (ajustes.length > 0) {
             registrar("licao_ajustada", { detalhe: ajustes.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
