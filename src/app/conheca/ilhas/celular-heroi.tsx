@@ -11,7 +11,8 @@ export interface TelaDoHeroi { captura: CapturaOtimizada; alt: string }
 /**
  * O celular do herói (spec 18, 1.4): três capturas nativas em laço, 3,5 s cada; a troca leva 400 ms, com a nova subindo 12 px (o CSS faz), SEM quadro vazio: a nova entra POR CIMA
  * da que sai, e a que sai fica inteira (`data-saindo`) por baixo até a nova terminar de entrar (`animationend`); a soma das opacidades das telas nunca cai abaixo de 1 (antes, a que saía
- * sumia na hora e a nova subia de zero: a tela do celular ficava desbotada na troca). A troca só acontece quando a próxima captura já chegou (rede lenta: espera, não mostra vazio). O laço só
+ * sumia na hora e a nova subia de zero: a tela do celular ficava desbotada na troca). A animação de entrada é só da tela que ENTRA numa troca (`data-entrando`): a primeira tela nunca anima, nem
+ * quando a página hidrata (antes a animação reiniciava nela e a tela piscava a 0 por uns 230 ms na carga). A troca só acontece quando a próxima captura já chegou (rede lenta: espera, não mostra vazio). O laço só
  * roda com o herói na tela, a aba à vista e sem movimento reduzido; com movimento reduzido fica só a proposta pronta, parada (o CSS). A primeira captura carrega já; a segunda e a terceira só
  * entram no código quando o laço começa. O conjunto tem um rótulo só, e a troca nunca é anunciada.
  */
@@ -74,6 +75,7 @@ export function CelularDoHeroi({ telas, rotulo, plataforma }: { telas: readonly 
       <Celular rotulo={rotulo} plataforma={plataforma}>
         {telas.map((tela, indice) => (
           <div key={tela.alt} className="cn-tela" data-ativa={indice === troca.ativa || undefined} data-saindo={indice === troca.anterior || undefined}
+            data-entrando={(indice === troca.ativa && troca.anterior !== null) || undefined}
             onAnimationEnd={(evento) => { if (evento.target === evento.currentTarget && indice === troca.ativa) soltarAnterior(); }}>
             <CapturaDaTela captura={tela.captura} alt={tela.alt} prioridade={indice === 0} escondida={indice > 0 && !liberadas} />
           </div>

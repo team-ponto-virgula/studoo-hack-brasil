@@ -480,10 +480,13 @@ test('a troca de tela do herói não deixa quadro vazio: a nova entra por cima d
   assert.match(css, /\.cn-tela\[data-ativa\] \{ opacity: 1; z-index: 2; \}/, 'a tela de agora fica por cima');
   assert.match(css, /\.cn-tela\[data-saindo\] \{ opacity: 1; z-index: 1; \}/, 'a que sai fica inteira por baixo (a soma das opacidades nunca cai abaixo de 1)');
   assert.doesNotMatch(css, /\.cn-heroi__celular \.cn-tela \{ transition: opacity/, 'sem transição de opacidade nas telas (a que saía sumia na hora e a nova subia do zero)');
-  assert.match(css, /\.cn-heroi__celular\[data-pronto\] \.cn-tela\[data-ativa\] \{ animation: cn-entrar 400ms cubic-bezier\(0\.2, 0\.8, 0\.2, 1\) both; \}/, 'a troca continua em 400 ms, com a nova subindo 12 px');
+  assert.match(css, /\.cn-heroi__celular \.cn-tela\[data-entrando\] \{ animation: cn-entrar 400ms cubic-bezier\(0\.2, 0\.8, 0\.2, 1\) both; \}/, 'a troca continua em 400 ms, com a nova subindo 12 px');
+  assert.doesNotMatch(css, /\.cn-tela\[data-ativa\] \{ animation/, 'a animação NÃO é da tela ativa em geral: reiniciava na primeira tela quando a página hidratava e ela piscava a 0 na carga');
+  assert.doesNotMatch(css, /\[data-pronto\] \.cn-tela/, 'nada de animação ligada pela hidratação (data-pronto)');
   assert.match(css, /@keyframes cn-entrar \{ from \{ opacity: 0; transform: translateY\(12px\); \} to \{ opacity: 1; transform: none; \} \}/);
   const ilha = ler('src/app/conheca/ilhas/celular-heroi.tsx');
   assert.match(ilha, /data-saindo=\{indice === troca\.anterior \|\| undefined\}/, 'a que sai leva a marca na mesma troca em que a nova leva data-ativa');
+  assert.match(ilha, /data-entrando=\{\(indice === troca\.ativa && troca\.anterior !== null\) \|\| undefined\}/, 'só a tela que entra numa troca anima (a primeira, no carregamento, nunca)');
   assert.match(ilha, /setTroca\(\{ ativa: proxima, anterior: ativaAgora\.current \}\);/, 'um estado só: nova e anterior mudam juntas');
   assert.match(ilha, /onAnimationEnd=\{\(evento\) => \{ if \(evento\.target === evento\.currentTarget && indice === troca\.ativa\) soltarAnterior\(\); \}\}/, 'a que saiu só é solta quando a nova terminou de entrar');
   assert.match(ilha, /imagem && imagem\.complete && imagem\.naturalWidth > 0/, 'só entra uma captura que já chegou');
@@ -496,6 +499,8 @@ test('a troca de tela do herói não deixa quadro vazio: a nova entra por cima d
   assert.match(roteiro, /ciclos \* 3 \* 3500/);
   assert.match(roteiro, /setTimeout\(passo, 50\)/);
   assert.match(roteiro, /argumento\("minimo", "0\.95"\)/);
+  assert.match(roteiro, /addInitScript/, 'a carga é amostrada desde o começo do documento (a primeira tela piscava na hidratação)');
+  assert.match(roteiro, /cargaOk && abaixo\.length === 0/);
 });
 
 test('as ilhas de movimento respeitam o movimento reduzido e a aba escondida, e só rodam com o herói na tela', () => {
