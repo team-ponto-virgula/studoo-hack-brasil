@@ -22,4 +22,5 @@ body[data-direction=jornada] .cover{box-shadow:inset 5px 0 0 #cbdcff;border:1px 
 body[data-direction=jornada] .screen[data-page=explorar] .row{padding:16px;border:1px solid #dfe7f2;border-bottom-width:3px;border-radius:20px;margin-bottom:10px}
 body[data-direction=jornada] .tag{border:1px solid #d5e3ff}
 body[data-direction=jornada] .feedback{border:1px solid currentColor}
+body[data-direction=jornada] .screen[data-page=conclusao] .mascot.big{width:112px;max-height:112px}
 @media(prefers-reduced-motion:reduce){body[data-direction=jornada] .primary:active{transform:none}}
