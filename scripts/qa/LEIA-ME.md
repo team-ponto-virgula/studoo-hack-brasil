@@ -47,3 +47,15 @@ node scripts/qa/heroi-troca.mjs --base=http://localhost:3000 [--motor=chromium|w
 ```
 
 Amostra a cada 50 ms, por dois ciclos, as opacidades das três telas do celular do herói (`/conheca`) e exige que a soma nunca fique abaixo de 0,95: a troca não pode deixar quadro vazio (a tela que sai fica inteira por baixo até a nova terminar de entrar por cima). Sai com 1 se falhar. Roda com o site no ar, sem banco e sem IA.
+
+## A raiz "/" atrás de um proxy HTTPS
+
+```sh
+# o site de PRODUÇÃO, numa cópia da worktree (o `next build` apaga o `.next` do `next dev`), ligado em 127.0.0.1
+npm run build && npx next start -p 3000 --hostname 127.0.0.1
+node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3000 [--origem-publica=https://127.0.0.1:3452]
+```
+
+Pede `/` sem sessão, `/` com uma sessão no formato certo e `/conheca` em 8 variações de cabeçalho (sem proxy, `X-Forwarded-Proto` http e https, com o `Host` em `localhost`, em `127.0.0.1` e de fora, com `X-Forwarded-Host` e o conjunto que o Traefik manda). Exige 200 em todos, a página de apresentação sem sessão, o app com sessão, e nenhuma reescrita do proxy do Next (`x-middleware-rewrite`) nem redirecionamento. Sai com 1 se alguma variação falhar. Roda com o site no ar, sem banco e sem IA. `--origem-publica` é o `STUDOO_ORIGEM` do servidor: com `https` o cookie de sessão é o `__Host-studoo-sessao`.
+
+Guarda o defeito da banca da QA em 8cf17cf: a raiz sem sessão era reescrita para `/conheca` no proxy do Next e, com o Next ligado em 127.0.0.1 e `X-Forwarded-Proto: https`, o Next repassava o pedido a `https://localhost:<porta>/conheca` (o servidor fala http) e dava 500 (`Failed to proxy … EPROTO … wrong version number`). Nesse código, 6 das 8 variações dão 500 e todas passam por reescrita; no atual, a página decide pelo cookie e não há reescrita.
