@@ -1,0 +1,383 @@
+{
+  "scope": "Preflight de autoria em R6 intermediária; não é revisão independente congelada.",
+  "rows": [
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 292,
+        "scroll": 292
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 280,
+        "scroll": 280
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 292,
+        "scroll": 292
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 280,
+        "scroll": 280
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 390,
+        "scroll": 390
+      }
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 292,
+        "scroll": 292
+      }
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "retry-focus-pair",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "success-focus-continue",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "error-focus-retry",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "retry-focus-choice",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "green-focus-control",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "purple-focus-control",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "material-name-card200",
+      "pass": true,
+      "detail": {
+        "client": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "material-name-dialog200",
+      "pass": true,
+      "detail": {
+        "client": 280,
+        "scroll": 280
+      }
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "name": "no-js-errors",
+      "pass": true,
+      "detail": []
+    }
+  ]
+}

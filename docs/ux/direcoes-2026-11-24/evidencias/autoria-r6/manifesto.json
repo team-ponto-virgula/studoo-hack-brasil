@@ -1,0 +1,25 @@
+{
+  "scope": "Provas de autoria em R6 intermediária; não substituem a revisão independente congelada da28b003e. Primeiro ensaio negativo preservado, sem somar rodadas ou capturas aos asserts finais.",
+  "files": [
+    {
+      "file": "root-foco-texto.json",
+      "sha256": "e24d8356efe0c9bab47055a258a3ad591b9839958fce8c9b49b0655ee25416a3",
+      "original": "/workspace/work/revisao-root-r6/resultado.json"
+    },
+    {
+      "file": "root-acabamento.json",
+      "sha256": "b677ca16290007491e12734720e78d0d43c71bdea20bc1dbd219326a42856417",
+      "original": "/workspace/work/revisao-root-r6/acabamento.json"
+    },
+    {
+      "file": "compartilhamento.json",
+      "sha256": "2357c630a6d6a0ff77342284dd118f935dbe9aa5226665cdbfd37ef0fe17d6cb",
+      "original": "/workspace/work/compartilhar-r6-author/resultado.json"
+    },
+    {
+      "file": "compartilhamento-inicial.json",
+      "sha256": "ec45f615bbaeca81cfc313222313dc8681f5f71ff16431c96c07855e25e25215",
+      "original": "/workspace/work/compartilhar-r6-author/resultado-inicial.json"
+    }
+  ]
+}

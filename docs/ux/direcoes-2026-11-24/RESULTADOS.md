@@ -1,6 +1,12 @@
 # Três direções — resultados e limites
 
-**R6 em construção; a meta global ainda não foi aprovada.** A meta continua sendo pelo menos 9 em cada D1–D10 e na pior variante obrigatória, com os pesos e gates do [protocolo](COBERTURA-E-REVISAO.md) preservados.
+**R7 em construção; a meta global ainda não foi aprovada.** A meta continua sendo pelo menos 9 em cada D1–D10 e na pior variante obrigatória, com os pesos e gates do [protocolo](COBERTURA-E-REVISAO.md) preservados.
+
+## Fechamento R6
+
+A candidata `28b003e6c29728e1fd8c96f14efbb497353b0d10` fechou as falhas de leitura/foco e as restrições de compartilhamento observadas na R5. [Visual](revisoes/PARECER-VISUAL-R6.md), [QA](revisoes/PARECER-A11Y-R6.md) e [arte](revisoes/PARECER-ARTE-CRAFT-R6.md) sustentaram 9 nas respectivas facetas D3/D4/D5/D6/D7; não aprovaram o produto nativo.
+
+A regressão de [fluxo](revisoes/PARECER-FLUXOS-R6.md) passou **888/888**. A ampliação de riscos encontrou **três médios**: callbacks de clipboard/folha fora do contexto original, retirada alterando outra trilha e promessa contraditória sobre o nome do material. O conjunto final foi **1.101/1.158 asserções, 207 cenários**; os resultados positivos não escondem as 57 falhas. D1/D2/D8/D9 ficaram em 8 e a nota global continuou `null`. A [matriz R6](MATRIZ-COBERTURA-R6.md) e as evidências históricas preservam esses resultados. A R7 corrige somente esses riscos e a comunicação correspondente, com revalidação afetada e regressão pertinente.
 
 ## Fechamento R5
 
