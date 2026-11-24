@@ -1,0 +1,154 @@
+{
+  "priorSource": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "currentSource": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "runtime": [
+    {
+      "file": "app.js",
+      "prior": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+      "current": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+      "unchanged": false
+    },
+    {
+      "file": "app.html",
+      "prior": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "current": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "unchanged": true
+    },
+    {
+      "file": "index.html",
+      "prior": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "current": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "unchanged": true
+    },
+    {
+      "file": "base.css",
+      "prior": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "current": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "unchanged": true
+    },
+    {
+      "file": "accessibility.css",
+      "prior": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "current": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "unchanged": true
+    },
+    {
+      "file": "directions/jornada.css",
+      "prior": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "current": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "unchanged": true
+    },
+    {
+      "file": "directions/caderno.css",
+      "prior": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "current": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "unchanged": true
+    },
+    {
+      "file": "directions/foco.css",
+      "prior": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "current": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "unchanged": true
+    },
+    {
+      "file": "media-pages.js",
+      "prior": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+      "current": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+      "unchanged": false
+    },
+    {
+      "file": "media-pages.css",
+      "prior": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "current": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "unchanged": true
+    },
+    {
+      "file": "social-pages.js",
+      "prior": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+      "current": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+      "unchanged": false
+    },
+    {
+      "file": "social-pages.css",
+      "prior": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "current": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "unchanged": true
+    },
+    {
+      "file": "material-pages.js",
+      "prior": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "current": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "unchanged": true
+    },
+    {
+      "file": "material-pages.css",
+      "prior": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "current": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "unchanged": true
+    },
+    {
+      "file": "personal-pages.js",
+      "prior": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "current": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "unchanged": true
+    },
+    {
+      "file": "personal-pages.css",
+      "prior": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "current": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "unchanged": true
+    },
+    {
+      "file": "vendor/qrcode.js",
+      "prior": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "current": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "unchanged": true
+    }
+  ],
+  "assets": [
+    {
+      "file": "assets/logo.png",
+      "priorGit": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+      "current": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+      "unchanged": true
+    },
+    {
+      "file": "assets/nunito.woff2",
+      "priorGit": "69d4149a1e1924d777aa343c190ea0b829f2f1987d1bf8d836e819b9c7870e2f",
+      "current": "69d4149a1e1924d777aa343c190ea0b829f2f1987d1bf8d836e819b9c7870e2f",
+      "unchanged": true
+    },
+    {
+      "file": "assets/quicksand.woff2",
+      "priorGit": "5e2902c5c3847576e718070ca75c2176eac1c02bf59dd1ff7a57cfd98dc0d56c",
+      "current": "5e2902c5c3847576e718070ca75c2176eac1c02bf59dd1ff7a57cfd98dc0d56c",
+      "unchanged": true
+    },
+    {
+      "file": "assets/stu-acolhida.webp",
+      "priorGit": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+      "current": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+      "unchanged": true
+    },
+    {
+      "file": "assets/stu-comemorando.webp",
+      "priorGit": "5ea5888dd6c58a3aa59ec22e2d715f74673de3b397aa40c84e734baa5cca54ce",
+      "current": "5ea5888dd6c58a3aa59ec22e2d715f74673de3b397aa40c84e734baa5cca54ce",
+      "unchanged": true
+    },
+    {
+      "file": "assets/stu-encorajador.webp",
+      "priorGit": "d729357365dfc80d572a96496174bbed68f895097e1f6a90c4d55a101c3b9c6c",
+      "current": "d729357365dfc80d572a96496174bbed68f895097e1f6a90c4d55a101c3b9c6c",
+      "unchanged": true
+    },
+    {
+      "file": "assets/stu-estudando.webp",
+      "priorGit": "33ca34839d3f090321de8c7124c968d65191eaa6706b360613bb47e8c2f0ce72",
+      "current": "33ca34839d3f090321de8c7124c968d65191eaa6706b360613bb47e8c2f0ce72",
+      "unchanged": true
+    }
+  ],
+  "unchangedRuntime": 14,
+  "unchangedAssets": 7
+}

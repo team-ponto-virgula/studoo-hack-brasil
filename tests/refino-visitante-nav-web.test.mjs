@@ -77,14 +77,14 @@ test('item 33: com a cápsula no tablet a página reserva o espaço dela, e o qu
   const variaveis = /html:has\(\.estudo\[data-navegacao\]\) \{([^}]*)\}/.exec(ate1023.map((b) => b.corpo).join('\n'))?.[1] ?? '';
   for (const nome of ['--margem-ilha-esq', '--margem-ilha-dir', '--base-ilha', '--altura-navegacao', '--sombra-ilha', '--espaco-rodape']) assert.match(variaveis, new RegExp(`${nome}:`), `${nome} vale até 1023 px`);
   assert.ok(em(ate1023, /\.estudo\[data-navegacao\] \.estudo-principal \{ padding-bottom: var\(--espaco-rodape\); \}/), 'o fim da página reserva a cápsula');
-  assert.ok(em(ate1023, /\.estudo\[data-navegacao\] \.estudo-principal:has\(\.painel--pedido\) \{ padding-bottom: calc\(40px \+ var\(--altura-navegacao\)\); \}/), 'a Nova trilha também');
+  assert.ok(em(ate1023, /\.estudo\[data-navegacao\] \.estudo-principal:has\(\.painel--pedido\) \{ padding-bottom: calc\(40px \+ var\(--altura-navegacao\) \+ var\(--espaco-acao-fixa, 0px\)\); \}/), 'a Nova trilha também');
   assert.ok(em(ate1023, /\.estudo\[data-navegacao\] \.painel--planos > \.acao-principal \{ display: none; \}/), 'o "Nova trilha" do fim da lista sai: a cápsula já tem a aba');
   assert.ok(em(ate1023, /html\[data-teclado='true'\] \.navegacao-mobile \{ display: none; \}/), 'com o teclado aberto a cápsula sai da frente, no tablet também');
   assert.ok(em(g.blocos.filter((b) => b.condicao === '(max-width: 1023px) and (forced-colors: active)'), /\.navegacao-mobile button\[aria-current\] \{ border: 2px solid Highlight; \}/), 'cores forçadas: a aba atual segue marcada');
   // As ações que flutuam sobre a cápsula só existem no celular: no tablet a ação principal fica no fluxo.
   const celular = ate(767);
   assert.ok(em(celular, /\.estudo\[data-navegacao\] \.acao-principal \{\s*inset: auto var\(--margem-ilha-dir\) calc\(var\(--altura-navegacao\) \+ 12px\) var\(--margem-ilha-esq\);/));
-  assert.ok(em(celular, /html:has\(\.estudo\[data-navegacao\] :is\(\.trilha-proximo, \.trilha-vazia\)\) \{\s*--espaco-acao-fixa:/));
+  assert.ok(em(celular, /html:has\(\.estudo\[data-navegacao\] :is\(\.trilha-proximo, \.trilha-vazia(?:, [^)]*)?\)\) \{\s*--espaco-acao-fixa:/));
   assert.ok(em(ate1023, /html:has\(\.estudo\[data-navegacao\] \.editor-perfil__barra\[data-presa\]\) \{\s*--espaco-acao-fixa: calc\(var\(--altura-acao-fixa, 48px\) \+ 12px\);/), 'a barra de salvar do Perfil flutua também no tablet');
 });
 

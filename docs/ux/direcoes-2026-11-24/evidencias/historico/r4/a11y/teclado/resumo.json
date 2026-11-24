@@ -1,0 +1,79 @@
+{
+  "candidate": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "finishedAt": "2026-11-24T20:53:32.565Z",
+  "directed": {
+    "passed": 186,
+    "total": 186
+  },
+  "photoGuards": {
+    "passed": 36,
+    "total": 42,
+    "failedCases": [
+      {
+        "direction": "jornada",
+        "width": 390,
+        "scenario": "header-focus-during-decode"
+      },
+      {
+        "direction": "jornada",
+        "width": 360,
+        "scenario": "header-focus-during-decode"
+      },
+      {
+        "direction": "caderno",
+        "width": 390,
+        "scenario": "header-focus-during-decode"
+      },
+      {
+        "direction": "caderno",
+        "width": 360,
+        "scenario": "header-focus-during-decode"
+      },
+      {
+        "direction": "foco",
+        "width": 390,
+        "scenario": "header-focus-during-decode"
+      },
+      {
+        "direction": "foco",
+        "width": 360,
+        "scenario": "header-focus-during-decode"
+      }
+    ]
+  },
+  "sourceStable": true,
+  "pageErrors": [],
+  "closedFindings": [
+    "K1 named modal menus and opener return",
+    "K2 reorder focus and announcement",
+    "K3 focus transfer to stop recording",
+    "K4 original success/decode-error focus recovery"
+  ],
+  "openFindings": [
+    {
+      "id": "K4b",
+      "severity": "medium",
+      "criterion": "D6",
+      "cases": 6,
+      "issue": "During pending decode, focus newly chosen on header data-go=perfil is lost after render; BODY stays document-focused and next Tab reaches Back"
+    }
+  ],
+  "facetScores": {
+    "D5": 9.0,
+    "D6": 8.0,
+    "D7": 9.0
+  },
+  "facetScope": "Only prototype motion, keyboard and local response branches actually tested; full direction and native scores are separate",
+  "generationPendingMs": [
+    2.5999999940395355,
+    8.299999997019768
+  ],
+  "generationReadyMs": [
+    1608.2000000029802,
+    1615.6999999955297
+  ],
+  "nativeExecuted": false,
+  "realFileChooserValidated": false,
+  "apiExecuted": false,
+  "uploadObserved": false
+}

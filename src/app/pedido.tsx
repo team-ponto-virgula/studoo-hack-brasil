@@ -41,11 +41,12 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  focarCampo = false, porLink }: {
+  focarCampo = false, porLink, aoDesconectar }: {
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
   /** A ação da lista vazia leva diretamente ao campo de objetivo, inclusive no celular. */
   focarCampo?: boolean;
+  aoDesconectar?: () => void;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
@@ -64,13 +65,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
+  const [lendoMaterial, setLendoMaterial] = useState(false);
   /** Lendo o material enviado: o Stu fica concentrado só quando a espera passa de 1 s (menos que isso, só o esqueleto). */
   const [lendoDemorado, setLendoDemorado] = useState(false);
   useEffect(() => {
-    if (!(modo === 'material' && ocupado)) { setLendoDemorado(false); return; }
+    if (modo !== 'material' || !lendoMaterial) { setLendoDemorado(false); return; }
     const relogio = window.setTimeout(() => setLendoDemorado(true), 1000);
     return () => window.clearTimeout(relogio);
-  }, [modo, ocupado]);
+  }, [modo, lendoMaterial]);
   const campo = useRef<HTMLTextAreaElement>(null);
   const focarBotaoCriar = useRef(false);
   const focouComTexto = useRef(false);
@@ -179,7 +181,8 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         </EstadoErro>
       )}
       <div hidden={modo !== 'material'} className="pedido-material">
-        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} />
+        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} aoDesconectar={aoDesconectar}
+          aoMudarLeitura={setLendoMaterial} />
       </div>
       <form hidden={modo !== 'ideia'} className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
         <div className="campo pedido-campo">

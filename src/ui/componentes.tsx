@@ -30,10 +30,11 @@ export function Stu({ expressao = 'stu-feliz', tamanho = 96, animado, acontecime
 
 type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variante?: 'primario' | 'secundario' | 'texto' | 'sucesso' | 'alerta';
+  ref?: Ref<HTMLButtonElement>;
 };
 
-export function Botao({ variante = 'primario', className = '', type = 'button', ...props }: BotaoProps) {
-  return <button type={type} className={`botao botao--${variante} ${className}`} {...props} />;
+export function Botao({ variante = 'primario', className = '', type = 'button', ref, ...props }: BotaoProps) {
+  return <button ref={ref} type={type} className={`botao botao--${variante} ${className}`} {...props} />;
 }
 
 export function AcaoPrincipal({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivElement> }) {

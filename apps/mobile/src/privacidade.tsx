@@ -1,10 +1,12 @@
 import { CONFIRMACAO_EXCLUSAO, confirmacaoExclusaoValida } from '@studoo/contratos/privacidade';
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useRef, useState, type ComponentRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ListaProvedores, useConsentimentoIa } from './consentimento-ia';
+import { focarSemRolar } from './foco';
 import { Botao, Campo, CartaoConfirmacao, estilos } from './interface';
+import { useDepoisDeSair } from './janelas';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
-import { abrirNoNavegador, dataCurta } from './social';
+import { dataCurta } from './social';
 import { cores, fontes } from './tema';
 
 /*
@@ -17,10 +19,9 @@ import { cores, fontes } from './tema';
 
 const t = mensagens.privacidade;
 
-export function SecaoPrivacidade({ desativado, visitante }: { desativado: boolean; visitante: boolean }) {
+export function SecaoPrivacidade({ desativado }: { desativado: boolean }) {
   const { estado, permitido, permitir, revogar, politicaUrl } = useConsentimentoIa();
   const [verQuem, setVerQuem] = useState(false);
-  const [excluindo, setExcluindo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
   const ia = estado?.consentimentoIa;
@@ -54,27 +55,54 @@ export function SecaoPrivacidade({ desativado, visitante }: { desativado: boolea
         {ia?.necessario && (permitido
           ? <Botao rotulo={t.revogar} testID="privacidade-revogar" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(false)} estilo={p.acao} />
           : <Botao rotulo={t.permitirAgora} testID="privacidade-permitir" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(true)} estilo={p.acao} />)}
-        {politicaUrl && (
-          <Botao rotulo={t.politica} testID="privacidade-politica" variante="secundario" desativado={desativado} acao={() => abrirNoNavegador(politicaUrl)} estilo={p.acao} />
-        )}
       </View>
       {/* O aviso de "Pronto" ou o erro, anunciado ao leitor de tela (role="status" na web). */}
       {aviso ? <Text testID="privacidade-aviso" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text> : null}
-      <Botao rotulo={t.excluir} testID="excluir-conta" variante="destrutivo" desativado={desativado} acao={() => setExcluindo(true)} estilo={p.excluir} />
-      {excluindo && <ConfirmarExclusao visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
     </View>
   );
 }
 
+/**
+ * "Excluir conta" (spec 16, item 20): o secundário de 44 com borda e texto #C23B4E, igual nas três plataformas, depois de
+ * "Sair" (na seção Conta). Abre a mesma confirmação com "digite EXCLUIR".
+ */
+export function BotaoExcluirConta({ desativado, visitante }: { desativado: boolean; visitante: boolean }) {
+  const [excluindo, setExcluindo] = useState(false);
+  const botaoExcluir = useRef<ComponentRef<typeof Pressable>>(null);
+  const { depoisDeSair, aoSair } = useDepoisDeSair();
+
+  function cancelarExclusao() {
+    depoisDeSair(() => requestAnimationFrame(() => focarSemRolar(botaoExcluir.current)));
+    setExcluindo(false);
+  }
+
+  return (
+    <>
+      <Botao rotulo={t.excluir} testID="excluir-conta" variante="destrutivoBaixo" referencia={botaoExcluir} desativado={desativado}
+        acao={() => setExcluindo(true)} estilo={p.excluir} />
+      <ConfirmarExclusao visivel={excluindo} visitante={visitante} aoCancelar={cancelarExclusao} aoFechar={aoSair} />
+    </>
+  );
+}
+
 /** O cartão destrutivo (sem janela nativa): o texto de conta ou de visitante e o campo "digite EXCLUIR"; a ação só liga com a palavra certa. */
-function ConfirmarExclusao({ visitante, aoCancelar }: { visitante: boolean; aoCancelar: () => void }) {
+function ConfirmarExclusao({ visivel, visitante, aoCancelar, aoFechar }: {
+  visivel: boolean; visitante: boolean; aoCancelar: () => void; aoFechar: () => void;
+}) {
   const { excluirConta } = useConsentimentoIa();
   const [digitado, setDigitado] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const valido = confirmacaoExclusaoValida(digitado);
 
+  function cancelar() {
+    setDigitado('');
+    setErro(null);
+    aoCancelar();
+  }
+
   async function excluir() {
+    if (ocupado) return;
     if (!valido) { setErro(mensagemDoCodigo('confirmacao_invalida')); return; }
     setOcupado(true);
     setErro(null);
@@ -87,9 +115,10 @@ function ConfirmarExclusao({ visitante, aoCancelar }: { visitante: boolean; aoCa
   }
 
   return (
-    <CartaoConfirmacao testID="excluir-conta-confirmacao" mensagem={t.excluirTitulo} texto={visitante ? t.excluirVisitante : t.excluirTexto}
+    <CartaoConfirmacao testID="excluir-conta-confirmacao" visivel={visivel} aoFechar={aoFechar}
+      mensagem={t.excluirTitulo} texto={visitante ? t.excluirVisitante : t.excluirTexto}
       confirmarRotulo={ocupado ? t.excluindo : t.excluirConfirmar} cancelarRotulo={t.excluirCancelar} destrutivo ocupado={ocupado} erro={erro}
-      confirmarDesativado={!valido} aoConfirmar={() => void excluir()} aoCancelar={aoCancelar}
+      confirmarDesativado={!valido} aoConfirmar={() => void excluir()} aoCancelar={cancelar}
       extra={
         <Campo testID="excluir-conta-campo" rotulo={t.excluirDigite} placeholder={CONFIRMACAO_EXCLUSAO} value={digitado}
           onChangeText={(valor) => { setDigitado(valor); setErro(null); }}

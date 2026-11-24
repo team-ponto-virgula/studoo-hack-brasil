@@ -7,6 +7,7 @@ import { mensagens } from '../../mensagens/pt-BR';
 import { Stu } from '../../ui';
 import { ExplorarPublico } from '../comunidade';
 import { ExplorarComSessao } from '../estudo';
+import { lerFiltroExplorarDaUrl } from '../navegacao-web';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../publico';
 
 export const dynamic = 'force-dynamic';
@@ -22,16 +23,33 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+function primeiroValor(valor: string | string[] | undefined): string | null {
+  if (typeof valor === 'string') return valor;
+  if (Array.isArray(valor) && typeof valor[0] === 'string') return valor[0];
+  return null;
+}
+
 /**
  * Com sessão, o Explorar abre na navegação principal. Sem sessão, a página pública oferece estudo e denúncia.
  */
-export default async function PaginaExplorarPublica() {
+export default async function PaginaExplorarPublica({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   if (!comunidadeAtiva()) notFound();
-  if (await usuarioDaPagina()) return <ExplorarComSessao />;
+  const bruto = searchParams ? await searchParams : {};
+  const params = new URLSearchParams();
+  for (const chave of ['tema', 'aba', 'q']) {
+    const valor = primeiroValor(bruto[chave]);
+    if (valor) params.set(chave, valor);
+  }
+  const filtro = lerFiltroExplorarDaUrl(params);
+  if (await usuarioDaPagina()) return <ExplorarComSessao filtroInicial={filtro} />;
   let inicial: PaginaExplorar | null = null;
   try {
     await limitarPublico(await redeDaPagina());
-    inicial = await explorar(null, {});
+    inicial = await explorar(null, { tema: filtro.tema, busca: filtro.busca || undefined });
   } catch {
     return (
       <PaginaPublica>
@@ -44,7 +62,7 @@ export default async function PaginaExplorarPublica() {
   }
   return (
     <PaginaPublica>
-      <ExplorarPublico inicial={inicial} logado={false} />
+      <ExplorarPublico inicial={inicial} logado={false} filtroInicial={filtro} />
     </PaginaPublica>
   );
 }

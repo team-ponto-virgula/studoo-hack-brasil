@@ -22,6 +22,20 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
 import { Avatar, CHAVE_DEPOIS_DO_LOGIN, useAbrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
+import {
+  carregarPaginasOrigemExplorar,
+  encontrarLinkOrigemExplorar,
+  lerOrigemExplorar,
+  mesmaUrlExplorar,
+  normalizarPaginasOrigem,
+  paginaContemCodigoExplorar,
+  salvarOrigemExplorar,
+  urlDoExplorar,
+  type AbaExplorar,
+  type FiltroExplorarUrl,
+  type SecaoAlvoExplorar,
+  type TipoAlvoExplorar,
+} from './navegacao-web';
 import { tocaSons } from './sons';
 import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
 import { MenuPublicacao, useAtualizacaoComunidade } from './seguranca-comunidade';
@@ -56,16 +70,38 @@ export type AcoesCartao = {
   ocupado: string | null;
 };
 
+type AlvoOrigemCartao = {
+  href: string;
+  codigo: string;
+  tipo: TipoAlvoExplorar;
+  secao: SecaoAlvoExplorar;
+};
+
 /**
  * Cartão de trilha: capa (tema e, se for o caso, "Demonstração"), título (abre a prévia /t), quem fez (foto e nome,
  * levam ao perfil), legenda, "6 lições · 3 partes", "12 estudando · 8 valeus" e as ações: Quero estudar / Continuar /
  * Sua trilha, Valeu (liga e desliga), Compartilhar e "•••" com Denunciar.
  */
-export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono = false }: { cartao: CartaoTrilha; acoes: AcoesCartao; posicao?: number; nivel?: 'h2' | 'h3'; semDono?: boolean }) {
+export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono = false, secao, aoAbrirOrigem }: {
+  cartao: CartaoTrilha;
+  acoes: AcoesCartao;
+  posicao?: number;
+  nivel?: 'h2' | 'h3';
+  semDono?: boolean;
+  secao?: SecaoAlvoExplorar;
+  aoAbrirOrigem?: (alvo: AlvoOrigemCartao) => void;
+}) {
   const Titulo = nivel;
   const tituloId = useId();
   const sua = cartao.situacao === 'sua';
   const ocupado = acoes.ocupado === cartao.codigo;
+  const registrarOrigem = (href: string, tipo: TipoAlvoExplorar) => {
+    if (aoAbrirOrigem && secao) {
+      aoAbrirOrigem({ href, codigo: cartao.codigo, tipo, secao });
+    } else if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      salvarOrigemExplorar(href, { codigo: cartao.codigo, tipo, secao });
+    }
+  };
   const principal = sua
     ? <Botao variante="secundario" onClick={() => cartao.planoId && acoes.abrir(cartao.planoId)}>{c.sua}</Botao>
     : cartao.situacao === 'adicionada'
@@ -81,11 +117,18 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
-        <Titulo id={tituloId} className="cartao-trilha__titulo"><Link href={`/t/${cartao.codigo}`}>{cartao.titulo}</Link></Titulo>
+        <Titulo id={tituloId} className="cartao-trilha__titulo">
+          <Link href={`/t/${cartao.codigo}`} data-origem-cartao={secao ? `${secao}:${cartao.codigo}:titulo` : undefined}
+            onClick={() => registrarOrigem(`/t/${cartao.codigo}`, 'titulo')}>
+            {cartao.titulo}
+          </Link>
+        </Titulo>
         {!semDono && (
           <p className="cartao-trilha__dono">
             {cartao.dono.perfilId
-              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={`${c.por(cartao.dono.nome)}. ${c.perfilDe(cartao.dono.nome)}`}>
+              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={`${c.por(cartao.dono.nome)}. ${c.perfilDe(cartao.dono.nome)}`}
+                data-origem-cartao={secao ? `${secao}:${cartao.codigo}:dono` : undefined}
+                onClick={() => { if (cartao.dono.perfilId) registrarOrigem(`/p/${cartao.dono.perfilId}`, 'dono'); }}>
                 <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
                 <span className="cartao-trilha__por">por </span><span className="cartao-trilha__nome">{cartao.dono.nome}</span>
               </Link>
@@ -261,7 +304,7 @@ export function useAvisoDoApp(): [ReactNode, (texto: string, som?: IdEfeitoSonor
 }
 
 /** Lista horizontal do "Em alta": numeral grande no canto da capa, com encaixe ao rolar e setas (com ponteiro fino). */
-function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
+function EmAlta({ cartoes, acoes, titulo, aoAbrirOrigem }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string; aoAbrirOrigem?: (alvo: AlvoOrigemCartao) => void }) {
   const fileira = useFileira<HTMLOListElement>(cartoes.length);
   const tituloId = useId();
   return (
@@ -277,7 +320,7 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
         data-rola={fileira.rola || undefined} data-inicio={fileira.inicio || undefined} data-fim={fileira.fim || undefined}>
         {cartoes.map((cartao, indice) => (
           <li key={cartao.codigo} className="em-alta__item">
-            <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} />
+            <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} secao="em-alta" aoAbrirOrigem={aoAbrirOrigem} />
           </li>
         ))}
       </ol>
@@ -289,51 +332,237 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
  * Tela Explorar: título, "Em alta esta semana" (Top 10), fichas de tema, "Novas" (20 por página, "Ver mais"), vazios
  * com o Stu. Igual no app e na página pública /explorar (ver não pede conta; agir pede).
  */
-export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irParaTrilhas, topo }: {
+export function Explorar({
+  logado,
+  visitante = false,
+  inicial = null,
+  temaInicial = null,
+  abaInicial = 'todos',
+  buscaInicial = '',
+  aoMudarFiltro,
+  aoSair,
+  aoAdicionado,
+  aoAbrir,
+  irParaTrilhas,
+  topo,
+}: {
   logado: boolean;
+  visitante?: boolean;
   inicial?: PaginaExplorar | null;
+  temaInicial?: Tema | null;
+  abaInicial?: AbaExplorar;
+  buscaInicial?: string;
+  aoMudarFiltro?: (filtro: FiltroExplorarUrl) => void;
+  aoSair?: () => void;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
   irParaTrilhas?: () => void;
   /** Conteúdo acima do título (na página pública, o convite para entrar). */
   topo?: ReactNode;
 }) {
-  const [tema, setTema] = useState<Tema | null>(null);
+  const [tema, setTema] = useState<Tema | null>(temaInicial);
   // Aba "Seguindo" (etapa C2, só com sessão): as trilhas de quem a pessoa segue, mais novas primeiro.
-  const [aba, setAba] = useState<'todos' | 'seguindo'>('todos');
+  const [aba, setAba] = useState<AbaExplorar>(abaInicial);
+  const [buscaTexto, setBuscaTexto] = useState(buscaInicial);
+  const [buscaAtiva, setBuscaAtiva] = useState(buscaInicial.trim().slice(0, 80));
   const [pagina, setPagina] = useState<PaginaExplorar | null>(inicial);
-  const [carregando, setCarregando] = useState(!inicial);
+  const [carregando, setCarregando] = useState(!inicial && !(visitante && abaInicial === 'seguindo'));
   const [maisCarregando, setMaisCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
   const titulo = useRef<HTMLHeadingElement>(null);
   const { versao, confirmarLeitura } = useAtualizacaoComunidade();
   const primeira = useRef(Boolean(inicial));
+  const inicialRef = useRef(inicial);
+  const filtroSincronizado = useRef(false);
+  const consultaAtual = useRef(0);
+  const restauracaoPronta = useRef(false);
+  const paginasCarregadas = useRef(1);
+  paginasCarregadas.current = Math.max(1, Math.ceil((pagina?.novas.length ?? 0) / LIMITES_COMUNIDADE.porPagina));
   const anunciar = (texto: string) => setAnuncio((anterior) => (anterior === texto ? `${texto} ` : texto));
+  const aoAbrirOrigem = useCallback((alvo: AlvoOrigemCartao) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      salvarOrigemExplorar(alvo.href, {
+        codigo: alvo.codigo,
+        tipo: alvo.tipo,
+        secao: alvo.secao,
+        paginas: Math.max(1, paginasCarregadas.current),
+      });
+    }
+  }, []);
 
-  useEffect(() => { titulo.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
-    if (primeira.current) { primeira.current = false; if (!versao) return; }
+    setTema(temaInicial);
+  }, [temaInicial]);
+  useEffect(() => {
+    setAba(abaInicial);
+  }, [abaInicial]);
+  useEffect(() => {
+    setBuscaTexto(buscaInicial);
+    setBuscaAtiva(buscaInicial.trim().slice(0, 80));
+  }, [buscaInicial]);
+
+  useEffect(() => {
+    const limpa = buscaTexto.trim().slice(0, 80);
+    if (limpa === buscaAtiva) return;
+    const relogio = window.setTimeout(() => setBuscaAtiva(limpa), 250);
+    return () => window.clearTimeout(relogio);
+  }, [buscaTexto, buscaAtiva]);
+
+  useEffect(() => {
+    if (!filtroSincronizado.current) {
+      filtroSincronizado.current = true;
+      return;
+    }
+    const filtro: FiltroExplorarUrl = { aba, tema, busca: buscaAtiva };
+    if (aoMudarFiltro) {
+      aoMudarFiltro(filtro);
+    } else if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      const proxima = urlDoExplorar(filtro);
+      if (`${window.location.pathname}${window.location.search}` !== proxima) {
+        window.history.replaceState(window.history.state, '', proxima);
+      }
+    }
+  }, [aba, tema, buscaAtiva, aoMudarFiltro]);
+
+  useEffect(() => {
+    const origem = lerOrigemExplorar(false);
+    const urlAtual = typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '';
+    if (!origem || !mesmaUrlExplorar(origem.url, urlAtual)) titulo.current?.focus({ preventScroll: true });
+  }, []);
+
+  const seguindoVisitante = visitante && aba === 'seguindo';
+
+  useEffect(() => {
+    const geracao = ++consultaAtual.current;
+    restauracaoPronta.current = false;
+    setMaisCarregando(false);
+    if (seguindoVisitante) {
+      paginasCarregadas.current = 0;
+      setCarregando(false);
+      setErro(null);
+      setPagina(null);
+      return;
+    }
+    const urlFiltro = urlDoExplorar({ aba, tema, busca: buscaAtiva });
+    const origemPendente = lerOrigemExplorar(false);
+    const restaurandoOrigem = Boolean(origemPendente && mesmaUrlExplorar(origemPendente.url, urlFiltro));
+    const paginasAlvo = restaurandoOrigem ? normalizarPaginasOrigem(origemPendente?.paginas) : 1;
+
+    let reutilizarInicial = false;
+    if (primeira.current) {
+      primeira.current = false;
+      if (!versao) {
+        const precisaMaisNoInicial = Boolean(
+          restaurandoOrigem &&
+          origemPendente &&
+          inicialRef.current?.cursor &&
+          (paginasAlvo > 1 || (origemPendente.alvoCodigo && !paginaContemCodigoExplorar(inicialRef.current, origemPendente.alvoCodigo))),
+        );
+        if (!precisaMaisNoInicial) {
+          restauracaoPronta.current = true;
+          return;
+        }
+        reutilizarInicial = Boolean(inicialRef.current);
+      }
+    }
+
     let ativo = true;
     setCarregando(true);
-    setPagina(null);
+    if (!reutilizarInicial) setPagina(null);
     setErro(null);
-    cliente.explorar({ tema, seguindo: aba === 'seguindo' }).then((dados) => { if (ativo) setPagina(dados); })
-      .catch((falha) => { if (ativo) setErro(textoErro(codigoDoErro(falha))); })
-      .finally(() => { if (ativo) { setCarregando(false); confirmarLeitura(versao); } });
-    return () => { ativo = false; };
-  }, [tema, aba, versao, confirmarLeitura]);
+
+    (async () => {
+      try {
+        const primeiraPagina: PaginaExplorar = reutilizarInicial && inicialRef.current
+          ? inicialRef.current
+          : await cliente.explorar({ tema, seguindo: aba === 'seguindo', busca: buscaAtiva || undefined });
+        if (!ativo || geracao !== consultaAtual.current) return;
+        const acumulada = restaurandoOrigem && origemPendente
+          ? await carregarPaginasOrigemExplorar({
+              inicial: primeiraPagina,
+              origem: origemPendente,
+              buscarProxima: (cursor) => cliente.explorar({
+                tema,
+                cursor,
+                seguindo: aba === 'seguindo',
+                busca: buscaAtiva || undefined,
+              }),
+              ativo: () => ativo && geracao === consultaAtual.current,
+            })
+          : primeiraPagina;
+        if (acumulada && ativo && geracao === consultaAtual.current) {
+          restauracaoPronta.current = true;
+          setPagina(acumulada);
+        }
+      } catch (falha) {
+        if (ativo && geracao === consultaAtual.current) setErro(textoErro(codigoDoErro(falha)));
+      } finally {
+        if (ativo && geracao === consultaAtual.current) {
+          setCarregando(false);
+          confirmarLeitura(versao);
+        }
+      }
+    })();
+
+    return () => {
+      ativo = false;
+      if (consultaAtual.current === geracao) consultaAtual.current += 1;
+    };
+  }, [tema, aba, buscaAtiva, versao, confirmarLeitura, seguindoVisitante]);
+
+  useEffect(() => {
+    if (carregando || !pagina) return;
+    const origem = lerOrigemExplorar(false);
+    const urlFiltro = urlDoExplorar({ aba, tema, busca: buscaAtiva });
+    if (!origem || !mesmaUrlExplorar(origem.url, urlFiltro)) return;
+    const paginasDesejadas = normalizarPaginasOrigem(origem.paginas);
+    const faltaPagina = paginasDesejadas > 1 && paginasCarregadas.current < paginasDesejadas;
+    const faltaAlvo = Boolean(origem.alvoCodigo && !paginaContemCodigoExplorar(pagina, origem.alvoCodigo));
+    if ((faltaPagina || faltaAlvo) && pagina.cursor && !restauracaoPronta.current) return;
+    lerOrigemExplorar(true);
+    const aplicar = () => {
+      window.scrollTo(0, origem.scrollY);
+      const links = document.querySelectorAll<HTMLAnchorElement>('.painel--explorar a[href]');
+      const alvo = encontrarLinkOrigemExplorar(links, origem);
+      if (alvo) {
+        const caixa = alvo.getBoundingClientRect();
+        if (caixa.bottom <= 0 || caixa.top >= window.innerHeight) {
+          alvo.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+        alvo.focus({ preventScroll: true });
+      }
+    };
+    aplicar();
+    const timer = window.setTimeout(aplicar, 0);
+    const quadro = window.requestAnimationFrame(aplicar);
+    return () => {
+      window.clearTimeout(timer);
+      window.cancelAnimationFrame(quadro);
+    };
+  }, [carregando, pagina, aba, tema, buscaAtiva]);
 
   async function verMais() {
-    if (!pagina?.cursor) return;
+    if (!pagina?.cursor || maisCarregando) return;
+    const geracao = consultaAtual.current;
+    const cursorUsado = pagina.cursor;
     setMaisCarregando(true);
     try {
-      const proxima = await cliente.explorar({ tema, cursor: pagina.cursor, seguindo: aba === 'seguindo' });
-      setPagina((atual) => atual && { ...atual, novas: [...atual.novas, ...proxima.novas], cursor: proxima.cursor });
+      const proxima = await cliente.explorar({ tema, cursor: cursorUsado, seguindo: aba === 'seguindo', busca: buscaAtiva || undefined });
+      if (geracao !== consultaAtual.current) return;
+      setPagina((atual) => {
+        if (!atual || atual.cursor !== cursorUsado) return atual;
+        const vistos = new Set(atual.novas.map((item) => item.codigo));
+        return {
+          ...atual,
+          novas: [...atual.novas, ...proxima.novas.filter((item) => !vistos.has(item.codigo))],
+          cursor: proxima.cursor,
+        };
+      });
     } catch (falha) {
-      anunciar(textoErro(codigoDoErro(falha)));
+      if (geracao === consultaAtual.current) anunciar(textoErro(codigoDoErro(falha)));
     } finally {
-      setMaisCarregando(false);
+      if (geracao === consultaAtual.current) setMaisCarregando(false);
     }
   }
 
@@ -342,8 +571,16 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   const { acoes, dialogo } = useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, anunciar });
   const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
   const fichas = useFileira<HTMLDivElement>(logado);
-  // Na aba Seguindo sem ninguém seguido, as fichas de tema não têm o que filtrar.
-  const semFichas = aba === 'seguindo' && pagina?.seguindoAlguem === false;
+  // Na aba Seguindo sem ninguém seguido (ou visitante), as fichas de tema não têm o que filtrar.
+  const semFichas = seguindoVisitante || (aba === 'seguindo' && pagina?.seguindoAlguem === false);
+
+  // Evita cartão duplicado quando um tema tem só 1 trilha ou já aparece no "Em alta" daquele tema.
+  const emAltaRaw = pagina?.emAlta ?? [];
+  const novasRaw = pagina?.novas ?? [];
+  const unicoIgual = emAltaRaw.length === 1 && novasRaw.length === 1 && emAltaRaw[0].codigo === novasRaw[0].codigo && !pagina?.cursor;
+  const emAltaVisiveis = unicoIgual ? [] : emAltaRaw;
+  const codigosEmAlta = tema && emAltaVisiveis.length > 0 ? new Set(emAltaVisiveis.map((item) => item.codigo)) : null;
+  const novasVisiveis = codigosEmAlta ? novasRaw.filter((item) => !codigosEmAlta.has(item.codigo)) : novasRaw;
 
   return (
     <section className="painel painel--explorar" aria-busy={carregando || undefined}>
@@ -359,6 +596,20 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
           <button type="button" className="explorar__aba" aria-pressed={aba === 'todos'} onClick={() => setAba('todos')}>{c.abaTodos}</button>
           <button type="button" className="explorar__aba" aria-pressed={aba === 'seguindo'} onClick={() => setAba('seguindo')}><Icone nome="pessoa" />{c.abaSeguindo}</button>
         </div>
+      )}
+
+      {!semFichas && (
+        <form className="explorar__busca" role="search" onSubmit={(evento) => { evento.preventDefault(); setBuscaAtiva(buscaTexto.trim().slice(0, 80)); }}>
+          <label htmlFor="explorar-busca" className="somente-leitor">{c.buscaRotulo}</label>
+          <input id="explorar-busca" type="search" value={buscaTexto} maxLength={80} placeholder={c.buscaPlaceholder}
+            onChange={(evento) => setBuscaTexto(evento.target.value)} />
+          {buscaTexto && (
+            <button type="button" className="explorar__busca-limpar" aria-label={c.buscaLimpar}
+              onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>
+              ×
+            </button>
+          )}
+        </form>
       )}
 
       {!semFichas && (
@@ -378,40 +629,58 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       {erro && <p className="campo-erro" role="alert">{erro}</p>}
       {carregando && !pagina && <div className="explorar__esqueleto" aria-hidden="true"><span /><span /><span /></div>}
 
-      {pagina && vazio && aba === 'seguindo' && (
+      {seguindoVisitante && (
         <div className="explorar__vazio">
           <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
           <div>
-            <h2 className="explorar__secao">{pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo}</h2>
-            {!pagina.seguindoAlguem && <p className="folha-texto">{c.vazioSeguindoTexto}</p>}
-            <Botao variante="secundario" onClick={() => { setTema(null); setAba('todos'); }}>{c.vazioSeguindoAcao}</Botao>
-          </div>
-        </div>
-      )}
-      {pagina && vazio && aba === 'todos' && (
-        <div className="explorar__vazio">
-          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
-          <div>
-            <h2 className="explorar__secao">{tema ? c.vazioTema(temas[tema]) : c.vazioTitulo}</h2>
-            <p className="folha-texto">{tema ? c.vazioTemaTexto : c.vazioTexto}</p>
-            {tema
-              ? <Botao variante="secundario" onClick={() => setTema(null)}>{c.vazioTemaAcao}</Botao>
-              : logado && irParaTrilhas && <Botao onClick={irParaTrilhas}>{c.vazioAcao}</Botao>}
+            <h2 className="explorar__secao">{c.seguindoVisitanteTitulo}</h2>
+            <p className="folha-texto">{c.seguindoVisitanteTexto}</p>
+            <div className="explorar__vazio-acoes">
+              <Botao variante="primario" onClick={() => { setTema(null); setAba('todos'); }}>{c.voltarComunidade}</Botao>
+              {aoSair && <Botao variante="secundario" onClick={aoSair}>{c.entrarOuCriar}</Botao>}
+            </div>
           </div>
         </div>
       )}
 
-      {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} />}
+      {!seguindoVisitante && pagina && vazio && aba === 'seguindo' && (
+        <div className="explorar__vazio">
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
+          <div>
+            <h2 className="explorar__secao">{buscaAtiva ? c.buscaVazio(buscaAtiva) : pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo}</h2>
+            {!buscaAtiva && !pagina.seguindoAlguem && <p className="folha-texto">{c.vazioSeguindoTexto}</p>}
+            {buscaAtiva
+              ? <Botao variante="secundario" onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>{c.buscaLimpar}</Botao>
+              : <Botao variante="secundario" onClick={() => { setTema(null); setAba('todos'); }}>{c.vazioSeguindoAcao}</Botao>}
+          </div>
+        </div>
+      )}
+      {!seguindoVisitante && pagina && vazio && aba === 'todos' && (
+        <div className="explorar__vazio">
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
+          <div>
+            <h2 className="explorar__secao">{buscaAtiva ? c.buscaVazio(buscaAtiva) : tema ? c.vazioTema(temas[tema]) : c.vazioTitulo}</h2>
+            <p className="folha-texto">{buscaAtiva || tema ? c.vazioTemaTexto : c.vazioTexto}</p>
+            {buscaAtiva
+              ? <Botao variante="secundario" onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>{c.buscaLimpar}</Botao>
+              : tema
+                ? <Botao variante="secundario" onClick={() => setTema(null)}>{c.vazioTemaAcao}</Botao>
+                : logado && irParaTrilhas && <Botao onClick={irParaTrilhas}>{c.vazioAcao}</Botao>}
+          </div>
+        </div>
+      )}
 
-      {pagina && pagina.novas.length > 0 && (
+      {!seguindoVisitante && pagina && emAltaVisiveis.length > 0 && <EmAlta cartoes={emAltaVisiveis} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} aoAbrirOrigem={aoAbrirOrigem} />}
+
+      {!seguindoVisitante && pagina && novasVisiveis.length > 0 && (
         <section className="explorar__novas" aria-labelledby="explorar-novas">
-          <h2 id="explorar-novas" className="explorar__secao">{aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</h2>
+          <h2 id="explorar-novas" className="explorar__secao">{buscaAtiva ? c.buscaResultados(novasVisiveis.length, buscaAtiva) : aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</h2>
           <ul className="grade-cartoes">
-            {pagina.novas.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} /></li>)}
+            {novasVisiveis.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} secao="novas" aoAbrirOrigem={aoAbrirOrigem} /></li>)}
           </ul>
           {pagina.cursor
             ? <Botao variante="secundario" className="explorar__mais" disabled={maisCarregando} aria-busy={maisCarregando || undefined} onClick={() => void verMais()}>{maisCarregando ? c.carregando : c.carregarMais}</Botao>
-            : pagina.novas.length >= LIMITES_COMUNIDADE.porPagina && <p className="campo-dica">{c.fim}</p>}
+            : novasVisiveis.length >= LIMITES_COMUNIDADE.porPagina && <p className="campo-dica">{c.fim}</p>}
         </section>
       )}
       {dialogo}
@@ -471,11 +740,13 @@ export function CartoesPublicos({ inicial, logado, titulo }: { inicial: CartaoTr
 }
 
 /** /explorar: o mesmo Explorar do app, com o convite para entrar quando não há sessão. */
-export function ExplorarPublico({ inicial, logado }: { inicial: PaginaExplorar | null; logado: boolean }) {
+export function ExplorarPublico({ inicial, logado, filtroInicial }: { inicial: PaginaExplorar | null; logado: boolean; filtroInicial?: FiltroExplorarUrl }) {
   const abrirNoApp = useAbrirNoApp();
   const router = useRouter();
   return (
-    <Explorar logado={logado} inicial={inicial} topo={logado ? undefined : <ConviteEntrar />}
+    <Explorar logado={logado} inicial={inicial}
+      temaInicial={filtroInicial?.tema ?? null} abaInicial={filtroInicial?.aba ?? 'todos'} buscaInicial={filtroInicial?.busca ?? ''}
+      topo={logado ? undefined : <ConviteEntrar />}
       aoAbrir={(planoId) => abrirNoApp(planoId)}
       aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))}
       irParaTrilhas={() => router.push('/')} />
@@ -489,11 +760,17 @@ export function ExplorarPublico({ inicial, logado }: { inicial: PaginaExplorar |
 export function VoltarDaPagina({ destino }: { destino: string }) {
   const router = useRouter();
   function voltar() {
+    const origemExplorar = destino === '/explorar' ? lerOrigemExplorar(false) : null;
     const entrada = performance.getEntriesByType('navigation')[0]?.name;
     const veioDoStudoo = window.history.length > 1 && ((entrada && new URL(entrada).pathname !== location.pathname)
       || (document.referrer && new URL(document.referrer).origin === location.origin));
-    if (veioDoStudoo) window.history.back();
-    else router.push(destino);
+    if (veioDoStudoo) {
+      window.history.back();
+    } else if (origemExplorar) {
+      router.push(origemExplorar.url);
+    } else {
+      router.push(destino);
+    }
   }
   return (
     <Botao variante="texto" className="voltar-pagina" onClick={voltar}>

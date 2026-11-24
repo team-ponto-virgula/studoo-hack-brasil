@@ -107,6 +107,20 @@
 .explorar__vazio { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 22px; border: 2px dashed var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
 .explorar__vazio .stu { width: 96px; height: auto; flex: none; }
 .explorar__vazio > div { display: grid; flex: 1 1 16rem; gap: 8px; justify-items: start; }
+.explorar__vazio-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.explorar__busca { position: relative; display: flex; align-items: center; width: min(100%, 30rem); }
+.explorar__busca input {
+  width: 100%; min-height: 44px; padding: 8px 44px 8px 14px; border: 2px solid #8792bd; border-radius: 14px;
+  background: var(--fundo); color: var(--texto); font: inherit; font-weight: 700;
+}
+.explorar__busca input::placeholder { color: var(--texto2); font-weight: 600; }
+.explorar__busca input:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-color: var(--acao); }
+.explorar__busca-limpar {
+  position: absolute; right: 2px; display: inline-grid; place-items: center; min-width: 44px; min-height: 44px;
+  border: 0; border-radius: 12px; background: transparent; color: var(--texto2); font-size: 1.25rem; font-weight: 900; cursor: pointer;
+}
+.explorar__busca-limpar:focus-visible { outline: 3px solid var(--acao); outline-offset: -2px; }
+@media (hover: hover) { .explorar__busca-limpar:hover { color: var(--texto); } }
 .explorar__novas { display: grid; gap: 12px; }
 .explorar__mais { justify-self: center; min-width: 14rem; min-height: 48px; }
 .explorar__convite {

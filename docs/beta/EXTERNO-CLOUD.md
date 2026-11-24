@@ -1,5 +1,11 @@
 # Beta externo — estado de entrega
 
+## Organização Expo — 23/11/2026
+
+Organização **@studoo** com Miguel como Owner e Julio já membro Developer. O projeto existente foi transferido para **@studoo/studoo-mobile**, mantendo o UUID; `expo.owner` local está atualizado. Histórico do build 3, numeração remota e assinatura iOS foram conferidos no destino; 22/22 testes do preflight passaram. A [operação da organização](EXPO-ORGANIZACAO.md) registra a conclusão e o acesso para builds/envios. [Estado sanitizado](conferencia-cloud/expo-organizacao.json). Os registros de Apple/TestFlight abaixo são das conferências datadas de 21/11.
+
+Para os próximos uploads de Julio, foi habilitada a geração de chave individual no App Store Connect e preparado o perfil `submit.testflight-individual`. Ele usa `.p8` e Key ID do próprio usuário, sem Issuer ID. [Operação de envio](ENVIO-JULIO-TESTFLIGHT.md). A chave ainda precisa ser gerada na sessão de Julio; nenhum novo build foi enviado nessa preparação.
+
 ## Estado atual — 21/11/2026, 03:14 UTC (21/11, 00:14 em São Paulo)
 
 O **Studoo 0.1.0 (3) está compilado, assinado, enviado e processado pela Apple**. O build está `VALID`, com estado externo `READY_FOR_BETA_SUBMISSION`. **Ainda não foi enviado à Beta App Review e não está disponível para testadores externos.**

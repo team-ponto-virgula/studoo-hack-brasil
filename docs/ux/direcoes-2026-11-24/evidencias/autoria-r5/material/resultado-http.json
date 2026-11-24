@@ -1,0 +1,909 @@
+{
+  "scope": "HTTP integrado da bancada com fixtures locais explícitas; não testa seletor/OCR/câmera nativos ou leitura real de arquivo",
+  "sourceBefore": {
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f"
+  },
+  "sourceAfter": {
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f"
+  },
+  "sourceStable": true,
+  "rows": [
+    {
+      "direction": "jornada",
+      "width": 360,
+      "height": 800,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "height": 844,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "height": 800,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "height": 844,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "height": 844,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "height": 800,
+      "checks": [
+        {
+          "name": "limites reais visíveis",
+          "passed": true
+        },
+        {
+          "name": "seleção não confirma material antes da leitura",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Cancelar",
+          "passed": true
+        },
+        {
+          "name": "prévia recupera destino coerente quando Cancelar desaparece",
+          "passed": true
+        },
+        {
+          "name": "citação mostra trecho literal e página",
+          "passed": true
+        },
+        {
+          "name": "Escape da citação devolve foco",
+          "passed": true
+        },
+        {
+          "name": "confirmar aplica arquivo e referência ao pedido",
+          "passed": true
+        },
+        {
+          "name": "objetivo preservado ao confirmar",
+          "passed": true
+        },
+        {
+          "name": "tipo inválido não substitui confirmado",
+          "passed": true
+        },
+        {
+          "name": "recuperar formato volta ao objetivo preservado",
+          "passed": true
+        },
+        {
+          "name": "limite exato 5MB+1 rejeitado",
+          "passed": true
+        },
+        {
+          "name": "tamanho inválido mantém material anterior",
+          "passed": true
+        },
+        {
+          "name": "primeiro evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "segundo evento preserva foco em Meu perfil",
+          "passed": true
+        },
+        {
+          "name": "CSV mostra tabela e rótulo de linhas",
+          "passed": true
+        },
+        {
+          "name": "prévia nova sem confirmação mantém PDF",
+          "passed": true
+        },
+        {
+          "name": "cancelar impede prévia tardia e preserva confirmado",
+          "passed": true
+        },
+        {
+          "name": "trocar durante leitura descarta resultado antigo",
+          "passed": true
+        },
+        {
+          "name": "DOCX confirmado após troca",
+          "passed": true
+        },
+        {
+          "name": "cancelar e remover não ressuscita seleção antiga",
+          "passed": true
+        },
+        {
+          "name": "remoção preserva referências e progresso existentes",
+          "passed": true
+        },
+        {
+          "name": "navegação cancela avanço assíncrono",
+          "passed": true
+        },
+        {
+          "name": "câmera representada sem abrir recurso",
+          "passed": true
+        },
+        {
+          "name": "foto tem prévia e origem de exemplo",
+          "passed": true
+        },
+        {
+          "name": "permissão negada tem saída sem câmera",
+          "passed": true
+        },
+        {
+          "name": "saída de permissão preserva foto confirmada",
+          "passed": true
+        },
+        {
+          "name": "erro de leitura oferece tentativa recuperável",
+          "passed": true
+        },
+        {
+          "name": "expiração não oferece usar material vencido",
+          "passed": true
+        },
+        {
+          "name": "recuperar expiração limpa entrada e preserva citações",
+          "passed": true
+        },
+        {
+          "name": "reload depois de recuperar não reabre expiração",
+          "passed": true
+        },
+        {
+          "name": "galeria tem quadro próprio e cancelamento",
+          "passed": true
+        },
+        {
+          "name": "cancelar galeria preserva objetivo",
+          "passed": true
+        },
+        {
+          "name": "sem câmera real acionada",
+          "passed": true
+        },
+        {
+          "name": "sem requests de API",
+          "passed": true
+        },
+        {
+          "name": "zero pageerrors",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "apiRequests": []
+    }
+  ],
+  "nativeExecuted": false
+}

@@ -1,0 +1,166 @@
+{
+  "startedAt": "2026-11-24T17:44:50.397943+00:00",
+  "finishedAt": "2026-11-24T17:45:12.850749+00:00",
+  "sourceCommit": "4523a2ee5f2f137b5b31f74c2468facc4f1e8b1d",
+  "scope": "Ritmo suave: typecheck web e regressões automatizadas; não é build/IPA, captura do renderer ou execução iOS/Android.",
+  "parameters": {
+    "sequenciaMs": 880,
+    "sequenciaMinimaMs": 680,
+    "saidaMs": 160,
+    "limiteMs": 1400,
+    "margemQuadroMs": 48,
+    "curva": [
+      0.42,
+      0,
+      0.58,
+      1
+    ],
+    "marcos": [
+      0,
+      0.26,
+      0.4,
+      0.56,
+      0.9,
+      1
+    ],
+    "oculosRotacao": [
+      0,
+      -5,
+      2,
+      0,
+      0,
+      0
+    ]
+  },
+  "sourceHashesBefore": {
+    "packages/contratos/src/abertura.ts": "0928bb58fda29e8a843c6c5708a215faddf515de71302d32571a430f7def7fc1",
+    "packages/contratos/src/abertura-motion.json": "7eeecd405a1acbdc554cc4c43969593fb33dfa3831532ed5abe9f39fdbf0e0bd",
+    "apps/mobile/src/abertura.tsx": "2df590d60705de9d2945efaa6c4ba5cf707509c5a6445f73dd17c5accede0a1a",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+    "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+    "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+    "tests/abertura.test.mjs": "98dd040d9f515f7498d6304fe698796fa9551e1c9aad09e5e5fe152087fa74c9",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "sourceHashesAfter": {
+    "packages/contratos/src/abertura.ts": "0928bb58fda29e8a843c6c5708a215faddf515de71302d32571a430f7def7fc1",
+    "packages/contratos/src/abertura-motion.json": "7eeecd405a1acbdc554cc4c43969593fb33dfa3831532ed5abe9f39fdbf0e0bd",
+    "apps/mobile/src/abertura.tsx": "2df590d60705de9d2945efaa6c4ba5cf707509c5a6445f73dd17c5accede0a1a",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+    "apps/mobile/src/interface.tsx": "26406fbacdd315ede9da89efe262360b4749f74f6875a76489933166fa2116b4",
+    "apps/mobile/assets/marca/logo-com-sorriso.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+    "tests/abertura.test.mjs": "98dd040d9f515f7498d6304fe698796fa9551e1c9aad09e5e5fe152087fa74c9",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "sourceFilesChangedDuringChecks": [],
+  "envFileUnchanged": true,
+  "allPassed": true,
+  "results": [
+    {
+      "suite": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "startedAt": "2026-11-24T17:44:50.400244+00:00",
+      "finishedAt": "2026-11-24T17:44:55.567496+00:00",
+      "durationMs": 5167.26,
+      "exitCode": 0,
+      "counts": null,
+      "log": "/workspace/work/testflight-oculos-suave/typecheck.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:estudio:interface",
+      "command": [
+        "npm",
+        "run",
+        "test:estudio:interface"
+      ],
+      "startedAt": "2026-11-24T17:44:55.573030+00:00",
+      "finishedAt": "2026-11-24T17:45:12.848386+00:00",
+      "durationMs": 17275.37,
+      "exitCode": 0,
+      "counts": {
+        "tests": 604,
+        "suites": 0,
+        "pass": 604,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/testflight-oculos-suave/test-estudio-interface.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:paridade",
+      "command": [
+        "npm",
+        "run",
+        "test:paridade"
+      ],
+      "startedAt": "2026-11-24T17:44:55.574300+00:00",
+      "finishedAt": "2026-11-24T17:44:56.339964+00:00",
+      "durationMs": 765.67,
+      "exitCode": 0,
+      "counts": {
+        "tests": 5,
+        "suites": 0,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/testflight-oculos-suave/test-paridade.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:movimento",
+      "command": [
+        "npm",
+        "run",
+        "test:movimento"
+      ],
+      "startedAt": "2026-11-24T17:44:55.574733+00:00",
+      "finishedAt": "2026-11-24T17:44:56.274882+00:00",
+      "durationMs": 700.16,
+      "exitCode": 0,
+      "counts": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/testflight-oculos-suave/test-movimento.log",
+      "sanitized": true
+    }
+  ],
+  "nativeExecuted": false,
+  "nativeScoresAssigned": false,
+  "priorEvidenceUsedAsCurrentApproval": false,
+  "noBuildOrPublishStarted": true,
+  "sourceCommitIsBaseSnapshot": true,
+  "sourceFilesDifferingFromRecordedBase": [
+    "packages/contratos/src/abertura.ts",
+    "packages/contratos/src/abertura-motion.json",
+    "apps/mobile/src/abertura.tsx",
+    "tests/abertura.test.mjs"
+  ],
+  "evaluatedSourceOfTruth": "Hashes congelados antes/depois; o SHA é a base Git da árvore com as alterações de suavização ainda não commitadas."
+}

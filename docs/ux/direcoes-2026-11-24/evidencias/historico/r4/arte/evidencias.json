@@ -1,0 +1,376 @@
+{
+  "candidate": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "chromium": "156.0.8078.79",
+  "DPR": 2,
+  "before": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "after": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "stable": true,
+  "rows": [
+    {
+      "d": "jornada",
+      "page": "inicio",
+      "w": 390,
+      "file": "jornada-inicio-390.png",
+      "title": "Vamos nessa, Nina?",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "mapa",
+      "w": 390,
+      "file": "jornada-mapa-390.png",
+      "title": "SQL para a prova",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "licao",
+      "w": 390,
+      "file": "jornada-licao-390.png",
+      "title": "O limite também entra.",
+      "stats": 0,
+      "code": "SELECT nome FROM alunos\nWHERE nota >= 7;",
+      "emphasis": ">= 7",
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "conclusao",
+      "w": 390,
+      "file": "jornada-conclusao-390.png",
+      "title": "Um passo bem entendido!",
+      "stats": 0,
+      "mascotWidth": 112,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "perfil",
+      "w": 390,
+      "file": "jornada-perfil-390.png",
+      "title": "Nina",
+      "stats": 1,
+      "mainOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "inicio-concluida",
+      "w": 390,
+      "file": "jornada-inicio-concluida-390.png",
+      "title": "Vamos nessa, Nina?",
+      "hero": "Trilha concluídaSQL para a provaLições concluídas5 de 5Reveja uma ideia ou abra um novo caminho.",
+      "footer": [
+        "Criar outra trilha",
+        "Rever esta trilha"
+      ],
+      "mainOverflow": false
+    },
+    {
+      "d": "jornada",
+      "page": "conclusao",
+      "w": 360,
+      "file": "jornada-conclusao-360.png",
+      "title": "Um passo bem entendido!",
+      "stats": 0,
+      "mascotWidth": 112,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "page": "inicio-concluida",
+      "w": 360,
+      "file": "jornada-inicio-concluida-360.png",
+      "title": "Vamos nessa, Nina?",
+      "hero": "Trilha concluídaSQL para a provaLições concluídas5 de 5Reveja uma ideia ou abra um novo caminho.",
+      "footer": [
+        "Criar outra trilha",
+        "Rever esta trilha"
+      ],
+      "mainOverflow": false
+    },
+    {
+      "d": "caderno",
+      "page": "inicio",
+      "w": 390,
+      "file": "caderno-inicio-390.png",
+      "title": "Seu caderno de estudos.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "page": "mapa",
+      "w": 390,
+      "file": "caderno-mapa-390.png",
+      "title": "SQL para a prova",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "page": "licao",
+      "w": 390,
+      "file": "caderno-licao-390.png",
+      "title": "O limite também entra.",
+      "stats": 0,
+      "code": "SELECT nome FROM alunos\nWHERE nota >= 7;",
+      "emphasis": ">= 7",
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "page": "conclusao",
+      "w": 390,
+      "file": "caderno-conclusao-390.png",
+      "title": "Mais uma página entendida.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "page": "perfil",
+      "w": 390,
+      "file": "caderno-perfil-390.png",
+      "title": "Nina",
+      "stats": 1,
+      "mainOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "page": "conclusao",
+      "w": 360,
+      "file": "caderno-conclusao-360.png",
+      "title": "Mais uma página entendida.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "inicio",
+      "w": 390,
+      "file": "foco-inicio-390.png",
+      "title": "Seu próximo passo.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 702.40625,
+          "bottom": 754.40625
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "mapa",
+      "w": 390,
+      "file": "foco-mapa-390.png",
+      "title": "SQL para a prova",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 702.40625,
+          "bottom": 754.40625
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "licao",
+      "w": 390,
+      "file": "foco-licao-390.png",
+      "title": "O limite também entra.",
+      "stats": 0,
+      "code": "SELECT nome FROM alunos\nWHERE nota >= 7;",
+      "emphasis": ">= 7",
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "conclusao",
+      "w": 390,
+      "file": "foco-conclusao-390.png",
+      "title": "Uma ideia que ficou.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "perfil",
+      "w": 390,
+      "file": "foco-perfil-390.png",
+      "title": "Nina",
+      "stats": 1,
+      "mainOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "page": "conclusao",
+      "w": 360,
+      "file": "foco-conclusao-360.png",
+      "title": "Uma ideia que ficou.",
+      "stats": 0,
+      "mainOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    }
+  ]
+}

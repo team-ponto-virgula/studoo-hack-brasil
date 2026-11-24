@@ -17,7 +17,7 @@ import {
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { AlturaDaFaixaFixa, Botao, DeslocamentoDaRolagem, EspacoDaBarra, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
+import { AlturaDaFaixaFixa, AvisoDoApp, Botao, DeslocamentoDaRolagem, EspacoDaBarra, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -108,15 +108,10 @@ function resumoDosTrechos(nos: readonly NoCaminho[]) {
   return resumo;
 }
 
-/** Um trecho está vencido quando todas as suas lições estão concluídas: o marco que o fecha fica dourado. */
-function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
-  return nos.every((no) => no.trecho !== trecho || no.estado === 'concluida');
-}
-
 /**
  * Caminho único e contínuo de lições, na ordem de aprendizado, sobre o mundo ilustrado.
  * Não agrupa por assunto: entre um trecho e outro aparece só o marco, sem nome, sobre a fronteira das regiões.
- * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho; o cenário fica de fora.
+ * O leitor de tela ouve "Parte 1" antes das primeiras lições e cada nova parte depois do último nó do trecho anterior.
  * O nó atual abre a lição; concluído ou bloqueado abre a folha que explica o estado.
  * Com `rolarPara`, avisa por `aoRolar` o topo e a base da lente desse nó na rolagem da tela (o caminho deve ser filho direto dela).
  * Com `montando`, a trilha ainda está sendo gerada: cada nó novo entra com um movimento curto e o cenário brota junto,
@@ -128,14 +123,22 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * Ao abrir, os nós caem no lugar em sequência. Com `recemConcluida`, o nó da lição que a pessoa acabou de concluir
  * comemora, a linha até o próximo se desenha e só então o próximo nó se abre. Árvores e flores balançam com o vento.
  */
+/** Cores do piloto, opt-in: não recolore a trilha salva ou os mapas de outros fluxos. */
+function coresDoCaminho(trecho: number, claro = false) {
+  const regiao = coresDaRegiao(trecho);
+  return claro ? { ...regiao, chao: '#F4F7FF', relevo: '#E2E8F4' } : regiao;
+}
+
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
   rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0, semFala = false, respiroNoAlto = 0,
-  aoMedirNo, stuNoNo1 = false, festaPermitida = true, trofeuDoZero = false, rascunho = false, criacao = null, guardarNo1 }: {
+  aoMedirNo, stuNoNo1 = false, festaPermitida = true, trofeuDoZero = false, rascunho = false, claro = false, criacao = null, guardarNo1 }: {
   /**
    * A prévia é rascunho (spec 04, "Criar a trilha"): nós de face branca com contorno tracejado de 2 px `#9CB4F5`, sem o lábio,
    * e o caminho tracejado 8/8 na mesma cor. Quando a trilha passa a existir (`criacao` = 'criada'), viram os de sempre.
    */
   rascunho?: boolean;
+  /** Superfície opt-in da geração/proposta; a geometria e os estados do caminho permanecem os mesmos. */
+  claro?: boolean;
   /**
    * O toque em "Começar a lição 1": 'criando' (o anel do nó 1 respira e o Stu estuda ao lado dele), 'erro' (o Stu fica ao
    * lado do nó 1, parado, encorajador) e 'criada' (o nó 1 pulsa e fica azul cheio, o caminho firma e o Stu comemora).
@@ -195,6 +198,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   // troféu continua por baixo dela, com a altura que ela cobre a mais, sem faixa branca no fim. Sem a barra, 0.
   const espacoDaBarra = useContext(EspacoDaBarra);
   const [aberto, setAberto] = useState<string | null>(null);
+  // Spec 16, item 14 (ee85828): se o balão de um nó abre com o aviso do alto à vista (o da música), o aviso fecha na hora,
+  // sem animação, para nunca disputar com o balão.
+  const { aviso, dispensar } = useContext(AvisoDoApp);
+  useEffect(() => {
+    if (aberto !== null && aviso?.noAlto) dispensar();
+    // Só quando um balão abre.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto]);
   // Largura do caminho (a serpentina usa pixels): começa pela tela e se ajusta quando a lista mede.
   const [largura, setLargura] = useState(() => (largo ? Math.min(width, 620) : width));
   // A entrada em sequência só acontece numa trilha que já abre pronta, não quando a geração termina.
@@ -384,7 +395,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       tentarRolar();
       informarNos();
     }}>
-      <Inicio texto={semFala ? undefined : stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
+      <Inicio claro={claro} texto={semFala ? undefined : stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
         respiroNoAlto={semFala ? respiroNoAlto : 0}
         comecoAtual={nos[0]?.estado === 'atual'}
         aoMedir={(altura) => {
@@ -395,7 +406,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           posicoes.current.parte = y;
           tentarRolar();
         }}
-        parte={total > 0 ? <Parte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
+        parte={total > 0 ? <Parte claro={claro} numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
       {/* Acima da chegada (zIndex 1): o título embaixo do último nó passa por cima do morro do troféu, inteiro e com a sombra,
           como na web (no app ele era cortado pela chegada, desenhada depois). */}
       <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes} style={{ zIndex: 1 }}
@@ -447,7 +458,6 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto) depois += (seguinte?.estado === 'atual' ? 12 : 22) * selosDoNo(no).length;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
-          const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
           const recem = no.id === recemConcluida;
           const guia = guiaNoCaminho && no.estado === 'atual';
           const atrasoEntrada = surgir ? 0 : 100 + indice * 70;
@@ -461,7 +471,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 
           // O espaço até o próximo nó fica dentro da linha (padding), para o chão da região não ter falhas e o marco anunciado caber nela.
           return (
-            <Linha key={no.id} espaco={espaco} chao={coresDaRegiao(no.trecho).chao} elevada={aberto === no.id}
+            <Linha key={no.id} espaco={espaco} chao={coresDoCaminho(no.trecho, claro).chao} elevada={aberto === no.id}
               aoMedir={(caixa) => {
                 posicoes.current.linhas.set(no.id, caixa);
                 if (montando && indice === total - 1) setAlvoStu((anterior) => anterior?.x === x && anterior.topo === caixa.y ? anterior : { x, topo: caixa.y });
@@ -469,15 +479,15 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 tentarAcompanhar();
                 informarNos();
               }}>
-              {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { backgroundColor: estradaSobre(coresDaRegiao(no.trecho).chao), left: (largura * x) / 100 - 12,
+              {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { backgroundColor: estradaSobre(coresDoCaminho(no.trecho, claro).chao), left: (largura * x) / 100 - 12,
                 top: no.estado === 'atual' ? -70 : -22, height: (no.estado === 'atual' ? 70 : 22) + medidas.lente / 2 }]} />}
-              <Terreno x={x} largura={largura} semEnfeites={comRotulo} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
+              {!claro && <Terreno x={x} largura={largura} semEnfeites={comRotulo} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
                 atraso={surgir ? (novo ? atrasos.cenario : 0) : atrasoEntrada + 160} guia={guia} atrasoGuia={comRecem ? 1350 : 300}
                 duracao={montando ? RITMO_DA_GERACAO.cenarioMs : 440} deZero={montando}
-                vento={indice % 2 ? ventoImpar : ventoPar} />
-              {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
+                vento={indice % 2 ? ventoImpar : ventoPar} />}
+              {!claro && fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
               {(seguinte || vaiAteChegada || vaiAteVindo) && (
-                <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2} chao={coresDaRegiao(no.trecho).chao}
+                <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2} chao={coresDoCaminho(no.trecho, claro).chao}
                   desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} surgir={linhaParaONovo ?? linhaParaAVaga}
                   rascunho={rascunho && no.estado === 'previa'} firmar={firmar} />
               )}
@@ -497,16 +507,16 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
               {indice === 0 && (criacao !== null || stuNoNo1) && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao ?? 'pronta'} reduzir={reduzir} />}
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
+                <Marco topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
                   queda={montando}>
-                  <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
+                  <Parte claro={claro} numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
             </Linha>
           );
         })}
         {montando && (
-          <Vindo key={total} x={posicaoX(total)} largura={largura} medidas={medidas} chao={coresDaRegiao(ultimoTrecho).chao} folgaAbaixo={Math.round(alturaTela * 0.12)}
+          <Vindo key={total} x={posicaoX(total)} largura={largura} medidas={medidas} chao={coresDoCaminho(ultimoTrecho, claro).chao} folgaAbaixo={Math.round(alturaTela * 0.12)}
             aparecerEm={total === 0 ? 0 : atrasosDaLicao(total > 1 && nos[total - 2].trecho !== nos[total - 1].trecho).espera}
             aoMedir={(caixa) => {
               posicoes.current.vindo = caixa;
@@ -520,7 +530,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada + espacoDaBarra}
+        <Chegada claro={claro} trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada + espacoDaBarra}
           rascunho={rascunho} firmar={firmar}
           faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={(festaNaChegada && festaPermitida) || (comRecem && tudoFeito)}
           doZero={trofeuDoZero}
@@ -542,7 +552,8 @@ function circulo(tamanho: number) {
  * senão, o Stu abre o mapa com a frase num balão. Enquanto a IA monta a trilha, o Stu "pensa" (sobe e desce devagar),
  * pontinhos digitam no balão e as dicas se revezam embaixo da frase.
  */
-function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir, aoMedirParte, respiroNoAlto = 0 }: {
+function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir, aoMedirParte, respiroNoAlto = 0, claro = false }: {
+  claro?: boolean;
   /** Na geração, a placa presa no alto cobre o começo do céu: o céu ganha esta altura em cima. */
   respiroNoAlto?: number;
   aoMedir?: (altura: number) => void;
@@ -559,7 +570,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
   /** Faixa da Parte 1, no pé do céu. */
   parte: ReactNode;
 }) {
-  const { chao, relevo } = coresDaRegiao(trecho);
+  const { chao, relevo } = coresDoCaminho(trecho, claro);
   // Spec 13 (A2): o Stu do começo do mapa tem 92; montando, `stu-curioso` em laço (é espera); pronto, `stu-feliz` uma vez.
   const stu = 92;
 
@@ -568,12 +579,12 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
     // entre os postes da placa e o balão, sem que um cubra o outro (defeito e da rodada 4, em 360 e 412).
     // .caminho-inicio: céu em degradê contínuo (#d6e4ff até #ecf2ff aos 72%); sol em 14/18; nuvens em 22 à direita (8%) e em
     // 70 à esquerda (4%).
-    <View style={[caminhoEstilos.inicio, degrade('linear-gradient(180deg, #d6e4ff 0%, #ecf2ff 72%)'), comecoAtual && { paddingBottom: INICIO_COM_BALAO },
+    <View style={[caminhoEstilos.inicio, claro ? { backgroundColor: '#F4F7FF' } : degrade('linear-gradient(180deg, #d6e4ff 0%, #ecf2ff 72%)'), comecoAtual && { paddingBottom: INICIO_COM_BALAO },
       respiroNoAlto > 0 && { minHeight: Math.max(210, respiroNoAlto + 96) }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-        <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />
-        <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 22, right: '8%' }} />
-        <Desenho nome="nuvem" largura={46} estilo={{ position: 'absolute', top: 70, left: '4%' }} />
+        {!claro && <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />}
+        {!claro && <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 22, right: '8%' }} />}
+        {!claro && <Desenho nome="nuvem" largura={46} estilo={{ position: 'absolute', top: 70, left: '4%' }} />}
         <View style={caminhoEstilos.inicioColinas}>
           <Onda chao={chao} relevo={relevo} forma="inicio" />
         </View>
@@ -1488,15 +1499,11 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgi
 }
 
 /**
- * Marco entre um trecho e outro: o sinal com relevo sobre a fronteira das regiões, sem nome de assunto; dourado quando
- * o trecho foi vencido. Vem depois do nó na árvore, então o leitor de tela lê "Marco 1", "Marco 2"… logo depois do
- * último nó do trecho.
+ * Faixa da parte seguinte, inserida depois do último nó da parte anterior.
  */
-function Marco({ numero, vencido, topo, noAlto = false, queda = false, children }: {
+function Marco({ topo, noAlto = false, queda = false, children }: {
   /** Geração: o marco de um trecho novo cai 12 px em 260 ms, antes da lição (com movimento reduzido, já aparece). */
   queda?: boolean;
-  numero: number;
-  vencido: boolean;
   topo: number;
   /** Com o balão "Começar" logo abaixo, a pílula fica no alto do vão, sem dividir espaço com ele. */
   noAlto?: boolean;
@@ -1518,8 +1525,7 @@ function Marco({ numero, vencido, topo, noAlto = false, queda = false, children 
   }, [reduzir]);
   return (
     <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }, noAlto && caminhoEstilos.marcoNoAlto]}>
-      <Animated.View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}
-        style={{ opacity: chegada, transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [-RITMO_DA_GERACAO.marcoQueda, 0] }) }] }}>
+      <Animated.View style={{ opacity: chegada, transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [-RITMO_DA_GERACAO.marcoQueda, 0] }) }] }}>
         {children}
       </Animated.View>
     </View>
@@ -1527,21 +1533,23 @@ function Marco({ numero, vencido, topo, noAlto = false, queda = false, children 
 }
 
 /** Faixa que abre cada parte da trilha: número, andamento e barra; dourada quando vencida. Sem nome de assunto. */
-function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; resumo?: ResumoTrecho }) {
+function Parte({ numero, resumo, trecho, claro = false }: { numero: number; trecho: number; resumo?: ResumoTrecho; claro?: boolean }) {
   if (!resumo) return null;
   const vencida = !resumo.previa && resumo.feitas === resumo.total;
   // Na prévia (spec 04, "Criar a trilha"), só "Parte 2": sem contagem. No mapa salvo, o progresso de verdade.
   let texto: string | null = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
   if (resumo.previa) texto = null;
   else if (vencida) texto = mensagens.trilha.parteVencida;
+  const titulo = mensagens.trilha.parte(numero);
   return (
-    <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida]}>
+    <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDoCaminho(trecho, claro).relevo, borderColor: coresDoCaminho(trecho, claro).relevo }, claro && { borderWidth: 0, borderBottomWidth: 0 }]}
+      accessible accessibilityRole="header" accessibilityLabel={texto ? `${titulo}. ${texto}` : titulo}>
+      <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida, claro && { backgroundColor: cores.acao }]}>
         <Icone nome={vencida ? 'trofeu' : 'bandeira'} tamanho={16} cor={vencida ? cores.ouroTexto : cores.fundo} />
       </View>
       <View style={caminhoEstilos.parteCorpo}>
         <View style={caminhoEstilos.parteTopo}>
-          <Text style={caminhoEstilos.parteNumero}>{mensagens.trilha.parte(numero)}</Text>
+          <Text style={[caminhoEstilos.parteNumero, claro && { color: cores.texto, fontSize: 14, lineHeight: 21 }]}>{titulo}</Text>
           {texto !== null && <Text style={[caminhoEstilos.parteAndamento, vencida && { color: cores.alerta }]}>{texto}</Text>}
         </View>
       </View>
@@ -1550,7 +1558,8 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0, doZero = false, rascunho = false, firmar = false }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0, doZero = false, rascunho = false, firmar = false, claro = false }: {
+  claro?: boolean;
   /** Prévia em rascunho: a reta até o troféu também é tracejada; vira a estrada de sempre quando a trilha passa a existir. */
   rascunho?: boolean;
   firmar?: boolean;
@@ -1569,7 +1578,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   festa: boolean;
   aoMedir: (caixa: Caixa) => void;
 }) {
-  const { chao, relevo } = coresDaRegiao(trecho);
+  const { chao, relevo } = coresDoCaminho(trecho, claro);
   const { width: larguraTela } = useWindowDimensions();
   const larguraColina = Math.min(larguraTela * 0.94, 440);
   // .caminho-chegada__lente: lente-base + 20.

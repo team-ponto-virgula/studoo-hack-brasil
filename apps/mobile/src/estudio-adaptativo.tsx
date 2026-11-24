@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -99,6 +99,8 @@ export function MaterialParaTrilha({
   ia,
   mostrarCabeca = true,
   aoEsperar,
+  definirAcaoPresa,
+  ultimaOpcao,
 }: {
   cliente: ClienteEstudio;
   objetivo: string;
@@ -109,6 +111,13 @@ export function MaterialParaTrilha({
   ia?: ProvedorIa;
   /** No pedido, o título já está no alto da tela: o cartão não repete (como `mostrarCabeca={false}` na web). */
   mostrarCabeca?: boolean;
+  /**
+   * Spec 16, item 35: com o material lido, "Criar trilha deste material" vira a ação presa da tela (sempre à vista, acima da
+   * cápsula), em vez de ficar no fim da prévia. Quem mostra a tela recebe o botão (ou null, sem material) e o põe no rodapé.
+   */
+  definirAcaoPresa?: (acao: ReactNode | null) => void;
+  /** Spec 16, item 35: a última opção de antes de escolher ("Experimentar com frações"), para a tela saber se ela está à vista. */
+  ultimaOpcao?: Ref<ComponentRef<typeof View>>;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -199,13 +208,43 @@ export function MaterialParaTrilha({
       if (vivo.current) setMaterial(novo);
     });
   }
+  const gerar = () =>
+    void executar(async () => {
+      if (!material) return;
+      const p = await cliente.proporMaterial(material.id, objetivo.trim() || m.objetivo);
+      if (vivo.current) onProposta(p);
+    });
+  const botaoCriar = material ? <Botao rotulo={m.gerar} testID="criar-trilha-material" peso="900" desativado={ocupado} acao={gerar} /> : null;
+  // A ação presa acompanha o material e o estado de ocupado; sai da tela junto com o cartão (desmontado ou sem material).
+  const acaoPresa = useRef(definirAcaoPresa);
+  acaoPresa.current = definirAcaoPresa;
+  const gerarAgora = useRef(gerar);
+  gerarAgora.current = gerar;
+  useEffect(() => {
+    acaoPresa.current?.(material ? <Botao rotulo={m.gerar} testID="criar-trilha-material" peso="900" desativado={ocupado} acao={() => gerarAgora.current()} /> : null);
+  }, [material, ocupado]);
+  useEffect(() => () => acaoPresa.current?.(null), []);
   return (
     <Card>
       {mostrarCabeca && <H>{mensagens.inicio.materialTitulo}</H>}
       {mostrarCabeca && <T>{mensagens.inicio.materialTexto}</T>}
       {/* <p class="estudio-legenda">: 13,6 na entrelinha de 1,6 e 12 de margem (dentro do respiro do cartão). */}
-      <Text style={[estilos.legenda, s.legendaCartao, !mostrarCabeca && s.legendaPrimeira]}>{mensagens.inicio.enviarSeguro}</Text>
-      <LinhaAbrir rotulo={mensagens.inicio.detalhes} aberto={detalhes} alternar={() => setDetalhes(!detalhes)} />
+      {mostrarCabeca ? (
+        <>
+          <Text style={[estilos.legenda, s.legendaCartao]}>{mensagens.inicio.enviarSeguro}</Text>
+          <LinhaAbrir rotulo={mensagens.inicio.detalhes} aberto={detalhes} alternar={() => setDetalhes(!detalhes)} />
+        </>
+      ) : (
+        // Spec 16, item 35: no pedido, o aviso e "Saiba mais" dividem o mesmo parágrafo (o "Saiba mais" fecha a frase), para as
+        // três opções caberem na primeira vista.
+        <Text style={[estilos.legenda, s.legendaCartao, s.legendaPrimeira]}>
+          {mensagens.inicio.enviarSeguro}{' '}
+          <Text testID="material-saiba-mais" accessibilityRole="button" accessibilityState={{ expanded: detalhes }} aria-expanded={detalhes}
+            suppressHighlighting onPress={() => setDetalhes(!detalhes)} style={s.saibaMaisNaLinha}>
+            {mensagens.inicio.detalhes}{detalhes ? ' ▴' : ' ▾'}
+          </Text>
+        </Text>
+      )}
       {/* O aviso diz quem lê o material (OpenAI, DeepSeek ou ninguém, na demonstração). Antes de a configuração chegar, ou
           se ela falhar, vale o texto geral, verdadeiro em qualquer configuração. */}
       {detalhes && <View><Text style={[estilos.legenda, s.legendaCartao]}>{m.limites}</Text><Text style={[estilos.legenda, s.legendaCartao]}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
@@ -213,9 +252,13 @@ export function MaterialParaTrilha({
         <View style={s.acoesMaterial}>
           {/* Como .estudio-arquivo da web: contorno tracejado azul, texto à esquerda; o seletor é o do sistema. */}
           <BotaoArquivo rotulo={mensagens.inicio.arquivo} testID="escolher-arquivo" desativado={ocupado} acao={() => void selecionar()} />
-          <BotaoArquivo rotulo={mensagens.inicio.camera} testID="usar-camera" desativado={ocupado} acao={() => void selecionar(true)} />
+          {Platform.OS !== 'web' && (
+            <BotaoArquivo rotulo={mensagens.inicio.camera} testID="usar-camera" desativado={ocupado} acao={() => void selecionar(true)} />
+          )}
+          <View ref={ultimaOpcao} collapsable={false}>
           <Botao
             rotulo={mensagens.inicio.demo}
+            testID="material-demo"
             variante="secundario"
             desativado={ocupado}
             acao={() =>
@@ -225,6 +268,7 @@ export function MaterialParaTrilha({
               })
             }
           />
+          </View>
         </View>
       ) : (
         <>
@@ -236,19 +280,8 @@ export function MaterialParaTrilha({
           {/* Como na web (rodada 1.1): cada página num cartão, com a miniatura da foto, a tabela do CSV ou as primeiras
               linhas do texto. */}
           {material.paginas.map((p) => <PaginaDoMaterial key={p.numero} pagina={p} />)}
-          <Botao
-            rotulo={m.gerar}
-            desativado={ocupado}
-            acao={() =>
-              void executar(async () => {
-                const p = await cliente.proporMaterial(
-                  material.id,
-                  objetivo.trim() || m.objetivo,
-                );
-                if (vivo.current) onProposta(p);
-              })
-            }
-          />
+          {/* Sem quem segure a ação presa (fora do pedido), o botão fica no fluxo, como antes. */}
+          {!definirAcaoPresa && botaoCriar}
           <Botao
             rotulo={m.remover}
             variante="texto"
@@ -284,7 +317,7 @@ function AvisoAlerta({ texto }: { texto: string }) {
 function BotaoArquivo({ rotulo, testID, desativado, acao }: { rotulo: string; testID: string; desativado: boolean; acao: () => void }) {
   const [focado, setFocado] = useState(false);
   return (
-    <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado} onPress={acao}
+    <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ disabled: desativado }} focusable={!desativado} disabled={desativado} onPress={acao}
       onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [s.arquivo, pressed && { opacity: 0.8 }, desativado && { borderColor: cores.gelo }, focado && estilos.foco]}>
       <Text style={[s.arquivoTexto, desativado && { color: cores.textoSecundario }]}>{rotulo}</Text>
@@ -309,6 +342,7 @@ export function ApoioDaLicao({
   aoMostrarCena,
   aoVoltarExercicio,
   definirRodapePonte,
+  definirRodapeEnsino,
   aoMostrarVoz,
 }: {
   /**
@@ -327,6 +361,7 @@ export function ApoioDaLicao({
    * "Verificar", "Tentar de novo" ou "Voltar ao exercício"); null quando a ponte fecha.
    */
   definirRodapePonte?: (rodape: ReactNode | null) => void;
+  definirRodapeEnsino?: (rodape: ReactNode | null) => void;
   /** Com `configuracaoAcesso` e `sessao` (o cliente do app tem os dois), a conversa ao vivo pode aparecer, como na web. */
   cliente: ClienteEstudio & Pick<ClienteElegibilidadeVoz, 'configuracaoAcesso' | 'sessao'>;
   licao: LicaoDetalhe;
@@ -362,6 +397,7 @@ export function ApoioDaLicao({
     setApoio(valor);
   }
   const [texto, setTexto] = useState('');
+  const [enviado, setEnviado] = useState('');
   /** O rascunho mais recente, para o fim da conversa ao vivo juntar a fala com ele (como textoRef da web). */
   const textoRef = useRef('');
   textoRef.current = texto;
@@ -389,6 +425,7 @@ export function ApoioDaLicao({
   const cenaY = useRef(0);
   const retornoRolado = useRef('');
   const [erro, setErro] = useState('');
+  const [erroPonte, setErroPonte] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [ensinar, setEnsinar] = useState(false);
@@ -463,7 +500,7 @@ export function ApoioDaLicao({
   useEffect(() => {
     if (segundos >= 60 && ativo.current) void parar();
   }, [segundos]);
-  async function executar(f: () => Promise<void>) {
+  async function executar(f: () => Promise<void>, mostrarErro = setErro) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
@@ -471,7 +508,7 @@ export function ApoioDaLicao({
     try {
       await f();
     } catch (e) {
-      if (vivo.current) setErro(erroTexto(e));
+      if (vivo.current) mostrarErro(erroTexto(e));
     } finally {
       emExecucao.current = false;
       if (vivo.current) setOcupado(false);
@@ -608,6 +645,7 @@ export function ApoioDaLicao({
       const r = await cliente.ensinarStu(licao.id, preparada);
       atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
       setEnsino(r);
+      setEnviado(preparada);
       setAviso('');
       aoEnsinar?.();
     });
@@ -684,6 +722,7 @@ export function ApoioDaLicao({
     setResposta('');
     setResultadoPonte(null);
     setRetorno('');
+    setErroPonte('');
     setReverPonte(false);
     retornoRolado.current = '';
   }, [pedidoPonte]);
@@ -745,6 +784,7 @@ export function ApoioDaLicao({
     return () => animacao.stop();
   }, [etapaPonte, venceu, revendo, reduzirMovimento, entradaPasso]);
   function verificarPonte() {
+    setErroPonte('');
     void executar(async () => {
       const r = await cliente.avaliarPonte(licao.id, resposta);
       atualizarApoio(r.apoio);
@@ -752,7 +792,7 @@ export function ApoioDaLicao({
       setRetorno(r.feedback);
       void tocaSons.tocarEfeito(r.correta ? 'acerto' : 'erro');
       if (r.correta) setVenceu(true);
-    });
+    }, setErroPonte);
   }
   // O rodapé preso da aula com a ação do passo (spec 05, ponte clara): sempre à vista.
   const errouAgora = Boolean(resultadoPonte && !resultadoPonte.correta && resposta === resultadoPonte.id);
@@ -770,13 +810,40 @@ export function ApoioDaLicao({
       // "Tentar de novo" limpa a escolha; o retorno fica até a nova escolha.
       definirRodapePonte(<Botao testID="ponte-tentar-de-novo" peso="900" rotulo={m.ponteTentarDeNovo} desativado={ocupado} acao={() => setResposta('')} />);
     } else {
-      definirRodapePonte(<Botao testID="ponte-conferir" peso="900" rotulo={ocupado ? m.pensando : m.verificar} ocupado={ocupado}
-        desativado={ocupado || gravando || !resposta} acao={verificarPonte} />);
+      definirRodapePonte(
+        <View style={{ gap: 8 }}>
+          {erroPonte ? <AvisoAlerta texto={erroPonte} /> : null}
+          <Botao testID="ponte-conferir" peso="900" rotulo={ocupado ? m.pensando : m.verificar} ocupado={ocupado}
+            desativado={ocupado || gravando || !resposta} acao={verificarPonte} />
+        </View>,
+      );
     }
     // O rodapé muda com o passo e o estado da ponte; as ações leem o estado do desenho em que foram criadas.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ponteAberta, venceu, revendo, ponte, etapaPonte, errouAgora, resposta, ocupado, gravando]);
+  }, [ponteAberta, venceu, revendo, ponte, etapaPonte, errouAgora, resposta, ocupado, gravando, erroPonte]);
   useEffect(() => () => definirRodapePonte?.(null), [definirRodapePonte]);
+
+  function enviarEnsino() {
+    const explicacao = texto.trim();
+    void executar(async () => {
+      const r = await cliente.ensinarStu(licao.id, explicacao);
+      atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+      setEnsino(r);
+      setEnviado(explicacao);
+      setAviso('');
+      aoEnsinar?.();
+    });
+  }
+
+  const prenderEnvio = Boolean(definirRodapeEnsino && ultimo && ensinar && !ponteAberta && (!ensino || texto.trim() !== enviado));
+  const botaoEnviar = <Botao testID="enviar-explicacao" rotulo={ocupado ? m.pensando : m.enviar} ocupado={ocupado}
+    desativado={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20} acao={enviarEnsino} />;
+  useEffect(() => {
+    definirRodapeEnsino?.(prenderEnvio ? botaoEnviar : null);
+    // O botão muda com o texto e o estado de envio. A ação lê estes valores do desenho atual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [definirRodapeEnsino, prenderEnvio, texto, ocupado, gravando, etapaVoz]);
+  useEffect(() => () => definirRodapeEnsino?.(null), [definirRodapeEnsino]);
   const cartaoOrigem = !!licao.referencias?.length && (
         <Card>
           <LinhaAbrir rotulo={m.origem} aberto={fontes} alternar={() => setFontes(!fontes)} />
@@ -859,6 +926,7 @@ export function ApoioDaLicao({
                               setResposta(o.id);
                               setResultadoPonte(null);
                               setRetorno('');
+                              setErroPonte('');
                             }} />
                         );
                       })}
@@ -981,25 +1049,7 @@ export function ApoioDaLicao({
                 </Text>
               </View>
             )}
-            <Botao
-              // Como a web 4.2: ocupado logo no toque.
-              rotulo={ocupado ? m.pensando : m.enviar}
-              ocupado={ocupado}
-              desativado={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20}
-              acao={() =>
-                void executar(async () => {
-                  const r = await cliente.ensinarStu(licao.id, texto);
-                  atualizarApoio((a) => ({
-                    ...(a ?? { erros: 0, ponte: null }),
-                    ensino: r,
-                  }));
-                  setEnsino(r);
-                  // Como na web: o aviso da gravação sai e a lição tira o convite para explicar.
-                  setAviso('');
-                  aoEnsinar?.();
-                })
-              }
-            />
+            {!prenderEnvio && botaoEnviar}
             {/* Como a web (<p role="status"> depois das ações): o aviso da gravação, da permissão e da fala trazida da conversa. */}
             {!!aviso && <Text role="status" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text>}
             {ensino && (
@@ -1036,6 +1086,8 @@ const s = StyleSheet.create({
   // .estudio-acoes: 20 em cima (o cartão já põe 14).
   acoesMaterial: { gap: 12, marginTop: 6 },
   legendaPrimeira: { marginTop: 12, marginBottom: -2 },
+  // O "Saiba mais" no fim do aviso (spec 16, item 35): o azul de ação em 800, com alvo de toque pelo parágrafo inteiro da linha.
+  saibaMaisNaLinha: { color: cores.acao, fontWeight: '800' },
   nomeMaterial: { fontSize: 17.6, lineHeight: 22.88, letterSpacing: -0.264, marginTop: 6 },
   seloMaterial: { marginTop: -2, marginBottom: 10 },
   // A pergunta do desafio da ponte como a do exercício (24 px, -1 px) e as opções no espaço da lista da aula.

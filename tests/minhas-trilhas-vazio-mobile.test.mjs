@@ -25,7 +25,8 @@ test('a abertura sem trilhas vai para a Nova trilha; planos sem trilhas é o vaz
 
 test('a barra de abas aparece também sem trilhas, com "Minhas trilhas" marcada no vazio', async () => {
   const fonte = await ler('apps/mobile/src/estudo.tsx');
-  assert.match(fonte, /const comNavegacaoAgora = planos !== null && !pendente && \(ABAS\.includes\(aba\) \|\| \(comunidade && aba === 'explorar'\)\);/);
+  // Com um pedido em andamento, a barra fica à vista e só desliga (spec 05; rede lenta, ver tests/rede-lenta-mobile.test.mjs).
+  assert.match(fonte, /const comNavegacaoAgora = planos !== null && \(ABAS\.includes\(aba\) \|\| \(comunidade && aba === 'explorar'\)\);/);
   assert.match(fonte, /const ABAS: readonly string\[\] = \['planos',/);
   assert.match(fonte, /planos: tocarMinhasTrilhas,/);
   assert.match(fonte, /acao=\{criacao === 'criando' \? sairDaCriacao : tocarMinhasTrilhas\} \/>/, 'o meus-planos do alto leva ao mesmo estado');

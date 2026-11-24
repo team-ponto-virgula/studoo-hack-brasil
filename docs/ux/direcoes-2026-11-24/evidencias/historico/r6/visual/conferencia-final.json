@@ -1,0 +1,107 @@
+{
+  "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "sourceStable": true,
+  "expectedMainViews": 1524,
+  "mainViews": 1524,
+  "blockHashes": [
+    {
+      "file": "longos",
+      "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sourceStable": true,
+      "sameAsMain": true,
+      "afterSame": true
+    },
+    {
+      "file": "fontes",
+      "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sourceStable": true,
+      "sameAsMain": true,
+      "afterSame": true
+    },
+    {
+      "file": "folhas",
+      "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sourceStable": true,
+      "sameAsMain": true,
+      "afterSame": true
+    },
+    {
+      "file": "guards",
+      "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sourceStable": true,
+      "sameAsMain": true,
+      "afterSame": true
+    }
+  ],
+  "footerComparison": {
+    "priorSource": "5ad1225f586af063d58f694d4ebe705fcabca081",
+    "prior": [
+      {
+        "d": "jornada",
+        "mainHeight": 361.03125,
+        "footerButtons": 4,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar",
+          "Etapa anterior"
+        ]
+      },
+      {
+        "d": "caderno",
+        "mainHeight": 359.03125,
+        "footerButtons": 4,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar",
+          "Etapa anterior"
+        ]
+      },
+      {
+        "d": "foco",
+        "mainHeight": 369.8125,
+        "footerButtons": 4,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar",
+          "Etapa anterior"
+        ]
+      }
+    ],
+    "current": [
+      {
+        "d": "jornada",
+        "mainHeight": 426.625,
+        "footerButtons": 3,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar"
+        ]
+      },
+      {
+        "d": "foco",
+        "mainHeight": 432.8125,
+        "footerButtons": 3,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar"
+        ]
+      },
+      {
+        "d": "caderno",
+        "mainHeight": 424.625,
+        "footerButtons": 3,
+        "footerTexts": [
+          "Tentar de novo",
+          "Ver outro jeito de entender",
+          "Seguir sem acertar"
+        ]
+      }
+    ]
+  },
+  "sameDirectionCSS": true
+}

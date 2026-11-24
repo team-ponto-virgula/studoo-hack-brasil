@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "buildNumber": "6",
+  "bundle": "com.studoo.mobile.dev",
+  "introAssetIncluded": true,
+  "introAssetSha256": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+  "publishedApiPresent": true,
+  "qaApiStringsAbsent": true,
+  "launchStoryboard": "SplashScreen",
+  "nativeExecuted": false
+}

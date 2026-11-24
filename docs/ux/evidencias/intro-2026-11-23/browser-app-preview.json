@@ -1,0 +1,100 @@
+{
+  "date": "2026-11-23T20:51:43.256Z",
+  "surface": "app_previa_web",
+  "results": [
+    {
+      "name": "app-preview-static-390x844",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 105,
+          "y": 392.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "scope": "React Native Web; local Expo dev; fonts held; clock controlled; AX scoped to app root, excluding Expo dev toolbar",
+        "decorativeAX": ""
+      }
+    },
+    {
+      "name": "app-preview-static-360x800",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 90,
+          "y": 370.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "scope": "React Native Web; local Expo dev; fonts held; clock controlled; AX scoped to app root, excluding Expo dev toolbar",
+        "decorativeAX": ""
+      }
+    },
+    {
+      "name": "app-preview-static-390x667",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 105,
+          "y": 303.921875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "scope": "React Native Web; local Expo dev; fonts held; clock controlled; AX scoped to app root, excluding Expo dev toolbar",
+        "decorativeAX": ""
+      }
+    },
+    {
+      "name": "app-preview-timeout",
+      "passed": true,
+      "evidence": {
+        "afterControlledMs": 932
+      }
+    },
+    {
+      "name": "app-preview-touch-dismiss",
+      "passed": true,
+      "evidence": {
+        "completed": true
+      }
+    },
+    {
+      "name": "app-preview-escape-dismiss",
+      "passed": true,
+      "evidence": {
+        "completed": true
+      }
+    },
+    {
+      "name": "app-preview-tab-focus",
+      "passed": true,
+      "evidence": {
+        "tag": "BUTTON",
+        "text": "Tentar novamente"
+      }
+    },
+    {
+      "name": "app-preview-reduced-motion",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0
+      }
+    },
+    {
+      "name": "app-preview-query-bypass",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0
+      }
+    },
+    {
+      "name": "app-preview-normal-recording",
+      "passed": true,
+      "evidence": {
+        "errors": [],
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente",
+        "scope": "RNWeb; does not validate authentication or native behavior"
+      }
+    }
+  ]
+}

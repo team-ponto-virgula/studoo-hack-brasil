@@ -1,0 +1,3910 @@
+{
+  "startedAt": "2026-11-24T21:14:31.803Z",
+  "surface": "HTTP Chromium HTML mobile prototype, no native selector or services",
+  "sourceHashesBefore": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "pairs": [
+    {
+      "pair": "jornada-390",
+      "completed": true
+    },
+    {
+      "pair": "jornada-360",
+      "completed": true
+    },
+    {
+      "pair": "caderno-390",
+      "completed": true
+    },
+    {
+      "pair": "caderno-360",
+      "completed": true
+    },
+    {
+      "pair": "foco-390",
+      "completed": true
+    },
+    {
+      "pair": "foco-360",
+      "completed": true
+    }
+  ],
+  "checks": [
+    {
+      "pair": "jornada-390",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-390",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "jornada-360",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-390",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 52.390625
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 67.59375
+      }
+    },
+    {
+      "pair": "caderno-360",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "pair": "foco-390",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 163.578125
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-390",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "pair": "foco-360",
+      "name": "configuration loads without losing current progress",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance opens at top",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance preview has all 12 contract covers plus default",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel appearance restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel appearance preserves unsaved title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel appearance preserves unsaved description",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel appearance leaves cover unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel appearance does not commit title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "confirmed cover stored on track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "confirmed theme stored on track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance leaves progress unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance leaves publication state unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance does not apply title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "appearance save restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "title draft survives appearance save",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "save returns to map",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "title saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "description saved on correct track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "reload restores title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "reload restores appearance",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "other track starts with its own title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "other track starts with its own description",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "other track does not inherit cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "B gets chosen metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "A metadata stays intact",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "both progress values unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "switch restores A metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "invalid title does not leave configuration",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "title error attached to field",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "invalid title does not overwrite committed title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "description rejects URL",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "description validation preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "field network error has retry",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "field retry restores affected field focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "field retry clears scenario",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "field retry confirms saved value",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "profile does not show email",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "initial public count honest",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "posting opens at top",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "posting heading receives focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "received copies excluded from posting",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel posting leaves visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "posting enters pending moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "active publication fields remain consistent",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending posting never claims approval",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "posting preserves progress",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "posting preserves cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel withdrawing keeps selected visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "withdrawing changes only visibility",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "withdraw undo offered",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "undo restores visibility and moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending survives reload",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-recusado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-retirado is labeled simulation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-aprovado preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente stored state matches view",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente cancel keeps state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente withdraw keeps moderation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente undo restores state shown",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil-pendente preserves private track data",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "material origin comes from track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "material disclosure before confirmation",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "profile posting never offers Explorar target",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "material disclosure does not expose unrelated request filename",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cover selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "theme selection preserves keyboard focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cover selection preserves checked state",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "activity example explicitly synthetic",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "community disabled hides posting action",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "community disabled retains edit",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 155
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/capa-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/tema-erro 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/tema-erro 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/tema-erro named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "configurar/tema-erro target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 55
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/postar 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/postar 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/postar named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/postar target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/novidades 200% no horizontal overflow",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/novidades 200% footer visible",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/novidades named controls",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "perfil/novidades target >=44",
+      "pass": true,
+      "detail": {
+        "horizontal": false,
+        "footer": true,
+        "unnamed": 0,
+        "minTarget": 69.1875
+      }
+    },
+    {
+      "pair": "foco-360",
+      "name": "no pageerrors in pair",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "captures": [
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-capa-previa.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-postagem-pendente.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-perfil-pendente.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-perfil-aprovado.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-perfil-recusado.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-perfil-retirado.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-novidades.png"
+    },
+    {
+      "pair": "jornada-390",
+      "file": "jornada-390-sem-social.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-capa-previa.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-postagem-pendente.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-perfil-pendente.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-perfil-aprovado.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-perfil-recusado.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-perfil-retirado.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-novidades.png"
+    },
+    {
+      "pair": "jornada-360",
+      "file": "jornada-360-sem-social.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-capa-previa.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-postagem-pendente.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-perfil-pendente.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-perfil-aprovado.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-perfil-recusado.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-perfil-retirado.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-novidades.png"
+    },
+    {
+      "pair": "caderno-390",
+      "file": "caderno-390-sem-social.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-capa-previa.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-postagem-pendente.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-perfil-pendente.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-perfil-aprovado.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-perfil-recusado.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-perfil-retirado.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-novidades.png"
+    },
+    {
+      "pair": "caderno-360",
+      "file": "caderno-360-sem-social.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-capa-previa.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-postagem-pendente.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-perfil-pendente.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-perfil-aprovado.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-perfil-recusado.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-perfil-retirado.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-novidades.png"
+    },
+    {
+      "pair": "foco-390",
+      "file": "foco-390-sem-social.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-capa-previa.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-postagem-pendente.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-perfil-pendente.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-perfil-aprovado.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-perfil-recusado.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-perfil-retirado.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-novidades.png"
+    },
+    {
+      "pair": "foco-360",
+      "file": "foco-360-sem-social.png"
+    }
+  ],
+  "finishedAt": "2026-11-24T21:15:29.473Z",
+  "sourceHashesAfter": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "sourceStable": true,
+  "summary": {
+    "checks": 588,
+    "pass": 588,
+    "fail": 0,
+    "pairsCompleted": 6,
+    "errors": 0
+  }
+}

@@ -288,10 +288,6 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
             return <li key={no.id} className="previa-no" data-lado={x >= 50 ? 'direita' : 'esquerda'} data-fronteira={fronteira || undefined} data-nova-parte={novaParte || undefined} data-primeiro={i === 0 || undefined} data-mais-novo={i === nos.length - 1 || undefined}
               style={{ ...coresDaRegiao(no.trecho), '--x': `${x}%` } as CSSProperties}>
               <CenarioDaPrevia trecho={no.trecho} indice={i} />
-              {fronteira && <>
-                <Fronteira trechoSeguinte={seguinte.trecho} />
-                <span className="previa-marco" style={coresDaRegiao(seguinte.trecho)}><Icone nome="bandeira" />{mensagens.trilha.parte(seguinte.trecho + 1)}</span>
-              </>}
               {i > 0 && <LigacaoRascunho de={antes} ate={x} />}
               <div className="previa-no__centro">
                 <button type="button" className="previa-no__alvo" disabled={salvando} aria-expanded={mostrar} aria-label={no.titulo}
@@ -308,6 +304,10 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
                 </div>}
                 {mostrar && <p className="previa-no__explicacao">{no.resumo || mensagens.licao.audio.previaAbre}</p>}
               </div>
+              {fronteira && <>
+                <Fronteira trechoSeguinte={seguinte.trecho} />
+                <span className="previa-marco" style={coresDaRegiao(seguinte.trecho)}><Icone nome="bandeira" />{mensagens.trilha.parte(seguinte.trecho + 1)}</span>
+              </>}
             </li>;
           })}
         </ol>

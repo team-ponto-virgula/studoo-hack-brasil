@@ -1,0 +1,89 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "rawEvidence": "resultado.json",
+  "rawInitialAssertions": {
+    "total": 192,
+    "passed": 180,
+    "failed": 12
+  },
+  "harnessDiagnosis": "12 checks material-erro exigiam divulgação integral de confirmação em um estado que informa falha não publicada. Não é o requisito desse quadro. Raw preservado; geometria e copy examinadas separadamente.",
+  "geometry": {
+    "views": 192,
+    "passed": 192,
+    "failed": []
+  },
+  "oldClaim": {
+    "views": 192,
+    "present": 0
+  },
+  "materialDisclosure": {
+    "applicableViews": 36,
+    "passed": 36,
+    "failed": []
+  },
+  "materialErrorCopy": {
+    "views": 12,
+    "passed": 12
+  },
+  "guards": {
+    "views": 72,
+    "passed": 72
+  },
+  "noticeBeforeCode": {
+    "views": 48,
+    "passed": 48
+  },
+  "sourceStable": true,
+  "assetsAfter": [
+    {
+      "file": "assets/logo.png",
+      "priorGit": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+      "current": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+      "unchanged": true,
+      "after": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f"
+    },
+    {
+      "file": "assets/nunito.woff2",
+      "priorGit": "69d4149a1e1924d777aa343c190ea0b829f2f1987d1bf8d836e819b9c7870e2f",
+      "current": "69d4149a1e1924d777aa343c190ea0b829f2f1987d1bf8d836e819b9c7870e2f",
+      "unchanged": true,
+      "after": "69d4149a1e1924d777aa343c190ea0b829f2f1987d1bf8d836e819b9c7870e2f"
+    },
+    {
+      "file": "assets/quicksand.woff2",
+      "priorGit": "5e2902c5c3847576e718070ca75c2176eac1c02bf59dd1ff7a57cfd98dc0d56c",
+      "current": "5e2902c5c3847576e718070ca75c2176eac1c02bf59dd1ff7a57cfd98dc0d56c",
+      "unchanged": true,
+      "after": "5e2902c5c3847576e718070ca75c2176eac1c02bf59dd1ff7a57cfd98dc0d56c"
+    },
+    {
+      "file": "assets/stu-acolhida.webp",
+      "priorGit": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+      "current": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+      "unchanged": true,
+      "after": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0"
+    },
+    {
+      "file": "assets/stu-comemorando.webp",
+      "priorGit": "5ea5888dd6c58a3aa59ec22e2d715f74673de3b397aa40c84e734baa5cca54ce",
+      "current": "5ea5888dd6c58a3aa59ec22e2d715f74673de3b397aa40c84e734baa5cca54ce",
+      "unchanged": true,
+      "after": "5ea5888dd6c58a3aa59ec22e2d715f74673de3b397aa40c84e734baa5cca54ce"
+    },
+    {
+      "file": "assets/stu-encorajador.webp",
+      "priorGit": "d729357365dfc80d572a96496174bbed68f895097e1f6a90c4d55a101c3b9c6c",
+      "current": "d729357365dfc80d572a96496174bbed68f895097e1f6a90c4d55a101c3b9c6c",
+      "unchanged": true,
+      "after": "d729357365dfc80d572a96496174bbed68f895097e1f6a90c4d55a101c3b9c6c"
+    },
+    {
+      "file": "assets/stu-estudando.webp",
+      "priorGit": "33ca34839d3f090321de8c7124c968d65191eaa6706b360613bb47e8c2f0ce72",
+      "current": "33ca34839d3f090321de8c7124c968d65191eaa6706b360613bb47e8c2f0ce72",
+      "unchanged": true,
+      "after": "33ca34839d3f090321de8c7124c968d65191eaa6706b360613bb47e8c2f0ce72"
+    }
+  ],
+  "assetsStable": true
+}

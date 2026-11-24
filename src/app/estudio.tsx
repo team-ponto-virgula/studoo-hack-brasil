@@ -19,7 +19,8 @@ import {
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Stu } from '../ui';
+import { AcaoPrincipal, Botao, Stu } from '../ui';
+import { medirAcaoFixa } from '../ui/rodape-movel';
 import {
   iniciarControladorVozAoVivo,
   type ControladorVozAoVivo,
@@ -89,19 +90,28 @@ export function MaterialParaTrilha({
   objetivo,
   onProposta,
   mostrarCabeca = true,
+  aoDesconectar,
+  aoMudarLeitura,
 }: {
   objetivo: string;
   onProposta: (p: PropostaPlano) => void;
   mostrarCabeca?: boolean;
+  aoDesconectar?: () => void;
+  aoMudarLeitura?: (lendo: boolean) => void;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
   const [provedorIa, setProvedorIa] = useState<ProvedorIa>('falsa');
+  const [toque, setToque] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const vivo = useRef(true);
+  const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const inputCameraRef = useRef<HTMLInputElement>(null);
+  const acoesMaterialRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     vivo.current = true;
+    setToque(window.matchMedia('(pointer: coarse)').matches);
     void cliente.configuracaoAcesso().then((cfg) => {
       if (vivo.current) setProvedorIa(cfg.ia);
     }).catch(() => undefined);
@@ -109,18 +119,45 @@ export function MaterialParaTrilha({
       vivo.current = false;
     };
   }, []);
-  async function executar(tarefa: () => Promise<void>) {
+  useEffect(() => {
+    if (!material) return;
+    const quadro = window.requestAnimationFrame(() => {
+      const el = acoesMaterialRef.current;
+      if (!el?.getClientRects().length) return;
+      const acaoPrincipal = el.querySelector('.acao-principal');
+      // Com a ação já presa à vista, a prévia não precisa saltar até o botão de remoção.
+      if (acaoPrincipal && window.getComputedStyle(acaoPrincipal).position === 'fixed') return;
+      const barra = document.querySelector<HTMLElement>('.navegacao-mobile');
+      const limite = (barra?.getClientRects().length ? barra.getBoundingClientRect().top : window.innerHeight) - 16;
+      const sobra = el.getBoundingClientRect().bottom - limite;
+      if (sobra > 0) {
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollBy({ top: sobra + 16, behavior: reduzido ? 'auto' : 'smooth' });
+      }
+    });
+    return () => window.cancelAnimationFrame(quadro);
+  }, [material]);
+  async function executar(tarefa: () => Promise<void>, lendo = false) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
     setErro('');
+    if (lendo) aoMudarLeitura?.(true);
     try {
       await tarefa();
     } catch (e) {
-      if (vivo.current) setErro(erroTexto(e));
+      if (!vivo.current) return;
+      if (aoDesconectar && e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+        aoDesconectar();
+        return;
+      }
+      setErro(erroTexto(e));
     } finally {
       emExecucao.current = false;
-      if (vivo.current) setOcupado(false);
+      if (vivo.current) {
+        setOcupado(false);
+        if (lendo) aoMudarLeitura?.(false);
+      }
     }
   }
   async function selecionar(f?: File) {
@@ -134,7 +171,7 @@ export function MaterialParaTrilha({
         base64: await lerBase64(f),
       });
       if (vivo.current) setMaterial(novo);
-    });
+    }, true);
   }
   return (
     <section
@@ -156,31 +193,53 @@ export function MaterialParaTrilha({
       <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
-          <label className="estudio-arquivo botao botao--secundario">
+          <Botao
+            variante="secundario"
+            className="estudio-arquivo"
+            disabled={ocupado}
+            onClick={() => inputArquivoRef.current?.click()}
+          >
             {mensagens.inicio.arquivo}
-            <input
-              type="file"
-              accept=".pdf,.docx,.csv,image/jpeg,image/png,image/webp"
-              disabled={ocupado}
-              onChange={(e) => {
-                void selecionar(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-          </label>
-          <label className="estudio-arquivo botao botao--secundario">
-            {mensagens.inicio.camera}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              disabled={ocupado}
-              onChange={(e) => {
-                void selecionar(e.target.files?.[0]);
-                e.target.value = '';
-              }}
-            />
-          </label>
+          </Botao>
+          <input
+            ref={inputArquivoRef}
+            className="estudio-arquivo-input"
+            type="file"
+            tabIndex={-1}
+            aria-hidden="true"
+            accept=".pdf,.docx,.csv,image/jpeg,image/png,image/webp"
+            disabled={ocupado}
+            onChange={(e) => {
+              void selecionar(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+          {toque && (
+            <>
+              <Botao
+                variante="secundario"
+                className="estudio-arquivo"
+                disabled={ocupado}
+                onClick={() => inputCameraRef.current?.click()}
+              >
+                {mensagens.inicio.camera}
+              </Botao>
+              <input
+                ref={inputCameraRef}
+                className="estudio-arquivo-input"
+                type="file"
+                tabIndex={-1}
+                aria-hidden="true"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                disabled={ocupado}
+                onChange={(e) => {
+                  void selecionar(e.target.files?.[0]);
+                  e.target.value = '';
+                }}
+              />
+            </>
+          )}
           <Botao
             variante="secundario"
             disabled={ocupado}
@@ -188,7 +247,7 @@ export function MaterialParaTrilha({
               void executar(async () => {
                 const x = await cliente.materialDemo();
                 if (vivo.current) setMaterial(x);
-              })
+              }, true)
             }
           >
             {mensagens.inicio.demo}
@@ -248,21 +307,25 @@ export function MaterialParaTrilha({
               </article>
             ))}
           </div>
-          <div className="estudio-acoes">
-            <Botao
-              disabled={ocupado}
-              onClick={() =>
-                void executar(async () => {
-                  const p = await cliente.proporMaterial(
-                    material.id,
-                    objetivo.trim() || m.objetivo,
-                  );
-                  if (vivo.current) onProposta(p);
-                })
-              }
-            >
-              {m.gerar}
-            </Botao>
+          {/* Spec 16, item 35: com o material lido, "Criar trilha deste material" é a ação presa da tela (no celular, até 767 px: 12 px acima da cápsula, sempre à vista, e o fim da rolagem reserva a
+              altura dela mais 12 px); "Remover material" fica no fim do conteúdo, no fluxo. Do tablet para cima a ação fica no fluxo, como as outras ações principais. */}
+          <div ref={acoesMaterialRef} className="estudio-acoes estudio-acoes--previa estudio-acoes--material">
+            <AcaoPrincipal ref={medirAcaoFixa}>
+              <Botao
+                disabled={ocupado}
+                onClick={() =>
+                  void executar(async () => {
+                    const p = await cliente.proporMaterial(
+                      material.id,
+                      objetivo.trim() || m.objetivo,
+                    );
+                    if (vivo.current) onProposta(p);
+                  })
+                }
+              >
+                {m.gerar}
+              </Botao>
+            </AcaoPrincipal>
             <Botao
               variante="texto"
               disabled={ocupado}
@@ -294,6 +357,7 @@ export function ApoioDaLicao({
   aoConcluirPonte,
   aoEnsinar,
   aoAbrirExplique,
+  aoDesconectar,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -311,14 +375,31 @@ export function ApoioDaLicao({
   aoEnsinar?: () => void;
   /** O "Explique" abriu ou fechou: a lição deixa o rodapé só com as ações enquanto ele está aberto. */
   aoAbrirExplique?: (aberto: boolean) => void;
+  /** Sessão encerrada ou inválida (401): redireciona para o login sem mascarar o erro. */
+  aoDesconectar?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
+  const acoesEnsinoRef = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
   const revisaoApoio = useRef(0);
+  function garantirAcoesEnsinoVisiveis() {
+    window.requestAnimationFrame(() => {
+      const el = acoesEnsinoRef.current;
+      if (!el) return;
+      const rodape = document.querySelector<HTMLElement>('.aula-rodape');
+      const alturaRodape = rodape ? rodape.getBoundingClientRect().height : 0;
+      const rect = el.getBoundingClientRect();
+      const limite = window.innerHeight - alturaRodape - 20;
+      if (rect.bottom > limite) {
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollBy({ top: rect.bottom - limite, behavior: reduzido ? 'auto' : 'smooth' });
+      }
+    });
+  }
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
     setApoio(valor);
@@ -502,7 +583,12 @@ export function ApoioDaLicao({
         if (ativo && revisao === revisaoApoio.current) setApoio(x);
       })
       .catch((e) => {
-        if (ativo && revisao === revisaoApoio.current) setErro(erroTexto(e));
+        if (!ativo || revisao !== revisaoApoio.current) return;
+        if (aoDesconectar && e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+          aoDesconectar();
+          return;
+        }
+        setErro(erroTexto(e));
       });
     return () => {
       ativo = false;
@@ -531,7 +617,12 @@ export function ApoioDaLicao({
     try {
       await tarefa();
     } catch (e) {
-      if (vivo.current) setErro(erroTexto(e));
+      if (!vivo.current) return;
+      if (aoDesconectar && e instanceof ErroStudoo && e.codigo === 'nao_autenticado') {
+        aoDesconectar();
+        return;
+      }
+      setErro(erroTexto(e));
     } finally {
       emExecucao.current = false;
       if (vivo.current) setOcupado(false);
@@ -696,7 +787,9 @@ export function ApoioDaLicao({
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
-          if (!e.currentTarget.open) {
+          if (e.currentTarget.open) {
+            garantirAcoesEnsinoVisiveis();
+          } else {
             if (recorder.current?.state === 'recording') recorder.current.stop();
             controladorVozRef.current?.descartar();
             controladorVozRef.current = null;
@@ -893,6 +986,7 @@ export function ApoioDaLicao({
           rows={5}
           maxLength={3000}
           value={texto}
+          onFocus={garantirAcoesEnsinoVisiveis}
           onChange={(e) => setTexto(e.target.value)}
           disabled={ocupado || gravando || etapaVoz === 'ativa'}
         />
@@ -900,7 +994,7 @@ export function ApoioDaLicao({
           {m.vozDica}
           {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
         </p>
-        <div className="estudio-acoes">
+        <div ref={acoesEnsinoRef} className="estudio-acoes">
           <Botao
             variante="secundario"
             disabled={ocupado || etapaVoz === 'ativa'}

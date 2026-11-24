@@ -21,3 +21,7 @@ export function Passos({ itens, icones }: { itens: readonly string[]; icones?: r
 export function PassosDoIphone() {
   return <Passos itens={textos.folhaIphone.passos} icones={[<IconeCompartilharIos key="c" />, <IconeAdicionarIos key="a" />, <IconeConfirmarIos key="o" />]} />;
 }
+
+export function AbrirAppNoSafari({ href }: { href: string }) {
+  return <a className="botao botao--primario cn-botao-principal" href={href}>{textos.folhaIphone.abrirApp}</a>;
+}

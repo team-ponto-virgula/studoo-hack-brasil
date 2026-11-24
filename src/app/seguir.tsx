@@ -11,7 +11,7 @@ import { type EstadoSeguir, type Novidade, type PessoaNovidade } from '@studoo/c
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
-import { Avatar, CHAVE_DEPOIS_DO_LOGIN, codigoDoErro, guardar } from './compartilhar';
+import { Avatar, CHAVE_DEPOIS_DO_LOGIN, DialogoConfirmar, codigoDoErro, guardar } from './compartilhar';
 import { MenuPublicacao } from './seguranca-comunidade';
 import { tocaSons } from './sons';
 
@@ -21,18 +21,51 @@ const c = mensagens.comunidade;
  * Botão Seguir: sem sessão leva ao login e volta ao perfil; para a própria pessoa e conta de visitante não aparece.
  * `aria-pressed` diz se segue; o resultado é anunciado numa região viva.
  */
-export function BotaoSeguir({ perfilId, nome, estado, logado, aoMudar }: {
+export function BotaoSeguir({ perfilId, nome, estado, logado, visitante = false, aoMudar }: {
   perfilId: string;
   nome: string;
   estado?: EstadoSeguir;
   logado: boolean;
+  visitante?: boolean;
   aoMudar?: (seguidores: number) => void;
 }) {
   const router = useRouter();
   const [seguindo, setSeguindo] = useState(Boolean(estado?.seguindo));
   const [ocupado, setOcupado] = useState(false);
   const [anuncio, setAnuncio] = useState('');
-  if (logado && estado && !estado.podeSeguir) return null;
+  const [confirmandoTroca, setConfirmandoTroca] = useState(false);
+  if (logado && estado && !estado.podeSeguir) {
+    if (!visitante) return null;
+    async function sairEEntrar() {
+      setOcupado(true);
+      try {
+        await cliente.logout();
+      } catch {
+        // Mesmo com erro de rede, leva à tela de login.
+      } finally {
+        guardar(CHAVE_DEPOIS_DO_LOGIN, `/p/${perfilId}`);
+        window.location.assign('/login');
+      }
+    }
+    return (
+      <>
+        <Botao variante="secundario" className="botao-seguir" disabled={ocupado} onClick={() => setConfirmandoTroca(true)}>
+          {c.entrarOuCriar}
+        </Botao>
+        {confirmandoTroca && (
+          <DialogoConfirmar
+            titulo={c.entrarOuCriar}
+            texto={c.seguirVisitanteAviso}
+            confirmar={mensagens.sair}
+            cancelar={mensagens.ficar}
+            ocupado={ocupado}
+            aoConfirmar={() => void sairEEntrar()}
+            aoCancelar={() => setConfirmandoTroca(false)}
+          />
+        )}
+      </>
+    );
+  }
 
   async function alternar() {
     if (!logado) {

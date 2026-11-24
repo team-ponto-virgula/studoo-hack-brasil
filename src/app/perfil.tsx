@@ -126,14 +126,14 @@ export function BotaoCompartilharPerfil({ perfilId, nome, cor, foto, variante = 
  * O cabeçalho do /p com Seguir (com a comunidade) e "Compartilhar perfil": a contagem de seguidores muda na hora ao
  * seguir ou deixar de seguir. Sem lista de quem segue.
  */
-export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilPublico; perfilId: string; logado: boolean }) {
+export function CabecalhoPublico({ perfil, perfilId, logado, visitante = false }: { perfil: PerfilPublico; perfilId: string; logado: boolean; visitante?: boolean }) {
   const [seguidores, setSeguidores] = useState(perfil.alcance.seguidores);
   const comunidade = perfil.alcance.seguidores !== undefined;
   return (
     <CabecalhoPerfil publica demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
       alcance={{ ...perfil.alcance, ...(seguidores !== undefined ? { seguidores } : {}) }}
       acoes={<>
-        {comunidade && <BotaoSeguir perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} logado={logado} aoMudar={setSeguidores} />}
+        {comunidade && <BotaoSeguir perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} logado={logado} visitante={visitante} aoMudar={setSeguidores} />}
         <BotaoCompartilharPerfil perfilId={perfilId} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} />
       </>} />
   );
@@ -170,10 +170,20 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
   const titulo = useRef<HTMLHeadingElement>(null);
   const [avisoSalvo, avisarSalvo] = useAvisoDoApp();
   const editarId = useId();
+  const botaoEditarRef = useRef<HTMLButtonElement>(null);
+  const devolverFocoEditar = useRef(false);
   function fecharEditor() {
+    devolverFocoEditar.current = true;
     setEditando(false);
-    requestAnimationFrame(() => document.getElementById(editarId)?.focus());
   }
+  useEffect(() => {
+    if (!editando && devolverFocoEditar.current) {
+      devolverFocoEditar.current = false;
+      window.requestAnimationFrame(() => {
+        (botaoEditarRef.current ?? document.getElementById(editarId))?.focus();
+      });
+    }
+  }, [editando, editarId]);
   const [toque, setToque] = useState(false);
   useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
   const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.moderacao}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
@@ -241,7 +251,13 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
       {compartilhar && perfil && (
         <>
           {perfil.visitante ? (
-            <div className="perfil-cartao"><p className="perfil-cartao__visitante">{p.visitante}</p></div>
+            <div className="perfil-cartao">
+              <p className="perfil-cartao__visitante">{p.visitante}</p>
+              <p className="campo-dica">{p.visitanteAvisoTroca}</p>
+              <div>
+                <Botao variante="secundario" onClick={sair}>{p.entrarOuCriar}</Botao>
+              </div>
+            </div>
           ) : !perfil.nome || editando ? (
             // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
             <EditorPerfil perfil={perfil} focoNome={focoNome} anunciar={anunciar} registrarGuarda={registrarGuarda}
@@ -254,7 +270,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
               alcance={perfil.alcance} nivel="h2"
               semResumo={<button type="button" className="cabeca-perfil__convite" onClick={() => setEditando(true)}>{p.semResumoDona}</button>}
               acoes={<>
-                <Botao id={editarId} variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
+                <Botao ref={botaoEditarRef} id={editarId} variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
                 {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
             {perfil.links.length > 0 && <EstadoModeracao estado={perfil.perfilModeracao} />}
@@ -596,10 +612,10 @@ export function EditorPerfil({ perfil, focoNome, aoMudarPerfil, anunciar, regist
           <p className="campo-dica" id={`${ids.interesses}-dica`}>
             {p.interessesDica(LIMITES_PERFIL.interessesMax)} <span>{p.interessesContador(interesses.length, LIMITES_PERFIL.interessesMax)}</span>
           </p>
-          <div className="interesses__lista">
+          <div className="interesses__lista" role="group" aria-label={p.interessesRotulo}>
             {TEMAS.map((tema) => (
               <label key={tema} className="interesse">
-                <input type="checkbox" checked={interesses.includes(tema)} onChange={(e) => alternarTema(tema, e.target.checked)} />
+                <input type="checkbox" aria-label={temas[tema]} checked={interesses.includes(tema)} onChange={(e) => alternarTema(tema, e.target.checked)} />
                 <span>{temas[tema]}</span>
               </label>
             ))}
@@ -609,10 +625,10 @@ export function EditorPerfil({ perfil, focoNome, aoMudarPerfil, anunciar, regist
 
         <fieldset className="cores-perfil">
           <legend>{m.corRotulo}</legend>
-          <div className="cores-perfil__lista">
+          <div className="cores-perfil__lista" role="radiogroup" aria-label={m.corRotulo}>
             {CORES_PERFIL.map((opcao) => (
-              <label key={opcao} className="cor-perfil" style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
-                <input type="radio" name="cor-perfil" value={opcao} checked={cor === opcao} onChange={() => setCor(opcao)} />
+              <label key={opcao} className="cor-perfil" title={m.cores[opcao]} style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
+                <input type="radio" name="cor-perfil" value={opcao} aria-label={m.cores[opcao]} checked={cor === opcao} onChange={() => setCor(opcao)} />
                 <span className="cor-perfil__amostra" aria-hidden="true" />
                 <span className="somente-leitor">{m.cores[opcao]}</span>
               </label>

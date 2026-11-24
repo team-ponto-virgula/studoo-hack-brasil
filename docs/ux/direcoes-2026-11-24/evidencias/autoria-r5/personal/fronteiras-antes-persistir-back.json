@@ -1,0 +1,446 @@
+{
+  "startedAt": "2026-11-24T21:10:15.591Z",
+  "sourceHashesBefore": {
+    "personal-pages.js": "554ee06560d62dc2b5974ff792476072adcbbeba3e53b8ff50da095d3068bb59",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "checks": [
+    {
+      "pair": "jornada-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    },
+    {
+      "pair": "jornada-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    },
+    {
+      "pair": "caderno-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    },
+    {
+      "pair": "caderno-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    },
+    {
+      "pair": "foco-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    },
+    {
+      "pair": "foco-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": false
+    }
+  ],
+  "errors": [],
+  "pairs": [
+    {
+      "pair": "jornada-390",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    },
+    {
+      "pair": "jornada-360",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    },
+    {
+      "pair": "caderno-390",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    },
+    {
+      "pair": "caderno-360",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    },
+    {
+      "pair": "foco-390",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    },
+    {
+      "pair": "foco-360",
+      "pass": false,
+      "error": "browser Back discards unconfirmed appearance only"
+    }
+  ],
+  "finishedAt": "2026-11-24T21:10:27.566Z",
+  "sourceHashesAfter": {
+    "personal-pages.js": "554ee06560d62dc2b5974ff792476072adcbbeba3e53b8ff50da095d3068bb59",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "sourceStable": true,
+  "summary": {
+    "checks": 72,
+    "pass": 66,
+    "fail": 6,
+    "errors": 0,
+    "pairs": [
+      {
+        "pair": "jornada-390",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      },
+      {
+        "pair": "jornada-360",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      },
+      {
+        "pair": "caderno-390",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      },
+      {
+        "pair": "caderno-360",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      },
+      {
+        "pair": "foco-390",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      },
+      {
+        "pair": "foco-360",
+        "pass": false,
+        "error": "browser Back discards unconfirmed appearance only"
+      }
+    ]
+  }
+}

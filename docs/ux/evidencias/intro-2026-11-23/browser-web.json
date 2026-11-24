@@ -1,0 +1,282 @@
+{
+  "date": "2026-11-23T20:45:41.571Z",
+  "base": "http://localhost:3000",
+  "results": [
+    {
+      "name": "static-390x844",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 105,
+          "y": 392.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "decorativeAX": "- alert"
+      }
+    },
+    {
+      "name": "static-360x800",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 90,
+          "y": 370.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "decorativeAX": "- alert"
+      }
+    },
+    {
+      "name": "static-390x667",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 105,
+          "y": 303.921875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "decorativeAX": "- alert"
+      }
+    },
+    {
+      "name": "static-768x1024",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 294,
+          "y": 482.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "decorativeAX": "- alert"
+      }
+    },
+    {
+      "name": "static-1440x900",
+      "passed": true,
+      "evidence": {
+        "box": {
+          "x": 630,
+          "y": 420.421875,
+          "width": 180,
+          "height": 59.140625
+        },
+        "decorativeAX": "- alert"
+      }
+    },
+    {
+      "name": "ready-without-minimum-hold",
+      "passed": true,
+      "evidence": [
+        {
+          "phase": "visivel",
+          "t": 2,
+          "reason": null
+        },
+        {
+          "phase": "saindo",
+          "t": 37,
+          "reason": "pronto"
+        },
+        {
+          "phase": "concluida",
+          "t": 152,
+          "reason": "pronto"
+        }
+      ]
+    },
+    {
+      "name": "unresponsive-fonts-cap",
+      "passed": true,
+      "evidence": {
+        "elapsedControlledMs": 900
+      }
+    },
+    {
+      "name": "first-touch-only-dismisses-cover-no-audio",
+      "passed": true,
+      "evidence": {
+        "audioPlayCalls": 0
+      }
+    },
+    {
+      "name": "tab-reveals-and-focuses",
+      "passed": true,
+      "evidence": {
+        "tag": "BUTTON",
+        "text": "",
+        "id": ""
+      }
+    },
+    {
+      "name": "escape-reveals",
+      "passed": true,
+      "evidence": {
+        "completed": true
+      }
+    },
+    {
+      "name": "visible-action-during-exit-first-click",
+      "passed": true,
+      "evidence": {
+        "onboardingOpened": true
+      }
+    },
+    {
+      "name": "background-and-return-no-replay",
+      "passed": true,
+      "evidence": {
+        "completed": true,
+        "replayed": false,
+        "simulation": "visibilitychange"
+      }
+    },
+    {
+      "name": "changed-reduced-preference",
+      "passed": true,
+      "evidence": {
+        "completed": true
+      }
+    },
+    {
+      "name": "reduced-motion-before-hydration",
+      "passed": true,
+      "evidence": {
+        "overlayVisible": false,
+        "contentVisible": true
+      }
+    },
+    {
+      "name": "without-javascript-css-fallback",
+      "passed": true,
+      "evidence": {
+        "afterMs": 1050,
+        "contentVisible": true,
+        "scope": "HTML form visible; app requires JS"
+      }
+    },
+    {
+      "name": "query-bypass-without-javascript",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0
+      }
+    },
+    {
+      "name": "root-query-redirect-keeps-bypass",
+      "passed": true,
+      "evidence": {
+        "localLogin": true,
+        "queryPreserved": true,
+        "overlayCount": 0
+      }
+    },
+    {
+      "name": "direct-route-without-javascript",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0
+      }
+    },
+    {
+      "name": "hash-bypass-before-app-bundle",
+      "passed": true,
+      "evidence": {
+        "appScriptsBlocked": true,
+        "contentVisible": true
+      }
+    },
+    {
+      "name": "image-failure-releases",
+      "passed": true,
+      "evidence": {
+        "reason": "falha"
+      }
+    },
+    {
+      "name": "font-failure-releases",
+      "passed": true,
+      "evidence": {
+        "reason": "falha"
+      }
+    },
+    {
+      "name": "api-delay-does-not-hold-intro",
+      "passed": true,
+      "evidence": {
+        "completeAtNavigationMs": 471,
+        "anyApiPending": true,
+        "apiDelayedMs": 1800
+      }
+    },
+    {
+      "name": "same-tab-reload-and-oauth-like-return-no-replay",
+      "passed": true,
+      "evidence": {
+        "replayed": false,
+        "scope": "hard navigation in same tab; no real OAuth provider"
+      }
+    },
+    {
+      "name": "text-200-percent",
+      "passed": true,
+      "evidence": {
+        "horizontalOverflow": false,
+        "entryVisible": true,
+        "scope": "intro bypass and next form only"
+      }
+    },
+    {
+      "name": "production-cold-warm-recording",
+      "passed": true,
+      "evidence": {
+        "runs": [
+          [
+            {
+              "phase": "visivel",
+              "t": 73.5
+            },
+            {
+              "phase": "saindo",
+              "t": 254.60000000149012,
+              "reason": "pronto"
+            },
+            {
+              "phase": "concluida",
+              "t": 375.5,
+              "reason": "pronto"
+            }
+          ],
+          [
+            {
+              "phase": "visivel",
+              "t": 96.39999999850988
+            },
+            {
+              "phase": "concluida",
+              "t": 133.5,
+              "reason": "contexto"
+            }
+          ],
+          [
+            {
+              "phase": "visivel",
+              "t": 35.19999999925494
+            },
+            {
+              "phase": "concluida",
+              "t": 86.5,
+              "reason": "contexto"
+            }
+          ]
+        ],
+        "environment": "headless Chromium; local Next production; no CPU/network throttle",
+        "coldContexts": 1,
+        "warmReloads": 2
+      }
+    }
+  ]
+}

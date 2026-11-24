@@ -38,7 +38,16 @@
         }
       ],
       "expo-image",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/marca/logo-com-sorriso.png",
+          "imageWidth": 210,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ]
     ],
     "android": {
       "package": "com.studoo.mobile.dev"
@@ -91,6 +100,6 @@
         "projectId": "81f67b49-67e1-4807-bf88-16f187169dfd"
       }
     },
-    "owner": "miguelvzs"
+    "owner": "studoo"
   }
 }

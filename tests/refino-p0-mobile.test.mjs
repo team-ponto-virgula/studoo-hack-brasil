@@ -60,3 +60,22 @@ test('item 3: o fundo da faixa presa fica no filho direto do ScrollView (o invó
   // A linha só entra depois que a faixa grudou (o mapa passa por baixo).
   assert.match(interfaceApp, /const presa = Boolean\(faixaFixa\) && !faixaColada && y > inicioDaFaixa \+ 0\.5;/);
 });
+
+test('item 1 (revisão 25c75c2): com o aviso de trilha repetida, a proposta pronta abre no topo; sem ele, rola até o nó 1', () => {
+  const pronta = estudo.slice(estudo.indexOf('if (!pronta) return;\n    for (const relogio of somDasLicoes.current)'), estudo.indexOf('}, [pronta]);'));
+  assert.match(pronta, /const comAviso = deveAbrirNoTopo\(Boolean\(existente\)\);/);
+  // Com o aviso: o cartão do título volta (é nele que o aviso fica), a tela vai ao topo e não rola até o nó 1 nem recentra.
+  assert.match(pronta, /const noAlto = comAviso \|\| rolado\.current <= 4;\n\s*if \(noAlto\) setCartaoDeVolta\(true\);/);
+  assert.match(pronta, /centrarNo1NaPronta\.current = !comAviso;/);
+  assert.match(pronta, /if \(comAviso\) rolagem\.current\?\.scrollTo\(\{ y: 0, animated: false \}\);\n\s*else centrarNo1\(noAlto, RITMO_DA_GERACAO\.prontaAteNo1Ms\);/);
+  // O aviso mora no cartão do título do alto, que só aparece com cartaoDeVolta.
+  const cartao = estudo.slice(estudo.indexOf('{pronta && proposta && cartaoDeVolta && ('), estudo.indexOf('testID="abrir-existente"'));
+  assert.match(cartao, /\{existente && !salvando && \(\n\s*<View testID="trilha-repetida"/);
+  // A recentragem pela volta do cartão só vale logo depois da pronta SEM aviso.
+  assert.match(estudo, /if \(!cartaoDeVolta \|\| !pronta \|\| !centrarNo1NaPronta\.current\) return;/);
+  const inicio = estudo.indexOf('export function deveAbrirNoTopo(');
+  const js = ts.transpileModule(estudo.slice(inicio, estudo.indexOf('\n}\n', inicio) + 2).replace('export ', ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const deveAbrirNoTopo = new Function(`${js}; return deveAbrirNoTopo;`)();
+  assert.equal(deveAbrirNoTopo(true), true);
+  assert.equal(deveAbrirNoTopo(false), false);
+});

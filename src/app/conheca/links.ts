@@ -2,10 +2,11 @@
  * Os dois endereços de instalação, lidos no servidor a CADA pedido (nunca no build): trocar a variável no Dokploy muda a página e o
  * /baixar sem publicar de novo.
  *  - STUDOO_APK_URL: o APK do Android. Padrão: o do build 4 (pacote com.studoo.mobile.dev, versão 0.1.0, Android 7 ou mais novo).
- *  - STUDOO_TESTFLIGHT_URL: o link público do TestFlight. Vazia (ou inválida) = "em breve" no iPhone.
+ *  - STUDOO_TESTFLIGHT_URL: substitui o convite público do TestFlight. Vazia ou inválida desativa o convite no iPhone.
  * Só endereço https, sem usuário nem senha: qualquer outra coisa (http, javascript:, texto solto) é ignorada.
  */
 export const APK_PADRAO = 'https://expo.dev/artifacts/eas/nuOIVcSzxIwsigXnnj-UTesEK1NSxGAzoZjAfBoIrbw.apk';
+export const TESTFLIGHT_PADRAO = 'https://testflight.apple.com/join/3zqhGSbD';
 
 export interface LinksDoSite {
   apk: string;
@@ -25,7 +26,10 @@ function enderecoHttps(valor: string | undefined): string | null {
 }
 
 export function linksDoSite(env: Record<string, string | undefined> = process.env): LinksDoSite {
-  return { apk: enderecoHttps(env.STUDOO_APK_URL) ?? APK_PADRAO, testflight: enderecoHttps(env.STUDOO_TESTFLIGHT_URL) };
+  return {
+    apk: enderecoHttps(env.STUDOO_APK_URL) ?? APK_PADRAO,
+    testflight: enderecoHttps(env.STUDOO_TESTFLIGHT_URL ?? TESTFLIGHT_PADRAO),
+  };
 }
 
 /*

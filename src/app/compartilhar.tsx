@@ -220,10 +220,10 @@ export function FormPerfil({ inicial, enviarRotulo, aoSalvar, aoCancelar, titulo
       </div>
       <fieldset className="cores-perfil">
         <legend>{m.corRotulo}</legend>
-        <div className="cores-perfil__lista">
+        <div className="cores-perfil__lista" role="radiogroup" aria-label={m.corRotulo}>
           {CORES_PERFIL.map((opcao) => (
-            <label key={opcao} className="cor-perfil" style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
-              <input type="radio" name="cor-perfil" value={opcao} checked={cor === opcao} onChange={() => setCor(opcao)} />
+            <label key={opcao} className="cor-perfil" title={m.cores[opcao]} style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
+              <input type="radio" name="cor-perfil" value={opcao} aria-label={m.cores[opcao]} checked={cor === opcao} onChange={() => setCor(opcao)} />
               <span className="cor-perfil__amostra" aria-hidden="true" />
               <span className="somente-leitor">{m.cores[opcao]}</span>
             </label>

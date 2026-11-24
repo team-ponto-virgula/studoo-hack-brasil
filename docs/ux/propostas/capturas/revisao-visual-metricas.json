@@ -1,0 +1,3400 @@
+{
+  "date": "2026-11-23T20:59:05.870Z",
+  "scope": "Read-only Chromium DOM of isolated HTML prototypes; visible direct text and primary buttons; no screenshot or native/product approval",
+  "method": "sRGB computed text colors composited over ancestor background colors. Background imagery, pseudo-elements, text enlargement, focus states and assistive technology are not audited.",
+  "results": [
+    {
+      "direction": "a",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar a primeira lição",
+            "x": 24,
+            "y": 590.171875,
+            "width": 342,
+            "height": 52,
+            "bottom": 642.171875,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "1",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "2",
+            "element": "span.lesson-number",
+            "color": "rgb(83, 106, 156)",
+            "background": [
+              240,
+              244,
+              253
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Começar a primeira lição",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Minhas trilhas",
+            "element": "button.",
+            "color": "rgb(90, 104, 135)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 5.58,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SUA TRILHA, EM TRÊS PASSOS",
+            "element": "p.eyebrow",
+            "color": "rgb(50, 93, 206)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 5.85,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Do primeiro SELECT aos filtros,com exemplos e exercício",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT e FROM",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiro passo",
+            "element": "small.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Nova trilha",
+            "element": "button.",
+            "color": "rgb(23, 78, 213)",
+            "background": [
+              238,
+              243,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 6.12,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Quero ajustar meu objetivo",
+            "element": "button.secondary",
+            "color": "rgb(61, 82, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 7.83,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(218, 227, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 12.38,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "M",
+            "element": "span.account",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              239,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 13.77,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA · Protótipo · dados sintéticos",
+            "element": "p.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA",
+            "element": "strong.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passosem SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "32px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Encontre os primeiros dados",
+            "element": "h2.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "a",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Ver minha trilha",
+            "x": 24,
+            "y": 631.046875,
+            "width": 342,
+            "height": 52,
+            "bottom": 683.046875,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Ver minha trilha",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Nova trilha",
+            "element": "button.",
+            "color": "rgb(90, 104, 135)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 5.58,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "1 de 3",
+            "element": "span.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 5.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu próximo passoFiltre com WHERE",
+            "element": "p.next",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "ratio": 5.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Agora você sabe buscar dadoscom SELECT e FROM.",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "PROGRESSO SALVO",
+            "element": "div.saved",
+            "color": "rgb(23, 104, 74)",
+            "background": [
+              233,
+              246,
+              238
+            ],
+            "fontSize": "11px",
+            "fontWeight": "900",
+            "ratio": 6.06,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Minhas trilhas",
+            "element": "button.",
+            "color": "rgb(23, 78, 213)",
+            "background": [
+              238,
+              243,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 6.12,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Rever o que aprendi",
+            "element": "button.secondary",
+            "color": "rgb(61, 82, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 7.83,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(218, 227, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 12.38,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "M",
+            "element": "span.account",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              239,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 13.77,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "span.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "14px",
+            "fontWeight": "800",
+            "ratio": 14.79,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Filtre com WHERE",
+            "element": "strong.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 14.79,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA · Protótipo · dados sintéticos",
+            "element": "p.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA",
+            "element": "strong.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira liçãoconcluída.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "32px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "a",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar a primeira lição",
+            "x": 22,
+            "y": 551.4375,
+            "width": 316,
+            "height": 52,
+            "bottom": 603.4375,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "1",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "2",
+            "element": "span.lesson-number",
+            "color": "rgb(83, 106, 156)",
+            "background": [
+              240,
+              244,
+              253
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Começar a primeira lição",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Minhas trilhas",
+            "element": "button.",
+            "color": "rgb(90, 104, 135)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 5.58,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SUA TRILHA, EM TRÊS PASSOS",
+            "element": "p.eyebrow",
+            "color": "rgb(50, 93, 206)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 5.85,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Do primeiro SELECT aos filtros,com exemplos e exercício",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT e FROM",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiro passo",
+            "element": "small.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Nova trilha",
+            "element": "button.",
+            "color": "rgb(23, 78, 213)",
+            "background": [
+              238,
+              243,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 6.12,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Quero ajustar meu objetivo",
+            "element": "button.secondary",
+            "color": "rgb(61, 82, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 7.83,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(218, 227, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 12.38,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "M",
+            "element": "span.account",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              239,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 13.77,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA · Protótipo · dados sintéticos",
+            "element": "p.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA",
+            "element": "strong.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passosem SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "30px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Encontre os primeiros dados",
+            "element": "h2.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "a",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Ver minha trilha",
+            "x": 22,
+            "y": 579.765625,
+            "width": 316,
+            "height": 52,
+            "bottom": 631.765625,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Ver minha trilha",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Nova trilha",
+            "element": "button.",
+            "color": "rgb(90, 104, 135)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 5.58,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "1 de 3",
+            "element": "span.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 5.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu próximo passoFiltre com WHERE",
+            "element": "p.next",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "ratio": 5.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Agora você sabe buscar dadoscom SELECT e FROM.",
+            "element": "p.",
+            "color": "rgb(86, 99, 130)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "PROGRESSO SALVO",
+            "element": "div.saved",
+            "color": "rgb(23, 104, 74)",
+            "background": [
+              233,
+              246,
+              238
+            ],
+            "fontSize": "11px",
+            "fontWeight": "900",
+            "ratio": 6.06,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Minhas trilhas",
+            "element": "button.",
+            "color": "rgb(23, 78, 213)",
+            "background": [
+              238,
+              243,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 6.12,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Rever o que aprendi",
+            "element": "button.secondary",
+            "color": "rgb(61, 82, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 7.83,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(218, 227, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 12.38,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "M",
+            "element": "span.account",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              239,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 13.77,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "span.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "14px",
+            "fontWeight": "800",
+            "ratio": 14.79,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Filtre com WHERE",
+            "element": "strong.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              245,
+              247,
+              253
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 14.79,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA · Protótipo · dados sintéticos",
+            "element": "p.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "A · CLAREZA QUE ENSINA",
+            "element": "strong.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira liçãoconcluída.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "30px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "b",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar primeira lição",
+            "x": 22,
+            "y": 696,
+            "width": 346,
+            "height": 50,
+            "bottom": 746,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "01",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Começar primeira lição",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta. Protótipo local com dados sintéticos.",
+            "element": "p.live",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              236,
+              230,
+              222
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 5.35,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "span.section-name",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Uma lição de cada vez, no seu ritmo.",
+            "element": "p.subtle",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual.Referência final: Stu cade",
+            "element": "p.art-note",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              248,
+              247,
+              251
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 6.22,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Escolha as colunas de uma tabela.",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Um começo possível",
+            "element": "p.eyebrow",
+            "color": "rgb(32, 78, 210)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 6.81,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "3 lições · do primeiro comando à consulta",
+            "element": "div.tag",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "02",
+            "element": "span.lesson-number",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Ajustar o que quero estudar",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "14px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← DireçõesProtótipo · dados sintéticos",
+            "element": "div.prototype-bar",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← Direções",
+            "element": "a.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "29px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "b",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Continuar para WHERE",
+            "x": 22,
+            "y": 730.578125,
+            "width": 346,
+            "height": 50,
+            "bottom": 780.578125,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Continuar para WHERE",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Um passo dado",
+            "element": "span.section-name",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você já sabe escolher colunas de uma tabela com SELECT.",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "15px",
+            "fontWeight": "400",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual.Referência final: Stu cade",
+            "element": "p.art-note",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              248,
+              247,
+              251
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 6.22,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você começou",
+            "element": "p.eyebrow",
+            "color": "rgb(23, 101, 63)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 6.51,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Progresso salvo",
+            "element": "small.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "span.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "NA PRÓXIMA LIÇÃO",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira lição concluída.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "30px",
+            "fontWeight": "700",
+            "ratio": 14.59,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Voltar à minha trilha",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "14px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← DireçõesProtótipo · dados sintéticos",
+            "element": "div.prototype-bar",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← Direções",
+            "element": "a.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu caminho continua aqui",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Encontre o que importa · WHERE",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "b",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar primeira lição",
+            "x": 20,
+            "y": 654,
+            "width": 320,
+            "height": 50,
+            "bottom": 704,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "01",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Começar primeira lição",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta. Protótipo local com dados sintéticos.",
+            "element": "p.live",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              236,
+              230,
+              222
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 5.35,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "span.section-name",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Uma lição de cada vez, no seu ritmo.",
+            "element": "p.subtle",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual.Referência final: Stu cade",
+            "element": "p.art-note",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              248,
+              247,
+              251
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 6.22,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Escolha as colunas de uma tabela.",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Um começo possível",
+            "element": "p.eyebrow",
+            "color": "rgb(32, 78, 210)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 6.81,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "3 lições · do primeiro comando à consulta",
+            "element": "div.tag",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "900",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "02",
+            "element": "span.lesson-number",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Ajustar o que quero estudar",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "14px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← DireçõesProtótipo · dados sintéticos",
+            "element": "div.prototype-bar",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← Direções",
+            "element": "a.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "26px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "b",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Continuar para WHERE",
+            "x": 20,
+            "y": 678,
+            "width": 320,
+            "height": 50,
+            "bottom": 728,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Continuar para WHERE",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "900",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão. Protótipo local com dados sintéticos.",
+            "element": "p.live",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              236,
+              230,
+              222
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 5.35,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Um passo dado",
+            "element": "span.section-name",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você já sabe escolher colunas de uma tabela com SELECT.",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "15px",
+            "fontWeight": "400",
+            "ratio": 6.11,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual.Referência final: Stu cade",
+            "element": "p.art-note",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              248,
+              247,
+              251
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 6.22,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você começou",
+            "element": "p.eyebrow",
+            "color": "rgb(23, 101, 63)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "15px",
+            "fontWeight": "900",
+            "ratio": 6.51,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Progresso salvo",
+            "element": "small.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "span.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "NA PRÓXIMA LIÇÃO",
+            "element": "p.",
+            "color": "rgb(83, 92, 119)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 6.63,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              233,
+              231,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "800",
+            "ratio": 13.08,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira lição concluída.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "28px",
+            "fontWeight": "700",
+            "ratio": 14.59,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Voltar à minha trilha",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              244,
+              231
+            ],
+            "fontSize": "14px",
+            "fontWeight": "900",
+            "ratio": 14.59,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← DireçõesProtótipo · dados sintéticos",
+            "element": "div.prototype-bar",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "← Direções",
+            "element": "a.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu caminho continua aqui",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "17px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Encontre o que importa · WHERE",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "700",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "c",
+      "state": "proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar primeira lição →",
+            "x": 20,
+            "y": 734,
+            "width": 350,
+            "height": 50,
+            "bottom": 784,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Começar primeira lição →",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "→",
+            "element": "span.arrow",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "19px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "SEU PLANO DE ESTUDO",
+            "element": "p.eyebrow",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "3 lições · uma etapa de cada vez",
+            "element": "p.meta-line",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "02",
+            "element": "span.lesson-number",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Quero aprender SQL para consultar dados",
+            "element": "span.",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Protótipo · dados sintéticos",
+            "element": "p.prototype-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual · final: Stu caderno",
+            "element": "p.art-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Comece aqui",
+            "element": "span.lesson-status",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              238,
+              242,
+              248
+            ],
+            "fontSize": "10px",
+            "fontWeight": "850",
+            "ratio": 14.1,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "p.sr-only",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 14.3,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SQL",
+            "element": "span.subject-mark",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "13px",
+            "fontWeight": "700",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "C · Estúdio essencial",
+            "element": "span.prototype-title",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "29px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "01",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "strong.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Rever meu objetivo",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "c",
+      "state": "conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Continuar com WHERE →",
+            "x": 20,
+            "y": 734,
+            "width": 350,
+            "height": 50,
+            "bottom": 784,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Continuar com WHERE →",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "→",
+            "element": "span.arrow",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "19px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "PRÓXIMA LIÇÃO",
+            "element": "p.eyebrow",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "9px",
+            "fontWeight": "850",
+            "ratio": 5.39,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Filtre os dados da sua consulta.",
+            "element": "p.",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 5.39,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "O QUE VOCÊ PRATICOU",
+            "element": "p.label",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "10px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira lição concluída",
+            "element": "p.completion-kicker",
+            "color": "rgb(35, 101, 72)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "850",
+            "ratio": 6.94,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Protótipo · dados sintéticos",
+            "element": "p.prototype-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Arte provisória do kit atual · final: Stu caderno",
+            "element": "p.art-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Lição concluída",
+            "element": "p.sr-only",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 14.3,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu caminho1 de 3 lições",
+            "element": "p.progress-label",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "12px",
+            "fontWeight": "850",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "1 de 3 lições",
+            "element": "span.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "WHERE",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "19px",
+            "fontWeight": "700",
+            "ratio": 14.52,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Lição concluída",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Selecionar uma coluna com SELECT para consultar os dado",
+            "element": "p.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "14px",
+            "fontWeight": "700",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "C · Estúdio essencial",
+            "element": "span.prototype-title",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT · Primeiros passos em SQL",
+            "element": "p.completion-topic",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você deu o primeiro passo.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "29px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "c",
+      "state": "proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Começar primeira lição →",
+            "x": 18,
+            "y": 690,
+            "width": 324,
+            "height": 50,
+            "bottom": 740,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Começar primeira lição →",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "→",
+            "element": "span.arrow",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "19px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "SEU PLANO DE ESTUDO",
+            "element": "p.eyebrow",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "11px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "3 lições · uma etapa de cada vez",
+            "element": "p.meta-line",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Escolha os dados que quer ver",
+            "element": "p.",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "02",
+            "element": "span.lesson-number",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "13px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Protótipo · dados sintéticos",
+            "element": "p.prototype-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Comece aqui",
+            "element": "span.lesson-status",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              238,
+              242,
+              248
+            ],
+            "fontSize": "10px",
+            "fontWeight": "850",
+            "ratio": 14.1,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "p.sr-only",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 14.3,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SQL",
+            "element": "span.subject-mark",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "13px",
+            "fontWeight": "700",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Sua trilha",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "C · Estúdio essencial",
+            "element": "span.prototype-title",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Proposta",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeiros passos em SQL",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "29px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "01",
+            "element": "span.lesson-number",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "13px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "strong.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "16px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Rever meu objetivo",
+            "element": "button.secondary",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "direction": "c",
+      "state": "conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "metrics": {
+        "overflow": false,
+        "buttons": [
+          {
+            "label": "Continuar com WHERE →",
+            "x": 18,
+            "y": 690,
+            "width": 324,
+            "height": 50,
+            "bottom": 740,
+            "inside": true
+          }
+        ],
+        "contrasts": [
+          {
+            "sample": "Continuar com WHERE →",
+            "element": "button.primary",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "→",
+            "element": "span.arrow",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              37,
+              99,
+              255
+            ],
+            "fontSize": "19px",
+            "fontWeight": "850",
+            "ratio": 4.88,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "PRÓXIMA LIÇÃO",
+            "element": "p.eyebrow",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "9px",
+            "fontWeight": "850",
+            "ratio": 5.39,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Filtre os dados da sua consulta.",
+            "element": "p.",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "12px",
+            "fontWeight": "400",
+            "ratio": 5.39,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "O QUE VOCÊ PRATICOU",
+            "element": "p.label",
+            "color": "rgb(90, 101, 121)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "10px",
+            "fontWeight": "850",
+            "ratio": 5.88,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Primeira lição concluída",
+            "element": "p.completion-kicker",
+            "color": "rgb(35, 101, 72)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "850",
+            "ratio": 6.94,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Protótipo · dados sintéticos",
+            "element": "p.prototype-note",
+            "color": "rgb(215, 223, 248)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "10px",
+            "fontWeight": "400",
+            "ratio": 11.92,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Lição concluída",
+            "element": "p.sr-only",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "ratio": 14.3,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Seu caminho1 de 3 lições",
+            "element": "p.progress-label",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "12px",
+            "fontWeight": "850",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "1 de 3 lições",
+            "element": "span.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 14.52,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "WHERE",
+            "element": "h3.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              244,
+              245,
+              247
+            ],
+            "fontSize": "19px",
+            "fontWeight": "700",
+            "ratio": 14.52,
+            "required": 3,
+            "passed": true
+          },
+          {
+            "sample": "Lição concluída",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Selecionar uma coluna com SELECT para consultar os dado",
+            "element": "p.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT",
+            "element": "strong.",
+            "color": "rgb(23, 35, 62)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "14px",
+            "fontWeight": "700",
+            "ratio": 15.6,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "C · Estúdio essencial",
+            "element": "span.prototype-title",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "11px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Pedido",
+            "element": "button.",
+            "color": "rgb(255, 255, 255)",
+            "background": [
+              11,
+              27,
+              92
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Conclusão",
+            "element": "button.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "12px",
+            "fontWeight": "800",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "SELECT · Primeiros passos em SQL",
+            "element": "p.completion-topic",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "15px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 4.5,
+            "passed": true
+          },
+          {
+            "sample": "Você deu o primeiro passo.",
+            "element": "h1.",
+            "color": "rgb(11, 27, 92)",
+            "background": [
+              255,
+              255,
+              255
+            ],
+            "fontSize": "29px",
+            "fontWeight": "850",
+            "ratio": 15.84,
+            "required": 3,
+            "passed": true
+          }
+        ]
+      }
+    }
+  ]
+}

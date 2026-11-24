@@ -132,10 +132,15 @@ export function SecaoPrivacidade({ visitante }: { visitante: boolean }) {
  */
 export function BotaoExcluirConta({ visitante }: { visitante: boolean }) {
   const [excluindo, setExcluindo] = useState(false);
+  const gatilho = useRef<HTMLButtonElement>(null);
+  function cancelar() {
+    setExcluindo(false);
+    window.requestAnimationFrame(() => gatilho.current?.focus());
+  }
   return (
     <>
-      <Botao variante="secundario" className="privacidade-excluir" onClick={() => setExcluindo(true)}>{t.excluir}</Botao>
-      {excluindo && <FolhaExcluir visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
+      <Botao ref={gatilho} variante="secundario" className="privacidade-excluir" onClick={() => setExcluindo(true)}>{t.excluir}</Botao>
+      {excluindo && <FolhaExcluir visitante={visitante} aoCancelar={cancelar} />}
     </>
   );
 }

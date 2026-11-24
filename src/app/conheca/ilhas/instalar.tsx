@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type Reac
 import { ehIos, refinarAparelho, type Aparelho } from '../aparelho';
 import { IconeBaixar, IconeCelular, IconeCompartilharIos, IconeConfirmarIos, IconeVisto } from '../icones';
 import { textos } from '../textos';
-import { Passos, PassosDoIphone } from './passos';
+import { AbrirAppNoSafari, Passos, PassosDoIphone } from './passos';
 import { BotaoVisitante } from './visitante';
 
 const FolhaIphone = dynamic(() => import('./folha-iphone'), { ssr: false });
@@ -31,6 +31,7 @@ export interface DadosDeInstalar {
   visitanteAtivo: boolean;
   /** A pessoa já tem sessão: "Experimentar sem conta" vira "Abrir o Studoo" e não cria outra sessão. */
   comSessao: boolean;
+  appParaInstalar: string;
 }
 
 /** "Baixar para Android": o arquivo baixa pelo link; o botão mostra o visto e "Baixando…" por 4 s, e a linha de como instalar fica. */
@@ -58,11 +59,11 @@ function useBaixando() {
 }
 
 /**
- * O que cada aparelho faz na primeira dobra e na chamada final (spec 18, 1.3 e S5). Android: baixa o APK. iPhone e iPad: o TestFlight,
- * quando há link público, e senão a folha "Use o Studoo no iPhone hoje". Computador: "Experimentar sem conta" é o botão principal
+ * Android baixa o APK. O iPhone abre o TestFlight quando há convite. A folha com instruções da Tela de Início atende o iPad
+ * e o iPhone quando o convite está desativado. Computador: "Experimentar sem conta" é o botão principal
  * e um link leva às instruções com o QR. O servidor já escolhe o aparelho certo no primeiro desenho; o navegador só corrige o iPad.
  */
-export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, lugar, reservarIpad = false }: DadosDeInstalar & { lugar: 'heroi' | 'final'; reservarIpad?: boolean }) {
+export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, appParaInstalar, lugar, reservarIpad = false }: DadosDeInstalar & { lugar: 'heroi' | 'final'; reservarIpad?: boolean }) {
   const aparelho = useAparelho(inicial);
   const { baixando, comoInstalar, aoBaixar } = useBaixando();
   const [folha, setFolha] = useState(false);
@@ -111,7 +112,7 @@ export function AcoesDeInstalar({ aparelho: inicial, apk, testflight, tamanho, v
       )}
       {textoVisitante('texto')}
       <p className="cn-apoio">{testflightAqui ? textos.acoes.iphoneTestflight.apoio : telaDeInicio.apoio}</p>
-      {folha && <FolhaIphone aoFechar={fecharFolha} visitanteAtivo={visitanteAtivo} comSessao={comSessao} ipad={ipad} />}
+      {folha && <FolhaIphone aoFechar={fecharFolha} appParaInstalar={appParaInstalar} ipad={ipad} />}
     </div>
   );
 }
@@ -122,10 +123,9 @@ type Aba = 'android' | 'iphone';
  * S4, "Instale em 3 passos": um seletor de duas abas (grupo de abas acessível, com setas, Home e End), que abre no aparelho de quem
  * está vendo (no computador, em Android). `#iphone` abre a aba do iPhone e `#android` a do Android. `#baixar` abre a do aparelho (é para onde o
  * `/baixar` manda). Android: os três passos e o botão (ou, no computador, o cartão do QR no lugar do botão). iPhone: com TestFlight, os
- * três passos dele e "Instalar no iPhone"; sem, os três da Tela de Início, a disponibilidade do convite público e
- * "Experimentar sem conta".
+ * três passos dele e "Instalar no iPhone"; sem convite, as instruções para adicionar o app à Tela de Início.
  */
-export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, visitanteAtivo, comSessao, qr, qrIphone = qr }: DadosDeInstalar & { qr: ReactNode | null; /** O cartão do QR da aba do iPhone (o mesmo, sem o link do arquivo do Android). */ qrIphone?: ReactNode | null }) {
+export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, appParaInstalar, qr, qrIphone = qr }: DadosDeInstalar & { qr: ReactNode | null; /** O cartão do QR da aba do iPhone (o mesmo, sem o link do arquivo do Android). */ qrIphone?: ReactNode | null }) {
   const aparelho = useAparelho(inicial);
   const { baixando, comoInstalar, aoBaixar } = useBaixando();
   const [aba, setAba] = useState<Aba>(ehIos(inicial) ? 'iphone' : 'android');
@@ -214,7 +214,7 @@ export function SecaoInstalar({ aparelho: inicial, apk, testflight, tamanho, vis
             {comQrNoIphone && <div className="cn-painel__qr">{qrIphone}</div>}
             <p className="cn-apoio cn-apoio--painel">{aparelho === 'ipad' ? textos.acoes.ipad.apoio : textos.acoes.iphoneEmBreve.disponibilidade}</p>
             <div className="cn-painel__acao">
-              <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="primario" className="cn-botao-principal" />
+              <AbrirAppNoSafari href={appParaInstalar} />
             </div>
           </>
         )}

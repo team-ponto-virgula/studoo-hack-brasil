@@ -1,0 +1,63 @@
+{
+  "route": "APPLE_BUILD_UPLOADS_API",
+  "appId": "6837508955",
+  "version": "0.1.0",
+  "buildNumber": "7",
+  "sourceCommit": "0a96649e44c56feefa92a59daec950d4484756f0",
+  "easBuildId": "5fd98b86-9c98-48f4-b1d4-2ec43b7d877f",
+  "appleUploadId": "d0a32bdc-6b25-48ff-88ef-345b16d18bf7",
+  "appleFileId": "ced486a0-339c-4ab1-9f53-419a39ffd8b8",
+  "fileName": "application-5fd98b86-9c98-48f4-b1d4-2ec43b7d877f.ipa",
+  "fileSize": 30179153,
+  "ipaSha256": "d0c22916a75baf4ea7944c5e7e58608bc62dc3c4f89ed2363eea8c1c8793259c",
+  "ipaMd5": "1ba5bc302cd603436521bf0884cbb2ab",
+  "fileDeliveryConfirmedAt": "2026-11-24T20:28:48.497Z",
+  "fileDeliveryState": "COMPLETE",
+  "identityChecksumConfirmed": true,
+  "fileCommitHttp": 200,
+  "parts": [
+    {
+      "offset": 0,
+      "length": 5242880,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:41.390Z"
+    },
+    {
+      "offset": 5242880,
+      "length": 5242880,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:42.230Z"
+    },
+    {
+      "offset": 10485760,
+      "length": 5242880,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:43.341Z"
+    },
+    {
+      "offset": 15728640,
+      "length": 5242880,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:44.091Z"
+    },
+    {
+      "offset": 20971520,
+      "length": 5242880,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:44.888Z"
+    },
+    {
+      "offset": 26214400,
+      "length": 3964753,
+      "httpStatus": 200,
+      "deliveredAt": "2026-11-24T20:28:45.983Z"
+    }
+  ],
+  "manifestSha256": "d7f49a9b429d8755f59323cff45847a3f25141ae18d72f9d829c4500abb61db7",
+  "uploaderSha256": "a353071bb6f535523d58240afff0099464a7ae022d801c5c34b416d9479ea65f",
+  "rootReviewedBeforeFirstPost": true,
+  "mockTestsPassed": 15,
+  "automaticReservationRetries": 0,
+  "easSubmitCreated": false,
+  "nativeExecuted": false
+}

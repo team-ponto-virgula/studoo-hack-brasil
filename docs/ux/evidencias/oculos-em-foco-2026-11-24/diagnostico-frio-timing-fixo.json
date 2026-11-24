@@ -1,0 +1,51 @@
+{
+  "scope": "Diagnóstico separado do run4/5; rendererRNWeb; métricas de leitura adicionadas apenas ao bundle servido à página de QA; fonte produção não alterada",
+  "evidence": {
+    "events": [
+      {
+        "event": "module",
+        "at": 1928.4000000022352
+      },
+      {
+        "event": "controller",
+        "at": 2190.800000000745,
+        "remaining": 637.6000000014901
+      },
+      {
+        "event": "motion-start",
+        "at": 2285.7000000029802
+      },
+      {
+        "event": "resources-ready",
+        "at": 2302.10000000149,
+        "motion": false
+      },
+      {
+        "event": "phase",
+        "phase": "concluida",
+        "reason": "limite",
+        "at": 2828.300000000745
+      },
+      {
+        "event": "motion-callback",
+        "at": 2829.7000000029802,
+        "finished": false
+      }
+    ],
+    "dom": [
+      {
+        "phase": "ausente",
+        "at": 27.5
+      },
+      {
+        "phase": "visivel",
+        "at": 2209.60000000149
+      },
+      {
+        "phase": "ausente",
+        "at": 2830.2000000029802
+      }
+    ]
+  },
+  "errors": []
+}

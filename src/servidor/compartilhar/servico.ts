@@ -29,6 +29,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { ILUSTRACAO_VIOLAO } from "@/servidor/ia/ilustracao-violao";
 import { exigirParLivre, filtroPublico } from "./visibilidade";
 import { revisarConteudo } from "./revisao";
 import type { Prisma } from "@/servidor/banco/gerado/client";
@@ -259,18 +260,23 @@ function tituloTemNomeDoArquivo(titulo: string, licoes: LicaoComConteudo[]) {
 
 const rotuloMaterial = (nome: string) => `Material de ${nome}`;
 
+/** Ilustrações estáticas embutidas do próprio Studoo (nunca fotos de material de outra pessoa). */
+const ILUSTRACOES_EMBUTIDAS = new Set<string>([ILUSTRACAO_VIOLAO]);
+
 /**
  * O conteúdo de uma lição na cópia. As referências ficam com o trecho citado e a página, mas sem o nome do arquivo
- * ("Material de Ana") e com um `materialId` neutro. Nenhum recurso de imagem vai, seja qual for o endereço: hoje é a
- * foto de página em data URL, e se um dia virar um endereço do servidor a cópia não pode apontar para o material de outra
- * pessoa.
+ * ("Material de Ana") e com um `materialId` neutro. Imagens de material/usuário nunca vão na cópia; apenas ilustrações
+ * estáticas embutidas do próprio Studoo (como a ilustração numerada do violão) são preservadas em trilhas sem material.
  */
 export function conteudoParaCopia(conteudo: ConteudoLicao, nomeDono: string): ConteudoLicao {
   const deMaterial = Boolean(conteudo.referencias?.length);
   const { recurso, referencias, ...resto } = conteudo;
+  const manterRecurso = Boolean(
+    recurso && (recurso.tipo !== "imagem" || (!deMaterial && ILUSTRACOES_EMBUTIDAS.has(recurso.src))),
+  );
   return {
     ...resto,
-    ...(recurso && recurso.tipo !== "imagem" ? { recurso } : {}),
+    ...(manterRecurso && recurso ? { recurso } : {}),
     ...(referencias?.length
       ? { referencias: referencias.map(({ pagina, localizacao, trecho, leitura }) => ({ materialId: MATERIAL_COMPARTILHADO, nome: rotuloMaterial(nomeDono), pagina, ...(localizacao ? { localizacao } : {}), trecho, leitura })) }
       : {}),

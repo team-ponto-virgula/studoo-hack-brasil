@@ -1,0 +1,47 @@
+{
+  "executedAt": "2026-11-24T18:07:35.684Z",
+  "branch": "feat/mobile-ui-ux-refino",
+  "base": "c3ee262bfad035892b79355abb510fc3a290dcab",
+  "workingTree": true,
+  "sourceHashes": {
+    "apps/mobile/src/estudo.tsx": "4ef69116f0e77bbf8f5fd7743920f3f335e1660f0879457b09e6fff1b2a70056",
+    "apps/mobile/src/interface.tsx": "bfa0ebba2e5160ec7e9f9775aacd5c36ae7ab2aa9525005f5b5b22fca5d03469",
+    "apps/mobile/src/caminho.tsx": "5a1c912b2c533f1b436b9d9aebfdff72d4ea39d59322668778017a75d1a466f0",
+    "apps/mobile/src/licao.tsx": "108249487b3150cdbd3753b48c7820a20e45eb786e7b44fc5dcc7324d02562ec"
+  },
+  "checks": [
+    {
+      "command": "npm run typecheck --workspace=@studoo/mobile",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:estudio:interface",
+      "tests": 603,
+      "passed": 603,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:movimento",
+      "tests": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:paridade",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "legacyTestUpdates": [
+    "refino-p1-mobile: apresentação 24/30 e folga compartilhada",
+    "criacao-trilha-mobile: reserva do nó1 usa a mesma folga da placa; centro e alvo preservados"
+  ],
+  "limits": [
+    "Esses checks não comprovam a execução nativa nem o layout integrado; a conferência de fluxo RNWeb/API local é registrada separadamente por checks_release."
+  ]
+}

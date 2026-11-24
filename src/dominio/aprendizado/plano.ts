@@ -600,6 +600,33 @@ function estaEntreAspas(texto: string, resposta: string): boolean {
   return alvo !== "" && new RegExp(`[“"‘'«\`]\\s*${alvo}\\s*[”"’'»\`]`, "u").test(semAcentoEmMinusculas(texto));
 }
 
+/** Os trechos entre aspas do texto (“…”, "…", ‘…’, «…», `…` e '…' de aspas simples retas, que só abre depois de um espaço ou pontuação e fecha antes de um: "don't" não abre trecho). */
+const TRECHOS_ENTRE_ASPAS = [
+  /“([^”\n]{1,160})”/gu,
+  /"([^"\n]{1,160})"/gu,
+  /‘([^’\n]{1,160})’/gu,
+  /«([^»\n]{1,160})»/gu,
+  /`([^`\n]{1,160})`/gu,
+  /(?<![\p{L}\p{N}])'([^'\n]{1,160})'(?![\p{L}\p{N}])/gu,
+];
+
+/**
+ * A resposta de uma ou duas letras aparece como palavra INTEIRA dentro de um exemplo entre aspas com mais de uma palavra (“help me”, “want to go”)? É o exemplo que a dica cita e que só pode estar
+ * ali por causa da resposta (prova com a IA real, 24/11: aceitas ["me"] e a dica "…aquele que também aparece em “help me”." entregava o "me", que a regra da resposta SOZINHA entre aspas não via).
+ * Só vale a palavra inteira (o "me" de "come" ou de "homework" não conta), dentro das aspas: a palavra de ligação solta na frase da dica ("o lado esquerdo do braço", para a nota "Dó") segue sem contar.
+ */
+function estaDentroDeCitacao(texto: string, resposta: string): boolean {
+  const alvo = pedacosDoTexto(resposta)[0];
+  if (!alvo || !/^\p{L}{1,2}$/u.test(alvo)) return false;
+  for (const regra of TRECHOS_ENTRE_ASPAS) {
+    for (const achado of texto.matchAll(regra)) {
+      const palavras: string[] = semAcentoEmMinusculas(achado[1]).match(/\p{L}+/gu) ?? [];
+      if (palavras.length >= 2 && palavras.includes(alvo)) return true;
+    }
+  }
+  return false;
+}
+
 /** O texto sem a pontuação das pontas: "Lá," e "(Lá)" viram "Lá". */
 function semPontuacaoNasPontas(texto: string): string {
   return texto.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").trim();
@@ -646,7 +673,7 @@ function aparecemOsSimbolos(texto: string, simbolos: string): boolean {
 
 /**
  * O texto diz alguma das respostas aceitas da lacuna? As respostas de uma ou duas letras (“a”, “de”, “to”) são palavras de ligação que a dica usa por outros motivos: só contam entre
- * aspas, soltas numa lista ou com a inicial maiúscula no meio da frase (ver `curtaSoltaNoTexto`). A resposta só de números (6/10) também vale quando os números aparecem na ordem, com palavras no meio ("6 sobre 10"). A resposta só de símbolos (>=) vale quando o símbolo
+ * aspas, dentro de um exemplo entre aspas (“help me”, ver `estaDentroDeCitacao`), soltas numa lista ou com a inicial maiúscula no meio da frase (ver `curtaSoltaNoTexto`). A resposta só de números (6/10) também vale quando os números aparecem na ordem, com palavras no meio ("6 sobre 10"). A resposta só de símbolos (>=) vale quando o símbolo
  * aparece inteiro, sem outro símbolo de operação colado a ele.
  */
 export function textoDizARespostaDaLacuna(texto: string, gabarito: readonly string[]): boolean {
@@ -655,7 +682,7 @@ export function textoDizARespostaDaLacuna(texto: string, gabarito: readonly stri
     const alvo = pedacosDoTexto(resposta);
     if (alvo.length === 0) return aparecemOsSimbolos(texto, resposta);
     if (pedacos.length === 0) return false;
-    if (alvo.length === 1 && /^\p{L}{1,2}$/u.test(alvo[0])) return estaEntreAspas(texto, resposta) || curtaSoltaNoTexto(texto, resposta);
+    if (alvo.length === 1 && /^\p{L}{1,2}$/u.test(alvo[0])) return estaEntreAspas(texto, resposta) || estaDentroDeCitacao(texto, resposta) || curtaSoltaNoTexto(texto, resposta);
     return apareceSeguido(pedacos, alvo) || (alvo.length > 1 && alvo.every((pedaco) => /^\d/.test(pedaco)) && apareceNaOrdem(pedacos, alvo));
   });
 }

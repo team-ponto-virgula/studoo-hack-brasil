@@ -3,8 +3,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { textos } from '../textos';
-import { PassosDoIphone } from './passos';
-import { BotaoVisitante } from './visitante';
+import { AbrirAppNoSafari, PassosDoIphone } from './passos';
 import '../../compartilhar.css'; // `.folha-fundo` e `.folha`: a mesma folha do resto do site (spec 11); só carrega quando a pessoa abre a folha.
 
 const t = textos.folhaIphone;
@@ -16,12 +15,11 @@ export function foraDoSafariNoIphone(userAgent: string): boolean {
 }
 
 /**
- * A folha "Use o Studoo no iPhone hoje" (spec 18, 1.5), antes de o TestFlight ter link público: três passos de "Adicionar à Tela de
- * Início", "Entendi" e "Experimentar sem conta". É a folha do Studoo (nunca janela do sistema): foco no título, Tab preso nela,
+ * Instruções da Tela de Início para iPad e iPhone sem convite do TestFlight. A folha recebe foco no título e mantém Tab dentro dela.
  * Esc e toque fora fecham, e o foco volta ao botão que a abriu. Sai do herói e entra na raiz da página (portal): lá dentro o contexto de empilhamento do texto
  * do herói (z-index 1) deixava o celular do herói, que vem depois, passar por cima da folha e do escurecimento.
  */
-export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao, ipad = false }: { aoFechar: () => void; visitanteAtivo: boolean; comSessao: boolean; /** No iPad, o título fala do iPad (os passos são os mesmos). */ ipad?: boolean }) {
+export default function FolhaIphone({ aoFechar, appParaInstalar, ipad = false }: { aoFechar: () => void; appParaInstalar: string; ipad?: boolean }) {
   const caixa = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
   const idTitulo = useId();
@@ -71,8 +69,8 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao, ipad 
         {foraDoSafari && <p className="folha-texto cn-folha__aviso" role="note">{t.foraDoSafari}</p>}
         <PassosDoIphone />
         <div className="folha-acoes folha-acoes--empilhadas cn-folha__acoes">
-          <button type="button" className="botao botao--primario" onClick={aoFechar}>{t.entendi}</button>
-          <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="texto" />
+          <AbrirAppNoSafari href={appParaInstalar} />
+          <button type="button" className="botao botao--texto" onClick={aoFechar}>{t.entendi}</button>
         </div>
       </div>
     </div>,

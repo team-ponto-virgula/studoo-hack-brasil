@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { provedoresDaIa, VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
 import { provedorIaAtivo } from '@/servidor/ia/gerador';
+import { VoltarDaPagina } from '../comunidade';
+import { PaginaPublica, usuarioDaPagina } from '../publico';
 import '../privacidade.css';
 
 export const dynamic = 'force-dynamic';
@@ -16,16 +18,19 @@ export const metadata: Metadata = {
  * dito pela política dele (link), sem afirmar retenção que não controlamos.
  * O contato vem de `STUDOO_CONTATO_PRIVACIDADE` (e-mail ou endereço), configurado no servidor.
  */
-export default function PaginaPrivacidade() {
+export default async function PaginaPrivacidade() {
   const ia = provedorIaAtivo();
   // A política descreve todos os provedores que o Studoo pode usar, não só o ligado agora.
   const provedores = provedoresDaIa(ia === 'falsa' ? 'deepseek' : ia, true);
   const contato = process.env.STUDOO_CONTATO_PRIVACIDADE?.trim();
   const contatoHref = contato && (contato.includes('@') && !contato.includes('://') ? `mailto:${contato}` : contato);
+  const logado = Boolean(await usuarioDaPagina());
 
   return (
-    <main className="politica">
-      <h1>Política de privacidade do Studoo</h1>
+    <PaginaPublica>
+      <div className="politica">
+        <VoltarDaPagina destino={logado ? '/?tela=perfil' : '/login'} />
+        <h1>Política de privacidade do Studoo</h1>
       <p className="politica__data">Versão de {VERSAO_CONSENTIMENTO_IA}. Vale para o site e para o app.</p>
 
       <h2>Em resumo</h2>
@@ -101,6 +106,7 @@ export default function PaginaPrivacidade() {
       {contato && contatoHref
         ? <p>Dúvidas ou pedidos sobre seus dados: <a href={contatoHref}>{contato}</a>.</p>
         : <p>Para dúvidas ou pedidos sobre seus dados, <a href="/suporte">fale com o suporte do Studoo</a>.</p>}
-    </main>
+      </div>
+    </PaginaPublica>
   );
 }

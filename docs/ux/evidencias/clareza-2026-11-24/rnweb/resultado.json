@@ -1,0 +1,437 @@
+{
+  "startedAt": "2026-11-24T18:11:37.207Z",
+  "scope": "UI mobile real em RN Web, API Next local separada3011, IA/email falsos e conta sintética exclusiva; shims QA, sem prova nativa.",
+  "sourceHashesBefore": {
+    "apps/mobile/src/estudo.tsx": "4ef69116f0e77bbf8f5fd7743920f3f335e1660f0879457b09e6fff1b2a70056",
+    "apps/mobile/src/interface.tsx": "bfa0ebba2e5160ec7e9f9775aacd5c36ae7ab2aa9525005f5b5b22fca5d03469",
+    "apps/mobile/src/caminho.tsx": "5a1c912b2c533f1b436b9d9aebfdff72d4ea39d59322668778017a75d1a466f0",
+    "apps/mobile/src/licao.tsx": "108249487b3150cdbd3753b48c7820a20e45eb786e7b44fc5dcc7324d02562ec",
+    "apps/mobile/src/api-nativa.ts": "486a588c9f61fdc5e1411fea2afe6207ab50c89876a17b496bc79f12d3005a08"
+  },
+  "steps": [
+    {
+      "name": "login-pela-ui",
+      "at": "2026-11-24T18:11:38.963Z"
+    },
+    {
+      "name": "aviso-musica-observado-e-dispensado-pela-ui",
+      "at": "2026-11-24T18:11:39.322Z"
+    },
+    {
+      "name": "trilha-gerada",
+      "at": "2026-11-24T18:11:42.328Z"
+    },
+    {
+      "name": "trilha-aceita",
+      "at": "2026-11-24T18:11:43.492Z",
+      "status": 200,
+      "progresso": {
+        "concluidas": 0,
+        "total": 5,
+        "percentual": 0
+      }
+    },
+    {
+      "name": "erro-e-feedback",
+      "at": "2026-11-24T18:11:46.171Z"
+    },
+    {
+      "name": "resposta-corrigida",
+      "at": "2026-11-24T18:11:47.278Z"
+    },
+    {
+      "name": "licao1-concluida-progresso-salvo",
+      "at": "2026-11-24T18:11:47.574Z",
+      "progresso": {
+        "concluidas": 1,
+        "total": 5,
+        "percentual": 20
+      }
+    },
+    {
+      "name": "sessao-e-progresso-restaurados-apos-reload",
+      "at": "2026-11-24T18:11:51.464Z",
+      "progresso": {
+        "concluidas": 1,
+        "total": 5,
+        "percentual": 20
+      }
+    },
+    {
+      "name": "retomada-na-licao2",
+      "at": "2026-11-24T18:11:51.574Z"
+    }
+  ],
+  "captures": [
+    {
+      "state": "01-pedido",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/01-pedido-390x844.png",
+      "primary": "gerar-trilha",
+      "primaryBox": {
+        "x": 20,
+        "y": 360,
+        "width": 350,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "01-pedido",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/01-pedido-360x800.png",
+      "primary": "gerar-trilha",
+      "primaryBox": {
+        "x": 20,
+        "y": 360,
+        "width": 320,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "02-proposta",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/02-proposta-390x844.png",
+      "primary": "comecar-trilha",
+      "primaryBox": {
+        "x": 16,
+        "y": 726,
+        "width": 358,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "02-proposta",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/02-proposta-360x800.png",
+      "primary": "comecar-trilha",
+      "primaryBox": {
+        "x": 16,
+        "y": 682,
+        "width": 328,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "03-licao-conceito",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/03-licao-conceito-390x844.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "03-licao-conceito",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/03-licao-conceito-360x800.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "04-primeiro-exercicio",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/04-primeiro-exercicio-390x844.png",
+      "primary": "enviar-resposta",
+      "primaryBox": {
+        "x": 16,
+        "y": 778,
+        "width": 358,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "04-primeiro-exercicio",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/04-primeiro-exercicio-360x800.png",
+      "primary": "enviar-resposta",
+      "primaryBox": {
+        "x": 16,
+        "y": 734,
+        "width": 328,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "05-feedback-erro",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/05-feedback-erro-390x844.png",
+      "primary": "tentar-de-novo",
+      "primaryBox": {
+        "x": 16,
+        "y": 784,
+        "width": 205.765625,
+        "height": 44
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "05-feedback-erro",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/05-feedback-erro-360x800.png",
+      "primary": "tentar-de-novo",
+      "primaryBox": {
+        "x": 16,
+        "y": 740,
+        "width": 175.765625,
+        "height": 44
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "06-conclusao",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/06-conclusao-390x844.png",
+      "primary": "proxima-licao",
+      "primaryBox": {
+        "x": 20,
+        "y": 724,
+        "width": 350,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "06-conclusao",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/06-conclusao-360x800.png",
+      "primary": "proxima-licao",
+      "primaryBox": {
+        "x": 20,
+        "y": 680,
+        "width": 320,
+        "height": 52
+      },
+      "primaryInsideViewport": true,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "07-mapa-progresso",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/07-mapa-progresso-390x844.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "07-mapa-progresso",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/07-mapa-progresso-360x800.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    },
+    {
+      "state": "08-retomada-licao2",
+      "width": 390,
+      "height": 844,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/08-retomada-licao2-390x844.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "state": "08-retomada-licao2",
+      "width": 360,
+      "height": 800,
+      "file": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/08-retomada-licao2-360x800.png",
+      "primaryBox": null,
+      "primaryInsideViewport": null,
+      "scrollWidth": 360,
+      "clientWidth": 360
+    }
+  ],
+  "pageErrors": [],
+  "planId": "545f14bc-7e5c-4033-aef6-9d75e61af486",
+  "passed": true,
+  "finishedAt": "2026-11-24T18:11:52.382Z",
+  "sourceHashesAfter": {
+    "apps/mobile/src/estudo.tsx": "4ef69116f0e77bbf8f5fd7743920f3f335e1660f0879457b09e6fff1b2a70056",
+    "apps/mobile/src/interface.tsx": "bfa0ebba2e5160ec7e9f9775aacd5c36ae7ab2aa9525005f5b5b22fca5d03469",
+    "apps/mobile/src/caminho.tsx": "5a1c912b2c533f1b436b9d9aebfdff72d4ea39d59322668778017a75d1a466f0",
+    "apps/mobile/src/licao.tsx": "108249487b3150cdbd3753b48c7820a20e45eb786e7b44fc5dcc7324d02562ec",
+    "apps/mobile/src/api-nativa.ts": "486a588c9f61fdc5e1411fea2afe6207ab50c89876a17b496bc79f12d3005a08"
+  },
+  "sourceFilesChanged": [],
+  "apiEvents": [
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/mobile/sessao",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/privacidade",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/planos",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/aprendizado/propostas/ao-vivo",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/aprendizado/planos",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/estudio/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/aprendizado/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1/avaliar",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/estudio/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/estudio/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/aprendizado/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1/avaliar",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/estudio/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/aprendizado/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-1/concluir",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/planos/545f14bc-7e5c-4033-aef6-9d75e61af486",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/sessao",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/privacidade",
+      "error": "bridge-unavailable"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/config",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/planos",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/planos/545f14bc-7e5c-4033-aef6-9d75e61af486",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/planos/545f14bc-7e5c-4033-aef6-9d75e61af486",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/aprendizado/licoes/545f14bc-7e5c-4033-aef6-9d75e61af486-1-2",
+      "status": 200
+    }
+  ],
+  "nativeExecuted": false,
+  "nativeStorageSecurityValidated": false,
+  "productionCorsOrTlsValidated": false,
+  "accessibilityFallbackQaOnly": true,
+  "nativeAccessibilityValidated": false,
+  "streamingTimingValidated": false
+}

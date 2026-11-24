@@ -929,7 +929,7 @@ button { touch-action: manipulation; }
 }
 /* Só no celular (até 767 px) as ações de rodapé (a principal, o próximo passo da trilha) flutuam; no tablet elas ficam no fluxo da página. */
 @media (max-width: 767px) {
-  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .trilha-vazia)) {
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .trilha-vazia, .pedido-novo[data-modo="material"] .estudio-acoes--previa)) {
     --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
   }
   .estudo[data-navegacao] .acao-principal {
@@ -979,8 +979,9 @@ button { touch-action: manipulation; }
 @media (max-width: 1023px) {
   .estudo[data-navegacao] .painel--planos > .acao-principal { display: none; }
   .estudo[data-navegacao] .planos-ativos { margin-bottom: 0; }
-  /* Nova trilha (pedido vazio, com ideia, com material e prévia): 40 px entre o último conteúdo e a barra de baixo. */
-  .estudo[data-navegacao] .estudo-principal:has(.painel--pedido) { padding-bottom: calc(40px + var(--altura-navegacao)); }
+  /* Nova trilha (pedido vazio, com ideia, com material e prévia): 40 px entre o último conteúdo e a barra de baixo; com a ação presa da prévia (até 767 px, teclado fechado),
+     soma a altura dela mais 12 (spec 16, item 35), para o fim da prévia não ficar atrás dela. */
+  .estudo[data-navegacao] .estudo-principal:has(.painel--pedido) { padding-bottom: calc(40px + var(--altura-navegacao) + var(--espaco-acao-fixa, 0px)); }
 }
 
 /* A entrada lateral da aula/trilha não cria rolagem horizontal durante a transição. */

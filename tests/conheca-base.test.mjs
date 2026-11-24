@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { detectarAparelho, ehIos, refinarAparelho } from '../src/app/conheca/aparelho.ts';
-import { APK_PADRAO, APK_PADRAO_BYTES, linksDoSite, tamanhoDoApk, tamanhoEmMb } from '../src/app/conheca/links.ts';
+import { APK_PADRAO, APK_PADRAO_BYTES, TESTFLIGHT_PADRAO, linksDoSite, tamanhoDoApk, tamanhoEmMb } from '../src/app/conheca/links.ts';
 import { origemPublica } from '../src/app/conheca/origem-publica.ts';
 import { GET } from '../src/app/baixar/route.ts';
 
@@ -34,8 +34,8 @@ test('o navegador corrige só o que o servidor não vê: iPad no modo "site para
   assert.equal(refinarAparelho('iphone', { userAgent: AGENTES.mac, pontosDeToque: 5 }), 'iphone', 'o que o servidor já sabe não muda');
 });
 
-test('os links: padrão do build 4, só https, e o TestFlight vazio ou inválido vale "em breve"', () => {
-  assert.deepEqual(linksDoSite({}), { apk: APK_PADRAO, testflight: null });
+test('os links: APK e convite público por padrão, só HTTPS e opção de desativar o TestFlight', () => {
+  assert.deepEqual(linksDoSite({}), { apk: APK_PADRAO, testflight: 'https://testflight.apple.com/join/3zqhGSbD' });
   assert.match(APK_PADRAO, /^https:\/\/expo\.dev\/artifacts\/eas\/nuOIVcSzxIwsigXnnj-UTesEK1NSxGAzoZjAfBoIrbw\.apk$/);
   assert.deepEqual(linksDoSite({ STUDOO_APK_URL: '  ', STUDOO_TESTFLIGHT_URL: '' }), { apk: APK_PADRAO, testflight: null });
   const novo = linksDoSite({ STUDOO_APK_URL: 'https://exemplo.test/studoo.apk', STUDOO_TESTFLIGHT_URL: ' https://testflight.apple.com/join/ABC123 ' });
@@ -99,7 +99,7 @@ test('/baixar no Android leva ao APK (o padrão ou o da variável), com 302 e se
 
 test('/baixar usa TestFlight só no iPhone; o iPad sempre abre as instruções da Tela de Início', () => {
   for (const agente of [AGENTES.iphone, AGENTES.ipad]) {
-    assert.equal(destino(baixar(agente)), '/conheca#iphone');
+    assert.equal(destino(baixar(agente)), agente === AGENTES.iphone ? TESTFLIGHT_PADRAO : '/conheca#iphone');
     assert.equal(destino(baixar(agente, { testflight: '' })), '/conheca#iphone');
     assert.equal(destino(baixar(agente, { testflight: 'https://testflight.apple.com/join/ABC123' })), agente === AGENTES.ipad ? '/conheca#iphone' : 'https://testflight.apple.com/join/ABC123');
     assert.equal(destino(baixar(agente, { testflight: 'javascript:alert(1)' })), '/conheca#iphone', 'link inválido vale "em breve"');

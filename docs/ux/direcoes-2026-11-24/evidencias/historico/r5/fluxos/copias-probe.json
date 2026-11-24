@@ -1,0 +1,41 @@
+[
+  {
+    "direction": "jornada",
+    "active": "recebida-sql-sem-complica--o",
+    "track": {
+      "title": "SQL sem complicação",
+      "completed": 0,
+      "description": "Praticar filtros e junções em consultas.",
+      "reviewNeeded": [],
+      "visibility": "explorar",
+      "publicationStatus": "pendente"
+    },
+    "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=jornada&p=compartilhar&s=publicacao-pendente"
+  },
+  {
+    "direction": "caderno",
+    "active": "recebida-sql-sem-complica--o",
+    "track": {
+      "title": "SQL sem complicação",
+      "completed": 0,
+      "description": "Praticar filtros e junções em consultas.",
+      "reviewNeeded": [],
+      "visibility": "explorar",
+      "publicationStatus": "pendente"
+    },
+    "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=caderno&p=compartilhar&s=publicacao-pendente"
+  },
+  {
+    "direction": "foco",
+    "active": "recebida-sql-sem-complica--o",
+    "track": {
+      "title": "SQL sem complicação",
+      "completed": 0,
+      "description": "Praticar filtros e junções em consultas.",
+      "reviewNeeded": [],
+      "visibility": "explorar",
+      "publicationStatus": "pendente"
+    },
+    "url": "http://localhost:3012/docs/ux/direcoes-2026-11-24/prototipo/app.html?d=foco&p=compartilhar&s=publicacao-pendente"
+  }
+]

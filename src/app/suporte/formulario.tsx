@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MOTIVOS_DENUNCIA, type MotivoDenuncia } from '@studoo/contratos';
 import { mensagens } from '../../mensagens/pt-BR';
 import { Botao } from '../../ui';
+import { VoltarDaPagina } from '../comunidade';
 
 export async function pedido<T>(url: string, corpo?: unknown): Promise<T> {
   const r = await fetch(url, corpo === undefined ? { cache: 'no-store' } : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
@@ -12,7 +13,7 @@ export async function pedido<T>(url: string, corpo?: unknown): Promise<T> {
   return dados as T;
 }
 
-export function FormularioSuporte({ tipo, alvo, nomeAlvo, inicial = '' }: { tipo?: 'perfil' | 'trilha'; alvo?: string; nomeAlvo?: string; inicial?: string }) {
+export function FormularioSuporte({ tipo, alvo, nomeAlvo, inicial = '', logado = false }: { tipo?: 'perfil' | 'trilha'; alvo?: string; nomeAlvo?: string; inicial?: string; logado?: boolean }) {
   const [mensagem, escrever] = useState('');
   const [motivo, escolher] = useState<MotivoDenuncia | ''>('');
   const [protocolo, digitar] = useState(inicial);
@@ -40,7 +41,9 @@ export function FormularioSuporte({ tipo, alvo, nomeAlvo, inicial = '' }: { tipo
     catch(e) { falhar((e as Error).message); } finally { ocupar(false); }
   }
   return <div className="atendimento">
-    {tipo && alvo && <Link className="voltar-pagina" href={`/${tipo === 'trilha' ? 't' : 'p'}/${alvo}`}>Voltar</Link>}
+    {tipo && alvo
+      ? <Link className="voltar-pagina" href={`/${tipo === 'trilha' ? 't' : 'p'}/${alvo}`}>{mensagens.voltar}</Link>
+      : <VoltarDaPagina destino={logado ? '/?tela=perfil' : '/login'} />}
     <h1>{tipo ? mensagens.comunidade.denuncia[tipo === 'trilha' ? 'tituloTrilha' : 'tituloPerfil'] : 'Suporte do Studoo'}</h1>
     {tipo && <><p className="denuncia__alvo">{nomeAlvo || <code>{alvo}</code>}</p>
       <p>{tipo === 'trilha' ? mensagens.comunidade.denuncia.texto : mensagens.comunidade.denuncia.textoPerfil}</p></>}

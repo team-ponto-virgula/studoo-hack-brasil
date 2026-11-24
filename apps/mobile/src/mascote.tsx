@@ -29,6 +29,25 @@ const largarVez = (id: number) => { if (donoDaVez === id) { donoDaVez = 0; ouvin
 /* E4: o laço pausa depois de 20 s sem toque nem rolagem. A tela avisa cada toque e cada rolagem por `acordarMascote`. */
 const ouvintesDoToque = new Set<() => void>();
 /** Um toque ou uma rolagem na tela: o laço que tinha parado por ociosidade volta a se mexer. */
+/**
+ * Pré-carga das imagens paradas do Stu (banca P2-1): no iPhone, a imagem local só aparece depois de decodificada, e o troféu
+ * da criação ficava um disco branco nos primeiros quadros. Uma cópia de 1 px, invisível e fora do leitor de tela, faz o
+ * sistema decodificar antes de a tela precisar dela.
+ */
+export function PreCargaDoStu({ arquivos }: { arquivos: readonly string[] }) {
+  return (
+    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={estilosDaPreCarga.lugar}>
+      {arquivos.map((arquivo) => PARADO_STU[arquivo] ? <Image key={arquivo} source={PARADO_STU[arquivo]} accessible={false} style={estilosDaPreCarga.imagem} /> : null)}
+    </View>
+  );
+}
+const estilosDaPreCarga = StyleSheet.create({
+  lugar: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' },
+  imagem: { width: 1, height: 1 },
+});
+/** O troféu da criação nas duas faixas que o mapa usa. */
+export const TROFEU_DA_CRIACAO = ['acessorio-trofeu-p', 'acessorio-trofeu-m'] as const;
+
 export function acordarMascote() {
   ouvintesDoToque.forEach((ouvir) => ouvir());
 }

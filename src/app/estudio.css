@@ -39,6 +39,12 @@
   gap: 12px;
   margin-top: 20px;
 }
+/* Spec 16, item 35: "Criar trilha deste material" é a ação presa da prévia (globals.css) só até 767 px e com o teclado fechado. No tablet, no computador e com o teclado aberto o envoltório
+   não é uma caixa e o botão fica na linha, ao lado de "Remover material", como era antes da ação presa. */
+@media (min-width: 768px) {
+  .estudio-acoes > .acao-principal { display: contents; }
+}
+html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; }
 @media (min-width: 601px) {
   .estudio-acoes .ensino-gravando {
     order: 3;
@@ -61,6 +67,16 @@
     font-weight: 700;
     text-align: start;
   }
+}
+.estudio-arquivo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
 }
 .estudio-arquivo input {
   position: absolute;
@@ -186,6 +202,10 @@
   }
   .estudio-acoes > * {
     width: 100%;
+  }
+  /* A ação principal da prévia é a presa (globals.css): a largura dela vem das margens da ilha, não de 100%. */
+  .estudio-acoes > .acao-principal {
+    width: auto;
   }
   .estudio-cabeca {
     align-items: flex-start;
@@ -825,8 +845,23 @@
   }
 }
 
+.estudio-ensino[open] {
+  margin-bottom: 32px;
+}
+.estudio-ensino .estudio-acoes {
+  scroll-margin-bottom: 112px;
+}
+.estudio-acoes--material {
+  scroll-margin-bottom: calc(var(--espaco-rodape, 110px) + 16px);
+}
+@media (max-width: 1023px) {
+  .estudio-acoes--material {
+    margin-bottom: 8px;
+  }
+}
+
 /* Reforço da lição, com três tábuas e uma ação por passo. */
-.reforco { display: grid; gap: 12px; width: min(100%, 680px); margin: 0 auto; padding-bottom: 88px; }
+.reforco { display: grid; gap: 12px; width: min(100%, 680px); margin: 0 auto; padding-bottom: 148px; }
 .reforco h2, .reforco h3, .reforco p { margin: 0; }
 .reforco h2 { line-height: 1.2; font-size: clamp(1.5rem, 5vw, 2rem); }
 .reforco h2:focus, .reforco h3:focus { outline: none; }
@@ -846,7 +881,9 @@
 .reforco__cartao .botao--texto, .reforco > .botao--texto { justify-self: start; min-height: 44px; }
 .reforco__rodape { position: fixed; z-index: 5; bottom: 0; inset-inline: 0; display: flex; justify-content: center;
   padding: 10px max(16px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)); border-top: 2px solid var(--gelo); background: var(--fundo); }
-.reforco__rodape .botao { min-height: 48px; width: min(100%,680px); }
+.reforco__rodape-conteudo { display: grid; gap: 8px; width: min(100%, 680px); }
+.reforco__rodape .botao { min-height: 48px; width: 100%; }
+.reforco__aviso { margin: 0; font-size: 0.9375rem; line-height: 1.4; }
 @keyframes reforco-pulo { 50% { transform: translateY(-8px); } }
 @keyframes reforco-aparece { from { transform: translateY(8px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .reforco *, .reforco *::before { animation: none !important; transition: none !important; } }

@@ -441,10 +441,11 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     /** Comunidade (spec 10, etapa B; com `comunidade` no config). "explorar" pede o tema; a legenda é opcional. */
     definirVisibilidade: (codigo: string, visibilidade: Visibilidade, publicacao?: { tema: Tema; legenda?: string }) =>
       solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { visibilidade, ...publicacao }),
-    explorar: (filtro: { tema?: Tema | null; cursor?: string | null; seguindo?: boolean } = {}) => {
+    explorar: (filtro: { tema?: Tema | null; cursor?: string | null; seguindo?: boolean; busca?: string | null } = {}) => {
       const busca = new URLSearchParams();
       if (filtro.seguindo) busca.set("seguindo", "1");
       if (filtro.tema) busca.set("tema", filtro.tema);
+      if (filtro.busca?.trim()) busca.set("q", filtro.busca.trim());
       if (filtro.cursor) busca.set("cursor", filtro.cursor);
       const texto = busca.toString();
       return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);

@@ -24,9 +24,10 @@ async function nomeDaPublicacao(tipo: 'perfil' | 'trilha', alvo: string) {
 
 export default async function Suporte({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { alvoTipo, alvo } = await searchParams;
+  const logado = Boolean(await usuarioDaPagina());
   if ((alvoTipo === 'perfil' || alvoTipo === 'trilha') && typeof alvo === 'string' && FORMATO_CODIGO.test(alvo)) {
     const nome = await nomeDaPublicacao(alvoTipo, alvo);
-    return <PaginaPublica><FormularioSuporte tipo={alvoTipo} alvo={alvo} nomeAlvo={nome} /></PaginaPublica>;
+    return <PaginaPublica><FormularioSuporte tipo={alvoTipo} alvo={alvo} nomeAlvo={nome} logado={logado} /></PaginaPublica>;
   }
-  return <PaginaPublica><FormularioSuporte /></PaginaPublica>;
+  return <PaginaPublica><FormularioSuporte logado={logado} /></PaginaPublica>;
 }

@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { cookies, headers } from 'next/headers';
 import { nomeCookieSessao, origemStudoo } from '@/servidor/acesso/origem';
 import { usuarioDaSessao } from '@/servidor/acesso/sessao';
-import { enderecoRede } from '@/servidor/acesso/visitante';
+import { ehEmailVisitante, enderecoRede } from '@/servidor/acesso/visitante';
+import { banco } from '@/servidor/banco/cliente';
 import { Logo } from '../ui';
 import './compartilhar.css';
 import './perfil.css';
@@ -22,6 +23,14 @@ export function PaginaPublica({ children }: { children: ReactNode }) {
 export async function usuarioDaPagina(): Promise<string | null> {
   const token = (await cookies()).get(nomeCookieSessao())?.value;
   return token ? usuarioDaSessao(token, 'WEB') : null;
+}
+
+/** Sessão da página com indicação de visitante (evita consultar duas vezes onde precisa diferenciar visitante). */
+export async function sessaoDaPagina(): Promise<{ usuarioId: string; visitante: boolean } | null> {
+  const usuarioId = await usuarioDaPagina();
+  if (!usuarioId) return null;
+  const usuario = await banco.usuario.findUnique({ where: { id: usuarioId }, select: { email: true } });
+  return { usuarioId, visitante: Boolean(usuario && ehEmailVisitante(usuario.email)) };
 }
 
 /** O endereço de rede da página, do mesmo jeito que nas rotas da API (para o limite das rotas públicas). */

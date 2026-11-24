@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-24T18:21:58.992218+00:00",
+  "rawReport": "/workspace/work/studoo-ui-ux/.studoo-local/qa-rnw/evidencias/sql-final/resultado.json",
+  "rawReportSha256": "792e4b444825213686ea4fc445718c92b5dc7d74bcc1ee63e7b72ceda16442c6",
+  "rawPreserved": true,
+  "eventIndexZeroBased": 20,
+  "eventCount": 26,
+  "request": {
+    "method": "GET",
+    "path": "/api/privacidade"
+  },
+  "classification": "bridge-read-error-during-reopen-cause-undetermined",
+  "reportedError": "bridge-unavailable",
+  "originalExceptionCaptured": false,
+  "finalBrowserCloseCausedThisRecordedEvent": false,
+  "finalCloseExclusionEvidence": [
+    "O evento precede cinco respostas HTTP200, incluindo plano salvo e lição2.",
+    "sql.cjs serializa resultado.json antes de chamar browser.close()."
+  ],
+  "reloadAbortConfirmed": false,
+  "allRequestsSucceeded": false,
+  "privacyReadAfterReloadValidated": false,
+  "functionalOutcome": "Geração, aceite, erro/correção, conclusão1/5, sessão/progresso após reload e retomadaINNERJOIN passaram; nenhuma falha desses passos foi observada.",
+  "limits": "O catch genérico não preservou nome/mensagem da exceção e os eventos não têm timestamps; não é possível distinguir abort de rede/ponte no evento20 sem nova execução instrumentada, que não foi feita."
+}

@@ -1,0 +1,1999 @@
+{
+  "candidate": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "startedAt": "2026-11-24T20:52:47.592Z",
+  "sourceBefore": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "scope": "HTTP, repository-owned WebP supplied through Playwright input.setInputFiles; async guards use a controlled Image.decode resolution; no native picker or upload claim",
+  "nativeExecuted": false,
+  "realPickerValidated": false,
+  "checks": [
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 390,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "jornada",
+      "width": 360,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 390,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "caderno",
+      "width": 360,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 390,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "success",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "decode-error",
+      "passed": true,
+      "evidence": {
+        "before": null,
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-choose",
+            "go": null,
+            "label": null,
+            "text": "Escolher imagem",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "Não foi possível abrir essa imagem. Tente outro arquivo.",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "cancel-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Do seu jeito.",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "editar",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "navigate-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "H1",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Nina",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "perfil",
+            "photoKind": null,
+            "sliderDisabled": null,
+            "error": "",
+            "shape": null,
+            "toast": ""
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "shape-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "rounded",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": "media-photo-rounded",
+            "go": null,
+            "label": null,
+            "text": "Cantos suaves",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "rounded",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "header-focus-during-decode",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "",
+            "action": null,
+            "go": "perfil",
+            "label": "Meu perfil",
+            "text": "",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BODY",
+            "id": "",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "[body]",
+            "documentHasFocus": true,
+            "focusVisible": false
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": {
+          "tag": "BUTTON",
+          "id": "",
+          "action": "back",
+          "go": null,
+          "label": "Voltar",
+          "text": "",
+          "documentHasFocus": true,
+          "focusVisible": true
+        },
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    },
+    {
+      "direction": "foco",
+      "width": 360,
+      "scenario": "outside-root-focus-during-decode",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": null,
+            "sliderDisabled": true,
+            "error": "",
+            "shape": "circle",
+            "toast": ""
+          }
+        },
+        "after": {
+          "focus": {
+            "tag": "BUTTON",
+            "id": "qa-host-control",
+            "action": null,
+            "go": null,
+            "label": null,
+            "text": "Controle da bancada de QA",
+            "documentHasFocus": true,
+            "focusVisible": true
+          },
+          "state": {
+            "page": "foto",
+            "photoKind": "data:image/webp;base64",
+            "sliderDisabled": false,
+            "error": "",
+            "shape": "circle",
+            "toast": "Imagem pronta para conferir o enquadramento."
+          }
+        },
+        "nextTab": null,
+        "requestsAfterFixture": [],
+        "noUpload": true
+      }
+    }
+  ],
+  "errors": [],
+  "chromium": "156.0.8078.79",
+  "sourceAfter": {
+    "app.js": "5bfbd13c1b5856f01f36a0a96bac741000d22ea656e029457f1e18d4999d13ee",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "accessibility.css": "72989cbcbaf419faf790ee5a3bfb63465ffca5fd47fef21563ba6d0ba01b6f93",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "sourceStable": true,
+  "finishedAt": "2026-11-24T20:53:13.356Z"
+}

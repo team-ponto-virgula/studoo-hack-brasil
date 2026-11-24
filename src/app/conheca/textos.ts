@@ -51,18 +51,20 @@ export const textos = {
     alt: 'Código QR para baixar o Studoo no celular',
     legenda: 'Aponte a câmera do celular',
     arquivo: (tamanho: string | null) => (tamanho ? `Baixar o arquivo para Android (${tamanho})` : 'Baixar o arquivo para Android'),
+    conviteIphone: 'Abrir convite do TestFlight',
   },
   folhaIphone: {
     titulo: 'Use o Studoo no iPhone hoje',
     tituloIpad: 'Use o Studoo no iPad hoje',
-    texto: 'No Safari, o Studoo abre como um app, em tela cheia.',
-    foraDoSafari: 'Abra esta página no Safari para adicionar à Tela de Início.',
+    texto: 'Abra o app pelo botão abaixo. No Safari, siga estes passos para adicioná-lo à Tela de Início.',
+    foraDoSafari: 'Copie o endereço do app e abra-o no Safari para adicionar à Tela de Início.',
     passos: [
-      'Toque em Compartilhar, na barra do Safari.',
+      'Com o app aberto, toque em Compartilhar na barra do Safari.',
       'Escolha “Adicionar à Tela de Início”.',
       'Toque em Adicionar. O Studoo fica com os seus apps.',
     ],
     entendi: 'Entendi',
+    abrirApp: 'Abrir o app para adicionar',
     fechar: 'Fechar',
   },
   s2: {
@@ -111,14 +113,14 @@ export const textos = {
       ],
       /** No computador, antes do TestFlight (spec 18, seção 3): o QR leva o iPhone à página, no Safari, e dali à Tela de Início. */
       passosNoComputador: [
-        'Aponte a câmera do iPhone para o código ao lado e abra a página no Safari.',
+        'Leia o código com a câmera do iPhone. No Safari, toque em “Abrir o app para adicionar”.',
         'Toque em Compartilhar e escolha “Adicionar à Tela de Início”.',
         'Toque em Adicionar. O Studoo fica com os seus apps.',
       ],
       /** No computador, com o TestFlight (spec 18, seção 3). */
       testflightPassosNoComputador: [
         'Instale o TestFlight, o app de testes da Apple, pela App Store.',
-        'Aponte a câmera do iPhone para o código ao lado e toque em “Instalar no iPhone”.',
+        'Aponte a câmera do iPhone para o código ao lado e abra o convite.',
         'No TestFlight, toque em Instalar e abra o Studoo.',
       ],
     },

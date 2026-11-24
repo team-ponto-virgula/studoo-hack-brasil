@@ -1,0 +1,71 @@
+{
+  "scope": "R6 histórica; fontes, falhas e limites preservados. Não somar recortes/rodadas sobrepostos.",
+  "files": [
+    {
+      "file": "evidencias/historico/r6/fluxos/notas-e-contagens.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "9bb44b6b8419b8148398a367dff4aca9c268638905789cf76526150b8f2773ee",
+      "original": "/workspace/work/revisao-fluxos-r6/notas-e-contagens.json"
+    },
+    {
+      "file": "evidencias/historico/r6/fluxos/compartilhar-resultados.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "ac8a986f4ad4ea12c20e7dedb727cb94cac746398b6694ba7b78b55b8bc86ddb",
+      "original": "/workspace/work/revisao-fluxos-r6/compartilhar-resultados.json"
+    },
+    {
+      "file": "evidencias/historico/r6/fluxos/material-nome-probe.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "06beb1ff82509c35d2489c02c3a2d956822789999bb10b0b23305b6b8b12c7de",
+      "original": "/workspace/work/revisao-fluxos-r6/material-nome-probe.json"
+    },
+    {
+      "file": "evidencias/historico/r6/a11y/parecer-qa-r6.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "d27d66e5992295526da40732f91d7a0753f02f4c7f0b2a3b14e219f1145b0592",
+      "original": "/workspace/work/revisao-a11y-r6/parecer-qa-r6.json"
+    },
+    {
+      "file": "evidencias/historico/r6/a11y/resumo.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "b3ddf75bbcee1d5c2688350824eab26466c052305f0c8158d63274e04bc67654",
+      "original": "/workspace/work/revisao-a11y-r6/resumo.json"
+    },
+    {
+      "file": "evidencias/historico/r6/a11y/conteudo-longo.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "0104c0647f3c70dfd83e4aa4893a2b99e21085423d49087773bcd73d99610247",
+      "original": "/workspace/work/revisao-a11y-r6/conteudo-longo.json"
+    },
+    {
+      "file": "evidencias/historico/r6/visual/notas-r6.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "3d5de2f36cc5c24f1d2b1ddfc0b060667240d78f98374ffcf048e36485ae4e9f",
+      "original": "/workspace/work/revisao-visual-r6/notas-r6.json"
+    },
+    {
+      "file": "evidencias/historico/r6/visual/conferencia-final.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "e25a4bf748e9e1c92e942f407a13d7646c081af48cdc35d321a8ef6f6711bc50",
+      "original": "/workspace/work/revisao-visual-r6/conferencia-final.json"
+    },
+    {
+      "file": "evidencias/historico/r6/visual/equivalencia-r5.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "11e30cce22b850697e0b4d5fb026042a476ea2b3fa0c58a62e6fc087e770c9ad",
+      "original": "/workspace/work/revisao-visual-r6/equivalencia-r5.json"
+    },
+    {
+      "file": "evidencias/historico/r6/visual/copy-material.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "15543f3a30dbb83a39daa94f890e8e0801ba1eb7e5a88dc3be16b47ac1a9411b",
+      "original": "/workspace/work/revisao-visual-r6/copy-material.json"
+    },
+    {
+      "file": "evidencias/historico/r6/arte-craft/evidencias.json",
+      "sourceCandidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+      "sha256": "9f70b39abbce185ea1449cb1ac2458524c1336f533e02ceea5ba68f65dcb7513",
+      "original": "/workspace/work/revisao-arte-craft-r6/evidencias.json"
+    }
+  ]
+}

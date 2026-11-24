@@ -16,6 +16,7 @@ import {
   type ResultadoValeu,
   type Tema,
 } from "@studoo/contratos";
+import { mensagens } from "@studoo/contratos/experiencia";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
@@ -211,34 +212,90 @@ function lerCursor(cursor: string): { em: Date; codigo: string } {
   return { em, codigo };
 }
 
-/** GET /api/explorar: "Em alta" (primeira página) e "Novas" (20 por página, por cursor), com filtro de tema. */
-export async function explorar(quem: string | null, filtro: { tema?: string | null; cursor?: string | null; seguindo?: boolean }): Promise<PaginaExplorar> {
+const BUSCA_MAX = 80;
+const LOTE_BUSCA = 200;
+const normalizarBusca = (texto: string) =>
+  texto.normalize("NFD").replace(/\p{M}+/gu, "").toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").trim();
+
+const filtroCursor = (cursor: { em: Date; codigo: string } | null) =>
+  cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {};
+
+/** GET /api/explorar: "Em alta" (primeira página) e "Novas" (20 por página, por cursor), com filtro de tema e busca textual (`q`). */
+export async function explorar(
+  quem: string | null,
+  filtro: { tema?: string | null; cursor?: string | null; seguindo?: boolean; busca?: string | null },
+): Promise<PaginaExplorar> {
   const tema = filtro.tema || null;
   if (tema !== null && !ehTema(tema)) throw new FalhaApi("invalido");
+  const buscaBruta = typeof filtro.busca === "string" ? filtro.busca.trim() : "";
+  if (buscaBruta.length > BUSCA_MAX) throw new FalhaApi("invalido");
+  const termosBusca = normalizarBusca(buscaBruta).split(" ").filter(Boolean);
   const cursor = filtro.cursor ? lerCursor(filtro.cursor) : null;
   // Aba "Seguindo": as trilhas publicadas por quem a pessoa segue, das mais novas para as mais antigas (sem Em alta).
   if (filtro.seguindo && !quem) throw new FalhaApi("nao_autenticado");
   const seguidos = filtro.seguindo && quem ? await seguidosPor(quem) : null;
   const publico = await filtroPublico(quem);
-  const pagina = await banco.linkTrilha.findMany({
-    where: {
-      AND: [publico],
-      noExplorar: true,
-      oculta: false,
-      publicadaEm: { not: null },
-      ...semDemonstracao(),
-      ...(tema ? { tema } : {}),
-      ...(seguidos ? { usuarioId: { in: seguidos } } : {}),
-      ...(cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {}),
-    },
-    orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
-    take: LIMITES_COMUNIDADE.porPagina + 1,
-    select: camposLink,
-  });
-  const temMais = pagina.length > LIMITES_COMUNIDADE.porPagina;
-  const novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
+  const whereSemCursor = {
+    AND: [publico],
+    noExplorar: true,
+    oculta: false,
+    publicadaEm: { not: null },
+    ...semDemonstracao(),
+    ...(tema ? { tema } : {}),
+    ...(seguidos ? { usuarioId: { in: seguidos } } : {}),
+  };
+
+  let novas: LinkDoCartao[];
+  let temMais: boolean;
+  if (termosBusca.length > 0) {
+    // Busca acento-insensível sobre título, legenda, autor e rótulo do tema varrendo o catálogo em lotes
+    // pelo índice (publicadaEm DESC, codigo DESC) até completar a página (+1 para saber se há próxima) ou esgotar o catálogo.
+    const filtradas: LinkDoCartao[] = [];
+    let cursorLote = cursor;
+    while (filtradas.length <= LIMITES_COMUNIDADE.porPagina) {
+      const lote = await banco.linkTrilha.findMany({
+        where: { ...whereSemCursor, ...filtroCursor(cursorLote) },
+        orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
+        take: LOTE_BUSCA,
+        select: {
+          ...camposLink,
+          plano: { select: { titulo: true, usuario: { select: { perfilNome: true } } } },
+        },
+      });
+      if (lote.length === 0) break;
+      for (const link of lote) {
+        const rotuloTema = ehTema(link.tema) ? mensagens.temas[link.tema] : "";
+        const alvo = normalizarBusca([
+          link.plano.titulo,
+          link.legenda ?? "",
+          link.plano.usuario.perfilNome ?? "",
+          rotuloTema,
+        ].join(" "));
+        if (termosBusca.every((termo) => alvo.includes(termo))) {
+          filtradas.push(link);
+          if (filtradas.length > LIMITES_COMUNIDADE.porPagina) break;
+        }
+      }
+      if (lote.length < LOTE_BUSCA) break;
+      const ultimo = lote[lote.length - 1];
+      if (!ultimo.publicadaEm) break;
+      cursorLote = { em: ultimo.publicadaEm, codigo: ultimo.codigo };
+    }
+    temMais = filtradas.length > LIMITES_COMUNIDADE.porPagina;
+    novas = filtradas.slice(0, LIMITES_COMUNIDADE.porPagina);
+  } else {
+    const pagina = await banco.linkTrilha.findMany({
+      where: { ...whereSemCursor, ...filtroCursor(cursor) },
+      orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
+      take: LIMITES_COMUNIDADE.porPagina + 1,
+      select: camposLink,
+    });
+    temMais = pagina.length > LIMITES_COMUNIDADE.porPagina;
+    novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
+  }
+
   let emAlta: CartaoTrilha[] = [];
-  if (!cursor && !seguidos) {
+  if (!cursor && !seguidos && termosBusca.length === 0) {
     const top = (await classificacaoDaSemana()).filter((item) => !tema || item.tema === tema);
     const linksTop = top.length === 0 ? [] : await banco.linkTrilha.findMany({ where: { AND: [publico], codigo: { in: top.map((item) => item.codigo) }, noExplorar: true, oculta: false }, select: camposLink });
     const porCodigo = new Map(linksTop.map((link) => [link.codigo, link]));

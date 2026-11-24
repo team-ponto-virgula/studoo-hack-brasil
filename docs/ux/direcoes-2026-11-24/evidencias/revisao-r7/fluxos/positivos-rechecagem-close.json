@@ -1,0 +1,167 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "startedAt": "2026-11-24T22:18:27.004Z",
+  "hashesStart": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:28.103Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/jornada-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:28.890Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:29.618Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/caderno-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:30.304Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-folha-resolve",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "resolução válida conserva feedback de sucesso",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-folha-resolve-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:31.009Z"
+    },
+    {
+      "dir": "foco",
+      "name": "valido-folha-reject",
+      "checks": [
+        {
+          "name": "contexto válido inicia exatamente uma escrita",
+          "passed": true
+        },
+        {
+          "name": "fallback mídia válido seleciona campo de link",
+          "passed": true
+        },
+        {
+          "name": "cópia válida não muda trilha e progresso",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r7/foco-valido-folha-reject-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:18:31.715Z"
+    }
+  ],
+  "failures": [],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "finishedAt": "2026-11-24T22:18:31.721Z"
+}

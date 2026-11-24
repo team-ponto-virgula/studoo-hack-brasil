@@ -1,0 +1,655 @@
+{
+  "metadata": {
+    "commit": "5ad1225f586af063d58f694d4ebe705fcabca081",
+    "runtimeFileCount": 17,
+    "hashesBefore": {
+      "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+      "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+      "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+      "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+      "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+      "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+      "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+      "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+    },
+    "hashesAfter": {
+      "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+      "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+      "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+      "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+      "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+      "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+      "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+      "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+    },
+    "sourceStable": true,
+    "allRuntimeFilesMatchCommit": true,
+    "native": false
+  },
+  "rows": [
+    {
+      "dir": "jornada",
+      "zoom": 100,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1170,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 318,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 250,
+          "scrollWidth": 1097,
+          "left": 73,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1170,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 318,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 250,
+          "scrollWidth": 1097,
+          "left": 73,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 1375,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 1351,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-jornada-100-licao.png",
+        "material160-jornada-100-origem.png"
+      ]
+    },
+    {
+      "dir": "jornada",
+      "zoom": 200,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2268,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 318,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 250,
+          "scrollWidth": 2195,
+          "left": 73,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2268,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 318,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 250,
+          "scrollWidth": 2195,
+          "left": 73,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 2725,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 2701,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-jornada-200-licao.png",
+        "material160-jornada-200-origem.png"
+      ]
+    },
+    {
+      "dir": "caderno",
+      "zoom": 100,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1173,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 315,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 247,
+          "scrollWidth": 1097,
+          "left": 76,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1173,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 315,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 247,
+          "scrollWidth": 1097,
+          "left": 76,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 1375,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 1351,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-caderno-100-licao.png",
+        "material160-caderno-100-origem.png"
+      ]
+    },
+    {
+      "dir": "caderno",
+      "zoom": 200,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2271,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 315,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 247,
+          "scrollWidth": 2195,
+          "left": 76,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2271,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 315,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 247,
+          "scrollWidth": 2195,
+          "left": 76,
+          "right": 323,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 2725,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 2701,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-caderno-200-licao.png",
+        "material160-caderno-200-origem.png"
+      ]
+    },
+    {
+      "dir": "foco",
+      "zoom": 100,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1172,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 317,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 249,
+          "scrollWidth": 1097,
+          "left": 75,
+          "right": 324,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 1172,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 317,
+          "scrollWidth": 1149,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 249,
+          "scrollWidth": 1097,
+          "left": 75,
+          "right": 324,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 1375,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 1351,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-foco-100-licao.png",
+        "material160-foco-100-origem.png"
+      ]
+    },
+    {
+      "dir": "foco",
+      "zoom": 200,
+      "nomeLength": 160,
+      "lesson": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2270,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 317,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 249,
+          "scrollWidth": 2195,
+          "left": 75,
+          "right": 324,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": null,
+        "dialogText": null,
+        "active": "<summary>Um apoio para esta ideia</summary>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "dialog": {
+        "viewport": 360,
+        "main": {
+          "clientWidth": 360,
+          "scrollWidth": 2270,
+          "left": 0,
+          "right": 360,
+          "overflow": true
+        },
+        "card": {
+          "clientWidth": 317,
+          "scrollWidth": 2247,
+          "left": 20,
+          "right": 340,
+          "overflow": true
+        },
+        "cardContent": {
+          "clientWidth": 249,
+          "scrollWidth": 2195,
+          "left": 75,
+          "right": 324,
+          "overflow": true
+        },
+        "support": {
+          "clientWidth": 318,
+          "scrollWidth": 318,
+          "left": 20,
+          "right": 340,
+          "overflow": false
+        },
+        "dialog": {
+          "clientWidth": 328,
+          "scrollWidth": 2725,
+          "left": 16,
+          "right": 344,
+          "overflow": true
+        },
+        "dialogText": {
+          "clientWidth": 280,
+          "scrollWidth": 2701,
+          "left": 40,
+          "right": 320,
+          "overflow": true
+        },
+        "active": "<button type=\"button\" class=\"quiet\" data-action=\"cancel-dialog\">Cancelar</button>",
+        "doc": {
+          "clientWidth": 360,
+          "scrollWidth": 360
+        }
+      },
+      "restored": {
+        "action": "show-source",
+        "tag": "BUTTON"
+      },
+      "screenshots": [
+        "material160-foco-200-licao.png",
+        "material160-foco-200-origem.png"
+      ]
+    }
+  ]
+}

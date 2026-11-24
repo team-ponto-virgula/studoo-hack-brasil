@@ -1,0 +1,27 @@
+{
+  "scope": "3 bundles HTTP, author smoke; no file policy bypass/native",
+  "checks": 15,
+  "rows": [
+    {
+      "letter": "a",
+      "pass": true,
+      "networkDocuments": 1,
+      "otherNetwork": 0,
+      "errors": []
+    },
+    {
+      "letter": "b",
+      "pass": true,
+      "networkDocuments": 1,
+      "otherNetwork": 0,
+      "errors": []
+    },
+    {
+      "letter": "c",
+      "pass": true,
+      "networkDocuments": 1,
+      "otherNetwork": 0,
+      "errors": []
+    }
+  ]
+}

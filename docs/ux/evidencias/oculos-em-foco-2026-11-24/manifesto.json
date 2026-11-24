@@ -1,0 +1,271 @@
+{
+  "candidataProduto": "6ef71a9eee651cd988aa53c35947198f43f787a8",
+  "escopo": "Intro exclusivamente mobile iOS/Android",
+  "nativoExecutado": false,
+  "notaNativa": null,
+  "conceito": "MP4/GIF Python; pausa500ms de apresentação, sem representar tempo de app",
+  "contrato": {
+    "versao": 2,
+    "direcao": "Óculos em foco",
+    "largura": 210,
+    "fundo": "#FFFFFF",
+    "corLente": "#2563FF",
+    "sequenciaMs": 560,
+    "sequenciaMinimaMs": 360,
+    "margemQuadroMs": 32,
+    "saidaMs": 120,
+    "limiteMs": 900,
+    "curva": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "fonte": {
+      "largura": 560,
+      "altura": 184,
+      "divisao": 348,
+      "linhaSorriso": 134
+    },
+    "marcos": [
+      0,
+      0.18,
+      0.34,
+      0.5,
+      0.88,
+      1
+    ],
+    "oculosX": [
+      0,
+      -1,
+      -1,
+      -1,
+      0,
+      0
+    ],
+    "oculosY": [
+      0,
+      -12,
+      -12,
+      -12,
+      0,
+      0
+    ],
+    "oculosEscala": [
+      1,
+      2.15,
+      2.15,
+      2.15,
+      1,
+      1
+    ],
+    "oculosRotacao": [
+      0,
+      -8,
+      3,
+      0,
+      0,
+      0
+    ],
+    "palavraOpacidade": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "palavraX": [
+      0,
+      -16,
+      -16,
+      -16,
+      0,
+      0
+    ],
+    "sorrisoOpacidade": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "sorrisoEscala": [
+      1,
+      0.3,
+      0.3,
+      0.3,
+      1,
+      1
+    ],
+    "lenteOpacidade": [
+      0,
+      0.1,
+      0.1,
+      0.05,
+      0,
+      0
+    ],
+    "reflexoOpacidade": [
+      0,
+      0,
+      0.95,
+      0,
+      0,
+      0
+    ],
+    "reflexoX": [
+      -18,
+      -18,
+      0,
+      18,
+      18,
+      18
+    ],
+    "lentes": [
+      {
+        "x": 400.5,
+        "y": 84,
+        "diametro": 52
+      },
+      {
+        "x": 505.5,
+        "y": 84,
+        "diametro": 52
+      }
+    ]
+  },
+  "checksAdicionais": {
+    "typecheckWeb": "passou",
+    "typecheckMobile": "passou",
+    "exportHermesIosFinal": "passou; não é IPA nem execução nativa"
+  },
+  "fontes": {
+    "apps/mobile/src/abertura.tsx": "750644ff98f5d3ce500661bced2e90c14a9f5e1056b7c35d7ff6e7bc5dc17bf0",
+    "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+    "apps/mobile/assets/marca/abertura-oculos-hd.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+    "packages/contratos/src/abertura.ts": "d257d9654fe9b302877ebe7d180d6c95240397b0fe0261f852a2f0504ac6b3a5",
+    "packages/contratos/src/abertura-motion.json": "b2815f7a40c66b667798de45e38b8fcde547d5058294f139e8ee97fa86fa0649",
+    "scripts/motion/oculos-em-foco.py": "9b3f289f4bc6cda562c1df5ba85542aa7a7612562f61847a4a3670120094598e",
+    "scripts/motion/preparar-oculos.py": "0e513860eadfbe2893c159749694222da514557706ae716f50fa4c876457ab7a"
+  },
+  "artefatos": {
+    "frame-190.png": {
+      "bytes": 47491,
+      "sha256": "3c3346918d76a233b615477a1512473aa693df31a7d6d8fa7eebac4e31a63598"
+    },
+    "frame-560.png": {
+      "bytes": 31098,
+      "sha256": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122"
+    },
+    "oculos-em-foco.gif": {
+      "bytes": 135759,
+      "sha256": "32d30571b30b47db062c5acd7b5a4b1e0c6d421d67c2182cde6f60eadfcf253f"
+    },
+    "app-preview-390x667.png": {
+      "bytes": 9959,
+      "sha256": "ccd3fa1b3be6e845866527ac59de6491685b827946c79a5a9a4e9108edb436dd"
+    },
+    "app-preview-360x800.png": {
+      "bytes": 10287,
+      "sha256": "483a90a637a9c4b59a42aab1a8aed4ef211b30702f369bd3217a501c6d3195ee"
+    },
+    "rnw-pixelcaps.json": {
+      "bytes": 598,
+      "sha256": "12100695b63b77b4f1f424b6480a62dd6e97e47ebc201c12f6afc1bb85a51d29"
+    },
+    "rnw-manifesto.json": {
+      "bytes": 2063,
+      "sha256": "6543ce24373c662b74fb85906e09e33c06eb173e3e14b3b1382a7813708e81e5"
+    },
+    "frame-493.png": {
+      "bytes": 31098,
+      "sha256": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122"
+    },
+    "checks.json": {
+      "bytes": 32177,
+      "sha256": "c8963c5b3524589d6b706e785ad2eda50300dd3595ee84b0857268fc2071525f"
+    },
+    "rnw-151.png": {
+      "bytes": 9828,
+      "sha256": "a0761427a3848c76085eef3f8f4a9955df80653663397c9a62055381935bee53"
+    },
+    "diagnostico-frio-timing-fixo.json": {
+      "bytes": 1101,
+      "sha256": "2d4e8f51a33fc7e2f3b91b75348f06f168b9ab531d04fae39659c89fb0efb5f8"
+    },
+    "frame-280.png": {
+      "bytes": 41487,
+      "sha256": "b85081f0d80a2b507f9923345ce7e4fdba2fb4cfe30d48f3cb61c598d24f323c"
+    },
+    "prova-prazo.json": {
+      "bytes": 306,
+      "sha256": "447c4f92f42438c8f203ea0ab6256513065ca656f3c1433b97b7420306cab204"
+    },
+    "frame-385.png": {
+      "bytes": 32692,
+      "sha256": "e205be894ac9f50dce1b0ca532ee794859569ca885c9e93e8757149fa5b54f68"
+    },
+    "rnw-fim-final.png": {
+      "bytes": 10566,
+      "sha256": "94cc99be48ae946ecae83c7cf244f8941d93cc249aae802fa52313d766716870"
+    },
+    "render.json": {
+      "bytes": 888,
+      "sha256": "8c2db74c3978961270bf3b47bb7de89ed4b9fda3559c6840a59aa202ad97db2f"
+    },
+    "oculos-em-foco.mp4": {
+      "bytes": 43204,
+      "sha256": "0fa244af1974f1b334b9066d4bfbed561767246305e767334eee9bee1d1235fd"
+    },
+    "rnw-263.png": {
+      "bytes": 10583,
+      "sha256": "bf97ef0517c669c0a0cc738f91b9d5699e687edfaa61e112fa834771e8b8a152"
+    },
+    "app-preview-390x844.png": {
+      "bytes": 10655,
+      "sha256": "32678721df5aa80fb73f76bb129af84bfb9679dfb00e51b7a2a63d9d19bd440b"
+    },
+    "rnw-inicio-final.png": {
+      "bytes": 10566,
+      "sha256": "94cc99be48ae946ecae83c7cf244f8941d93cc249aae802fa52313d766716870"
+    },
+    "frame-000.png": {
+      "bytes": 31098,
+      "sha256": "d1d38b154a8f834fe0a48267105811dfc7b3de13aca5cae022273dfd2fc55122"
+    },
+    "app-preview-abertura.webm": {
+      "bytes": 95481,
+      "sha256": "3beae95f649a92e4c773d4c955966f3c22d394fc1defa0464a1bd9c3b3f67c50"
+    },
+    "browser-app-motion-timing-fixo-tentativa.json": {
+      "bytes": 10610,
+      "sha256": "0f089606724aebfc5ff1df17ce986e6df6e7da880befa548814f6816a73f1159"
+    },
+    "app-preview-destino.png": {
+      "bytes": 32565,
+      "sha256": "c745c596659375226e59edf74085422407dc3efb1ee1c8c58983ca99b2197069"
+    },
+    "browser-app-motion-independent.json": {
+      "bytes": 10745,
+      "sha256": "98f414ae992efbf14349a5acf5f104b1c9e9a8c1e24acc0f3d646d2ca3f82ae0"
+    },
+    "frame-101.png": {
+      "bytes": 45404,
+      "sha256": "cd189e8a4861243109a591589b673b8024f92d103731e13084fe10cf12d34abb"
+    },
+    "browser-app-motion-tentativa-antes-driver-unico.json": {
+      "bytes": 5590,
+      "sha256": "1423a390993ac3ffbb662e3aabdc7dcc0563b7b9456ffb84afc9fffbac04821c"
+    },
+    "rnw-reflexo.png": {
+      "bytes": 10140,
+      "sha256": "bf0d703be0fb728e589a2384309a1dd939da2566a9af7541c725f01dbaa89a92"
+    },
+    "browser-app-preview.json": {
+      "bytes": 2423,
+      "sha256": "0d4752ddc4c7d7c4e2362558fb8dc57a55534042a44c926fd0757ff8bb06b48f"
+    }
+  }
+}
