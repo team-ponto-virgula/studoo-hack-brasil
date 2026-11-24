@@ -79,3 +79,5 @@ body[data-direction] .map-node:has(+.reinforcement-bridge)::after{display:none}
 .avatar[data-hue=azul]{background:#2563ff}.avatar[data-hue=verde]{background:#1f7a5a}
 .avatar[data-hue]{color:#fff}
 .profile-cover[data-hue=roxo]{background:#eee9fa}.profile-cover[data-hue=laranja]{background:#fff0e3}.profile-cover[data-hue=rosa]{background:#fae9f1}.profile-cover[data-hue=turquesa]{background:#e4f3f5}
+
+.lesson-back{display:flex;justify-content:flex-start;margin:0 0 8px}.lesson-back>.quiet{width:auto;justify-content:flex-start;padding-left:0;padding-right:12px;gap:8px}

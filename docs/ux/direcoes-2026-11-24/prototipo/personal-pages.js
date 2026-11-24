@@ -18,7 +18,7 @@
       document.querySelector('.screen h1')?.focus({preventScroll:true});
     };
     const current = () => getState().tracks?.[getState().activeTrack] || null;
-    const received = id => String(id || '').startsWith('recebida-');
+    const received = id => !!getState().tracks?.[id]?.received || String(id || '').startsWith('recebida-');
     const ownTracks = () => Object.entries(getState().tracks || {}).filter(([id]) => !received(id));
     const statusOf = t => (t.visibility === 'perfil' || t.visibility === 'explorar') && ['pendente','aprovado','recusado'].includes(t.publicationStatus) ? t.publicationStatus : 'fora';
     const appearance = t => ({cover: Object.hasOwn(covers, t?.cover) ? t.cover : 'padrao', tema:Object.hasOwn(themes, t?.tema) ? t.tema : 'programacao'});
@@ -111,7 +111,7 @@
       const html=title('Capa e tema','Um jeito de reconhecer este estudo.','Confira a prévia. Sua escolha só muda esta trilha.')+
         appearancePreview(a)+ '<p class="personal-preview-label"><strong>'+esc(covers[a.cover]?.[0] || 'Padrão')+'</strong><span>'+esc(themes[a.tema] || themes.programacao)+'</span></p>'+
         '<div><label class="field-label" for="personal-theme">Tema da trilha</label><select id="personal-theme" aria-describedby="personal-tema-status">'+Object.entries(themes).map(([id,label])=>'<option value="'+id+'" '+(a.tema===id?'selected':'')+'>'+label+'</option>').join('')+'</select>'+fieldStatus('tema',scenario)+'</div>'+
-        '<div><h2 id="personal-covers-title">Escolha uma capa</h2><div class="personal-cover-grid" role="group" aria-labelledby="personal-covers-title">'+Object.entries(covers).map(([id,c])=>'<button type="button" id="personal-cover-'+id+'" class="personal-cover-choice" data-action="personal-cover-'+id+'" aria-pressed="'+(a.cover===id)+'">'+appearancePreview({cover:id})+'<span>'+esc(c[0])+'</span>'+'<span class="personal-cover-selected" aria-hidden="'+(a.cover!==id)+'">'+(a.cover===id?icon('check')+'Selecionada':'')+'</span>'+'</button>').join('')+'</div>'+fieldStatus('cover',scenario)+'</div>'+
+        '<div><h2 id="personal-covers-title">Escolha uma capa</h2><div class="personal-cover-grid" role="group" aria-labelledby="personal-covers-title">'+Object.entries(covers).map(([id,c])=>'<button type="button" id="personal-cover-'+id+'" class="personal-cover-choice" data-action="personal-cover-'+id+'" aria-pressed="'+(a.cover===id)+'">'+appearancePreview({cover:id})+'<span>'+esc(c[0])+'</span>'+'<span class="personal-cover-selected" aria-hidden="'+(a.cover!==id)+'">'+(icon('check')+'Selecionada')+'</span>'+'</button>').join('')+'</div>'+fieldStatus('cover',scenario)+'</div>'+
         note('Prévia local. Nenhuma imagem é enviada; o progresso, as respostas e a visibilidade da trilha são preservados.','shield');
       return {html,foot:actionButtons(btn('Usar esta capa e tema','personal-apply-cover'),btn('Cancelar escolha','personal-cancel-cover','quiet'))};
     }
@@ -145,7 +145,7 @@
       }
       const html=title('Postar no perfil','Escolha o que quer compartilhar.','Só as trilhas escolhidas aparecem no seu perfil, depois da aprovação.')+
         note('Postar compartilha a trilha, não suas respostas, progresso, explicações ou email. Neste protótipo, a solicitação e a moderação são exemplos locais.','shield')+
-        (forced?'<div class="note"><span>Estado de moderação simulado: '+esc({pendente:'em revisão',aprovado:'aprovado',recusado:'recusado',retirado:'fora do perfil'}[forced])+'. Nenhuma publicação real.</span></div>':'')+
+        (forced?'<span class="tag">Estado de exemplo: '+esc({pendente:'em revisão',aprovado:'aprovado',recusado:'recusado',retirado:'fora do perfil'}[forced])+'.</span>':'')+
         (rows.length?'<div class="stack">'+rows.map(([id,t],i)=>profileStatusCard(id,t,i===0&&forced?forced:statusOf(t))).join('')+'</div>':'<div class="empty"><h2>Uma trilha sua pode abrir caminhos.</h2><p>Crie uma trilha para escolher se quer postá-la aqui. Cópias recebidas continuam privadas nos seus estudos.</p>'+btn('Criar uma trilha','go:pedido','secondary')+'</div>')+
         (s.personalPostUndo?'<div class="note"><span>A trilha saiu do perfil neste exemplo. Sua cópia e o estado do link foram preservados.</span></div>'+btn('Desfazer retirada','personal-undo-unpost','secondary'):'')+
         btn('Regras da comunidade','social-rules','quiet');
