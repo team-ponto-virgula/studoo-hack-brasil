@@ -118,7 +118,8 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   const [focarResumo, setFocarResumo] = useState(false);
   // Pelo "Editar perfil" da folha "Postar no perfil", os campos abrem com o foco (e a tela) no nome (spec 10, P6).
   const [focarNome, setFocarNome] = useState(focarNomeAoAbrir);
-  const botaoEditar = useRef<ComponentRef<typeof View>>(null);
+  const botaoEditar = useRef<ComponentRef<typeof Pressable>>(null);
+  const botaoResumo = useRef<ComponentRef<typeof Pressable>>(null);
   const { avisar } = useContext(AvisoDoApp);
   function abrirEditor(resumo = false, nome = false) {
     setFocarResumo(resumo);
@@ -127,7 +128,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   }
   function fecharEditor() {
     setEditando(false);
-    setTimeout(() => focarSemRolar(botaoEditar.current), 250);
+    setTimeout(() => focarSemRolar((focarResumo ? botaoResumo.current : null) ?? botaoEditar.current), 250);
   }
   function aoSalvo() {
     fecharEditor();
@@ -236,15 +237,15 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 <CabecalhoPerfil daDona nome={perfil.nome ?? ''} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
                   alcance={perfil.alcance}
                   semResumo={(
-                    <Pressable testID="perfil-convite" accessibilityRole="button" onPress={() => abrirEditor(true)} disabled={desativado} style={socialEstilos.cabecaConvite}>
+                    <Pressable ref={botaoResumo} testID="perfil-convite" accessibilityRole="button" onPress={() => abrirEditor(true)} disabled={desativado} style={socialEstilos.cabecaConvite}>
                       <Text style={socialEstilos.cabecaConviteTexto}>{p.semResumoDona}</Text>
                     </Pressable>
                   )}
                   acoes={<>
                     {/* Ações numa fileira, metade cada, com 44 de altura: "Editar" e "Compartilhar" (só com perfil público; sem ele, "Editar" ocupa a fileira). */}
                     <View style={perfilEstilos.acoesPerfil}>
-                      <View ref={botaoEditar} style={perfilEstilos.acaoPerfil}>
-                        <Botao rotulo={p.editar} iconeAntes="lapis" variante="secundario" fonte={16} testID="perfil-editar" desativado={desativado} acao={() => abrirEditor()}
+                      <View style={perfilEstilos.acaoPerfil}>
+                        <Botao rotulo={p.editar} iconeAntes="lapis" variante="secundario" fonte={16} testID="perfil-editar" referencia={botaoEditar} desativado={desativado} acao={() => abrirEditor()}
                           estilo={perfilEstilos.botaoMetade} />
                       </View>
                       {perfil.publico && perfil.perfilId && (
