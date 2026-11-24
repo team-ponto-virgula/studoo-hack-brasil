@@ -21,7 +21,7 @@ A [pesquisa de estilos](referencias/ESTILOS-2026-11-24.md), os [componentes](ref
 | Web, Next real local | Conta sintética exclusiva, gerar/aceitar SQL, errar com `>`, corrigir com `>=`, concluir após POST200, recarregar com 1/5 salvo e abrir a lição 2 | Nove verificações positivas, zero erros de JavaScript; não é medição de desempenho ou teste com pessoas. |
 | Código mobile em React Native Web | Login pela UI em outra conta, mesmos passos, progresso 1/5 lido novamente na API após reload e retomada de INNERJOIN | Nove etapas concluídas, zero pageerrors, hashes estáveis. API Next separada com mesmos handlers e dados locais; adaptações de QA descritas abaixo. |
 | Capturas | Pedido, proposta, lição, exercício/correção, conclusão, mapa e retomada em 390×844 e 360×800 | Pares reais de cada renderer. Não chamar as capturas RNWeb de execução no iPhone/Android. |
-| Código/build | Checks mobile 603/603 antes de integrar o teste extra da intro; tipos mobile, paridade 5/5 e movimento 4/4; tipos web formais e build de produção | Todos passaram. O [CI da candidata integrada](https://github.com/team-ponto-virgula/studoo-hack-brasil/actions/runs/45456523616) passou com a intro suave integrada. A contagem de interface da intro isolada é 604, incluindo 18 de abertura. Não somar subconjuntos. |
+| Código/build | Checks mobile 603/603 antes de integrar o teste extra da intro; interface integrada 604/604; tipos mobile, paridade 5/5 e movimento 4/4; tipos web formais e build de produção | Todos passaram. O [CI da fonte do IPA](https://github.com/team-ponto-virgula/studoo-hack-brasil/actions/runs/45459665209) passou. Os 18 casos de abertura integram os 604; não somar subconjuntos. Os arquivos de checks anteriores preservam seus próprios hashes e contagens. |
 
 [Manifesto e hashes](evidencias/clareza-2026-11-24/manifesto.json) · [percurso web](evidencias/clareza-2026-11-24/web/percurso.json) · [percurso RNWeb](evidencias/clareza-2026-11-24/rnweb/resultado.json) · [checks mobile](evidencias/clareza-2026-11-24/checks-mobile.json) · [parecer visual independente](PARECER-PILOTO-CLAREZA.md).
 
@@ -45,7 +45,7 @@ O parecer identificou o rodapé da Proposta com 16 px contra 20 px da web. O aju
 
 O Stu exibido é o asset atual do kit, usado em escala contida. Os originais do novo Stu caderno continuam sendo as [referências de branding](REFERENCIAS-DO-STU.md); esta rodada não redesenhou um substituto nem afirma que essa integração terminou. Referências públicas e inspeção visual não aprovam toda a UX com 9,5. O método mantém pesos e gates, e exige evidência por fluxo/superfície.
 
-A intro é a [versão suave de 1,04 s](RESULTADO-INTRO.md), exclusiva mobile. Sua conferência anterior à integração do piloto está identificada separadamente. O estado de compilação/envio do próximo binário será registrado pelo ID específico do build, sem usar `--latest`.
+A intro é a [versão suave de 1,04 s](RESULTADO-INTRO.md), exclusiva mobile. Sua conferência anterior à integração do piloto está identificada separadamente. O [registro do build 0.1.0 (6)](../beta/BUILD-6-INTRO-CLAREZA.md) identifica fonte, auditoria do IPA e distribuição, sem usar `--latest` nem confundir compilação com disponibilidade.
 
 ## Reabrir no Cloud
 

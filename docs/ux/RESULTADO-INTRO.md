@@ -26,7 +26,9 @@ O [estudo de movimento](MOTION-OCULOS.md) usa os tempos atuais sem pausa extra d
 
 ## Distribuição e histórico
 
-O PR #92 foi integrado à release em `4523a2e`. O build **0.1.0 (5)** com o ritmo anterior compilou e passou no auditor do IPA, mas sua submissão EAS `a35b0260-5607-45b7-963d-f145f816df91` foi **cancelada enquanto ainda estava IN_QUEUE**, após o pedido de suavização. Não foi associado a grupo de teste e não é apresentado como a versão suave. O número remoto seguinte deve ser usado no novo binário.
+O PR #92 foi integrado à release em `4523a2e`. O build **0.1.0 (5)** com o ritmo anterior compilou e passou no auditor do IPA, mas sua submissão EAS `a35b0260-5607-45b7-963d-f145f816df91` foi **cancelada enquanto ainda estava IN_QUEUE**, após o pedido de suavização. Não foi associado a grupo de teste e não é apresentado como a versão suave.
+
+O **build 0.1.0 (6)** reúne o ritmo suave e o piloto Clareza. [Fonte, auditoria do IPA e estado de distribuição](../beta/BUILD-6-INTRO-CLAREZA.md) têm identificação própria; a compilação e o envio não substituem a conferência instalada.
 
 - [Resultado completo do ritmo anterior](RESULTADO-INTRO-RAPIDA-2026-11-24.md), com seus próprios checks e mídias.
 - [Primeira rodada de intro](RESULTADO-INTRO-2026-11-23.md).
