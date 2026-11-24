@@ -151,6 +151,8 @@ O momento 4 diz "com uma conta", porque o progresso do visitante fica só no apa
     1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
     2. "Aponte a câmera do iPhone para o código ao lado e toque em “Instalar no iPhone”."
     3. "No TestFlight, toque em Instalar e abra o Studoo."
+  - O cartão do QR da aba iPhone não traz o link do arquivo do Android. Os ícones do iOS aparecem só nos passos 2 (Compartilhar) e 3 (confirmar).
+  - Na aba iPhone, antes do TestFlight, a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta" ficam embaixo dos passos, na coluna da esquerda, alinhados ao texto dos passos e com a largura do botão principal (não a coluna toda). O cartão do QR fica sozinho à direita (conferência de 24/11).
 - **iPhone, antes do TestFlight:** os três passos da folha da seção 1.5, com a linha "O app para iPhone chega em breve pelo TestFlight." e o botão "Experimentar sem conta".
 - **iPhone, com o TestFlight:**
   1. "Instale o TestFlight, o app de testes da Apple, pela App Store."
