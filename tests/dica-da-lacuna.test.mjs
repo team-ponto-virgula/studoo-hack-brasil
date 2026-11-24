@@ -90,6 +90,69 @@ test('a dica: o caso da prova com a IA real perde a frase com a lista e fica com
   assert.equal(dicaDaLacunaSemAResposta(boa, ['la']), boa);
 });
 
+// Prova com a IA real (Lead, 24/11, DeepSeek, "Inglês para conversar em viagens", lição 6): aceitas ["me"] e a dica abaixo ENTREGAVA a resposta dentro de um EXEMPLO entre aspas ("help me") e passava: a
+// regra das respostas de uma ou duas letras só via a resposta SOZINHA entre aspas, numa lista ou com inicial maiúscula no meio da frase, e aqui ela é a última palavra de um trecho entre aspas.
+const DICA_COM_O_EXEMPLO = 'Pense no pedido educado que abre a conversa: depois de “excuse” vem o pronome objeto, aquele que também aparece em “help me”.';
+
+test('a conta: a resposta de uma ou duas letras como palavra inteira DENTRO de um exemplo entre aspas ("help me") conta como dita (o caso da prova com a IA real)', () => {
+  assert.equal(diz(DICA_COM_O_EXEMPLO, ['me']), true, 'o caso exato do Lead');
+  assert.equal(diz(DICA_COM_O_EXEMPLO, ['me', 'Me', 'ME']), true, 'com as grafias de verdade (caixa diferente)');
+  // Os jeitos de aspear, a posição da palavra no exemplo e a pontuação dentro das aspas.
+  for (const exemplo of ['“help me”', '"help me"', '‘help me’', '«help me»', '`help me`', "'help me'", '“me and you”', '“excuse me, please”', '“help me!”', '“Excuse me.”', '“help me now”']) {
+    assert.equal(diz(`Pense no exemplo ${exemplo} e complete.`, ['me']), true, exemplo);
+  }
+  // Outras respostas curtas de ligação, na mesma situação.
+  assert.equal(diz('Compare com “want to go” e “need to eat”.', ['to']), true, '"to" dentro dos exemplos');
+  assert.equal(diz('Pense em “bolo de chocolate”.', ['de']), true, 'a palavra de ligação dentro do exemplo que a dica cita');
+});
+
+test('a conta: o que NÃO conta como a resposta curta dentro de aspas (palavra de ligação da dica, parte de outra palavra, fora das aspas, outro exemplo) e o caso "lado esquerdo"/"Dó"', () => {
+  assert.equal(diz('Pense no pedido educado: depois de “excuse” vem o pronome objeto.', ['me']), false, 'a boa dica da mesma lição: nada de "me"');
+  assert.equal(diz('Use a mesma palavra de “help us” e “give them”.', ['me']), false, 'outros exemplos, sem a resposta');
+  assert.equal(diz('Fale como em “come here” ou “homework”.', ['me']), false, '"me" dentro de "come" e de "homework" não é a palavra');
+  assert.equal(diz('Ajude-me a lembrar: o pronome que vem depois de “excuse”.', ['me']), false, 'o "me" colado em "ajude-me", fora das aspas, é palavra de ligação da dica');
+  assert.equal(diz('Pergunte ao me ao lado, e depois responda.', ['me']), false, 'sem aspas, a palavra solta numa frase comum não conta (como antes)');
+  assert.equal(diz('Pense em “help” e em “me” separadamente.', ['me']), true, 'e a resposta SOZINHA entre aspas continua contando (como antes)');
+  // O falso positivo que a regra não pode criar: a nota "Dó" (e "do" sem acento) contra o "do" e o "lado" da própria dica.
+  const dolado = ['Dó', 'dó', 'do', 'DÓ'];
+  assert.equal(diz('Com a mão esquerda, no lado esquerdo do braço, aperte a corda mais grossa.', dolado), false, '"lado" não é "do" e o "do braço" é preposição fora das aspas');
+  assert.equal(diz('Pense na nota do lado esquerdo.', dolado), false);
+  assert.equal(diz('Pense na nota que vem antes do “Ré” e depois do “Si”.', dolado), false, 'o "do" fora das aspas, com aspas só nas outras notas');
+  assert.equal(diz('Use a nota “Ré” do lado esquerdo.', dolado), false);
+  assert.equal(diz('A primeira nota da escala é “Dó”.', dolado), true, 'a nota SOZINHA entre aspas é a resposta dita');
+  assert.equal(diz('Comece pelo “Dó” central e suba.', dolado), true);
+});
+
+test('a dica: o caso do "help me" perde a frase com o exemplo (entra a dica padrão se era a única); a que só aponta o caminho volta igual', () => {
+  assert.equal(dicaDaLacunaSemAResposta(DICA_COM_O_EXEMPLO, ['me']), DICA_PADRAO_DA_LACUNA, 'a dica inteira era uma frase só');
+  assert.equal(dicaDaLacunaSemAResposta('Pense no pedido educado que abre a conversa. Depois de “excuse” vem o pronome objeto, como em “help me”.', ['me']), 'Pense no pedido educado que abre a conversa.');
+  const boa = 'Pense no pedido educado que abre a conversa: depois de “excuse” vem o pronome objeto.';
+  assert.equal(dicaDaLacunaSemAResposta(boa, ['me']), boa);
+  assert.equal(avisoDaLacunaSemAResposta('Cuidado: não troque “excuse me” por “excuse I”.', ['me']), undefined, 'o aviso de armadilha que cita o exemplo com a resposta também sai');
+  assert.equal(avisoDaLacunaSemAResposta('Cuidado: depois de “excuse” vem um pronome objeto, não o sujeito.', ['me']), 'Cuidado: depois de “excuse” vem um pronome objeto, não o sujeito.');
+});
+
+test('o gerador: a lacuna do "excuse ___" com a dica que entregava "me" num exemplo entre aspas guarda a dica padrão e a lição segue válida', () => {
+  const ia = licaoDaIa({
+    gabarito: ['me', 'Me', 'ME'], trecho: 'Excuse ___, where is the station?', enunciado: 'Complete o pedido educado.',
+    feedbackCorreto: 'Isso! “Excuse me” abre a conversa com educação.', feedbackIncorreto: DICA_COM_O_EXEMPLO,
+  });
+  const lida = normalizarLicao(ia, 'IA de teste');
+  assert.ok(lida.conteudo, 'a lição não cai por causa da dica');
+  assert.equal(lida.conteudo.exercicio.feedbackIncorreto, DICA_PADRAO_DA_LACUNA);
+  assert.equal(lida.dicaDaLacunaAparada, true);
+  assert.equal(textoDizARespostaDaLacuna(lida.conteudo.exercicio.feedbackIncorreto, lida.conteudo.exercicio.gabarito), false);
+  assert.equal(conteudoValido(lida.conteudo), true);
+  assert.match(lida.conteudo.exercicio.feedbackCorreto, /Excuse me/, 'o retorno do acerto não muda: ali a resposta aparece');
+  // A dica boa da mesma lição passa igual e sem ajuste.
+  const boa = normalizarLicao(licaoDaIa({
+    gabarito: ['me', 'Me', 'ME'], trecho: 'Excuse ___, where is the station?', enunciado: 'Complete o pedido educado.',
+    feedbackCorreto: 'Isso! “Excuse me” abre a conversa com educação.', feedbackIncorreto: 'Pense no pedido educado que abre a conversa: depois de “excuse” vem o pronome objeto.',
+  }), 'IA de teste');
+  assert.equal(boa.conteudo.exercicio.feedbackIncorreto, 'Pense no pedido educado que abre a conversa: depois de “excuse” vem o pronome objeto.');
+  assert.equal(boa.dicaDaLacunaAparada, undefined);
+});
+
 test('o gerador: a lacuna do violão com a dica que entregava "Lá" numa lista guarda a dica aparada e a lição segue válida', () => {
   const ia = licaoDaIa({
     gabarito: ['Lá', 'lá', 'la', 'LÁ'], trecho: 'A 5ª corda solta do violão é a nota ___.', enunciado: 'Complete a frase.',
