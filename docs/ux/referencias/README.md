@@ -29,9 +29,11 @@ Curadoria pública de **24/11/2026**. Comece pelo [painel visual](painel-estilos
 | [Brilliant · Learning Paths](https://brilliant.org/help/features/what-are-learning-paths/) | Objetivo, sequência e primeiro passo claros. |
 | [Headspace · concluir uma sessão](https://www.purchasely.com/flows/headspace-completing-a-session) | Reconhecer a conclusão e orientar a próxima ação. |
 | [Things · funcionalidades](https://culturedcode.com/things/features/) | Hierarquia de listas, organização e escolha do que fazer agora. |
+| [CapWords · caso oficial Apple](https://developer.apple.com/articles/capwords/) | Conceito central e exemplos sob demanda, com capturas editoriais de iPhone. |
+| [Duolingo · rever lições](https://blog.duolingo.com/how-to-review-lessons-on-duolingo/) | Revisão e retorno ao ponto atual, com screenshot público do caminho. |
 
 **Direção recomendada:** organização de Notion, acolhimento de Headspace e progressão de Brilliant, com o azul, as fontes e o Stu do próprio Studoo. Craft serve à pesquisa da materialidade do caderno. As referências são analisadas pelo [método de avaliação](../METODO-AVALIACAO.md); não recebem aprovação de UX por aparência.
 
 Os exemplos do 21st/shadcn são React para web. No app, a composição e os estados precisam de implementação React Native e conferência de teclado, foco e acessibilidade. Nenhum desses catálogos foi instalado. Fichas de estilo e capturas públicas não comprovam o comportamento atual dos apps.
 
-Pesquisa detalhada, fontes e limites de acesso: [estilos](ESTILOS-2026-11-24.md), [oito componentes](COMPONENTES-2026-11-24.md) e [oito exemplos de fluxos](FLUXOS-2026-11-24.md). Refero, Mobbin e Pageflows tiveram acesso incompleto a fluxos; o texto identifica o que foi efetivamente inspecionado.
+Pesquisa detalhada, fontes e limites de acesso: [estilos](ESTILOS-2026-11-24.md), [oito componentes](COMPONENTES-2026-11-24.md), [oito exemplos de fluxos](FLUXOS-2026-11-24.md) e [duas referências visuais de apps](APPS-MOBILE-2026-11-24.md). Refero, Mobbin e Pageflows tiveram acesso incompleto a fluxos; o texto identifica o que foi efetivamente inspecionado.
