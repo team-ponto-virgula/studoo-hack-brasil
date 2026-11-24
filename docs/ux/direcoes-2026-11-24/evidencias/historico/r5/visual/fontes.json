@@ -1,0 +1,310 @@
+{
+  "source": "5ad1225f586af063d58f694d4ebe705fcabca081",
+  "hashesBefore": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "views": [
+    {
+      "d": "jornada",
+      "w": 390,
+      "scale": 100,
+      "mainWidth": 390,
+      "mainScroll": 1247,
+      "sourceWidth": 280,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 340,
+        "scroll": 1469,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 390,
+      "scale": 200,
+      "mainWidth": 390,
+      "mainScroll": 2422,
+      "sourceWidth": 280,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 340,
+        "scroll": 2915,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "scale": 100,
+      "mainWidth": 360,
+      "mainScroll": 1247,
+      "sourceWidth": 250,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 328,
+        "scroll": 1469,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "jornada",
+      "w": 360,
+      "scale": 200,
+      "mainWidth": 360,
+      "mainScroll": 2422,
+      "sourceWidth": 250,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 328,
+        "scroll": 2915,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "scale": 100,
+      "mainWidth": 390,
+      "mainScroll": 1250,
+      "sourceWidth": 277,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 340,
+        "scroll": 1469,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 390,
+      "scale": 200,
+      "mainWidth": 390,
+      "mainScroll": 2425,
+      "sourceWidth": 277,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 340,
+        "scroll": 2915,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "scale": 100,
+      "mainWidth": 360,
+      "mainScroll": 1250,
+      "sourceWidth": 247,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 328,
+        "scroll": 1469,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "caderno",
+      "w": 360,
+      "scale": 200,
+      "mainWidth": 360,
+      "mainScroll": 2425,
+      "sourceWidth": 247,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 328,
+        "scroll": 2915,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "scale": 100,
+      "mainWidth": 390,
+      "mainScroll": 1249,
+      "sourceWidth": 279,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 340,
+        "scroll": 1469,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "foco",
+      "w": 390,
+      "scale": 200,
+      "mainWidth": 390,
+      "mainScroll": 2424,
+      "sourceWidth": 279,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 340,
+        "scroll": 2915,
+        "viewportWidth": 390,
+        "docScroll": 390,
+        "p": [
+          {
+            "client": 292,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "scale": 100,
+      "mainWidth": 360,
+      "mainScroll": 1249,
+      "sourceWidth": 249,
+      "sourceScroll": 1174,
+      "dialog": {
+        "width": 328,
+        "scroll": 1469,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 1445,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    },
+    {
+      "d": "foco",
+      "w": 360,
+      "scale": 200,
+      "mainWidth": 360,
+      "mainScroll": 2424,
+      "sourceWidth": 249,
+      "sourceScroll": 2349,
+      "dialog": {
+        "width": 328,
+        "scroll": 2915,
+        "viewportWidth": 360,
+        "docScroll": 360,
+        "p": [
+          {
+            "client": 280,
+            "scroll": 2891,
+            "text": "Material de exemplo: nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn.pdf · página 1. SELECT nome FROM alunos\nWHERE nota >= 7; Nenhum documento externo é aberto ou enviado."
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [],
+  "hashesAfter": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "sourceStable": true,
+  "sameAsMainCapture": true
+}

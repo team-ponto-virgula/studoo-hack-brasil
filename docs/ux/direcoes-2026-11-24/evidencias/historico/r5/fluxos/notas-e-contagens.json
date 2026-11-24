@@ -1,0 +1,226 @@
+{
+  "source": "5ad1225f586af063d58f694d4ebe705fcabca081",
+  "surface": "Protótipo HTML mobile local Chromium 156.0.8078.79",
+  "completedAt": "2026-11-24T21:36:01.553474+00:00",
+  "suites": [
+    {
+      "artifact": "resultado.json",
+      "scenarios": 12,
+      "checks": 147,
+      "passed": 147,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "novos-resultados.json",
+      "scenarios": 33,
+      "checks": 207,
+      "passed": 207,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "integracao-resultados.json",
+      "scenarios": 12,
+      "checks": 51,
+      "passed": 51,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "fronteiras-resultados.json",
+      "scenarios": 6,
+      "checks": 111,
+      "passed": 111,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "riscos-lc-resultados.json",
+      "scenarios": 42,
+      "checks": 372,
+      "passed": 369,
+      "failed": 3,
+      "pageerrors": 0,
+      "exceptions": 0
+    }
+  ],
+  "directions": {
+    "jornada": {
+      "scenarios": 35,
+      "checks": 296,
+      "passed": 295,
+      "failed": 1,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "hashesAfter": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null,
+      "additionalCopyReproduction": "failed; separate diagnostic, not added to total"
+    },
+    "caderno": {
+      "scenarios": 35,
+      "checks": 296,
+      "passed": 295,
+      "failed": 1,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "hashesAfter": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null,
+      "additionalCopyReproduction": "failed; separate diagnostic, not added to total"
+    },
+    "foco": {
+      "scenarios": 35,
+      "checks": 296,
+      "passed": 295,
+      "failed": 1,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "hashesAfter": {
+        "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+        "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+        "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+      },
+      "scores": {
+        "D1": 8,
+        "D2": 8,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 8,
+        "D10": null
+      },
+      "globalScore": null,
+      "additionalCopyReproduction": "failed; separate diagnostic, not added to total"
+    }
+  },
+  "findings": [
+    {
+      "id": "R5-F1",
+      "severity": "medio",
+      "directions": [
+        "jornada",
+        "caderno",
+        "foco"
+      ],
+      "summary": "Trilha de material pode ser submetida ao Explorar",
+      "artifact": "riscos-lc-resultados.json",
+      "case": "LC10-16-17-material-origem-por-trilha"
+    },
+    {
+      "id": "R5-F2",
+      "severity": "medio",
+      "directions": [
+        "jornada",
+        "caderno",
+        "foco"
+      ],
+      "summary": "Cópia recebida pode ser compartilhada novamente pelo menu do mapa",
+      "artifact": "copias-probe.json",
+      "notAddedToAssertionTotal": true
+    },
+    {
+      "id": "R5-L1",
+      "severity": "baixo",
+      "directions": [
+        "foco"
+      ],
+      "summary": "Cartão ativo da biblioteca omite nome da trilha; contexto depende da lição."
+    }
+  ],
+  "sourceHashes": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "globalScore": null,
+  "productScores": {
+    "C1": null,
+    "C2": null,
+    "C3": null,
+    "C4": null,
+    "C5": null,
+    "C6": null,
+    "C7": null,
+    "C8": null,
+    "C9": null,
+    "C10": null
+  },
+  "native": "nao executado",
+  "realUsers": "nao realizado",
+  "totals": {
+    "scenarios": 105,
+    "checks": 888,
+    "passed": 885,
+    "failed": 3,
+    "pageerrors": 0,
+    "exceptions": 0
+  }
+}

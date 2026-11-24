@@ -1,0 +1,982 @@
+{
+  "candidate": "5ad1225f586af063d58f694d4ebe705fcabca081",
+  "chromium": "156.0.8078.79",
+  "DPR": 2,
+  "before": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "after": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "media-pages.js": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6"
+  },
+  "stable": true,
+  "rows": [
+    {
+      "d": "jornada",
+      "p": "inicio",
+      "w": 390,
+      "file": "jornada-inicio-390.png",
+      "errors": [],
+      "title": "Vamos nessa, Nina?",
+      "text": "MINHAS TRILHAS\nVamos nessa, Nina?\n\nUm passo pequeno. Uma ideia mais clara.\n\nCONTINUE SUA TRILHA\nSQL para a prova\n\nDe filtros a tabelas que se conectam.\n\nPróxima lição · 2 de 5\nINNER JOIN\nEncontre correspondências\nMais caminhos\nNova trilha\nDescobrir outras trilhas\nIdeias para seu próximo estudo\nRetome no seu ritmo. Seu ponto de partida continua aqui.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "mapa",
+      "w": 390,
+      "file": "jornada-mapa-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "SUA TRILHA\nSQL para a prova\n\nFiltros e junções, no seu ritmo.\n\nLições concluídas\n1 de 5\nPrimeiros passos\nWHERE\nInclua o valor no limite\nConcluída\nINNER JOIN\nEncontre correspondências\nSeu próximo passo\nDo filtro à combinação de ideias.\nPraticando\nAND\nCombine duas condições\nFiltro + junção\nUse as duas ideias juntas\nAgora, preserve também quem não tem par.\nDesafio\nLEFT JOIN\nPreserve linhas sem par",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "licao",
+      "w": 390,
+      "file": "jornada-licao-390.png",
+      "errors": [],
+      "title": "O limite também entra.",
+      "text": "1 / 3\nENTENDA A IDEIA\nO limite também entra.\n\nWHERE seleciona as linhas que satisfazem uma condição.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVeja um exemplo\n\nPara notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.\n\nSELECT nome FROM alunos\nWHERE nota >= 7;\nExemplo de demonstração\nConteúdo sintético de SQL do Studoo.\nConferir origem [1]\nUm apoio para esta ideia\n\nRepare em quem tem nota exatamente 7.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Recomeçar esta lição",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "conclusao",
+      "w": 390,
+      "file": "jornada-conclusao-390.png",
+      "errors": [],
+      "title": "Um passo bem entendido!",
+      "text": "LIÇÃO CONCLUÍDA\nUm passo bem entendido!\n\nVocê praticou filtros que incluem o valor do limite.\n\nProgresso confirmado · exemplo local\nLições concluídas\n1 de 5\nPróximo passo\nINNER JOIN\nEncontre correspondências\nLeve esta ideia: Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "perfil",
+      "w": 390,
+      "file": "jornada-perfil-390.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n0\ntrilhas públicas\nSuas novidades\nQuando alguém começar ou agradecer uma trilha sua, as novidades aparecem aqui.\nNo seu perfil\n\nNenhuma trilha aprovada por aqui. Você escolhe o que quer mostrar.\n\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "geracao",
+      "s": "parcial",
+      "w": 390,
+      "file": "jornada-geracao-parcial-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "geracao",
+      "s": "espera-longa",
+      "w": 360,
+      "file": "jornada-geracao-espera-longa-360.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências\nAinda estamos aguardando novas ideias. Seu objetivo está preservado; você pode cancelar sem perder o texto.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar o exemplo de geração",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "material",
+      "s": "previa",
+      "w": 360,
+      "file": "jornada-material-previa-360.png",
+      "errors": [],
+      "title": "O conteúdo está como você espera?",
+      "text": "CONFIRA A LEITURA\nO conteúdo está como você espera?\n\nRevise os trechos antes de usar o material no seu objetivo.\n\nrevisao-sql.pdf\n180 KB · 2 páginas de exemplo\nModo demonstração · leitura local\nPágina 1\nConteúdo de exemplo\nWHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.\nVer citação [1]\nPágina 2\nConteúdo de exemplo\nINNER JOIN combina linhas de duas tabelas quando a condição em ON é satisfeita. Cada par correspondente gera uma linha no resultado.\nVer citação [2]\nO texto de entrada fica disponível por 24 horas. As citações continuam nas lições salvas. Esta prévia usa conteúdo de exemplo.\nTrocar material\nRemover material",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar este material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "material",
+      "s": "formato-invalido",
+      "w": 360,
+      "file": "jornada-material-formato-invalido-360.png",
+      "errors": [],
+      "title": "Este formato não é aceito.",
+      "text": "SEU MATERIAL\nEste formato não é aceito.\n\nEscolha uma imagem JPG/PNG/WebP, PDF, DOCX ou CSV.\n\nO material não foi confirmado.\n\nA escolha rejeitada não substituiu o material anterior.\n\napresentacao.pptx\n100 KB · 1 página de exemplo\nFormatos e limites aceitos\n\nMaterial de exemplo. Arquivos e leitura são simulados; nada é enviado.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Escolher outro material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Continuar sem material",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "configurar",
+      "s": "capa",
+      "w": 390,
+      "file": "jornada-configurar-capa-390.png",
+      "errors": [],
+      "title": "Um jeito de reconhecer este estudo.",
+      "text": "CAPA E TEMA\nUm jeito de reconhecer este estudo.\n\nConfira a prévia. Sua escolha só muda esta trilha.\n\nPadrão\nProgramação e tecnologia\n\nTema da trilha\nIdiomas\nMatemática\nCiências\nProgramação e tecnologia\nNegócios e finanças\nVestibular e concursos\nHistória e sociedade\nArtes e música\nSaúde e bem-estar\nCulinária e casa\nCarreira e produtividade\nOutros\nEscolha uma capa\nPadrão\nSelecionada\nAurora\nOceano\nFloresta\nPôr do sol\nNoite\nAreia\nLavanda\nMenta\nCoral\nCéu\nCereja\nGrafite\nPrévia local. Nenhuma imagem é enviada; o progresso, as respostas e a visibilidade da trilha são preservados.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar esta capa e tema",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar escolha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "perfil",
+      "s": "perfil-aprovado",
+      "w": 390,
+      "file": "jornada-perfil-perfil-aprovado-390.png",
+      "errors": [],
+      "title": "Escolha o que quer compartilhar.",
+      "text": "POSTAR NO PERFIL\nEscolha o que quer compartilhar.\n\nSó as trilhas escolhidas aparecem no seu perfil, depois da aprovação.\n\nPostar compartilha a trilha, não suas respostas, progresso, explicações ou email. Neste protótipo, a solicitação e a moderação são exemplos locais.\nEstado de moderação simulado: aprovado. Nenhuma publicação real.\nSQL para a prova\n\nNo perfil\n\nAprovação de exemplo. Nenhum conteúdo foi publicado.\n\nTirar do perfil\nRegras da comunidade",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar ao meu perfil",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "perfil",
+      "s": "novidades",
+      "w": 360,
+      "file": "jornada-perfil-novidades-360.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n1\ntrilhas públicas\nSuas novidades\nAtividade de exemplo para conferir este estado. Não representa uso real ou alcance obtido pelo protótipo.\nLia começou uma trilha sua.\nSQL para a prova · evento de exemplo\nSua explicação abriu um caminho.\nSQL para a prova · valeu de exemplo\n1 pessoa começou · 1 valeu\nDados sintéticos desta variação.\nNo seu perfil\nSQL para a prova\nPublicação aprovada no exemplo local\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "exercicio",
+      "s": "parcial",
+      "f": "associar",
+      "w": 360,
+      "file": "jornada-exercicio-parcial-associar-360.png",
+      "errors": [],
+      "title": "Relacione os conceitos",
+      "text": "2 / 3\nSUA VEZ\nRelacione os conceitos\n\nUse a ideia do limite para resolver.\n\nMaior que\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nMaior ou igual\nSelecione\n>\n>=\n<=\nMenor ou igual\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nUma parte já fez sentido.\n\nAs correspondências corretas estão mantidas. Reveja os outros pares.\n\n2 de 3 pares corretos no exemplo.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Tentar de novo",
+          "top": 576,
+          "bottom": 628
+        },
+        {
+          "text": "Ver outro jeito de entender",
+          "top": 636,
+          "bottom": 680
+        },
+        {
+          "text": "Seguir sem acertar",
+          "top": 688,
+          "bottom": 732
+        },
+        {
+          "text": "Etapa anterior",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "jornada",
+      "p": "reforco",
+      "s": "vencido",
+      "w": 390,
+      "file": "jornada-reforco-vencido-390.png",
+      "errors": [],
+      "title": "Você encontrou outro caminho.",
+      "text": "DESAFIO VENCIDO\nVocê encontrou outro caminho.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVolte à questão original. Sua tentativa anterior foi preservada.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar à questão original",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Reler outro caminho",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "inicio",
+      "w": 390,
+      "file": "caderno-inicio-390.png",
+      "errors": [],
+      "title": "Seu caderno de estudos.",
+      "text": "MINHAS TRILHAS\nSeu caderno de estudos.\n\nIdeias que você está construindo.\n\nCADERNO ABERTO\nSQL para a prova\nLições concluídas\n1 de 5\nMarcador de página · próxima lição\nINNER JOIN · Encontre correspondências\nMais caminhos\nNova trilha\nDescobrir outras trilhas\nIdeias para seu próximo estudo\nRetome no seu ritmo. Seu ponto de partida continua aqui.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "mapa",
+      "w": 390,
+      "file": "caderno-mapa-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "SUA TRILHA\nSQL para a prova\n\nFiltros e junções, no seu ritmo.\n\nLições concluídas\n1 de 5\nPrimeiros passos\nWHERE\nInclua o valor no limite\nConcluída\nINNER JOIN\nEncontre correspondências\nSeu próximo passo\nDo filtro à combinação de ideias.\nPraticando\nAND\nCombine duas condições\nFiltro + junção\nUse as duas ideias juntas\nAgora, preserve também quem não tem par.\nDesafio\nLEFT JOIN\nPreserve linhas sem par",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 700,
+          "bottom": 752
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "licao",
+      "w": 390,
+      "file": "caderno-licao-390.png",
+      "errors": [],
+      "title": "O limite também entra.",
+      "text": "1 / 3\nENTENDA A IDEIA\nO limite também entra.\n\nWHERE seleciona as linhas que satisfazem uma condição.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVeja um exemplo\n\nPara notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.\n\nSELECT nome FROM alunos\nWHERE nota >= 7;\nExemplo de demonstração\nConteúdo sintético de SQL do Studoo.\nConferir origem [1]\nUm apoio para esta ideia",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Recomeçar esta lição",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "conclusao",
+      "w": 390,
+      "file": "caderno-conclusao-390.png",
+      "errors": [],
+      "title": "Mais uma página entendida.",
+      "text": "LIÇÃO CONCLUÍDA\nMais uma página entendida.\n\nVocê praticou filtros que incluem o valor do limite.\n\nProgresso confirmado · exemplo local\nLições concluídas\n1 de 5\nPróximo passo\nINNER JOIN\nEncontre correspondências\nLeve esta ideia: Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "perfil",
+      "w": 390,
+      "file": "caderno-perfil-390.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n0\ntrilhas públicas\nSuas novidades\nQuando alguém começar ou agradecer uma trilha sua, as novidades aparecem aqui.\nNo seu perfil\n\nNenhuma trilha aprovada por aqui. Você escolhe o que quer mostrar.\n\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "geracao",
+      "s": "parcial",
+      "w": 390,
+      "file": "caderno-geracao-parcial-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 781.203125,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "geracao",
+      "s": "espera-longa",
+      "w": 360,
+      "file": "caderno-geracao-espera-longa-360.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências\nAinda estamos aguardando novas ideias. Seu objetivo está preservado; você pode cancelar sem perder o texto.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar o exemplo de geração",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "material",
+      "s": "previa",
+      "w": 360,
+      "file": "caderno-material-previa-360.png",
+      "errors": [],
+      "title": "O conteúdo está como você espera?",
+      "text": "CONFIRA A LEITURA\nO conteúdo está como você espera?\n\nRevise os trechos antes de usar o material no seu objetivo.\n\nrevisao-sql.pdf\n180 KB · 2 páginas de exemplo\nModo demonstração · leitura local\nPágina 1\nConteúdo de exemplo\nWHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.\nVer citação [1]\nPágina 2\nConteúdo de exemplo\nINNER JOIN combina linhas de duas tabelas quando a condição em ON é satisfeita. Cada par correspondente gera uma linha no resultado.\nVer citação [2]\nO texto de entrada fica disponível por 24 horas. As citações continuam nas lições salvas. Esta prévia usa conteúdo de exemplo.\nTrocar material\nRemover material",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar este material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "material",
+      "s": "formato-invalido",
+      "w": 360,
+      "file": "caderno-material-formato-invalido-360.png",
+      "errors": [],
+      "title": "Este formato não é aceito.",
+      "text": "SEU MATERIAL\nEste formato não é aceito.\n\nEscolha uma imagem JPG/PNG/WebP, PDF, DOCX ou CSV.\n\nO material não foi confirmado.\n\nA escolha rejeitada não substituiu o material anterior.\n\napresentacao.pptx\n100 KB · 1 página de exemplo\nFormatos e limites aceitos\n\nMaterial de exemplo. Arquivos e leitura são simulados; nada é enviado.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Escolher outro material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Continuar sem material",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "configurar",
+      "s": "capa",
+      "w": 390,
+      "file": "caderno-configurar-capa-390.png",
+      "errors": [],
+      "title": "Um jeito de reconhecer este estudo.",
+      "text": "CAPA E TEMA\nUm jeito de reconhecer este estudo.\n\nConfira a prévia. Sua escolha só muda esta trilha.\n\nPadrão\nProgramação e tecnologia\n\nTema da trilha\nIdiomas\nMatemática\nCiências\nProgramação e tecnologia\nNegócios e finanças\nVestibular e concursos\nHistória e sociedade\nArtes e música\nSaúde e bem-estar\nCulinária e casa\nCarreira e produtividade\nOutros\nEscolha uma capa\nPadrão\nSelecionada\nAurora\nOceano\nFloresta\nPôr do sol\nNoite\nAreia\nLavanda\nMenta\nCoral\nCéu\nCereja\nGrafite\nPrévia local. Nenhuma imagem é enviada; o progresso, as respostas e a visibilidade da trilha são preservados.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar esta capa e tema",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar escolha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "perfil",
+      "s": "perfil-aprovado",
+      "w": 390,
+      "file": "caderno-perfil-perfil-aprovado-390.png",
+      "errors": [],
+      "title": "Escolha o que quer compartilhar.",
+      "text": "POSTAR NO PERFIL\nEscolha o que quer compartilhar.\n\nSó as trilhas escolhidas aparecem no seu perfil, depois da aprovação.\n\nPostar compartilha a trilha, não suas respostas, progresso, explicações ou email. Neste protótipo, a solicitação e a moderação são exemplos locais.\nEstado de moderação simulado: aprovado. Nenhuma publicação real.\nSQL para a prova\n\nNo perfil\n\nAprovação de exemplo. Nenhum conteúdo foi publicado.\n\nTirar do perfil\nRegras da comunidade",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar ao meu perfil",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "perfil",
+      "s": "novidades",
+      "w": 360,
+      "file": "caderno-perfil-novidades-360.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n1\ntrilhas públicas\nSuas novidades\nAtividade de exemplo para conferir este estado. Não representa uso real ou alcance obtido pelo protótipo.\nLia começou uma trilha sua.\nSQL para a prova · evento de exemplo\nSua explicação abriu um caminho.\nSQL para a prova · valeu de exemplo\n1 pessoa começou · 1 valeu\nDados sintéticos desta variação.\nNo seu perfil\nSQL para a prova\nPublicação aprovada no exemplo local\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "exercicio",
+      "s": "parcial",
+      "f": "associar",
+      "w": 360,
+      "file": "caderno-exercicio-parcial-associar-360.png",
+      "errors": [],
+      "title": "Relacione os conceitos",
+      "text": "2 / 3\nSUA VEZ\nRelacione os conceitos\n\nUse a ideia do limite para resolver.\n\nMaior que\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nMaior ou igual\nSelecione\n>\n>=\n<=\nMenor ou igual\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nUma parte já fez sentido.\n\nAs correspondências corretas estão mantidas. Reveja os outros pares.\n\n2 de 3 pares corretos no exemplo.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Tentar de novo",
+          "top": 576,
+          "bottom": 628
+        },
+        {
+          "text": "Ver outro jeito de entender",
+          "top": 636,
+          "bottom": 680
+        },
+        {
+          "text": "Seguir sem acertar",
+          "top": 688,
+          "bottom": 732
+        },
+        {
+          "text": "Etapa anterior",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "p": "reforco",
+      "s": "vencido",
+      "w": 390,
+      "file": "caderno-reforco-vencido-390.png",
+      "errors": [],
+      "title": "Você encontrou outro caminho.",
+      "text": "DESAFIO VENCIDO\nVocê encontrou outro caminho.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVolte à questão original. Sua tentativa anterior foi preservada.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar à questão original",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Reler outro caminho",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "inicio",
+      "w": 390,
+      "file": "foco-inicio-390.png",
+      "errors": [],
+      "title": "Seu próximo passo.",
+      "text": "MINHAS TRILHAS\nSeu próximo passo.\n\nVolte ao que importa para você.\n\nCONTINUE DE ONDE PAROU\nINNER JOIN\n\nEncontre correspondências\n\nLições concluídas\n1 de 5\nMais caminhos\nNova trilha\nDescobrir outras trilhas\nIdeias para seu próximo estudo\nRetome no seu ritmo. Seu ponto de partida continua aqui.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Retomar INNER JOIN",
+          "top": 702.40625,
+          "bottom": 754.40625
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "mapa",
+      "w": 390,
+      "file": "foco-mapa-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "SUA TRILHA\nSQL para a prova\n\nFiltros e junções, no seu ritmo.\n\nLições concluídas\n1 de 5\nPrimeiros passos\nWHERE\nInclua o valor no limite\nConcluída\nINNER JOIN\nEncontre correspondências\nSeu próximo passo\nDo filtro à combinação de ideias.\nPraticando\nAND\nCombine duas condições\nFiltro + junção\nUse as duas ideias juntas\nAgora, preserve também quem não tem par.\nDesafio\nLEFT JOIN\nPreserve linhas sem par",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar: INNER JOIN",
+          "top": 702.40625,
+          "bottom": 754.40625
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "licao",
+      "w": 390,
+      "file": "foco-licao-390.png",
+      "errors": [],
+      "title": "O limite também entra.",
+      "text": "1 / 3\nENTENDA A IDEIA\nO limite também entra.\n\nWHERE seleciona as linhas que satisfazem uma condição.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVeja um exemplo\n\nPara notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.\n\nSELECT nome FROM alunos\nWHERE nota >= 7;\nExemplo de demonstração\nConteúdo sintético de SQL do Studoo.\nConferir origem [1]\nUm apoio para esta ideia",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Vamos praticar",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Recomeçar esta lição",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "conclusao",
+      "w": 390,
+      "file": "foco-conclusao-390.png",
+      "errors": [],
+      "title": "Uma ideia que ficou.",
+      "text": "LIÇÃO CONCLUÍDA\nUma ideia que ficou.\n\nVocê praticou filtros que incluem o valor do limite.\n\nProgresso confirmado · exemplo local\nLições concluídas\n1 de 5\nPróximo passo\nINNER JOIN\nEncontre correspondências\nLeve esta ideia: Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar para INNER JOIN",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Ver minha trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "perfil",
+      "w": 390,
+      "file": "foco-perfil-390.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n0\ntrilhas públicas\nSuas novidades\nQuando alguém começar ou agradecer uma trilha sua, as novidades aparecem aqui.\nNo seu perfil\n\nNenhuma trilha aprovada por aqui. Você escolhe o que quer mostrar.\n\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "geracao",
+      "s": "parcial",
+      "w": 390,
+      "file": "foco-geracao-parcial-390.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 780,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "geracao",
+      "s": "espera-longa",
+      "w": 360,
+      "file": "foco-geracao-espera-longa-360.png",
+      "errors": [],
+      "title": "SQL para a prova",
+      "text": "PREPARANDO SEU CAMINHO\nSQL para a prova\n\nAs ideias aparecem conforme chegam. Você confere a proposta antes de começar.\n\nExemplo local · IA desligada\nSeu objetivo\n\nQuero praticar filtros e junções de SQL para a prova.\n\n2 lições recebidas.\nWHERE\nRecebida · Inclua o valor no limite\nINNER JOIN\nRecebida · Encontre correspondências\nAinda estamos aguardando novas ideias. Seu objetivo está preservado; você pode cancelar sem perder o texto.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Continuar o exemplo de geração",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Cancelar e voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "material",
+      "s": "previa",
+      "w": 360,
+      "file": "foco-material-previa-360.png",
+      "errors": [],
+      "title": "O conteúdo está como você espera?",
+      "text": "CONFIRA A LEITURA\nO conteúdo está como você espera?\n\nRevise os trechos antes de usar o material no seu objetivo.\n\nrevisao-sql.pdf\n180 KB · 2 páginas de exemplo\nModo demonstração · leitura local\nPágina 1\nConteúdo de exemplo\nWHERE seleciona as linhas que satisfazem a condição. Use >= para incluir valores a partir do limite: o próprio limite entra no resultado.\nVer citação [1]\nPágina 2\nConteúdo de exemplo\nINNER JOIN combina linhas de duas tabelas quando a condição em ON é satisfeita. Cada par correspondente gera uma linha no resultado.\nVer citação [2]\nO texto de entrada fica disponível por 24 horas. As citações continuam nas lições salvas. Esta prévia usa conteúdo de exemplo.\nTrocar material\nRemover material",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar este material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Voltar ao objetivo",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "material",
+      "s": "formato-invalido",
+      "w": 360,
+      "file": "foco-material-formato-invalido-360.png",
+      "errors": [],
+      "title": "Este formato não é aceito.",
+      "text": "SEU MATERIAL\nEste formato não é aceito.\n\nEscolha uma imagem JPG/PNG/WebP, PDF, DOCX ou CSV.\n\nO material não foi confirmado.\n\nA escolha rejeitada não substituiu o material anterior.\n\napresentacao.pptx\n100 KB · 1 página de exemplo\nFormatos e limites aceitos\n\nMaterial de exemplo. Arquivos e leitura são simulados; nada é enviado.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Escolher outro material",
+          "top": 680,
+          "bottom": 732
+        },
+        {
+          "text": "Continuar sem material",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "configurar",
+      "s": "capa",
+      "w": 390,
+      "file": "foco-configurar-capa-390.png",
+      "errors": [],
+      "title": "Um jeito de reconhecer este estudo.",
+      "text": "CAPA E TEMA\nUm jeito de reconhecer este estudo.\n\nConfira a prévia. Sua escolha só muda esta trilha.\n\nPadrão\nProgramação e tecnologia\n\nTema da trilha\nIdiomas\nMatemática\nCiências\nProgramação e tecnologia\nNegócios e finanças\nVestibular e concursos\nHistória e sociedade\nArtes e música\nSaúde e bem-estar\nCulinária e casa\nCarreira e produtividade\nOutros\nEscolha uma capa\nPadrão\nSelecionada\nAurora\nOceano\nFloresta\nPôr do sol\nNoite\nAreia\nLavanda\nMenta\nCoral\nCéu\nCereja\nGrafite\nPrévia local. Nenhuma imagem é enviada; o progresso, as respostas e a visibilidade da trilha são preservados.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Usar esta capa e tema",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Cancelar escolha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "perfil",
+      "s": "perfil-aprovado",
+      "w": 390,
+      "file": "foco-perfil-perfil-aprovado-390.png",
+      "errors": [],
+      "title": "Escolha o que quer compartilhar.",
+      "text": "POSTAR NO PERFIL\nEscolha o que quer compartilhar.\n\nSó as trilhas escolhidas aparecem no seu perfil, depois da aprovação.\n\nPostar compartilha a trilha, não suas respostas, progresso, explicações ou email. Neste protótipo, a solicitação e a moderação são exemplos locais.\nEstado de moderação simulado: aprovado. Nenhuma publicação real.\nSQL para a prova\n\nNo perfil\n\nAprovação de exemplo. Nenhum conteúdo foi publicado.\n\nTirar do perfil\nRegras da comunidade",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar ao meu perfil",
+          "top": 776,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "perfil",
+      "s": "novidades",
+      "w": 360,
+      "file": "foco-perfil-novidades-360.png",
+      "errors": [],
+      "title": "Nina",
+      "text": "N\nNina\n\nSeu espaço de aprender.\n\nAprendendo um pouco, entendendo de verdade.\n\nProgramação e tecnologia\nEditar meu perfil\n1\ntrilhas no exemplo\n1\nlições concluídas\n1\ntrilhas públicas\nSuas novidades\nAtividade de exemplo para conferir este estado. Não representa uso real ou alcance obtido pelo protótipo.\nLia começou uma trilha sua.\nSQL para a prova · evento de exemplo\nSua explicação abriu um caminho.\nSQL para a prova · valeu de exemplo\n1 pessoa começou · 1 valeu\nDados sintéticos desta variação.\nNo seu perfil\nSQL para a prova\nPublicação aprovada no exemplo local\nPostar no perfil\nPrivacidade\nVocê controla seus dados\nPreferências\nSom e movimento",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "exercicio",
+      "s": "parcial",
+      "f": "associar",
+      "w": 360,
+      "file": "foco-exercicio-parcial-associar-360.png",
+      "errors": [],
+      "title": "Relacione os conceitos",
+      "text": "2 / 3\nSUA VEZ\nRelacione os conceitos\n\nUse a ideia do limite para resolver.\n\nMaior que\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nMaior ou igual\nSelecione\n>\n>=\n<=\nMenor ou igual\nSelecione\n>\n>=\n<=\n\nCorrespondência correta · mantida\n\nUma parte já fez sentido.\n\nAs correspondências corretas estão mantidas. Reveja os outros pares.\n\n2 de 3 pares corretos no exemplo.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Tentar de novo",
+          "top": 576,
+          "bottom": 628
+        },
+        {
+          "text": "Ver outro jeito de entender",
+          "top": 636,
+          "bottom": 680
+        },
+        {
+          "text": "Seguir sem acertar",
+          "top": 688,
+          "bottom": 732
+        },
+        {
+          "text": "Etapa anterior",
+          "top": 740,
+          "bottom": 784
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "p": "reforco",
+      "s": "vencido",
+      "w": 390,
+      "file": "foco-reforco-vencido-390.png",
+      "errors": [],
+      "title": "Você encontrou outro caminho.",
+      "text": "DESAFIO VENCIDO\nVocê encontrou outro caminho.\n\nUse >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.\n\nVolte à questão original. Sua tentativa anterior foi preservada.",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "footer": [
+        {
+          "text": "Voltar à questão original",
+          "top": 724,
+          "bottom": 776
+        },
+        {
+          "text": "Reler outro caminho",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    }
+  ]
+}

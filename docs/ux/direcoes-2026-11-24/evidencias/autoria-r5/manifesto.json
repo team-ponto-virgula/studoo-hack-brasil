@@ -1,0 +1,50 @@
+{
+  "scope": "Provas de autoria anteriores à revisão independente da candidata completa. Hashes atestam os arquivos examinados por cada módulo; a fonte comum ainda era integrada. Não somar rodadas históricas/negativas às contagens finais.",
+  "files": [
+    {
+      "file": "jornada/resultado.json",
+      "sha256": "ffa105e52cf7f415143ada8d05a67041f2bab32d09c431a978ce00bb9026a926",
+      "original": "/workspace/work/jornada-r5-author/resultado.json"
+    },
+    {
+      "file": "jornada/bundles-http.json",
+      "sha256": "c73564ee2370550913071d696be9f8bb448a6f726a6a172ad9ba42a766f87190",
+      "original": "/workspace/work/jornada-r5-author/bundles-http.json"
+    },
+    {
+      "file": "material/resultado-http.json",
+      "sha256": "4e23e75c35a59956eedeb9fb82b6d58aafb725a4c89212cad4de28817b2090a7",
+      "original": "/workspace/work/revisao-material-r5/resultado-http.json"
+    },
+    {
+      "file": "material/geometria.json",
+      "sha256": "582cdb392fa1262a9d7a3854683c39393148702646f105004cc4685c789632d4",
+      "original": "/workspace/work/revisao-material-r5/geometria.json"
+    },
+    {
+      "file": "personal/resumo.json",
+      "sha256": "2b6096835df13019a935bf2ae747fde70c90af14a5248ad244d9320bda267489",
+      "original": "/workspace/work/revisao-personal-r5/resumo.json"
+    },
+    {
+      "file": "personal/resultado.json",
+      "sha256": "8624cbdd91de61533bf6a7ab7c80060dbc6d6a9158a1d7392ac3cfb206c302ef",
+      "original": "/workspace/work/revisao-personal-r5/resultado.json"
+    },
+    {
+      "file": "personal/fronteiras.json",
+      "sha256": "4dffb8dae8b05c4c488538d02ad17a8167cc147c7598dcc89e7d665c1fcc663c",
+      "original": "/workspace/work/revisao-personal-r5/fronteiras.json"
+    },
+    {
+      "file": "personal/atividade-campos.json",
+      "sha256": "a34d2274a2de10f0135fc4f15ef2d56533e242d30e2cbbece78cf85b5db33976",
+      "original": "/workspace/work/revisao-personal-r5/atividade-campos.json"
+    },
+    {
+      "file": "personal/fronteiras-antes-persistir-back.json",
+      "sha256": "cbc66bb646714abbc514ea39b13aa7f760d3913a5ed3ec567a76ec28f625a3c7",
+      "original": "/workspace/work/revisao-personal-r5/fronteiras-antes-persistir-back.json"
+    }
+  ]
+}

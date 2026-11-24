@@ -1,6 +1,14 @@
 # Três direções — resultados e limites
 
-**R5 em construção; a meta global ainda não foi aprovada.** A revisão de arte R4 atingiu 9,0, mas a auditoria das 18 famílias encontrou estados ainda não representados, e o QA encontrou dois defeitos de foco/leitura. A meta continua sendo pelo menos 9 em cada D1–D10 e na pior variante obrigatória, com os pesos e gates do [protocolo](COBERTURA-E-REVISAO.md) preservados.
+**R6 em construção; a meta global ainda não foi aprovada.** A meta continua sendo pelo menos 9 em cada D1–D10 e na pior variante obrigatória, com os pesos e gates do [protocolo](COBERTURA-E-REVISAO.md) preservados.
+
+## Fechamento R5
+
+A candidata `5ad1225f586af063d58f694d4ebe705fcabca081` completou as representações das 14 lacunas da R4, com novas revisões de [fluxo](revisoes/PARECER-FLUXOS-R5.md), [visual](revisoes/PARECER-VISUAL-R5.md), [QA/acessibilidade](revisoes/PARECER-A11Y-R5.md) e [arte](revisoes/PARECER-ARTE-CRAFT-R5.md). A [matriz R5](MATRIZ-COBERTURA-R5.md) separa representação, interação, captura e exclusões fundamentadas.
+
+O fluxo teve **885/888 asserções em 105 cenários**; três falhas são material pessoal enviado ao Explorar, repetidas em A/B/C. A republicação de cópias recebidas foi confirmada em três probes adicionais separados. Visual produziu 1536 vistas e complementos; QA produziu 210 PNGs DPR2 novos, matrizes e teclado. As contagens se sobrepõem e não são uma soma de testes funcionais. Fontes permaneceram estáveis durante as coletas.
+
+**Seis achados mantêm a nota global `null`:** material permitido no Explorar; cópia recebida republicável; nome longo de material cortado no cartão/diálogo; foco perdido ao verificar/repetir uma resposta; foco perdido ao trocar cor; combinação inválida de parcial com lacuna na bancada. D3/D6 ficaram em 8 e as facetas de confiança/ação afetadas também não atingiram a meta. D4 de arte permaneceu em 9, com refinamentos baixos registrados. A R6 corrige os casos e exige nova prova; não altera os resultados históricos.
 
 ## Fonte e estado da revisão
 

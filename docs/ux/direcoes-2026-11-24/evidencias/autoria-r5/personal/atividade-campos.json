@@ -1,0 +1,412 @@
+{
+  "startedAt": "2026-11-24T21:15:12.229Z",
+  "hashesBefore": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "checks": [
+    {
+      "pair": "jornada-390",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "default cover retry stores contract null",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cover retry restores opener focus",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "theme field retry stores chosen theme",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "theme field retry does not commit pending cover",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "theme retry clears error scenario",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "activity fixture uses approved own track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "activity fixture public count matches state",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "activity titles match fixture target",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "activity keeps data explicit",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "profile interests show label instead of ID",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "guest activity scenario cannot approve track",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "guest gets account gate instead of activity",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "no POST requests from these interactions",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "finishedAt": "2026-11-24T21:15:20.759Z",
+  "hashesAfter": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "sourceStable": true,
+  "summary": {
+    "checks": 78,
+    "pass": 78,
+    "fail": 0,
+    "errors": []
+  }
+}
