@@ -1,0 +1,84 @@
+{
+  "observedAt": "2026-11-24T20:15:28.607893+00:00",
+  "baseline": "e5bb84c12721a201d09ef7fe513709123f7aeb46",
+  "sourceHashes": {
+    "apps/mobile/src/abertura.tsx": "8b17bf67c51462d87d7b123487ec305451604303f550ef8458a0cfe59c9e0ed4",
+    "apps/mobile/src/movimento.ts": "066779e89f7872b79445505e0f441a60dcb8e3ffc28e88ce3ddd97e5dfd5fc59",
+    "packages/contratos/src/abertura.ts": "3932c63232b134f92cb9b463230b3afd75e80e40741353e25908e90823eda6c8",
+    "packages/contratos/src/abertura-motion.json": "d0fbee62e79592155882cd49be46d3f940a9a636d1c29994cf8d9af6defc3dd7",
+    "tests/abertura.test.mjs": "fc53849b1e396f320ecb8167b77e5e2baf333518c0821d29938e10d5873a1a66",
+    "tests/movimento-mobile.test.mjs": "e5b704b7a1fb481e2d8c16c3aaa698602ff318141c7757b388906a1fe2bb24fd",
+    "tests/abertura-inicializacao-mobile.test.mjs": "56218fc1c9c056b476059acb907f1ed9ff32e62650f3f0b5e969fa1132d80cbe"
+  },
+  "workspaceContractsResolvedLocally": true,
+  "physicalNpmCi": true,
+  "prismaGenerated": true,
+  "syntheticEnvironment": {
+    "IA": "falsa",
+    "EMAIL": "falso"
+  },
+  "checks": [
+    {
+      "command": "npm run typecheck --workspace apps/mobile",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:estudio:interface",
+      "tests": 622,
+      "passed": 622,
+      "failed": 0,
+      "includesComponentBootTests": 15,
+      "includesContractTests": 21
+    },
+    {
+      "command": "npm run test:movimento",
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:paridade",
+      "tests": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:visitante-mobile",
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:formatos",
+      "tests": 271,
+      "passed": 271,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:dominio",
+      "tests": 18,
+      "passed": 18,
+      "failed": 0
+    }
+  ],
+  "baselineReproduction": {
+    "command": "STUDOO_INTRO_TEST_REF=e5bb84c node --test tests/abertura-inicializacao-mobile.test.mjs",
+    "exitCode": 1,
+    "tests": 15,
+    "passed": 10,
+    "failed": 5,
+    "failuresExpected": true,
+    "runtimeSourcesReadFromGitRef": true
+  },
+  "nativeExecuted": false,
+  "nativeBuildUploaded": false,
+  "limits": [
+    "Host de hooks/eventos/relógio com TSX e store reais; APIs nativas e driver são dublês, sem UIKit ou pixels.",
+    "Resultados não comprovam fluidez, passagem nativa de splash ou leitor de tela em aparelho.",
+    "Não somar subconjuntos do teste de interface."
+  ]
+}

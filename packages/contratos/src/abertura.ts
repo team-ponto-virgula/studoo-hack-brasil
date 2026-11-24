@@ -7,6 +7,39 @@ export const abertura = {
   curva: movimento.curva as [number, number, number, number],
 } as const;
 
+export type EstadoAppAbertura = 'active' | 'background' | 'inactive' | 'unknown' | 'extension' | null;
+
+/** No cold start do iOS, null/unknown/inactive ainda não são uma saída do app. */
+export function dispensarAberturaPorContexto(estado: EstadoAppAbertura, jaEsteveAtivo: boolean): boolean {
+  return estado === 'background' || (jaEsteveAtivo && estado !== 'active');
+}
+
+/** O relógio visual só começa quando a marca pode realmente ser vista/movida. */
+export function decidirInicioAbertura(sinais: {
+  estadoApp: EstadoAppAbertura;
+  jaEsteveAtivo: boolean;
+  movimentoReduzido: boolean | null;
+  leitorDeTela: boolean | null;
+  layoutPronto: boolean;
+  imagensProntas: boolean;
+  splashLiberado: boolean;
+}): 'aguardar' | 'iniciar' | 'preferencia' | 'contexto' {
+  if (dispensarAberturaPorContexto(sinais.estadoApp, sinais.jaEsteveAtivo)) return 'contexto';
+  if (sinais.movimentoReduzido === true || sinais.leitorDeTela === true) return 'preferencia';
+  if (sinais.estadoApp !== 'active' || sinais.movimentoReduzido !== false || sinais.leitorDeTela !== false
+    || !sinais.layoutPronto || !sinais.imagensProntas || !sinais.splashLiberado) return 'aguardar';
+  return 'iniciar';
+}
+
+/** Uma única origem visual; prontidão/re-render não renovam o orçamento. */
+export function criarJanelaVisualAbertura(agora: () => number = Date.now) {
+  let prazo: number | null = null;
+  return {
+    iniciar() { if (prazo === null) prazo = agora() + abertura.limiteMs; },
+    restante() { return prazo === null ? 0 : Math.max(0, prazo - agora()); },
+  };
+}
+
 /** Escolhe o ritmo antes de mover a marca; nunca começa uma história que já não cabe. */
 export function duracaoDaCoreografia(restanteMs: number): number {
   if (!Number.isFinite(restanteMs)) return 0;
@@ -68,8 +101,8 @@ export function criarControleAbertura(
     fase = 'concluida';
     publicar(fase, motivo);
   };
-  // O app compartilha uma origem no módulo com a guarda do splash. Montar tarde
-  // recebe só o prazo restante; nunca renova o orçamento nem estende o teto.
+  // O app fornece o saldo da origem visual; ready/re-render não renovam o teto.
+  // A preparação e a proteção da launch screen têm guardas separadas.
   const restante = Number.isFinite(tempoRestanteMs) ? Math.max(0, Math.min(abertura.limiteMs, tempoRestanteMs)) : 0;
   if (restante > 0) cancelarLimite = agendar(() => concluir('limite'), restante);
   else concluir('limite');

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { abertura, criarControleAbertura, permiteAbertura, progressoDaCoreografia, duracaoDaCoreografia } from '@studoo/contratos/abertura';
+import { abertura, criarControleAbertura, criarJanelaVisualAbertura, decidirInicioAbertura, dispensarAberturaPorContexto, permiteAbertura, progressoDaCoreografia, duracaoDaCoreografia } from '@studoo/contratos/abertura';
 
 function cenario(tempoRestanteMs) {
   let agora = 0, sequencia = 0;
@@ -143,7 +143,7 @@ test('os dados da coreografia respeitam orçamento e interpolações válidas', 
   }
 });
 
-test('montagem tardia recebe só o orçamento restante da origem compartilhada', () => {
+test('controlador recebe só o orçamento restante da origem visual compartilhada', () => {
   const origemAoMontar = 200;
   const saldo = abertura.limiteMs - origemAoMontar;
   const c = cenario(saldo);
@@ -153,6 +153,51 @@ test('montagem tardia recebe só o orçamento restante da origem compartilhada',
   assert.deepEqual(c.publicados.at(-1), { fase: 'concluida', motivo: 'limite', em: saldo });
   assert.equal(origemAoMontar + c.publicados.at(-1).em, abertura.limiteMs);
   assert.equal(c.pendentes(), 0);
+});
+
+test('cold start aguarda o primeiro active e as respostas reais de acessibilidade', () => {
+  const sinais = { estadoApp: 'active', jaEsteveAtivo: true, movimentoReduzido: false, leitorDeTela: false,
+    layoutPronto: true, imagensProntas: true, splashLiberado: true };
+  assert.equal(decidirInicioAbertura(sinais), 'iniciar');
+  for (const estadoApp of [null, 'unknown', 'inactive']) {
+    assert.equal(decidirInicioAbertura({ ...sinais, estadoApp, jaEsteveAtivo: false }), 'aguardar');
+    assert.equal(dispensarAberturaPorContexto(estadoApp, false), false);
+  }
+  assert.equal(decidirInicioAbertura({ ...sinais, movimentoReduzido: null }), 'aguardar');
+  assert.equal(decidirInicioAbertura({ ...sinais, leitorDeTela: null }), 'aguardar');
+  for (const chave of ['layoutPronto', 'imagensProntas', 'splashLiberado']) {
+    assert.equal(decidirInicioAbertura({ ...sinais, [chave]: false }), 'aguardar', chave);
+  }
+});
+
+test('preferência verdadeira e saída real de foreground continuam dispensando', () => {
+  const sinais = { estadoApp: 'active', jaEsteveAtivo: true, movimentoReduzido: false, leitorDeTela: false,
+    layoutPronto: true, imagensProntas: true, splashLiberado: true };
+  assert.equal(decidirInicioAbertura({ ...sinais, movimentoReduzido: true }), 'preferencia');
+  assert.equal(decidirInicioAbertura({ ...sinais, leitorDeTela: true }), 'preferencia');
+  for (const estadoApp of [null, 'unknown', 'inactive', 'background']) {
+    assert.equal(decidirInicioAbertura({ ...sinais, estadoApp }), 'contexto', estadoApp);
+  }
+  assert.equal(decidirInicioAbertura({ ...sinais, estadoApp: 'background', jaEsteveAtivo: false }), 'contexto');
+});
+
+test('preparação lenta não consome movimento; a janela visual inicia uma vez', () => {
+  let agora = 0;
+  const janela = criarJanelaVisualAbertura(() => agora);
+  agora = 6000; // importação, montagem e preparação são anteriores à origem visual.
+  assert.equal(janela.restante(), 0);
+  janela.iniciar();
+  assert.equal(janela.restante(), abertura.limiteMs);
+  assert.equal(duracaoDaCoreografia(janela.restante()), 880);
+  agora += 500;
+  janela.iniciar();
+  assert.equal(janela.restante(), 900, 'ready/re-render não reiniciam o prazo');
+  agora += 900;
+  assert.equal(janela.restante(), 0);
+  janela.iniciar();
+  assert.equal(janela.restante(), 0, 'a janela esgotada não renasce');
+  assert.ok(abertura.limitePreparacaoMs > 0 && abertura.limitePreparacaoMs <= 2000);
+  assert.ok(abertura.limiteNativoMs >= abertura.limitePreparacaoMs + abertura.limiteMs);
 });
 
 test('prazo esgotado ou inválido dispensa sincronicamente, sem agendar outra abertura', () => {
