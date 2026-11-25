@@ -29,9 +29,12 @@ PORTA_WEB=3000
 PORTA_METRO=8081
 PORTA_METRO_INTERNA=8082
 
+# A entrada e o login rodam também na conferência dedicada ao feedback.
+CAPTURAS_ENTRADA="
+01-entrada-em-repouso 02-entrada-email-em-foco 03-entrada-senha-em-foco 04-entrada-preenchida 05-depois-de-entrar
+"
 # O que o percurso inteiro deve produzir. `coletar` acusa a captura que faltar.
 CAPTURAS_ESPERADAS="
-01-entrada-em-repouso 02-entrada-email-em-foco 03-entrada-senha-em-foco 04-entrada-preenchida 05-depois-de-entrar
 10-mapa-da-trilha 11-mapa-rolado-sob-a-barra 12-mapa-rolado-mais
 20-minhas-trilhas 21-minhas-trilhas-rolada 22-menu-aberto 23-confirmacao-de-apagar
 30-exercicio-ordenar 30-exercicio-ordenar-abaixo 31-exercicio-associar 31-exercicio-associar-abaixo
@@ -45,6 +48,14 @@ CAPTURAS_ESPERADAS="
 95-resposta-exercicio 96-resposta-errada 97-resposta-certa
 98-ponte-passo-1 98-ponte-desafio 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
 "
+CAPTURAS_FEEDBACK_ALUNO="
+84-equacao-inicial-salva 84-equacao-inicial-exercicio
+85-equacao-demonstrada-salva 85-equacao-demonstrada-exercicio
+"
+if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
+  CAPTURAS_ESPERADAS="$CAPTURAS_FEEDBACK_ALUNO"
+fi
+CAPTURAS_ESPERADAS="$CAPTURAS_ENTRADA $CAPTURAS_ESPERADAS"
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
 PASTA_DOS_FLUXOS="$AQUI/fluxos"
@@ -483,8 +494,34 @@ fluxo_criacao() {
   esac
 }
 
+# Cada perfil usa a mesma conta sintética e parte da lista do preparo. Confere e remove só a sua trilha temporária
+# antes de passar ao perfil seguinte, inclusive quando o Maestro falha depois de salvar.
+fluxo_feedback_aluno() {
+  local perfil fase antes depois codigo linha
+  for perfil in inicial demonstrada; do
+    fase="feedback-$perfil"
+    antes="$REGISTROS/$fase-antes.json"
+    depois="$REGISTROS/$fase-depois.json"
+    trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$antes" \
+      || erro "A conta sintética não corresponde ao preparo antes de $fase."
+    codigo=0
+    rodar_maestro "$fase" "$PASTA_DOS_FLUXOS/feedback/feedback-aluno.yaml" -e "PERFIL=$perfil" || codigo=$?
+    linha="$(trilhas_da_criacao depois --antes "$antes" --saida "$depois" --apagar)" \
+      || erro "Falhou a conferência da trilha temporária em $fase. $linha"
+    resumo "$linha"
+    [ "$codigo" -eq 0 ] || erro "Falhou $fase. Veja maestro-$fase.log e a tela registrada."
+    [ "$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).caso' "$depois")" = "apagada" ] \
+      || erro "$fase não criou exatamente uma trilha temporária."
+  done
+  resumo "✅ Feedback do aluno: exercícios distintos após salvar e reabrir nos dois perfis de equação."
+}
+
 fluxo_telas() {
   local falhas
+  if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
+    fluxo_feedback_aluno
+    return
+  fi
   if [ "${TELAS_UMA_POR_VEZ:-}" = "1" ]; then
     fluxo_telas_uma_por_vez
     return
