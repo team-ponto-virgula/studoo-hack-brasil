@@ -206,7 +206,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
   const curtidasDaDona = sua && cartao.valeus > 0 ? c.valeus(cartao.valeus) : null;
   const por = c.por('');
   return (
-    <View testID={id} style={[degrauFora(4, 20, cores.gelo), comunidadeEstilos.cartaoFora]}>
+    <View testID={id} style={comunidadeEstilos.cartaoFora}>
       <View style={comunidadeEstilos.cartao}>
         <View style={[comunidadeEstilos.capa, alturaCapa !== undefined && { aspectRatio: undefined, height: alturaCapa }]}>
           <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
@@ -684,14 +684,18 @@ function Grade({ cartoes, acoes, prefixo }: { cartoes: CartaoTrilha[]; acoes: Ac
 }
 
 /** O Stu e o texto de um vazio, como `.explorar__vazio` da web. */
-function Vazio({ titulo, texto, acao }: { titulo: string; texto?: string; acao?: ReactNode }) {
+function Vazio({ titulo, texto, acao, acaoPrincipal }: { titulo: string; texto?: string; acao?: ReactNode; acaoPrincipal?: ReactNode }) {
+  const estreito = useWindowDimensions().width <= 600;
   return (
     <View testID="explorar-vazio" style={comunidadeEstilos.vazio}>
       <Stu nome="stu-curioso" tamanho={96} animado="uma-vez" />
       <View style={comunidadeEstilos.vazioTexto}>
         <Text accessibilityRole="header" style={comunidadeEstilos.secao}>{titulo}</Text>
         {texto && <Text style={estilos.texto}>{texto}</Text>}
-        {acao}
+        {(acaoPrincipal || acao) && <View style={comunidadeEstilos.vazioAcoes}>
+          {acaoPrincipal && <View style={[comunidadeEstilos.vazioPrincipal, estreito && comunidadeEstilos.vazioPrincipalEstreito]}>{acaoPrincipal}</View>}
+          {acao}
+        </View>}
       </View>
     </View>
   );
@@ -908,10 +912,10 @@ export function TelaExplorar({ cliente, visitante, entradaDaConta, acoesTela, ao
         )}
 
         {visitanteSeguindo && (
-          <Vazio titulo={v.seguindoTitulo} texto={v.seguindoTexto} acao={<View style={{ alignItems: 'flex-start', gap: 8 }}>
-            <Botao rotulo={v.entrar} testID="seguindo-entrar" acao={entradaDaConta} />
-            <Botao rotulo={v.voltarComunidade} testID="vazio-ver-todas" variante="secundario" acao={() => setAba('todos')} />
-          </View>} />
+          <Vazio titulo={v.seguindoTitulo} texto={v.seguindoTexto}
+            acaoPrincipal={<Botao rotulo={v.entrar} testID="seguindo-entrar" acao={entradaDaConta} />}
+            acao={<Botao rotulo={v.voltarComunidade} testID="vazio-ver-todas" variante="secundario" acao={() => setAba('todos')}
+              estilo={{ alignSelf: 'flex-start' }} />} />
         )}
         {!visitanteSeguindo && vazio && busca && (aba === 'todos' || pagina.seguindoAlguem !== false) && (
           <Vazio titulo={b.vazia(busca)} acao={<Botao rotulo={b.limpar} variante="secundario" acao={() => buscar('')} />} />
@@ -922,9 +926,8 @@ export function TelaExplorar({ cliente, visitante, entradaDaConta, acoesTela, ao
         )}
         {vazio && !busca && aba === 'todos' && (
           <Vazio titulo={tema ? c.vazioTema(temas[tema]) : c.vazioTitulo} texto={tema ? c.vazioTemaTexto : c.vazioTexto}
-            acao={tema
-              ? <Botao rotulo={c.vazioTemaAcao} variante="secundario" testID="vazio-ver-temas" acao={() => setTema(null)} estilo={{ alignSelf: 'flex-start' }} />
-              : <Botao rotulo={c.vazioAcao} testID="vazio-minhas-trilhas" acao={irParaTrilhas} estilo={{ alignSelf: 'flex-start' }} />} />
+            acaoPrincipal={!tema ? <Botao rotulo={c.vazioAcao} testID="vazio-minhas-trilhas" acao={irParaTrilhas} /> : undefined}
+            acao={tema ? <Botao rotulo={c.vazioTemaAcao} variante="secundario" testID="vazio-ver-temas" acao={() => setTema(null)} estilo={{ alignSelf: 'flex-start' }} /> : undefined} />
         )}
 
         {!visitanteSeguindo && pagina && pagina.emAlta.length > 0 && (
@@ -1343,7 +1346,7 @@ const comunidadeEstilos = StyleSheet.create({
   seguirNaPrevia: { marginTop: 6, alignSelf: 'flex-start' },
   // .cartao-trilha: borda de 2 em volta, cantos de 20 e o degrau de 4 por fora.
   cartaoFora: { flex: 1 },
-  cartao: { flex: 1, overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
+  cartao: { flex: 1, overflow: 'hidden', borderWidth: 1.5, borderBottomWidth: 3, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
   capa: { aspectRatio: 2, overflow: 'hidden' },
   posicao: { position: 'absolute', top: 10, right: 10, height: 24, minWidth: 24, paddingHorizontal: 8, borderRadius: 12, backgroundColor: '#FFFFFF',
     alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.12)' },
@@ -1357,15 +1360,15 @@ const comunidadeEstilos = StyleSheet.create({
   seloTemaComPosicao: { maxWidth: '72%' },
   metaLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   // O selo neutro da spec 10: #F1F4FD com o texto #5E6A85 13 px 800.
-  seloNeutro: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 1, backgroundColor: '#F1F4FD' },
-  seloNeutroTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  seloNeutro: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 1, backgroundColor: cores.nevoa },
+  seloNeutroTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   seloTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20, fontWeight: '900' },
-  corpo: { flex: 1, gap: 6, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, minWidth: 0 },
+  corpo: { flex: 1, gap: 8, padding: 20, minWidth: 0 },
   somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   tituloToque: { minHeight: 44, paddingTop: 2, alignSelf: 'flex-start' },
   // Em fileira ou grade de várias colunas: duas linhas reservadas (2,6 em + 2).
-  tituloDuasLinhas: { minHeight: 48.8 },
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
+  tituloDuasLinhas: { minHeight: 54 },
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
   dono: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
   donoLink: { minHeight: 44 },
   // "por" em cinza, sem negrito (600); só o nome sublinhado, na cor do link.
@@ -1374,7 +1377,7 @@ const comunidadeEstilos = StyleSheet.create({
   donoNome: { color: cores.acao, textDecorationLine: 'underline' },
   donoTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   legenda: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23.2 },
-  meta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 20, fontWeight: '800' },
+  meta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   // .linha-numeros: 26 de altura fixa; "Nova" é a pílula verde-clara (#E6F4EE, texto #14513B).
   numerosLinha: { flexDirection: 'row', alignItems: 'center', height: 26 },
   nova: { height: 26, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#E6F4EE' },
@@ -1382,13 +1385,13 @@ const comunidadeEstilos = StyleSheet.create({
   // .cartao-trilha__rodape: contagem e números ancorados acima dos botões (margin-top: auto); as ações a 12 deles.
   rodape: { gap: 4, marginTop: 'auto' },
   acoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, paddingTop: 12 },
-  principal: { flexBasis: '100%', flexGrow: 1 },
+  principal: { flexBasis: '100%', flexGrow: 1, minHeight: 52 },
   // Contornos dos controles com 3:1 sobre o branco (#8792BD); "Continuar" em azul claro da marca.
-  contorno: { borderColor: '#8792BD' },
+  contorno: { borderColor: cores.bordaCampo },
   continuar: { backgroundColor: cores.ceu },
   // .curtir: contorno de 2 #8792BD, raio 14, fundo branco (curtido também), 14 de folga e 6 entre o coração e a palavra.
   valeu: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 44, minHeight: 44, paddingHorizontal: 14,
-    borderWidth: 2, borderColor: '#8792BD', borderRadius: 14, backgroundColor: cores.fundo },
+    borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 16, backgroundColor: cores.fundo },
   valeuCoracao: { width: 20, height: 20 },
   valeuTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   // .cartao-trilha__valeu-n: a contagem em algarismos de largura fixa, no mínimo 1,25 em.
@@ -1396,8 +1399,8 @@ const comunidadeEstilos = StyleSheet.create({
   valeuRolo: { marginLeft: 2 },
   valeuNumero: { fontVariant: ['tabular-nums'] },
   valeuNumeroAntigo: { position: 'absolute', left: 0, top: 0 },
-  icone: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderWidth: 2, borderColor: '#8792BD',
-    borderRadius: 14, backgroundColor: cores.fundo },
+  icone: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderWidth: 2, borderColor: cores.bordaCampo,
+    borderRadius: 16, backgroundColor: cores.fundo },
   // .denuncia__alvo: o que está sendo denunciado, logo abaixo do título (6 mais perto dele), em 800.
   denunciaAlvo: { marginTop: -6, color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   menu: { position: 'relative' },
@@ -1414,9 +1417,9 @@ const comunidadeEstilos = StyleSheet.create({
   // .painel--explorar: grade com vão de 20.
   painel: { gap: 20 },
   topo: { gap: 4 },
-  subtitulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5 },
-  secao: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
-  secaoPerfil: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
+  subtitulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
+  secao: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
+  secaoPerfil: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
   abas: { flexDirection: 'row', alignSelf: 'flex-start', gap: 4, padding: 4, borderRadius: 16, backgroundColor: cores.nevoa },
   aba: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 12 },
   abaMarcada: { backgroundColor: cores.fundo, shadowColor: cores.texto, shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
@@ -1428,13 +1431,16 @@ const comunidadeEstilos = StyleSheet.create({
   temasConteudo: { gap: 8, paddingTop: 2, paddingBottom: 6 },
   // .explorar__demo: 15/25,5 em cinza, com o selo "Demonstração" tracejado no começo.
   fichaTema: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 999, backgroundColor: cores.fundo },
-  fichaTemaMarcada: { borderColor: cores.texto, backgroundColor: cores.texto },
+  fichaTemaMarcada: { borderColor: cores.acao, backgroundColor: cores.acao },
   fichaTemaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   esqueleto: { gap: 16 },
   esqueletoBloco: { height: 280, borderRadius: 20, backgroundColor: cores.nevoa },
-  vazio: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, padding: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo,
-    borderRadius: 20, backgroundColor: cores.ceu },
-  vazioTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'flex-start' },
+  vazio: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, padding: 22, borderWidth: 1.5, borderColor: cores.gelo,
+    borderRadius: 24, backgroundColor: cores.nevoa },
+  vazioTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'stretch', minWidth: 0 },
+  vazioAcoes: { gap: 10, marginTop: 4, alignSelf: 'stretch' },
+  vazioPrincipal: { alignSelf: 'flex-start' },
+  vazioPrincipalEstreito: { alignSelf: 'stretch', width: '100%' },
   emAlta: { gap: 10 },
   emAltaLista: { gap: 8, paddingTop: 6, paddingBottom: 14 },
   novas: { gap: 12 },
@@ -1443,14 +1449,14 @@ const comunidadeEstilos = StyleSheet.create({
   verMais: { alignSelf: 'center', minWidth: 224 },
 
   perfilCartoes: { gap: 4 },
-  perfilCartoesTitulo: { marginTop: 28, marginBottom: 12, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
+  perfilCartoesTitulo: { marginTop: 28, marginBottom: 12, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
   perfilPublico: { gap: 0 },
   denunciarPerfil: { marginTop: 24, alignItems: 'flex-start', gap: 8 },
   menuPrevia: { alignSelf: 'flex-start', marginTop: 4 },
   listaSimples: { gap: 12 },
   listaSimplesFora: {},
   listaSimplesItem: { gap: 4, paddingHorizontal: 18, paddingVertical: 16, borderWidth: 2, borderColor: cores.gelo, borderRadius: 18, backgroundColor: cores.fundo },
-  listaSimplesTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5, fontWeight: '900' },
+  listaSimplesTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
   listaSimplesMeta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '700' },
   indisponivel: { gap: 12, alignItems: 'flex-start' },
 

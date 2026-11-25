@@ -19,6 +19,7 @@ import { AvisoMidiaEmRevisao, EstadoDaPublicacao, SecaoAjuda, SecaoBloqueadas } 
 import { FolhaPostarNoPerfil } from './postar-perfil';
 import { SomNoPerfil } from './som';
 import { cores, fontes } from './tema';
+import { CabecalhoSecao, CartaoStudoo } from './componentes-jornada';
 
 /*
  * Perfil rico (spec 10, etapa A) no app, espelhando src/app/perfil.tsx da web em a4c70cf: a tela Perfil (cabeçalho, trilhas
@@ -51,18 +52,19 @@ function BotaoCompartilharPerfil({ perfilId, nome, aoStatus, estilo }: { perfilI
     acao={() => void compartilhar()} estilo={estilo} />;
 }
 
-/** Título de seção do Perfil (`.perfil-secao__titulo`, 18 px). */
+/** Cabeçalho do sistema Jornada Azul, igual ao usado nas seções da web. */
 function TituloSecao({ children }: { children: ReactNode }) {
-  return <Text accessibilityRole="header" style={perfilEstilos.secaoTitulo}>{children}</Text>;
+  return <CabecalhoSecao titulo={children} />;
 }
 
 function ContaTemporaria({ entrar, desativado }: { entrar: () => void; desativado: boolean }) {
   return (
-    <View style={perfilEstilos.cartao}>
+    <CartaoStudoo tom="destaque">
       <Text style={estilos.texto}>{p.visitante}</Text>
+      <Text style={perfilEstilos.dica}>{p.visitanteAvisoTroca}</Text>
       <Botao rotulo={mensagens.sessaoVisitante.entrar} testID="perfil-visitante-entrar" variante="secundario"
         desativado={desativado} acao={entrar} estilo={{ alignSelf: 'flex-start', marginTop: 10 }} />
-    </View>
+    </CartaoStudoo>
   );
 }
 
@@ -102,6 +104,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   /** A sessão terminou no servidor (conta excluída em outro aparelho, sessão revogada): volta à entrada, como as outras telas. */
   aoSessaoTerminada?: () => void;
 }) {
+  const { width: larguraDaTela } = useWindowDimensions();
   const [perfil, setPerfil] = useState<Perfil | null>(inicial);
   const [erro, setErro] = useState<string | null>(null);
   const [parando, setParando] = useState<LinkCompartilhado | null>(null);
@@ -243,7 +246,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                   )}
                   acoes={<>
                     {/* Ações numa fileira, metade cada, com 44 de altura: "Editar" e "Compartilhar" (só com perfil público; sem ele, "Editar" ocupa a fileira). */}
-                    <View style={perfilEstilos.acoesPerfil}>
+                    <View style={[perfilEstilos.acoesPerfil, larguraDaTela < 560 && perfilEstilos.acoesPerfilEstreito]}>
                       <View style={perfilEstilos.acaoPerfil}>
                         <Botao rotulo={p.editar} iconeAntes="lapis" variante="secundario" fonte={16} testID="perfil-editar" referencia={botaoEditar} desativado={desativado} acao={() => abrirEditor()}
                           estilo={perfilEstilos.botaoMetade} />
@@ -798,14 +801,14 @@ const perfilEstilos = StyleSheet.create({
   linhaSecao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, marginTop: -4 },
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
-  secao: { gap: 10 },
+  secao: { gap: 12, paddingTop: 24, borderTopWidth: 1.5, borderTopColor: cores.gelo },
   secaoCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 8 },
   postarVazio: { gap: 12, alignItems: 'flex-start' },
-  secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
-  cartao: { gap: 12, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
+  secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
+  cartao: { gap: 12, padding: 20, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.nevoa },
   links: { gap: 12 },
-  link: { gap: 6, paddingHorizontal: 16, paddingVertical: 14, borderWidth: 2, borderColor: cores.gelo, borderRadius: 16 },
-  linkTitulo: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  link: { gap: 8, padding: 20, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24 },
+  linkTitulo: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   linkTituloTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5, fontWeight: '900', textDecorationLine: 'underline' },
   linkMeta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '700' },
   linkAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 8 },
@@ -816,10 +819,10 @@ const perfilEstilos = StyleSheet.create({
   emailRotulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   // .selo-so-voce: "Só você vê" ao lado do e-mail.
   soVoce: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: cores.nevoa },
-  soVoceTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '800' },
+  soVoceTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20, fontWeight: '800' },
 
   // Editor (esboço do Designer, .editor): bloco com borda de 2 e cantos de 24, respiro de 18 e 18 entre os campos.
-  editor: { gap: 18, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
+  editor: { gap: 20, padding: 20, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
   // .privacidade: o cadeado de 16 e a frase em Nunito 700 de 14/20, cinza.
   privacidade: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   privacidadeIcone: { marginTop: 2 },
@@ -849,7 +852,8 @@ const perfilEstilos = StyleSheet.create({
   botoes: { flexDirection: 'row', gap: 8 },
   // .acoes-perfil: "Editar" e "Compartilhar" lado a lado, metade cada, com 8 entre eles.
   acoesPerfil: { flexDirection: 'row', gap: 8, alignSelf: 'stretch' },
-  acaoPerfil: { flex: 1 },
+  acoesPerfilEstreito: { flexDirection: 'column' },
+  acaoPerfil: { flexGrow: 1, minWidth: 0 },
   // .botao--44: 44 de altura, 16 de texto e 14 de folga dos lados; sem "Compartilhar", "Editar" ocupa a fileira.
   botaoMetade: { alignSelf: 'stretch', minHeight: 44, paddingHorizontal: 14 },
 });

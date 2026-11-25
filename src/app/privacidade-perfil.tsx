@@ -11,6 +11,7 @@ import { CONFIRMACAO_EXCLUSAO, confirmacaoExclusaoValida, type EstadoPrivacidade
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao } from '../ui';
+import { CabecalhoSecao } from '../ui/jornada';
 import { ListaProvedores, gravarAceiteIa } from './aceite-ia';
 import { codigoDoErro, dataCurta, useDialogo } from './compartilhar';
 import './privacidade.css';
@@ -106,7 +107,7 @@ export function SecaoPrivacidade({ visitante }: { visitante: boolean }) {
   const ia = estado?.consentimentoIa;
   return (
     <section className="perfil-secao" aria-labelledby="perfil-privacidade">
-      <h2 id="perfil-privacidade" className="perfil-secao__titulo">{t.secaoTitulo}</h2>
+      <CabecalhoSecao tituloId="perfil-privacidade" titulo={t.secaoTitulo} />
       {ia && (
         <p className="folha-texto">
           {!ia.necessario ? t.iaSimulada : ia.aceitoEm ? t.iaPermitida(dataCurta(ia.aceitoEm)) : t.iaNaoPermitida}

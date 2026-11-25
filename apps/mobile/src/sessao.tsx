@@ -555,7 +555,7 @@ const entradaEstilos = StyleSheet.create({
   textoCompacto: { fontSize: 15, lineHeight: 22 },
   // .entrada-conteudo deixa 96 embaixo e o rodapé fixo cobre 76: sobram 20 entre o último item e o rodapé.
   conteudo: { paddingBottom: 20 },
-  visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
+  visitante: { gap: 8, padding: 16, borderRadius: 24, borderWidth: 1.5, borderColor: cores.gelo, backgroundColor: cores.superficieSutil },
   // Como .acesso-link da web no celular: 44 px de altura logo abaixo da introdução, sem sublinhado (globals.css, até 767 px).
   link: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   // O "Esqueci minha senha" é item da grade do formulário: ocupa a largura toda, com o texto no centro.
@@ -567,5 +567,5 @@ const entradaEstilos = StyleSheet.create({
   // O botão da Apple na altura dos botões do Studoo (52 com o degrau).
   apple: { width: '100%', height: 52 },
   // A web deixa 24 px nas laterais do "Entrar" (342 px em 390).
-  rodape: { paddingHorizontal: 24 },
+  rodape: { paddingHorizontal: 20 },
 });

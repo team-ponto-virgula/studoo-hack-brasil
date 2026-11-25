@@ -38,14 +38,27 @@
   max-height: 92svh;
   overflow: auto;
   padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-  border: 2px solid var(--gelo);
+  border: 1.5px solid var(--gelo);
   border-bottom: 0;
   border-radius: 24px 24px 0 0;
   background: var(--fundo);
   box-shadow: 0 -12px 40px rgb(15 23 42 / 0.2);
   overscroll-behavior: contain;
 }
-.folha--confirmar { border-bottom: 2px solid var(--gelo); border-radius: 24px; padding-bottom: 20px; }
+/* A confirmação tem a geometria do componente nativo; o texto pode rolar sem levar as ações junto. */
+.folha-fundo--centro.folha-fundo--confirmar { padding: 16px; }
+.folha.folha--confirmar { display: flex; flex-direction: column; width: min(100%, 400px); max-height: calc(100svh - 32px); gap: 12px; padding: 24px; border: 1.5px solid var(--gelo); border-radius: 24px; }
+.folha--confirmar > .folha-titulo { flex: none; font-size: 1.375rem; line-height: 1.75rem; }
+.confirmacao-miolo { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.confirmacao-miolo .folha-texto { color: var(--texto2); font-size: 1rem; line-height: 1.5rem; }
+.folha--confirmar .confirmacao-acoes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); flex: none; gap: 8px; margin-top: 4px; align-items: start; }
+.folha--confirmar .confirmacao-acoes[data-empilhado] { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.folha--confirmar .confirmacao-acoes > .botao { width: 100%; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.folha--confirmar .confirmacao-acoes > .botao--primario { min-height: 52px; }
+.folha--confirmar .confirmacao-acoes > .botao--secundario { min-height: 44px; }
+.folha--confirmar .modal-confirmar--destrutivo { --labio: #8f2a39; color: #fff; background: var(--erro); }
+.folha--confirmar .modal-confirmar--destrutivo:disabled { --labio: var(--gelo); color: var(--texto2); background: var(--nevoa); border-color: var(--gelo); }
+@media (hover: hover) { .folha--confirmar .modal-confirmar--destrutivo:hover:not(:disabled) { background: #ab3144; } }
 @media (min-width: 768px) {
   .folha-fundo { align-items: center; padding: 24px; }
   .folha { border-bottom: 2px solid var(--gelo); border-radius: 24px; padding-bottom: 24px; box-shadow: 0 20px 48px rgb(15 23 42 / 0.24); }
@@ -64,17 +77,18 @@
 .folha-topo__trilha { overflow: hidden; margin: 0; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .folha-contexto { margin: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
 .folha-fechar {
-  display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 14px;
+  display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 16px;
   color: var(--texto2); background: transparent; cursor: pointer;
 }
 .folha-fechar .icone { width: 22px; height: 22px; }
 @media (hover: hover) { .folha-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); } }
-.folha-titulo { margin: 0; font-size: 1.375rem; line-height: 1.25; }
+.folha-titulo { margin: 0; font-size: 1.5rem; line-height: 1.25; }
 .folha-titulo:focus { outline: none; }
 .folha-texto { margin: 0; color: var(--texto); line-height: 1.5; }
 .folha-texto--miudo { color: var(--texto2); font-size: 0.875rem; }
 .folha-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 4px; }
-.folha-acoes > .botao { min-height: 48px; }
+.folha-acoes > .botao { min-height: 44px; }
+.folha-acoes > :is(.botao--primario, .botao--sucesso, .botao--alerta) { min-height: 52px; }
 .folha-acoes--empilhadas { display: grid; grid-template-columns: 1fr 1fr; }
 .folha-acoes--empilhadas:has(> .botao:only-child) { grid-template-columns: 1fr; }
 .folha-acoes--par { display: flex; flex-wrap: wrap; justify-content: flex-end; }
@@ -96,7 +110,7 @@
 .folha-aviso p { margin: 0; }
 .folha-aviso__titulo { font-weight: 900; }
 .folha-link input {
-  width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid var(--borda-campo); border-radius: var(--raio-campo);
+  width: 100%; min-height: 52px; padding: 12px 16px; border: 1.5px solid var(--borda-campo); border-radius: var(--raio-campo);
   color: var(--texto); background: var(--nevoa); font: inherit; font-size: 0.9375rem;
 }
 .folha-link input:focus { outline: none; border-color: var(--acao); box-shadow: 0 0 0 4px rgb(37 99 255 / 0.16); }
@@ -108,7 +122,7 @@
 /* Chave (interruptor) acessível: um checkbox com role="switch". */
 .chave { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; font-weight: 800; }
 .chave input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.chave__trilho { position: relative; flex: none; width: 46px; height: 28px; border-radius: 999px; background: #c5cde6; transition: background-color 160ms ease-out; }
+.chave__trilho { position: relative; flex: none; width: 46px; height: 28px; border-radius: 999px; background: var(--borda-campo); transition: background-color 160ms ease-out; }
 .chave__trilho::after {
   content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
   background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 0.3); transition: transform 160ms ease-out;
@@ -122,7 +136,7 @@
 /* Formulário do perfil: nome, seis cores e a prévia "Compartilhada por Ana". */
 .form-perfil { display: grid; gap: 16px; }
 .form-perfil .campo input {
-  width: 100%; min-height: 48px; padding: 10px 14px; border: 2px solid var(--borda-campo); border-radius: var(--raio-campo);
+  width: 100%; min-height: 52px; padding: 12px 16px; border: 1.5px solid var(--borda-campo); border-radius: var(--raio-campo);
   color: var(--texto); background: var(--fundo); font: inherit;
 }
 .cores-perfil { margin: 0; padding: 0; border: 0; }
@@ -133,7 +147,7 @@
 .cor-perfil__amostra { width: 34px; height: 34px; border: 3px solid #fff; border-radius: 50%; background: var(--cor); box-shadow: 0 0 0 2px var(--gelo); }
 .cor-perfil input:checked + .cor-perfil__amostra { box-shadow: 0 0 0 3px var(--texto); }
 .cor-perfil input:focus-visible + .cor-perfil__amostra { outline: 3px solid var(--acao); outline-offset: 3px; }
-.form-perfil__previa { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--nevoa); font-weight: 800; overflow-wrap: anywhere; }
+.form-perfil__previa { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--nevoa); font-weight: 800; overflow-wrap: anywhere; }
 
 /* Selos e marcas nos cartões de trilha e no mapa. */
 .selo-compartilhada {
@@ -152,16 +166,16 @@
 .trilha-compartilhar[data-estado='nao-publicada'] { color: #9a5b00; background: #fff6ea; }
 .trilha-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 8px 0 0; color: var(--texto2); font-weight: 800; }
 .trilha-recebida a { color: var(--acao); }
-.trilha-aviso { margin: 8px 0 0; padding: 10px 14px; border-radius: 14px; background: #e3f6ea; color: #14513b; font-weight: 800; }
+.trilha-aviso { margin: 8px 0 0; padding: 10px 14px; border-radius: 16px; background: #e3f6ea; color: #14513b; font-weight: 800; }
 
 /* Tela Perfil. */
 .painel--perfil { display: grid; gap: 20px; width: min(100%, 680px); }
-.perfil-cartao { display: grid; gap: 12px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+.perfil-cartao { display: grid; gap: 12px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--nevoa); }
 .perfil-cartao__linha { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .perfil-cartao__nome { flex: 1 1 8rem; min-width: 0; margin: 0; font-size: 1.25rem; font-weight: 900; overflow-wrap: anywhere; }
 .perfil-cartao__visitante { margin: 0; line-height: 1.5; }
-.perfil-secao { display: grid; gap: 10px; }
-.perfil-secao__titulo { margin: 0; font-size: 1.125rem; }
+.perfil-secao { display: grid; gap: 12px; padding-top: 24px; border-top: 1.5px solid var(--gelo); }
+.perfil-secao__titulo { margin: 0; font-size: 1.5rem; line-height: 1.25; }
 .postar-cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 .postar-cabecalho .botao, .postar-botao { min-height: 44px; justify-self: start; }
 .folha-postar .folha-texto { color: var(--texto2); font-size: .875rem; line-height: 1.25rem; }
@@ -181,11 +195,11 @@
 .postar-estado[data-erro] { color: var(--erro); background: none; padding: 0; }
 
 .perfil-links { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.perfil-link { display: grid; gap: 6px; padding: 14px 16px; border: 2px solid var(--gelo); border-radius: 16px; }
+.perfil-link { display: grid; gap: 8px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: 24px; }
 .perfil-link__titulo {
   justify-self: start; padding: 0; border: 0; background: none; color: var(--texto); font: inherit; font-size: 1.0625rem;
   font-weight: 900; text-align: start; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; overflow-wrap: anywhere;
-  min-height: 32px;
+  min-height: 44px;
 }
 .perfil-link__meta { margin: 0; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .perfil-link__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -239,7 +253,7 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 .previa-trilha__parte { margin: 0 0 6px; font-size: 1rem; }
 .previa-trilha__partes ol { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .previa-trilha__partes ol li {
-  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 2px solid var(--gelo); border-radius: 14px;
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 2px solid var(--gelo); border-radius: 16px;
   font-weight: 700; overflow-wrap: anywhere;
 }
 .previa-trilha__partes ol li .icone { flex: none; width: 18px; height: 18px; color: var(--acao); }

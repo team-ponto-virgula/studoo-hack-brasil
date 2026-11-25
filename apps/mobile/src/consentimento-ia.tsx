@@ -262,7 +262,7 @@ const c = StyleSheet.create({
   subtitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   lista: { gap: 12 },
   // Cada provedor num quadro de borda gelo (.privacidade-provedores > ul > li da web).
-  provedor: { gap: 6, paddingVertical: 12, paddingHorizontal: 14, borderWidth: 2, borderColor: cores.gelo, borderRadius: 16 },
+  provedor: { gap: 8, padding: 16, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 16, backgroundColor: cores.superficieSutil },
   nome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   item: { flexDirection: 'row', gap: 8, paddingLeft: 4 },
   marca: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23 },
