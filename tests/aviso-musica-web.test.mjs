@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { elementos, renderizarBoasVindas, renderizarCadastro, renderizarEntrada } from './auxiliares/render-acesso.mjs';
 import { BALAO_DO_NO, CABECALHOS_DO_ALTO, RESPIRO_DO_AVISO, cabecalhoDoAlto, lugarDoAviso } from '../src/app/aviso-musica-regras.ts';
 
 const raiz = resolve(import.meta.dirname, '..');
@@ -32,17 +33,20 @@ test('o aviso fica 8 px abaixo do cabeçalho mais baixo que está à vista no al
   assert.equal(lugarDoAviso(retangulo(0, 52, 100, 700), 1280).left, '450px', 'centrado no cabeçalho');
 });
 
-test('os cabeçalhos que o aviso respeita são os das telas do app (entrada, app, mapa, aula, tour e geração)', () => {
+test('o aviso respeita os cabeçalhos de estudo e as telas públicas de acesso mantêm a área sem música', () => {
   for (const classe of ['.som-marca', '.recuperar-topo', '.estudo-cabecalho', '.trilha-topo', '.aula-topo', '.apresentacao-topo', '.previa-cabecalho', '.previa-placa']) {
     assert.ok(CABECALHOS_DO_ALTO.split(', ').includes(classe), classe);
   }
   assert.equal(BALAO_DO_NO, '.caminho-balao');
   // Cada classe existe de verdade na tela que ela nomeia.
-  for (const [arquivo, classe] of [['src/app/login/entrada.tsx', 'som-marca'], ['src/app/cadastro/cadastro.tsx', 'recuperar-topo'], ['src/app/estudo.tsx', 'estudo-cabecalho'], ['src/app/estudo.tsx', 'trilha-topo'],
+  for (const [arquivo, classe] of [['src/app/estudo.tsx', 'estudo-cabecalho'], ['src/app/estudo.tsx', 'trilha-topo'],
     ['src/app/aula.tsx', 'aula-topo'], ['src/app/apresentacao.tsx', 'apresentacao-topo'], ['src/app/previa-trilha.tsx', 'previa-cabecalho'], ['src/app/previa-trilha.tsx', 'previa-placa']]) {
     assert.match(ler(arquivo), new RegExp(`className="${classe}[" ]`), `${classe} em ${arquivo}`);
   }
   assert.match(ler('src/ui/caminho.tsx'), /caminho-balao/, 'o balão do nó existe');
+  for (const documento of [renderizarEntrada(), renderizarCadastro(), renderizarBoasVindas()]) {
+    assert.ok(elementos(documento, 'main').some(e => e.hasAttribute('data-sem-musica')), 'o motor reconhece a área pública antes do primeiro toque');
+  }
 });
 
 test('o componente: mede os cabeçalhos, fecha na hora com o balão aberto e não deixa sobrar posição no pé da tela', () => {

@@ -47,12 +47,14 @@ test('item 8: a contagem da resposta aberta aparece quando o contrato manda (pri
   assert.deepEqual([0, 1, 39, 40, 41].map((usados) => mostrarContagemDaAberta(usados, 40)), [false, true, true, false, false]);
 });
 
-test('item 10: o título da entrada ao lado do Stu de 72 em 26/32 e, até 320, 22/28, como a web', async () => {
-  const sessao = await ler('sessao.tsx');
-  const tamanho = funcao(sessao, 'tamanhoDoTituloComStu');
-  assert.deepEqual(tamanho(390), { fontSize: 26, lineHeight: 32 });
-  assert.deepEqual(tamanho(360), { fontSize: 26, lineHeight: 32 });
-  assert.deepEqual(tamanho(320), { fontSize: 22, lineHeight: 28 });
-  assert.match(sessao, /<Titulo foco testID="titulo-entrada" estilo=\{estiloDoTituloComStu\(largura\)\}>/);
-  assert.match(sessao, /const STU_DO_TITULO = 72;/);
+test('item 10 atualizado: login sem Stu pequeno, título responsivo e boas-vindas com Stu de 150', async () => {
+  const acesso = await ler('acesso-mobile.tsx');
+  const ast = ts.createSourceFile('acesso.tsx', acesso, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const componente = nome => ast.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === nome)?.getText(ast);
+  assert.ok(componente('EntradaMobile'));
+  assert.doesNotMatch(componente('EntradaMobile'), /<Stu\b|entrada-stu|STU_DO_TITULO/, 'o login prioriza o acesso e deixa o mascote para a apresentação');
+  assert.match(componente('BoasVindasMobile'), /<Stu nome=\{atual\.stu\} tamanho=\{150\} \/>/);
+  assert.match(componente('TituloAcesso'), /width < 375 && \{ fontSize: 30, lineHeight: 36 \}/);
+  assert.match(acesso, /titulo: \{[^}]*fontSize: 32, lineHeight: 38/);
+  assert.doesNotMatch(acesso, /allowFontScaling=\{false\}|maxFontSizeMultiplier=/, 'mantém a ampliação de texto do aparelho');
 });

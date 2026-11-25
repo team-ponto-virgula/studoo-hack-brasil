@@ -1,6 +1,6 @@
 // A raiz "/" (spec 18 + decisão do Lead): quem tem sessão, visitante incluído, vê o app como sempre. Quem não tem sessão vê a página de apresentação SÓ com STUDOO_ENTRADA_APRESENTACAO=1
-// (lida a cada pedido); sem a variável (o padrão) ou com outro valor vai ao /login (307, Location relativo), como era antes da página. A PÁGINA decide pelo cookie e pela variável, no
-// servidor (`redirect('/login')`, sem montar URL nenhuma); o proxy não decide a raiz: nem reescreve (ela dependia da URL que o Next monta atrás de um proxy HTTPS, com X-Forwarded-Proto, e
+// (lida a cada pedido); sem a variável (o padrão) ou com outro valor vai às boas-vindas do app (307, Location relativo). /login continua um acesso direto. A PÁGINA decide pelo cookie e pela variável, no
+// servidor (`redirect('/boas-vindas')`, sem montar URL nenhuma); o proxy não decide a raiz: nem reescreve (ela dependia da URL que o Next monta atrás de um proxy HTTPS, com X-Forwarded-Proto, e
 // dava 500 em produção) nem redireciona (um Location relativo vindo do proxy dá 500 no Next: ERR_INVALID_URL). "/conheca" e "/baixar" ficam sempre no ar.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -67,7 +67,7 @@ test('entrada LIGADA (=1): o proxy deixa a raiz passar, com e sem sessão: nem r
   });
 });
 
-test('entrada DESLIGADA (sem a variável, 0, true, vazia, " 1", 2): o proxy também deixa a raiz passar (quem leva ao /login é a página, sem reescrita e sem Location montado no proxy)', async () => {
+test('entrada DESLIGADA (sem a variável, 0, true, vazia, " 1", 2): o proxy também deixa a raiz passar (quem leva às boas-vindas é a página, sem reescrita e sem Location montado no proxy)', async () => {
   for (const valor of [undefined, '0', 'true', '', ' 1', '2', 'sim']) {
     await comEntrada(valor, () => {
       for (const cabecalhos of VARIANTES_DE_PROXY) {
@@ -129,7 +129,7 @@ test('as outras rotas seguem como eram (login, cadastro, privacidade…)', () =>
   }
 });
 
-test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (visitante incluído); sem sessão, com a entrada ligada → a página de apresentação, já com "naRaiz"; desligada → o /login', async () => {
+test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (visitante incluído); sem sessão, com a entrada ligada → a página de apresentação, já com "naRaiz"; desligada → /boas-vindas', async () => {
   const nome = nomeCookieSessao();
   const semSessao = [{}, { [nome]: '' }, { [nome]: 'A'.repeat(42) }, { [nome]: 'A'.repeat(44) }, { [nome]: `${'A'.repeat(42)}!` }, { outro: TOKEN }];
   for (const entrada of ['1', undefined, '0']) {
@@ -148,7 +148,7 @@ test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (v
   for (const entrada of [undefined, '0', 'true']) {
     await comEntrada(entrada, async () => {
       for (const biscoitos of semSessao) {
-        await assert.rejects(() => comCookie(biscoitos, () => Pagina.default()), (erro) => erro.message === 'NEXT_REDIRECT' && erro.destino === '/login', `sem sessão com a entrada desligada (${entrada}): ${JSON.stringify(biscoitos)}`);
+        await assert.rejects(() => comCookie(biscoitos, () => Pagina.default()), (erro) => erro.message === 'NEXT_REDIRECT' && erro.destino === '/boas-vindas', `sem sessão com a entrada desligada (${entrada}): ${JSON.stringify(biscoitos)}`);
       }
     });
   }
@@ -163,7 +163,7 @@ test('"/" escolhe no servidor pelo cookie e pela variável: sessão → o app (v
 
 test('a raiz carrega a página de apresentação e o app de forma estática e só decide qual desenha (a "/conheca" continua sem "naRaiz")', () => {
   const fonte = ler('src/app/page.tsx');
-  assert.match(fonte, /if \(inicio === 'login'\) redirect\('\/login'\);/);
+  assert.match(fonte, /if \(inicio === 'login'\) redirect\('\/boas-vindas'\);/);
   assert.match(fonte, /inicio === 'app' \? <Estudo \/> : <PaginaDeApresentacao naRaiz \/>/);
   assert.match(ler('src/app/conheca/page.tsx'), /return <PaginaDeApresentacao \/>;/);
 });
@@ -183,13 +183,13 @@ test('a raiz dos domínios públicos encaminha ao produto certo e preserva sess�
     }
     globalThis.__cabecalhos = { host: 'app.hellostudoo.com.br' };
     await comEntrada('1', async () => {
-      await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/login');
+      await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/boas-vindas');
       assert.equal((await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.default())).type, Estudo);
     });
     for (const host of ['studoo-web.exemplo.test','hellostudoo.com.br.exemplo.test']) {
       globalThis.__cabecalhos = { host, 'x-forwarded-host': 'hellostudoo.com.br' };
       await comEntrada(undefined, async () => {
-        await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/login');
+        await assert.rejects(() => comCookie({}, () => Pagina.default()), (e) => e.destino === '/boas-vindas');
         assert.equal((await comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.default())).type, Estudo);
       });
       assert.equal(proxy(pedido('/login', { host })).headers.has('location'), false);
@@ -230,7 +230,7 @@ test('os metadados da raiz levam a imagem de compartilhar com endereço completo
   assert.deepEqual(await comEntrada('1', () => comCookie({ [nomeCookieSessao()]: TOKEN }, () => Pagina.generateMetadata())), {});
   const sem = await comEntrada('1', () => comCookie({}, () => Pagina.generateMetadata()));
   assert.equal(sem.title, 'Studoo — Seu caderno vira lição.');
-  // Com a entrada desligada a raiz vai ao login: não anuncia a página de apresentação.
+  // Com a entrada desligada a raiz vai às boas-vindas do app: não anuncia a página de apresentação.
   assert.deepEqual(await comEntrada(undefined, () => comCookie({}, () => Pagina.generateMetadata())), {});
 });
 

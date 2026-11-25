@@ -146,15 +146,24 @@ test('item 4: com folga (regra do contrato), o Exemplo ganha o stu-feliz de 72 a
   assert.match(licao, /<Stu nome="stu-feliz" tamanho=\{STU_DA_ETAPA\} \/>/);
 });
 
-test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do título (parado com movimento reduzido)', async () => {
-  const sessao = await ler('sessao.tsx');
-  assert.match(sessao, /<View testID="entrada-stu" style=\{entradaEstilos\.stuDoTitulo\} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>\n\s*<Stu nome="stu-acolhida" tamanho=\{STU_DO_TITULO\} animado="laco" pausado=\{recolher\} \/>/);
-  assert.match(sessao, /const STU_DO_TITULO = 72;/);
-  assert.match(sessao, /tituloComStu: \{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 \}/);
-  // Com a paisagem (tela alta), o Stu já está nela: não aparece duas vezes.
-  assert.match(sessao, /\{ilustracao > 0 \? \(\n\s*<Titulo foco testID="titulo-entrada"/);
-  // O laço do Stu para com movimento reduzido (o próprio componente do mascote).
-  assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
+test('item 10 atualizado: Stu expressivo nas boas-vindas, login limpo e animações breves respeitando movimento reduzido', async () => {
+  const acesso = await ler('acesso-mobile.tsx');
+  const entrada = acesso.slice(acesso.indexOf('export function EntradaMobile'), acesso.indexOf('const beneficios'));
+  const boas = acesso.slice(acesso.indexOf('export function BoasVindasMobile'), acesso.indexOf('export const acessoEstilos'));
+  assert.doesNotMatch(entrada, /<Stu\b|entrada-stu|STU_DO_TITULO/);
+  assert.match(boas, /<Stu nome=\{atual\.stu\} tamanho=\{150\} \/>/);
+  assert.match(boas, /<TransicaoAcesso chave=\{pagina\}/);
+  const logo = acesso.slice(acesso.indexOf('export function LogoAcesso'), acesso.indexOf('export function AcessoTela'));
+  const transicao = acesso.slice(acesso.indexOf('export function TransicaoAcesso'), acesso.indexOf('export function TituloAcesso'));
+  for (const animacao of [logo, transicao]) {
+    assert.match(animacao, /useMovimentoReduzido\(\)/);
+    assert.match(animacao, /if \(reduzir === null\) return;/, 'espera conhecer a preferência antes de animar');
+    assert.match(animacao, /if \(reduzir \|\|[^}]*progresso\.stopAnimation\(\); progresso\.setValue\(1\); return;/);
+    assert.match(animacao, /animacao\.stop\(\)/, 'limpa a animação ao sair');
+    assert.doesNotMatch(animacao, /Animated\.loop|setInterval|animado="laco"/);
+  }
+  assert.match(logo, /vistos\.current\.has\(acontecimento\)/, 'a saudação não recomeça ao redesenhar');
+  assert.match(transicao, /ultimo\.current === chave/, 'a transição não recomeça na mesma etapa');
 });
 
 test('a explicação tem etapa própria, mantém o envio no rodapé e deixa seguir após o retorno ou pular', async () => {

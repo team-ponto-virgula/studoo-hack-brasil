@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { elementos, renderizarCadastro, renderizarEntrada, visivel } from './auxiliares/render-acesso.mjs';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
@@ -56,23 +57,24 @@ test('item 2: a ilustração tem a altura da janela e fica presa no alto, então
   assert.equal(base, embaixo + altura, `o Stu pisa a ${embaixo + altura}% do pé, onde a colina da frente termina`);
 });
 
-test('item 2: a entrada continua com o título e o texto na mensagem da ilustração e com o Stu da acolhida', () => {
-  const tela = ler('src/app/login/entrada.tsx');
-  assert.match(tela, /<div className="entrada-mensagem">\s*<p className="entrada-mensagem__titulo">\{mensagens\.login\.arteTitulo\}<\/p>\s*<p>\{mensagens\.login\.arteTexto\}<\/p>\s*<\/div>/);
-  assert.match(tela, /<Mascote expressao="stu-acolhida" tamanho=\{240\} sombra className="stu" \/>/);
-  // Até 1023 px a ilustração larga some (a faixa do celular tem o Stu dela): o sticky não pesa nas telas estreitas.
-  assert.match(css, /@media \(max-width: 1023px\) \{[^@]*\.entrada-arte \{ display: none; \}/);
+test('a entrada real usa uma saudação curta e a marca acessível, reservando o Stu para as boas-vindas', () => {
+  const documento = renderizarEntrada();
+  assert.equal(elementos(documento, 'h1')[0].textContent, 'Olá de novo.');
+  assert.ok(elementos(documento, '*').some(e => e.getAttribute('role') === 'img' && e.getAttribute('aria-label') === 'Studoo'));
+  assert.equal(elementos(documento, 'img').some(e => /stu-/.test(e.getAttribute('src') || '')), false);
+  assert.ok(elementos(documento, 'a').some(e => e.getAttribute('href') === '/boas-vindas'));
 });
 
-test('item 10: até 767 px o stu-acolhida de 72, acenando, fica à direita do título, alinhado ao topo; a faixa de paisagem sai em qualquer altura', () => {
-  const tela = ler('src/app/login/entrada.tsx');
-  assert.match(tela, /<div className="entrada-titulo-faixa">\s*<h1>\{mensagens\.login\.titulo\}<\/h1>\s*<Mascote expressao="stu-acolhida" tamanho=\{72\} prioridade animado="laco" className="entrada-stu-celular" \/>\s*<\/div>/);
-  // De 768 px em diante a faixa some e o Stu do celular também: o Stu da ilustração larga (≥1024) e o da faixa de 768 a 1023 seguem como eram.
-  assert.match(css, /\.entrada-titulo-faixa \{ display: contents; \}\s*\.entrada-stu-celular \{ display: none; \}/);
-  const celular = css.slice(css.indexOf('.entrada-titulo-faixa { display: contents; }'));
-  assert.match(celular, /@media \(max-width: 767px\) \{\s*\.entrada-banner \{ display: none; \}/, 'a faixa de paisagem sai em qualquer altura (antes só até 860 px)');
-  assert.match(celular, /\.entrada-titulo-faixa \{ display: grid; grid-template-columns: minmax\(0, 1fr\) 72px; align-items: start; column-gap: 12px; \}/, 'o título e o Stu lado a lado, o Stu alinhado ao topo do título');
-  assert.match(celular, /\.entrada-stu-celular \{ display: block; width: 72px;/);
+test('as capacidades mantêm e-mail disponível e permitem criar por Google sem habilitar cadastro por senha', () => {
+  const semAlternativas = renderizarEntrada({ google: false, cadastro: false, visitante: false, recuperacao: false });
+  assert.ok(elementos(semAlternativas, 'input').some(e => e.getAttribute('id') === 'email' && visivel(e)));
+  assert.equal(elementos(semAlternativas, 'a').some(e => e.getAttribute('href') === '/cadastro'), false);
+  assert.equal(elementos(semAlternativas, 'button').some(e => e.textContent.includes('Continuar com Google')), false);
+  assert.equal(elementos(semAlternativas, 'button').some(e => e.textContent === 'Experimentar sem conta' && visivel(e)), false);
+  const googleSemEmail = renderizarCadastro({ googleDisponivel: true, emailDisponivel: false });
+  assert.equal(elementos(googleSemEmail, 'input').length, 0, 'e-mail não aparece sem o provedor configurado');
+  assert.ok(elementos(googleSemEmail, 'button').some(e => e.textContent.includes('Continuar com Google')));
+  assert.ok(elementos(googleSemEmail, 'a').some(e => e.getAttribute('href') === '/login'));
 });
 
 test('item 10: o título encolhe para dar lugar ao Stu e não passa de 3 linhas em 360 px (e em 320 px a letra desce mais um pouco)', () => {

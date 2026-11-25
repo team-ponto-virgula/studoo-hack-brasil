@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
+import { criarClienteOnboarding } from '../packages/contratos/src/onboarding.ts';
 
 // O cliente do app (apps/mobile/src/api-nativa.ts): /api/auth/config é pública e recusa pedido com Authorization (rotaPublica
 // responde 401). Com sessão, o app mandava o token também nela, e a configuração nunca chegava (o compartilhar não aparecia
@@ -24,7 +25,7 @@ function montar({ semRede = false } = {}) {
     enviarFoto: (base64) => transporte('/api/perfil/foto', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 }) }).then((r) => r.json()),
   });
   const fetch = async (url, opcoes) => {
-    pedidos.push({ url, metodo: opcoes.method, headers: opcoes.headers });
+    pedidos.push({ url, metodo: opcoes.method, headers: opcoes.headers, corpo: opcoes.body, credenciais: opcoes.credentials });
     if (semRede) throw new TypeError('Network request failed');
     return { status: 200, ok: true, json: async () => ({ ok: true }), headers: { get: () => 'application/json' } };
   };
@@ -36,6 +37,7 @@ function montar({ semRede = false } = {}) {
     require: (nome) => {
       const modulos = {
         '@studoo/contratos': { criarClienteStudoo, ErroStudoo },
+        '@studoo/contratos/onboarding': { criarClienteOnboarding },
         'expo/fetch': { fetch },
         'expo-secure-store': { WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'x' },
         './geracao-ao-vivo': { codigoDaResposta: () => 'falha', lerEventos: async function* () {} },
@@ -75,6 +77,26 @@ test('a foto do perfil vai pelo canal do app, com o token e sem cookie', async (
   assert.equal(foto.url, 'https://studoo.example.test/api/perfil/foto');
   assert.equal(foto.headers.Authorization, `Bearer ${'b'.repeat(43)}`);
   assert.equal(foto.headers.Cookie, undefined);
+});
+
+test('onboarding usa o contrato real: leitura e meta seguem pelo canal Bearer, sem cookie', async () => {
+  const api = montar();
+  const cliente = api.criarClienteNativo('c'.repeat(43));
+  await cliente.obterOnboarding();
+  const acao = { acao: 'definir-meta', metaLicoesDia: 2, fuso: 'America/Sao_Paulo' };
+  await cliente.atualizarOnboarding(acao);
+  const [leitura, escrita] = api.pedidos;
+  assert.equal(leitura.metodo, 'GET');
+  assert.equal(leitura.corpo, undefined);
+  assert.equal(escrita.metodo, 'POST');
+  assert.equal(escrita.headers['Content-Type'], 'application/json');
+  assert.deepEqual(JSON.parse(escrita.corpo), acao);
+  for (const pedido of api.pedidos) {
+    assert.equal(pedido.url, 'https://studoo.example.test/api/onboarding');
+    assert.equal(pedido.headers.Authorization, `Bearer ${'c'.repeat(43)}`);
+    assert.equal(pedido.headers.Cookie, undefined);
+    assert.equal(pedido.credenciais, 'omit');
+  }
 });
 
 test('sem rede: numa ação da pessoa (pedido que não é GET) toca o erro de rede; nas leituras, nada (spec 12, como a web)', async () => {

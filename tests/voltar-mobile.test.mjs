@@ -102,7 +102,19 @@ test('as telas usam o voltar comum, e só o pacote do iPhone conhece o gesto', a
     assert.doesNotMatch(fonte, /BackHandler/, `${nome}: o voltar passa por voltar.ts`);
     assert.match(fonte, /ouvirVoltar\(/, nome);
   }
-  assert.match(estudo, /\}, etapa\.tipo !== 'planos'\);/, 'em Minhas trilhas o gesto não começa');
+  const arvore = ts.createSourceFile('estudo.tsx', estudo, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const assinaturas = [];
+  const visitar = (no) => {
+    if (ts.isCallExpression(no) && no.expression.getText(arvore) === 'ouvirVoltar') assinaturas.push(no);
+    ts.forEachChild(no, visitar);
+  };
+  visitar(arvore);
+  assert.equal(assinaturas.length, 1, 'o estudo registra uma política única de gesto');
+  const habilitarGesto = new Function('etapa', 'preparandoPrimeiroEstudo', `return (${assinaturas[0].arguments[1].getText(arvore)});`);
+  assert.equal(habilitarGesto({ tipo: 'planos' }, false), false, 'em Minhas trilhas o gesto não começa');
+  assert.equal(habilitarGesto({ tipo: 'licao' }, false), true, 'na lição o gesto chama o voltar comum');
+  assert.equal(habilitarGesto({ tipo: 'objetivo' }, false), true, 'o pedido normal mantém o voltar');
+  assert.equal(habilitarGesto({ tipo: 'objetivo' }, true), false, 'na preparação a navegação é do onboarding');
   assert.match(apresentacao, /useEffect\(\(\) => travarGesto\(\), \[\]\)/, 'o carrossel trava o gesto');
   assert.doesNotMatch(borda, /react-native-gesture-handler/, 'Android e web não carregam a biblioteca de gestos');
   assert.match(bordaIos, /hitSlop: \{ left: 0, width: BORDA \}/, 'só a partir da borda esquerda');

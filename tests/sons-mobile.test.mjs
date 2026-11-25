@@ -5,6 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
+import { runInNewContext } from 'node:vm';
+import ts from 'typescript';
 
 const raiz = resolve(import.meta.dirname, '..');
 const app = join(raiz, 'apps/mobile');
@@ -85,10 +87,41 @@ test('convivência: a fala e o acorde abaixam o fundo; a gravação e a voz ao v
   assert.ok(gravar.indexOf('entrarNoSomDaGravacao();') < gravar.indexOf('allowsRecording: true'), 'entra antes do modo do microfone');
 });
 
-test('a música desde a entrada (login e visitante), as preferências ao abrir e o primeiro toque libera o som', () => {
+// Executa o callback real dos efeitos que controlam a área. O dublê só oferece essa operação: mudar a preferência
+// da pessoa durante uma troca de tela faria o teste falhar.
+function executarArea(fonte, estado) {
+  const ast = ts.createSourceFile('tela.tsx', fonte, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let callback;
+  function visitar(no) {
+    if (ts.isCallExpression(no) && no.expression.getText(ast) === 'useEffect' && no.arguments[0]?.getText(ast).includes('tocaSons.definirAreaPermitida')) callback ??= no.arguments[0];
+    ts.forEachChild(no, visitar);
+  }
+  visitar(ast);
+  assert.ok(callback, 'efeito real de permissão da área');
+  const js = ts.transpileModule(`exports.executar = ${callback.getText(ast)};`, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const api = {}, chamadas = [];
+  runInNewContext(js, { exports: api, ...estado, tocaSons: { definirAreaPermitida: valor => chamadas.push(valor) } });
+  const limpar = api.executar();
+  const antesDeSair = [...chamadas];
+  limpar();
+  return { antesDeSair, aoSair: chamadas.at(-1) };
+}
+
+test('acesso e preparação ficam sem música; estudo libera a área sem mudar as preferências e sair a recolhe', () => {
   const sessao = ler('src/sessao.tsx');
-  // Uma música só, em laço no app inteiro (pedido do dono, 19/11): nada a prende à sessão ativa nem a para ao sair da conta.
-  assert.doesNotMatch(sessao, /definirAreaPermitida/);
+  for (const tipo of ['boasVindas', 'entrada', 'cadastro', 'recuperar', 'verificando', 'falha']) {
+    assert.deepEqual(executarArea(sessao, { sessao: { tipo } }), { antesDeSair: [false], aoSair: false }, tipo);
+  }
+  assert.deepEqual(executarArea(sessao, { sessao: { tipo: 'ativa' } }), { antesDeSair: [], aoSair: false }, 'a sessão delega a permissão ao estudo');
+  const estudo = ler('src/estudo.tsx');
+  const casos = [
+    [{ visitante: false, jornadaConsultada: false, preparandoPrimeiroEstudo: false }, false],
+    [{ visitante: false, jornadaConsultada: true, preparandoPrimeiroEstudo: true }, false],
+    [{ visitante: true, jornadaConsultada: false, preparandoPrimeiroEstudo: true }, false],
+    [{ visitante: false, jornadaConsultada: true, preparandoPrimeiroEstudo: false }, true],
+    [{ visitante: true, jornadaConsultada: false, preparandoPrimeiroEstudo: false }, true],
+  ];
+  for (const [estado, permitida] of casos) assert.deepEqual(executarArea(estudo, estado), { antesDeSair: [permitida], aoSair: false });
   assert.match(sessao, /tocaSons\.carregarPreferencias\(\)/);
   assert.match(ler('app/index.tsx'), /tocaSons\.registrarGesto\(\);\n\s*return false;/);
   assert.match(ler('app/index.tsx'), /onStartShouldSetResponderCapture=\{liberarSom\}/);
