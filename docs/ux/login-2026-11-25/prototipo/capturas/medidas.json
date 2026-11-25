@@ -1,0 +1,98 @@
+[
+  {
+    "name": "login-390",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "pageWidth": 390,
+    "pageHeight": 844,
+    "primary": {
+      "x": 28,
+      "y": 361.375,
+      "width": 334,
+      "height": 56
+    },
+    "headingLines": 38.390625
+  },
+  {
+    "name": "login-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "pageWidth": 360,
+    "pageHeight": 807,
+    "primary": {
+      "x": 24,
+      "y": 357.375,
+      "width": 312,
+      "height": 56
+    },
+    "headingLines": 36
+  },
+  {
+    "name": "senha-390",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "pageWidth": 390,
+    "pageHeight": 844,
+    "primary": {
+      "x": 28,
+      "y": 425.78125,
+      "width": 334,
+      "height": 56
+    },
+    "headingLines": 38.390625
+  },
+  {
+    "name": "senha-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "pageWidth": 360,
+    "pageHeight": 800,
+    "primary": {
+      "x": 24,
+      "y": 421.78125,
+      "width": 312,
+      "height": 56
+    },
+    "headingLines": 36
+  },
+  {
+    "name": "texto-200-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "pageWidth": 360,
+    "pageHeight": 1304,
+    "primary": {
+      "x": 24,
+      "y": 574.578125,
+      "width": 312,
+      "height": 76.796875
+    },
+    "headingLines": 144
+  },
+  {
+    "name": "sem-provedores-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "pageWidth": 360,
+    "pageHeight": 800,
+    "primary": {
+      "x": 24,
+      "y": 357.375,
+      "width": 312,
+      "height": 56
+    },
+    "headingLines": 36
+  }
+]

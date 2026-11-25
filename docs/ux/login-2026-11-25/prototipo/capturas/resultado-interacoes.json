@@ -1,0 +1,754 @@
+{
+  "checkedAt": "2026-11-25T12:51:31.687Z",
+  "scope": "HTML isolated prototype only; no native execution or real authentication",
+  "prototypeFilesBefore": {
+    "index.html": "28884451dd040e6ccf7613834606bb04cd086d09ca3e3271daed2e55f52b43e0",
+    "login.css": "af07135df53e562f28b9d8d375788f69518856fc1f04f8dd4efe5f295abc3052",
+    "login.js": "a8b0a7d59c975a7cc8a845606b95012b0d603838f1e09182e52a854a34797489"
+  },
+  "prototypeFilesAfter": {
+    "index.html": "28884451dd040e6ccf7613834606bb04cd086d09ca3e3271daed2e55f52b43e0",
+    "login.css": "af07135df53e562f28b9d8d375788f69518856fc1f04f8dd4efe5f295abc3052",
+    "login.js": "a8b0a7d59c975a7cc8a845606b95012b0d603838f1e09182e52a854a34797489"
+  },
+  "sourceStable": true,
+  "checks": [
+    {
+      "name": "email-vazio-invalido-e-foco-390",
+      "pass": true,
+      "emptyAndInvalidKeepEmailStep": true,
+      "focusReturnedToEmail": true
+    },
+    {
+      "name": "email-para-senha-sem-consulta-390",
+      "pass": true,
+      "normalizedEmailShown": true,
+      "passwordFocused": true,
+      "emailDisabled": true,
+      "passwordEnabled": true,
+      "requestsDuringProgression": []
+    },
+    {
+      "name": "senha-vazia-e-foco-390",
+      "pass": true,
+      "emptyPasswordRejected": true,
+      "focusReturnedToPassword": true
+    },
+    {
+      "name": "olho-e-editar-email-390",
+      "pass": true,
+      "showHideStateAndLabelCorrect": true,
+      "editPreservesEmail": true,
+      "editFocusesEmail": true,
+      "passwordRetainedWhenEditingSameEmail": true
+    },
+    {
+      "name": "senha-enxuta-e-outras-formas-390",
+      "pass": true,
+      "passwordHasNoRepeatedMenus": true,
+      "copyDoesNotClaimAccountLookup": true,
+      "otherMethodsPreservesEmailAndRestoresFocus": true
+    },
+    {
+      "name": "dialogos-e-retorno-foco-390",
+      "pass": true,
+      "checks": [
+        {
+          "screen": "apple",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "google",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "cadastro",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "recuperar",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "visitante",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "ajuda",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "privacidade",
+          "closeWithEscape": true,
+          "focusRestored": true
+        }
+      ]
+    },
+    {
+      "name": "enviar-e-dialogo-apenas-visual-390",
+      "pass": true,
+      "noAuthRequest": true,
+      "passwordCleared": true,
+      "dialogDeclaredVisualOnly": true,
+      "closeButtonRestoresPrimary": true
+    },
+    {
+      "name": "flags-todas-desligadas-390",
+      "pass": true,
+      "optionalPathsHidden": true,
+      "noEmptyAlternativeSeparator": true,
+      "emailStillWorks": true
+    },
+    {
+      "name": "flags-provedores-independentes-390",
+      "pass": true,
+      "independentFlags": true
+    },
+    {
+      "name": "texto200-sem-overflow-390",
+      "pass": true,
+      "states": [
+        {
+          "state": "email",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "rootFont": "32px",
+            "documentWidth": 390,
+            "bodyWidth": 390,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "senha-email-longo",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "rootFont": "32px",
+            "documentWidth": 390,
+            "bodyWidth": 390,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "dialogo-ajuda",
+          "dialogGeometry": {
+            "width": 358,
+            "clientWidth": 358,
+            "scrollWidth": 358,
+            "clientHeight": 741,
+            "scrollHeight": 741
+          }
+        },
+        {
+          "state": "dialogo-privacidade",
+          "dialogGeometry": {
+            "width": 358,
+            "clientWidth": 358,
+            "scrollWidth": 358,
+            "clientHeight": 741,
+            "scrollHeight": 741
+          }
+        }
+      ]
+    },
+    {
+      "name": "email-vazio-invalido-e-foco-360",
+      "pass": true,
+      "emptyAndInvalidKeepEmailStep": true,
+      "focusReturnedToEmail": true
+    },
+    {
+      "name": "email-para-senha-sem-consulta-360",
+      "pass": true,
+      "normalizedEmailShown": true,
+      "passwordFocused": true,
+      "emailDisabled": true,
+      "passwordEnabled": true,
+      "requestsDuringProgression": []
+    },
+    {
+      "name": "senha-vazia-e-foco-360",
+      "pass": true,
+      "emptyPasswordRejected": true,
+      "focusReturnedToPassword": true
+    },
+    {
+      "name": "olho-e-editar-email-360",
+      "pass": true,
+      "showHideStateAndLabelCorrect": true,
+      "editPreservesEmail": true,
+      "editFocusesEmail": true,
+      "passwordRetainedWhenEditingSameEmail": true
+    },
+    {
+      "name": "senha-enxuta-e-outras-formas-360",
+      "pass": true,
+      "passwordHasNoRepeatedMenus": true,
+      "copyDoesNotClaimAccountLookup": true,
+      "otherMethodsPreservesEmailAndRestoresFocus": true
+    },
+    {
+      "name": "dialogos-e-retorno-foco-360",
+      "pass": true,
+      "checks": [
+        {
+          "screen": "apple",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "google",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "cadastro",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "recuperar",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "visitante",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "ajuda",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "privacidade",
+          "closeWithEscape": true,
+          "focusRestored": true
+        }
+      ]
+    },
+    {
+      "name": "enviar-e-dialogo-apenas-visual-360",
+      "pass": true,
+      "noAuthRequest": true,
+      "passwordCleared": true,
+      "dialogDeclaredVisualOnly": true,
+      "closeButtonRestoresPrimary": true
+    },
+    {
+      "name": "flags-todas-desligadas-360",
+      "pass": true,
+      "optionalPathsHidden": true,
+      "noEmptyAlternativeSeparator": true,
+      "emailStillWorks": true
+    },
+    {
+      "name": "flags-provedores-independentes-360",
+      "pass": true,
+      "independentFlags": true
+    },
+    {
+      "name": "texto200-sem-overflow-360",
+      "pass": true,
+      "states": [
+        {
+          "state": "email",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "rootFont": "32px",
+            "documentWidth": 360,
+            "bodyWidth": 360,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "senha-email-longo",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "rootFont": "32px",
+            "documentWidth": 360,
+            "bodyWidth": 360,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "dialogo-ajuda",
+          "dialogGeometry": {
+            "width": 328,
+            "clientWidth": 328,
+            "scrollWidth": 328,
+            "clientHeight": 730,
+            "scrollHeight": 741
+          }
+        },
+        {
+          "state": "dialogo-privacidade",
+          "dialogGeometry": {
+            "width": 328,
+            "clientWidth": 328,
+            "scrollWidth": 328,
+            "clientHeight": 730,
+            "scrollHeight": 741
+          }
+        }
+      ]
+    }
+  ],
+  "failedChecks": [],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "width": 390,
+      "message": "Failed to load resource: the server responded with a status of 404 (File not found)",
+      "location": {
+        "url": "http://127.0.0.1:3030/favicon.ico",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "network": [
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/logo.svg",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/stu-acolhida.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/assets/Inter.ttf",
+      "type": "font"
+    }
+  ],
+  "authOrApiRequests": [],
+  "noProductChanges": true
+}
