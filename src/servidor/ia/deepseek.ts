@@ -372,7 +372,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
       return meta;
     },
 
-    async gerarConteudo(esqueleto, fluxo, licao, sinal, corrigirAbertura) {
+    async gerarConteudo(esqueleto, fluxo, licao, sinal) {
       // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
       let ultimoMotivo: string | undefined;
       const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
@@ -405,7 +405,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           resposta = await pedir(config, {
             messages: [
               { role: "system", content: matematica ? instrucoesLicaoJsonDeMatematica : instrucoesLicaoJson },
-              { role: "user", content: promptDaLicao(esqueleto, fluxo, licao, corrigirAbertura) },
+              { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
               ...(correcao ? [{ role: "user", content: correcao }] : []),
             ],
             response_format: { type: "json_object" },

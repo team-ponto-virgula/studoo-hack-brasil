@@ -268,5 +268,10 @@ export async function diagnosticoDaGeracao(usuarioId: string, objetivo: string, 
   });
   const estado = registro?.estado as unknown as Estado | undefined;
   if (!registro || !estado || !perfilDiagnosticoValido(estado.perfil)) throw new FalhaApi('proposta_invalida');
-  return registro.passo > 1 ? estado.perfil : undefined;
+  if (registro.passo <= 1) return undefined;
+  const amostrasDemonstradas = (estado.anteriores ?? []).flatMap(({ estado: anterior, opcaoId }) =>
+    anterior.fase === 'aplicacao' && anterior.respostaCorreta === opcaoId && anterior.pergunta && anterior.habilidade
+      && estado.perfil.demonstrados.includes(anterior.habilidade)
+      ? [{ habilidade: anterior.habilidade, enunciado: anterior.pergunta.enunciado }] : []);
+  return { diagnostico: estado.perfil, amostrasDemonstradas };
 }

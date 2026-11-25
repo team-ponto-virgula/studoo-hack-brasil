@@ -218,6 +218,10 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
     enunciado: 'Qual controle da câmera determina o tempo de exposição?',
     opcoes: ['Obturador', 'Visor', 'Ponto de foco'], correta: 0,
   };
+  const tituloDoRastro = 'Criar rastro sem perder a exposição';
+  const decisaoDoRastro = 'Escolher a abertura que mantém a exposição ao dobrar o tempo para criar um rastro de movimento.';
+  const casoDoRastro = 'Em 1/125 s e f/5,6 a exposição está correta. Ao passar para 1/60 s para criar rastro, qual abertura mantém o brilho com ISO fixo?';
+  const revisoesDeFotografia = [];
   const pedidos = [];
   const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(url, 'http://127.0.0.1:1/v1/responses');
@@ -239,20 +243,34 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
         recortes: amplo ? [{ titulo: 'Fotografar movimento', questao: aplicacao }, { titulo: 'Exposição manual', questao: exposicao }] : [],
       }) });
     }
-    if (payload.text?.format?.name === 'diagnostico_abertura') {
-      return Response.json({ output_text: JSON.stringify({
-        titulo: 'Criar rastro sem perder a exposição', desafio: 'Equilibrar tempo de exposição e abertura ao criar um rastro de movimento.',
-      }) });
+    if (payload.text?.format?.name === 'diagnostico_curriculo') {
+      const dados = JSON.parse(payload.input[0].content[0].text);
+      assert.deepEqual(dados.amostrasDemonstradas, [{ habilidade: aplicacao.habilidade, enunciado: aplicacao.enunciado }]);
+      return Response.json({ output_text: JSON.stringify({ fluxos: [{ titulo: 'Movimento', licoes: [{ titulo: tituloDoRastro, resumo: decisaoDoRastro }] }] }) });
     }
-    if (payload.text?.format?.name === 'diagnostico_verificar_licao') {
-      const { licao } = JSON.parse(payload.input[0].content[0].text);
-      assert.match(licao.exercicio.enunciado, /rastro/);
-      return Response.json({ output_text: JSON.stringify({ resultado: 'avanca' }) });
+    if (payload.text?.format?.name === 'diagnostico_verificar_curriculo') {
+      const { licoes } = JSON.parse(payload.input[0].content[0].text);
+      const { exercicios: [exercicio] } = licoes[0];
+      revisoesDeFotografia.push(exercicio.enunciado);
+      const avancou = exercicio.enunciado === casoDoRastro;
+      if (avancou) assert.equal(exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto, 'f/8');
+      else assert.equal(exercicio.enunciado, aplicacao.enunciado);
+      return Response.json({ output_text: JSON.stringify({ avaliacoes: [{ numero: 1, resultado: avancou ? 'avanca' : 'ajustar', motivo: avancou ? '' : 'Faltam o tempo inicial, o novo tempo e uma decisão sobre a abertura.' }] }) });
+    }
+    if (payload.text?.format?.name === 'diagnostico_reparar_curriculo') {
+      const { licoes } = JSON.parse(payload.input[0].content[0].text);
+      assert.match(licoes[0].motivo, /novo tempo/);
+      return Response.json({ output_text: JSON.stringify({ licoes: [{ numero: 1,
+        conceito: 'Dobrar o tempo deixa entrar o dobro de luz. Fechar a abertura em um ponto compensa esse ganho.',
+        exemplo: 'Com ISO fixo, passar de 1/250 s e f/4 para 1/125 s e f/5,6 mantém a exposição.',
+        enunciado: casoDoRastro, opcoes: ['f/8', 'f/4', 'f/5,6'], correta: 0,
+        feedbackCorreto: 'Fechar de f/5,6 para f/8 compensa o tempo dobrado.', feedbackIncorreto: 'O tempo maior já aumentou a luz. Veja qual abertura deixa entrar menos luz.',
+      }] }) });
     }
     const entrada = payload.input[1].content;
-    const avancado = entrada.includes('Fotografar movimento') && entrada.includes('Escolher velocidade para movimento');
+    const adaptada = entrada.includes('Fotografar movimento') && entrada.includes('Escolher velocidade para movimento');
     const ajuste = entrada.includes('Compensar exposição com o obturador');
-    const titulo = avancado ? 'Criar rastro sem perder a exposição' : ajuste ? 'Corrigir a subexposição' : 'Começar pela exposição';
+    const titulo = adaptada ? tituloDoRastro : ajuste ? 'Corrigir a subexposição' : 'Começar pela exposição';
     if (payload.stream) {
       const quebra = String.fromCharCode(10);
       const linhas = [
@@ -263,15 +281,16 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
       const mensagem = JSON.stringify({ type: 'response.output_text.delta', delta: linhas + quebra });
       return new Response('data: ' + mensagem + quebra + quebra, { headers: { 'Content-Type': 'text/event-stream' } });
     }
-    const enunciado = avancado ? 'Qual ajuste cria um rastro de movimento sem aumentar a exposição?' : 'Qual alteração corrige a subexposição sem mudar a abertura?';
+    const enunciado = adaptada ? aplicacao.enunciado : 'Qual alteração corrige a subexposição sem mudar a abertura?';
+    const opcoes = adaptada ? aplicacao.opcoes : ['Ajustar o tempo de exposição', 'Mudar apenas o foco', 'Manter todos os ajustes'];
     return Response.json({ status: 'completed', output_text: JSON.stringify({
       objetivo: 'Fotografar em condições de luz variável.',
       conceito: 'A duração da exposição e a abertura controlam a luz que chega ao sensor.',
       exemplo: 'Em 1/60 s o sensor recebe luz por mais tempo do que em 1/500 s.',
       exercicio: {
         tipo: 'multipla_escolha', enunciado, contexto: null, trecho: null,
-        opcoes: [{ id: 'a', texto: 'Ajustar o tempo de exposição' }, { id: 'b', texto: 'Mudar apenas o foco' }, { id: 'c', texto: 'Manter todos os ajustes' }],
-        gabarito: ['Ajustar o tempo de exposição'], feedbackCorreto: 'Sim.', feedbackIncorreto: 'Considere o tempo que o sensor recebe luz.',
+        opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })),
+        gabarito: ['0'], feedbackCorreto: 'Sim.', feedbackIncorreto: 'Considere o tempo que o sensor recebe luz.',
       },
     }) });
   });
@@ -283,17 +302,20 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   const recorte = await ok(pedido(geral));
   assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Visão geral', 'Fotografar movimento', 'Exposição manual', 'Ainda não sei']);
   const profundidade = await responder(cookie, recorte, 'Fotografar movimento');
-  const verificacao = await responder(cookie, profundidade, 'Avançado');
+  const verificacao = await responder(cookie, profundidade, 'Intermediário');
   assert.match(verificacao.pergunta.enunciado, /ciclista/);
   const ampla = await responder(cookie, verificacao, '1/500 s');
   assert.deepEqual(ampla.perfil, {
-    escopo: 'Fotografar movimento', nivel: 'avancado', demonstrados: ['Escolher velocidade para movimento'], lacunas: [],
+    escopo: 'Fotografar movimento', nivel: 'intermediario', demonstrados: ['Escolher velocidade para movimento'], lacunas: [],
   });
   const pa = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral, diagnosticoId: ampla.id })));
   const a = (await salvarEReabrir(cookie, pa)).primeira;
   assert.match(a.titulo, /rastro/);
   assert.match(a.exercicio.enunciado, /rastro/);
-  assert.ok(pedidos.some(p => p.stream && p.input[1].content.includes('"nivel":"avancado"')));
+  assert.deepEqual(revisoesDeFotografia, [aplicacao.enunciado, casoDoRastro]);
+  const aberturaCerta = a.exercicio.opcoes.find(o => o.texto === 'f/8');
+  assert.equal((await ok(avaliar(req('aprendizado/licoes/' + a.id + '/avaliar', cookie, { resposta: aberturaCerta.id }), ctx(a.id)))).correta, true);
+  assert.ok(pedidos.some(p => p.stream && p.input[1].content.includes('"nivel":"intermediario"')));
 
   for (const opcao of ['Visão geral', 'Ainda não sei']) {
     const escolha = await ok(pedido(geral));
@@ -408,13 +430,17 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
 
   const objetivo = 'Aprender a resolver equações do primeiro grau com uma única incógnita';
   const habilidade = 'Isolar a incógnita em equação simples';
-  const tituloRepetido = 'Igualdade e operações inversas';
+  const tituloRepetido = 'Reconhecer uma equação do primeiro grau';
   const tituloNovo = 'Traduzir um problema em equação';
   const desafio = 'Escolher a equação que representa uma taxa fixa e um valor por unidade.';
   const fundamentos = 'Qual valor de x torna x + 5 = 12 verdadeira?';
   const repeticao = 'Em x + 4 = 9, qual operação ajuda a isolar x?';
   const aplicacao = 'Uma corrida cobra R$ 5 fixos e R$ 3 por km. Qual equação representa um total de R$ 20?';
+  const decisaoDeConferencia = 'Verificar se a solução cabe na unidade e nas condições do problema.';
+  const conferencia = 'A conta deu 2,5 ingressos e só se vendem ingressos inteiros. O que essa solução mostra?';
+  const tituloDeConferencia = 'Conferir a solução no contexto';
   const revisoes = [];
+  let reparos = 0;
   let deixarRepetir = false;
 
   const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
@@ -428,7 +454,10 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       const linhas = [
         { tipo: 'plano', titulo: 'Equações do primeiro grau' },
         { tipo: 'fluxo', titulo: 'Primeiros passos' },
-        { tipo: 'licao', titulo: demonstrou ? tituloRepetido : 'O que é uma equação', resumo: 'Aprender a isolar x.' },
+        { tipo: 'licao', titulo: demonstrou ? tituloRepetido : 'O que é uma equação', resumo: demonstrou ? 'Identificar qual sentença é uma equação.' : 'Aprender a isolar x.' },
+        ...(demonstrou ? [
+          { tipo: 'licao', titulo: 'Usar operações inversas' }, { tipo: 'licao', titulo: 'Equilibrar os dois lados' },
+        ] : []),
       ].map(x => JSON.stringify(x)).join('\n') + '\n';
       return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: linhas } }] })}\n\ndata: [DONE]\n\n`);
     }
@@ -437,41 +466,59 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
         habilidade, enunciado: 'Na equação 3x + 5 = 20, qual é o valor de x?', opcoes: ['5', '8', '15'], correta: 0,
       } });
     }
-    if (sistema.includes('Revise a primeira lição proposta')) {
+    if (sistema.includes('Revise o conjunto das lições obrigatórias')) {
       const dados = JSON.parse(entrada);
       assert.equal(dados.objetivo, objetivo);
       assert.deepEqual(dados.diagnostico.demonstrados, [habilidade]);
       assert.equal(dados.diagnostico.nivel, 'basico');
-      assert.equal(dados.candidata.titulo, tituloRepetido);
-      return respostaJson({ titulo: tituloNovo, desafio });
+      assert.deepEqual(dados.amostrasDemonstradas, [{ habilidade, enunciado: 'Na equação 3x + 5 = 20, qual é o valor de x?' }]);
+      assert.deepEqual(dados.candidato[0].licoes.map(l => l.titulo), [tituloRepetido, 'Usar operações inversas', 'Equilibrar os dois lados']);
+      return respostaJson({ fluxos: [{ titulo: 'Aplicações', licoes: [
+        { titulo: tituloNovo, resumo: desafio }, { titulo: tituloDeConferencia, resumo: decisaoDeConferencia },
+      ] }] });
     }
-    if (sistema.includes('Avalie o conteúdo real da primeira lição')) {
+    if (sistema.includes('Avalie todas as lições recebidas')) {
       const dados = JSON.parse(entrada);
-      assert.equal(dados.desafioInicial, desafio);
-      const exercicio = dados.licao.exercicio;
-      const enunciado = exercicio.enunciado;
-      revisoes.push(enunciado);
-      const certa = exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto;
-      if (enunciado === aplicacao && certa === '3k + 5 = 20') return respostaJson({ resultado: 'avanca' });
-      assert.equal(enunciado, repeticao);
-      assert.equal(certa, 'Subtrair 4');
-      return respostaJson({ resultado: 'repete' });
+      assert.deepEqual(dados.curriculo.map(l => l.decisao), [desafio, decisaoDeConferencia]);
+      assert.equal(dados.amostrasDemonstradas.length, 1);
+      revisoes.push(dados.licoes.map(l => l.exercicios[0].enunciado));
+      return respostaJson({ avaliacoes: dados.licoes.map(({ numero, exercicios: [exercicio] }) => {
+        const certa = exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto;
+        if (exercicio.enunciado === aplicacao && certa === '3k + 5 = 20'
+          || exercicio.enunciado === conferencia && certa === 'O resultado não é válido nesse contexto') {
+          return { numero, resultado: 'avanca', motivo: '' };
+        }
+        assert.equal(exercicio.enunciado, repeticao);
+        assert.equal(certa, 'Subtrair 4');
+        return { numero, resultado: 'ajustar', motivo: numero === 1
+          ? 'Falta escolher a equação que modela a taxa fixa.' : 'Falta decidir se o valor da solução cabe na unidade.' };
+      }) });
+    }
+    if (sistema.includes('Reescreva apenas as lições indicadas')) {
+      reparos++;
+      const { licoes } = JSON.parse(entrada);
+      assert.deepEqual(licoes.map(l => l.numero), [1, 2]);
+      assert.match(licoes[0].motivo, /taxa fixa/);
+      assert.match(licoes[1].motivo, /na unidade/);
+      return respostaJson({ licoes: licoes.map(({ numero }) => ({
+        numero, conceito: numero === 1 ? 'Some a taxa fixa ao produto do preço pela quantidade.' : 'Confira se o resultado faz sentido na unidade pedida.',
+        exemplo: numero === 1 ? 'Numa conta de R$ 8 fixos mais R$ 2/kg, R$ 18 corresponde a 2k + 8 = 18.' : 'Não se podem comprar 2,5 ingressos inteiros.',
+        enunciado: deixarRepetir ? repeticao : numero === 1 ? aplicacao : conferencia,
+        opcoes: deixarRepetir ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : numero === 1 ? ['3k + 5 = 20', '5k + 3 = 20', '3k = 20 + 5']
+          : ['O resultado não é válido nesse contexto', 'Compre 2,5 ingressos', 'O arredondamento sempre resolve'],
+        correta: 0, feedbackCorreto: 'Confira a condição pedida.', feedbackIncorreto: 'Considere tanto a conta quanto a situação.',
+      })) });
     }
 
-    const adaptada = entrada.includes('Desafio inicial');
-    if (adaptada) {
-      assert.ok(entrada.includes(desafio));
-      assert.ok(entrada.includes(tituloNovo));
-    }
-    const nova = adaptada && !deixarRepetir && entrada.includes('A primeira versão não mostrou avanço no conteúdo');
-    const opcoes = nova ? ['3k + 5 = 20', '5k + 3 = 20', '3k = 20 + 5']
-      : adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
+    const adaptada = entrada.includes('Decisão a praticar nesta lição');
+    if (adaptada) assert.ok(entrada.includes(entrada.includes('Escreva a lição 1:') ? desafio : decisaoDeConferencia));
+    const opcoes = adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
     return respostaJson({
-      objetivo: nova ? desafio : habilidade,
-      conceito: nova ? 'Combine a taxa fixa com o produto do preço unitário pela quantidade.' : 'Aplique a mesma operação nos dois lados para isolar a incógnita.',
-      exemplo: nova ? 'Com R$ 8 fixos e R$ 2 por kg, um total de R$ 18 é representado por 2k + 8 = 18.' : 'Em x + 3 = 8, subtraia 3 para encontrar x = 5.',
+      objetivo: habilidade,
+      conceito: 'Aplique a mesma operação nos dois lados para isolar a incógnita.',
+      exemplo: 'Em x + 3 = 8, subtraia 3 para encontrar x = 5.',
       exercicio: {
-        tipo: 'multipla_escolha', enunciado: nova ? aplicacao : adaptada ? repeticao : fundamentos,
+        tipo: 'multipla_escolha', enunciado: adaptada ? repeticao : fundamentos,
         opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })), gabarito: ['0'],
         feedbackCorreto: 'Está certo.', feedbackIncorreto: 'Observe cada parte do problema.',
       },
@@ -496,16 +543,21 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   assert.equal(stream.status, 200);
   const eventos = (await stream.text()).trim().split('\n').map(JSON.parse);
   assert.equal(eventos.find(e => e.tipo === 'licao').resumo, desafio);
-  const { primeira } = await salvarEReabrir(cookie, eventos.at(-1).proposta);
+  const { primeira, reaberto } = await salvarEReabrir(cookie, eventos.at(-1).proposta);
   assert.equal(primeira.titulo, tituloNovo);
   assert.equal(primeira.exercicio.enunciado, aplicacao);
   const opcao = primeira.exercicio.opcoes.find(o => o.texto === '3k + 5 = 20');
   assert.equal((await ok(avaliar(req('aprendizado/licoes/' + primeira.id + '/avaliar', cookie, { resposta: opcao.id }), ctx(primeira.id)))).correta, true);
-  assert.deepEqual(revisoes, [repeticao, aplicacao]);
+  const segundaId = reaberto.fluxos[0].licoes[1].id;
+  const segunda = await ok(licao(req('aprendizado/licoes/' + segundaId, cookie), ctx(segundaId)));
+  assert.equal(segunda.titulo, tituloDeConferencia);
+  assert.equal(segunda.exercicio.enunciado, conferencia);
+  assert.deepEqual(revisoes, [[repeticao, repeticao], [aplicacao, conferencia]]);
+  assert.equal(reparos, 1, 'os dois exercícios foram reparados em uma chamada');
 
   deixarRepetir = true;
   const invalida = await pedir(corrigida.id);
   assert.equal((await salvar(req('aprendizado/planos', cookie, { token: invalida.token }))).status, 503);
-  assert.deepEqual(revisoes, [repeticao, aplicacao, repeticao, repeticao]);
+  assert.deepEqual(revisoes, [[repeticao, repeticao], [aplicacao, conferencia], [repeticao, repeticao], [repeticao, repeticao]]);
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });

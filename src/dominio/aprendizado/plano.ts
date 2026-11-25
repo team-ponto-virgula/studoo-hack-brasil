@@ -826,10 +826,14 @@ export function calcularProgresso(concluidas: number, total: number): Progresso 
   return { concluidas, total, percentual: total === 0 ? null : (concluidas / total) * 100 };
 }
 
-/** Estrutura de uma proposta: títulos, sem o conteúdo das lições. É o que o token da proposta carrega. */
+export type AmostraDemonstrada = { habilidade: string; enunciado: string };
+
+/** Estrutura assinada da proposta, sem o conteúdo das lições nem o gabarito do diagnóstico. */
 export type EsqueletoPlano = {
   materialId?: string;
   diagnostico?: PerfilDiagnostico;
+  amostrasDemonstradas?: AmostraDemonstrada[];
+  curriculoAdaptado?: true;
   desafioInicial?: string;
   gerador: string;
   titulo: string;
@@ -845,6 +849,9 @@ export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
   if (!objeto(valor) || !textoAte(valor.gerador, 40) || !textoAte(valor.titulo, LIMITES_ESQUELETO.titulo) ||
       !textoAte(valor.objetivo, LIMITES_ESQUELETO.objetivo) || !textoAte(valor.origem, LIMITES_ESQUELETO.titulo) ||
       !opcional(valor.diagnostico, perfilDiagnosticoValido) ||
+      !opcional(valor.amostrasDemonstradas, (amostras) => Array.isArray(amostras) && amostras.length <= 3 && amostras.every(a =>
+        objeto(a) && textoAte(a.habilidade, 100) && textoAte(a.enunciado, 320))) ||
+      !opcional(valor.curriculoAdaptado, (adaptado) => adaptado === true) ||
       !opcional(valor.desafioInicial, (desafio) => textoAte(desafio, 160)) ||
       !Array.isArray(valor.fluxos) || valor.fluxos.length === 0 || valor.fluxos.length > LIMITES_ESQUELETO.fluxos) {
     return false;
@@ -854,7 +861,7 @@ export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
     objeto(fluxo) && textoAte(fluxo.titulo, LIMITES_ESQUELETO.titulo) && Array.isArray(fluxo.licoes) &&
     fluxo.licoes.length > 0 && fluxo.licoes.length <= LIMITES_ESQUELETO.licoesPorFluxo &&
     fluxo.licoes.every((licao) => objeto(licao) && textoAte(licao.titulo, LIMITES_ESQUELETO.titulo) &&
-      opcional(licao.resumo, (resumo) => textoAte(resumo, 200))));
+      (valor.curriculoAdaptado ? textoAte(licao.resumo, 160) : opcional(licao.resumo, (resumo) => textoAte(resumo, 200)))));
 }
 
 /**

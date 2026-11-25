@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
 
 // Uma proposta carrega o esqueleto do plano (títulos). Com 8 fluxos de 8 lições cabe com folga.
-const TAMANHO_MAXIMO = 6000;
+export const TAMANHO_MAXIMO_COMPROVANTE = 6000;
 
 type TipoComprovante = "proposta" | "avaliacao";
 
@@ -29,7 +29,7 @@ export function emitirComprovante(tipo: TipoComprovante, usuarioId: string, dado
 }
 
 export function lerComprovante(tipo: TipoComprovante, usuarioId: string, token: string): Comprovante | null {
-  if (token.length > TAMANHO_MAXIMO) {
+  if (token.length > TAMANHO_MAXIMO_COMPROVANTE) {
     return null;
   }
 

@@ -1,5 +1,5 @@
 import type { EventoGeracao, PerfilDiagnostico } from "@studoo/contratos";
-import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import type { AmostraDemonstrada, ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { criarGeradorFalso } from "./falsa";
 import { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek } from "./deepseek";
@@ -12,7 +12,7 @@ export { REGRAS_ORDEM_DA_TRILHA, instrucoesDeOrdem } from "./ordem";
 export type EventoEstrutura = Extract<EventoGeracao, { tipo: "plano" | "fluxo" | "licao" }>;
 
 /** Devolvido ao fim da estrutura: quem gerou (para o aceite) e a origem exibida na proposta. */
-export type MetaPlano = { gerador: string; origem: string; desafioInicial?: string };
+export type MetaPlano = { gerador: string; origem: string; curriculoAdaptado?: true };
 
 /**
  * Fronteira da IA (SEGURANCA.md §5). O pedido leva só o objetivo: nenhum dado da conta.
@@ -29,10 +29,11 @@ export interface GeradorTrilha {
   gerarEstrutura(
     objetivo: string,
     sinal: AbortSignal,
-    opcoes: { aoVivo: boolean; diagnostico?: PerfilDiagnostico },
+    opcoes: { aoVivo: boolean; diagnostico?: PerfilDiagnostico; amostrasDemonstradas?: AmostraDemonstrada[] },
   ): AsyncGenerator<EventoEstrutura, MetaPlano | undefined>;
   /** Cria o conteúdo de uma lição do esqueleto aceito. Recusa (`proposta_invalida`) um esqueleto de outro gerador. */
-  gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal, corrigirAbertura?: boolean): Promise<ConteudoLicao>;
+  gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;
+  revisarConteudos?(esqueleto: EsqueletoPlano, conteudos: ConteudoLicao[][], sinal: AbortSignal): Promise<ConteudoLicao[][]>;
 }
 
 export type ProvedorIa = "falsa" | "openai" | "deepseek";
@@ -60,7 +61,7 @@ export function obterGerador(): GeradorTrilha {
     if (!config) {
       if (!reserva) throw new FalhaApi("ia_indisponivel");
       console.error(JSON.stringify({ rota: "ia-openai", codigo: "reserva", motivo: "sem_configuracao" }));
-      return reserva;
+      return comReserva(null, reserva, GERADOR_OPENAI, "ia-openai");
     }
     return comReserva(comProgressaoDiagnostica(criarGeradorOpenAi(config)), reserva, GERADOR_OPENAI, "ia-openai");
   }
@@ -70,7 +71,7 @@ export function obterGerador(): GeradorTrilha {
     if (!config) {
       if (!reserva) throw new FalhaApi("ia_indisponivel");
       console.error(JSON.stringify({ rota: "ia-deepseek", codigo: "reserva", motivo: "sem_configuracao" }));
-      return reserva;
+      return comReserva(null, reserva, GERADOR_DEEPSEEK, "ia-deepseek");
     }
     return comReserva(comProgressaoDiagnostica(criarGeradorDeepSeek(config)), reserva, GERADOR_DEEPSEEK, "ia-deepseek");
   }
@@ -79,11 +80,12 @@ export function obterGerador(): GeradorTrilha {
 
 /**
  * Gerador principal com a IA falsa de reserva. A troca só acontece antes do primeiro evento: depois disso, a pessoa já
- * viu a trilha começar, e o erro segue para a tela. O conteúdo das lições segue quem gerou a estrutura (o `gerador` do
+ * viu a trilha começar, e o erro segue para a tela. Com evidência demonstrada, o erro segue para a tela desde o início.
+ * O conteúdo das lições segue quem gerou a estrutura (o `gerador` do
  * esqueleto), então uma proposta da IA falsa continua aceita mesmo com `IA=openai` ou `IA=deepseek`.
  */
 function comReserva(
-  principal: GeradorTrilha,
+  principal: GeradorTrilha | null,
   reserva: GeradorTrilha | null,
   geradorPrincipal: string,
   rota: string,
@@ -91,6 +93,11 @@ function comReserva(
   const falsa = reserva ?? criarGeradorFalso();
   return {
     async *gerarEstrutura(objetivo, sinal, opcoes) {
+      const podeUsarReserva = reserva && !opcoes.diagnostico?.demonstrados.length;
+      if (!principal) {
+        if (!podeUsarReserva) throw new FalhaApi("ia_indisponivel");
+        return yield* reserva.gerarEstrutura(objetivo, sinal, opcoes);
+      }
       const estrutura = principal.gerarEstrutura(objetivo, sinal, opcoes);
       let emitiu = false;
       try {
@@ -101,7 +108,7 @@ function comReserva(
           yield passo.value;
         }
       } catch (erro) {
-        if (emitiu || !reserva || sinal.aborted) throw erro;
+        if (emitiu || !podeUsarReserva || sinal.aborted) throw erro;
         console.error(JSON.stringify({ rota, codigo: "reserva", motivo: "falha_do_provedor" }));
         return yield* reserva.gerarEstrutura(objetivo, sinal, opcoes);
       } finally {
@@ -109,8 +116,15 @@ function comReserva(
       }
     },
     gerarConteudo(esqueleto, fluxo, licao, sinal) {
-      if (esqueleto.gerador === geradorPrincipal) return principal.gerarConteudo(esqueleto, fluxo, licao, sinal);
+      if (esqueleto.gerador === geradorPrincipal) {
+        if (!principal) throw new FalhaApi("ia_indisponivel");
+        return principal.gerarConteudo(esqueleto, fluxo, licao, sinal);
+      }
       return falsa.gerarConteudo(esqueleto, fluxo, licao, sinal);
+    },
+    async revisarConteudos(esqueleto, conteudos, sinal) {
+      if (esqueleto.gerador !== geradorPrincipal || !principal?.revisarConteudos) return conteudos;
+      return principal.revisarConteudos(esqueleto, conteudos, sinal);
     },
   };
 }

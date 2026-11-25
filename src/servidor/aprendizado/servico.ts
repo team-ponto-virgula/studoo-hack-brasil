@@ -18,6 +18,7 @@ import {
   avaliarResposta,
   calcularProgresso,
   conteudoValido,
+  type AmostraDemonstrada,
   type ConteudoLicao,
   type EsqueletoPlano,
 } from "@/dominio/aprendizado/plano";
@@ -87,8 +88,8 @@ const selecaoPlano = {
 type PlanoPersistido = Prisma.PlanoAprendizadoGetPayload<{ select: typeof selecaoPlano }>;
 
 /** Proposta de uma vez, para o cliente que não acompanha a geração (POST /propostas). */
-export async function gerarProposta(usuarioId: string, objetivo: string, diagnostico?: PerfilDiagnostico): Promise<PropostaPlano> {
-  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false, diagnostico });
+export async function gerarProposta(usuarioId: string, objetivo: string, diagnostico?: PerfilDiagnostico, amostrasDemonstradas?: AmostraDemonstrada[]): Promise<PropostaPlano> {
+  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false, diagnostico, amostrasDemonstradas });
   if (!(await consumirGeracaoPersistente(usuarioId))) {
     throw new FalhaApi("limite_geracoes");
   }
@@ -221,10 +222,11 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
     }
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
-  if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
+  const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(plano, conteudos, sinal) : conteudos;
+  if (!revisados.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
   }
-  return conteudos;
+  return revisados;
 }
 
 /**
