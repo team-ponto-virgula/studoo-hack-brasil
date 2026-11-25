@@ -11,8 +11,8 @@ export function POST(request: Request) {
     await exigirConsentimentoIa(usuarioId);
     const { objetivo, diagnosticoId } = await lerObjeto(request);
     if (typeof objetivo !== "string") throw new FalhaApi("invalido");
-    const diagnostico = await diagnosticoDaGeracao(usuarioId, objetivo, diagnosticoId);
-    const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false, diagnostico });
+    const evidencias = await diagnosticoDaGeracao(usuarioId, objetivo, diagnosticoId);
+    const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false, ...evidencias });
     if (!(await consumirGeracaoPersistente(usuarioId))) {
       throw new FalhaApi("limite_geracoes");
     }

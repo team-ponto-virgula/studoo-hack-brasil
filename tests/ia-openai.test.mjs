@@ -132,8 +132,11 @@ before(async () => {
       const formato = dados.text?.format?.name;
       let saida = licaoDeEscolha;
       if (modo === 'diagnostico') {
-        if (formato === 'diagnostico_abertura') saida = { titulo: 'Traduzir uma situação em equação', desafio: desafioDaEquacao };
-        else if (formato === 'diagnostico_verificar_licao') saida = { resultado: 'avanca' };
+        if (formato === 'diagnostico_curriculo') saida = { fluxos: [{ titulo: 'Aplicações', licoes: [
+          { titulo: 'Traduzir uma situação em equação', resumo: desafioDaEquacao },
+          { titulo: 'Conferir uma solução', resumo: 'Verificar se a solução faz sentido no contexto.' },
+        ] }] };
+        else if (formato === 'diagnostico_verificar_curriculo') saida = { avaliacoes: [{ numero: 1, resultado: 'avanca', motivo: '' }, { numero: 2, resultado: 'avanca', motivo: '' }] };
         else saida = licaoComDiagnostico;
       }
       if (formato === "correcao_aberta") saida = { criterios: [{ atendido: true }, { atendido: false }], correta: true, feedback: "Boa ideia, faltou o exemplo." };
@@ -626,13 +629,27 @@ test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega
   assert.match(pedidos[0].dados.input[1].content, /Isolar a incógnita/);
 
   const plano = lerComprovante('proposta', 'teste-diagnostico', p.token).plano;
-  assert.equal(plano.desafioInicial, desafioDaEquacao);
-  const conteudo = await obterGerador().gerarConteudo(plano, 0, 0, new AbortController().signal);
+  assert.equal(plano.curriculoAdaptado, true);
+  assert.equal(plano.fluxos[0].licoes[0].resumo, desafioDaEquacao);
+  const gerador = obterGerador();
+  const sinal = new AbortController().signal;
+  const conteudo = await gerador.gerarConteudo(plano, 0, 0, sinal);
   assert.ok(conteudoValido(conteudo));
-  const pedidoDaLicao = pedidos.find(pedido => pedido.dados.input[1]?.content.includes('Desafio inicial'));
+  await gerador.revisarConteudos(plano, [[conteudo, conteudo]], sinal);
+  const pedidoDaLicao = pedidos.find(pedido => pedido.dados.input[1]?.content.includes('Decisão a praticar nesta lição'));
   assert.match(pedidoDaLicao.dados.input[1].content, /Use apenas demonstrados como evidência/);
   assert.match(pedidoDaLicao.dados.input[1].content, /Resolver equações com x dos dois lados/);
   const verificacao = pedidos.at(-1).dados;
-  assert.equal(verificacao.text.format.name, 'diagnostico_verificar_licao');
-  assert.match(JSON.parse(verificacao.input[0].content[0].text).licao.exercicio.enunciado, /Qual equação representa/);
+  assert.equal(verificacao.text.format.name, 'diagnostico_verificar_curriculo');
+  assert.match(JSON.parse(verificacao.input[0].content[0].text).licoes[0].exercicios[0].enunciado, /Qual equação representa/);
+});
+
+test('uma falha do provedor não substitui uma adaptação com evidência por uma trilha de reserva', async () => {
+  modo = 'falha';
+  const diagnostico = { nivel: 'intermediario', escopo: 'Exposição', demonstrados: ['Ajustar o obturador'], lacunas: [] };
+  for (const chaveAusente of [false, true]) {
+    if (chaveAusente) delete process.env.OPENAI_API_KEY;
+    const eventos = await coletar(iniciarGeracao(`falha-adaptacao-${chaveAusente}`, 'Compensar a exposição com o obturador', { diagnostico }));
+    assert.deepEqual(eventos, [{ tipo: 'erro', codigo: 'ia_indisponivel' }]);
+  }
 });

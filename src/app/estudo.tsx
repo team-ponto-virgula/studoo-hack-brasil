@@ -162,7 +162,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   const aceiteAtual = useRef<AbortController | null>(null);
   const montado = useRef(true);
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ texto: string; trilhaId?: string } | null>(null);
   const [anuncio, setAnuncio] = useState('');
   const [sincronia, setSincronia] = useState<Sincronia>({ estado: 'atualizando', em: null });
   const [agora, setAgora] = useState(() => Date.now());
@@ -680,7 +680,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
 
   function cancelarGeracao() {
     navegar({ tipo: 'objetivo' });
-    setAviso(mensagens.pedido.cancelada);
+    setAviso({ texto: mensagens.pedido.cancelada });
     anunciar(mensagens.pedido.cancelada);
   }
 
@@ -714,9 +714,10 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     if (!iniciar) {
       navegar({ tipo: 'planos' });
       setObjetivo('');
-      setAviso(visitante
+      const texto = visitante
         ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste navegador.'
-        : 'Trilha salva em Minhas trilhas. Comece quando quiser.');
+        : 'Trilha salva em Minhas trilhas. Comece quando quiser.';
+      setAviso({ texto, trilhaId: plano.id });
       anunciar('Trilha salva em Minhas trilhas.');
       return;
     }
@@ -930,7 +931,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
             <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
           )}
           {visivel && tela.tipo === 'objetivo' && (
-            <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
+            <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso?.texto ?? null} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
               focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto, id) => void gerar(texto, id)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
@@ -955,7 +956,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           )}
           {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
           {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
-            const destaque = planoInicial(planos);
+            const salvo = aviso?.trilhaId ? planos.find(p => p.id === aviso.trilhaId) : undefined;
+            const destaque = salvo ?? planoInicial(planos);
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (
               <section className="painel painel--planos">
@@ -965,8 +967,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                     <span aria-hidden="true">+</span> {mensagens.planos.novo}
                   </Botao>
                 </div>
-                <p className="introducao">{mensagens.planos.subtitulo}</p>
-                {aviso && <p role="status">{aviso}</p>}
+                {salvo && aviso ? <p className="trilha-aviso" role="status">{aviso.texto}</p>
+                  : <p className="introducao">{mensagens.planos.subtitulo}</p>}
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
                     ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => apagarPlano(destaque)}

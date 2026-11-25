@@ -462,6 +462,7 @@ button, input, textarea { font: inherit; }
 @keyframes planos-vazio-pular { 50% { transform: translateY(-8px); } }
 .painel--planos { display: grid; gap: 12px; max-width: 960px; }
 .painel--planos > .introducao { margin-top: 0; }
+.painel--planos > .trilha-aviso { margin-top: 0; }
 
 .plano-destaque {
   position: relative;

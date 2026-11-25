@@ -9,7 +9,7 @@ export function POST(request: Request) {
     await exigirConsentimentoIa(usuarioId);
     const { objetivo, diagnosticoId } = await lerObjeto(request);
     if (typeof objetivo !== "string") throw new FalhaApi("invalido");
-    const diagnostico = await diagnosticoDaGeracao(usuarioId, objetivo, diagnosticoId);
-    return responder(await gerarProposta(usuarioId, objetivo, diagnostico));
+    const evidencias = await diagnosticoDaGeracao(usuarioId, objetivo, diagnosticoId);
+    return responder(await gerarProposta(usuarioId, objetivo, evidencias?.diagnostico, evidencias?.amostrasDemonstradas));
   });
 }
