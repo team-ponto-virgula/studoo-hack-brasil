@@ -70,9 +70,12 @@ function PainelDeEstudo({ estudo, continuarEstudo }: {
     <TituloSecao>{p.estudo.titulo}</TituloSecao>
     <View style={perfilEstilos.cartao}>
       {indicadores.map(([rotulo, quantidade]) => Number.isInteger(quantidade) && quantidade >= 0 &&
-        <Text key={rotulo} style={estilos.texto}>{rotulo}: {quantidade}</Text>)}
-      {continuarEstudo && <Botao testID="perfil-continuar-estudo" rotulo={p.estudo.continuar} variante="secundario" acao={continuarEstudo} />}
+        <View key={rotulo} accessible accessibilityLabel={`${rotulo}, ${quantidade}`} style={perfilEstilos.linhaDeEstudo}>
+          <Text style={[estilos.texto, perfilEstilos.rotuloDeEstudo]}>{rotulo}</Text>
+          <Text style={estilos.texto}>{quantidade}</Text>
+        </View>)}
     </View>
+    {continuarEstudo && <Botao testID="perfil-continuar-estudo" rotulo={p.estudo.continuar} variante="secundario" acao={continuarEstudo} />}
   </View>;
 }
 
@@ -231,7 +234,7 @@ export function TelaPerfil({ continuarEstudo, cliente, perfil: inicial, comunida
   }
 
   return (
-    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA} aoRolar={() => ouvintesDaRolagem.current.forEach((ouvinte) => ouvinte())}
+    <Tela pagina="perfil" avisoNoFluxo acoes={acoes} estiloConteudo={FIM_COM_BARRA} aoRolar={() => ouvintesDaRolagem.current.forEach((ouvinte) => ouvinte())}
       rodape={comEditor && rodapeDoEditor ? rodapeDoEditor : undefined} estiloRodapeConteudo={comEditor ? perfilEstilos.barraConteudo : undefined}
       estiloRodape={comEditor ? perfilEstilos.barraFundo : undefined}>
       <View style={perfilEstilos.painel}>
@@ -793,7 +796,7 @@ export function PerfilSemSocial({ cliente, acoes, desativado, visitante: visitan
     return () => { ativo = false; };
   }, [cliente, visitanteInicial]);
   return (
-    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
+    <Tela pagina="perfil" avisoNoFluxo acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
       <View style={perfilEstilos.painel}>
         <Titulo testID="titulo-perfil" foco>{p.titulo}</Titulo>
         {visitante && <ContaTemporaria entrar={entrar} desativado={desativado} />}
@@ -826,6 +829,8 @@ const perfilEstilos = StyleSheet.create({
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
   secao: { gap: 10 },
+  linhaDeEstudo: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 },
+  rotuloDeEstudo: { flexShrink: 1 },
   secaoCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 8 },
   postarVazio: { gap: 12, alignItems: 'flex-start' },
   secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },

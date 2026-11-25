@@ -1074,28 +1074,29 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     // Como na web (rodada 4F): enquanto as trilhas chegam, o esqueleto do mapa (quem tem trilha cai no mapa logo depois).
     if (!planos && !erro) return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
 
+    const guardada = planos?.find(item => item.id === trilhaGuardada && item.progresso.concluidas === 0);
     return (
       <Tela pagina="planos" avisoNoFluxo acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}
         estiloConteudo={estudoEstilos.fimQuarenta}>
         {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título, sem margem em cima e a 16 dele. */}
         {erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} estilo={estudoEstilos.erroNaLista} />}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
-        {trilhaGuardada && planos?.some(item => item.id === trilhaGuardada && item.progresso.concluidas === 0) &&
+        {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
+        {planos && planos.length === 0 ? (
+          <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
+        ) : !guardada && (
+          /* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */
+          <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
+        )}
+        {guardada &&
           <Text role="status" accessibilityLiveRegion="polite" testID="trilha-salva-aviso" style={estudoEstilos.aviso}>
             {visitante
               ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste aparelho.'
               : 'Trilha salva em Minhas trilhas. Comece quando quiser.'}
           </Text>}
-        {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
-        {planos && planos.length === 0 ? (
-          <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
-        ) : (
-          /* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */
-          <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
-        )}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
-          const destaque = planos.find(item => item.id === trilhaGuardada && item.progresso.concluidas === 0) ?? planoInicial(planos);
+          const destaque = guardada ?? planoInicial(planos);
           const restantes = planos.filter((plano) => plano.id !== destaque?.id);
           return (
             <>
