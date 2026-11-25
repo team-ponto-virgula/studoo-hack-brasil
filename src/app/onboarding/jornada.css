@@ -54,6 +54,7 @@
 .estudo:has(.primeira-vitoria) { grid-template-columns: minmax(0, 1fr); }
 .estudo:has(.primeira-vitoria) :is(.barra-lateral, .estudo-cabecalho) { display: none; }
 .estudo-principal:has(.primeira-vitoria) { width: 100%; max-width: none; margin: 0; padding: 0; }
+.estudo-principal:has(.primeira-vitoria)[data-aviso-musica-abaixo] { margin-top: var(--aviso-musica-reserva, 0px); }
 .primeira-vitoria { display: flex; flex-direction: column; width: min(100%, 620px); margin: 0 auto; padding: 24px 28px; color: #17213d; font-family: Inter, sans-serif; }
 .primeira-vitoria__stu { display: flex; justify-content: center; height: 150px; margin-bottom: 16px; }
 .primeira-vitoria h1 { margin: 0; font-family: inherit; font-size: 1.875rem; line-height: 1.2; font-weight: 600; letter-spacing: -.033em; }
