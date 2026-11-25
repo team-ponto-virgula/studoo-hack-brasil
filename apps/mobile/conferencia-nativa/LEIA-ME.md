@@ -15,8 +15,10 @@ No disparo manual, `feedback_aluno=true` seleciona o percurso de diagnóstico na
 sintética e repete o pedido de equação com dois perfis. O primeiro usa “Ainda não sei” e chega a “Preservar a igualdade”
 e ao exercício com `x + 5 = 12`. O segundo demonstra duas habilidades e chega a “Modelar um problema com equação” e
 ao exercício da corrida. Os dois salvam na lista, reabrem o app, conferem `0/N` e só então começam a lição.
-Cada perfil deixa duas capturas (84 ou 85). O procedimento confere a conta antes de cada caso e remove apenas a trilha
-temporária identificada pela comparação da lista. Com o ambiente nativo de teste já preparado, o seletor local é
+O caso inicial também acerta o exercício, envia uma explicação escrita em “Ensine ao Stu” e confere o retorno no
+Caderno do Stu. São cinco capturas dos dois casos (84 e 85), além das cinco de entrada. O procedimento confere a conta
+antes de cada caso e remove apenas a trilha temporária identificada pela comparação da lista. Com o ambiente nativo
+de teste já preparado, o seletor local é
 `CONFERENCIA_TELAS=feedback-aluno` no passo `ios.sh fluxo-telas` ou `android.sh no-emulador`.
 
 ## De onde vêm os dados
