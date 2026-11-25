@@ -203,10 +203,10 @@ test("a barra de fração vale de 1 a 12 partes e nunca pinta mais que o total",
 
 test("as etapas da lição mudam com o número de exercícios e a prática", () => {
   const exercicio = { tipo: "lacuna", enunciado: "x" };
-  assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio"]);
+  assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio", "ensino"]);
   const completa = etapasDaLicao({ exercicio, exercicios: [exercicio, exercicio], pratica: { tarefa: "t", minutos: 3 } });
   assert.deepEqual(completa, [
-    { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "pratica" },
+    { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "ensino" }, { tipo: "pratica" },
   ]);
   assert.equal(ultimoExercicio(completa), 3, "com prática, a aula volta ao último exercício, não à prática");
 });

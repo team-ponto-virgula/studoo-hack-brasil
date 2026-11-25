@@ -1,3 +1,5 @@
+import { dataLocalDoEstudo } from './progresso-perfil';
+import { perfilDiagnosticoValido, type PerfilDiagnostico } from '@studoo/contratos';
 import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
@@ -59,6 +61,7 @@ const selecaoPlano = {
   capa: true,
   tema: true,
   objetivo: true,
+  diagnostico: true,
   origem: true,
   origemNome: true,
   origemPerfilId: true,
@@ -84,8 +87,8 @@ const selecaoPlano = {
 type PlanoPersistido = Prisma.PlanoAprendizadoGetPayload<{ select: typeof selecaoPlano }>;
 
 /** Proposta de uma vez, para o cliente que não acompanha a geração (POST /propostas). */
-export async function gerarProposta(usuarioId: string, objetivo: string): Promise<PropostaPlano> {
-  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false });
+export async function gerarProposta(usuarioId: string, objetivo: string, diagnostico?: PerfilDiagnostico): Promise<PropostaPlano> {
+  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false, diagnostico });
   if (!(await consumirGeracaoPersistente(usuarioId))) {
     throw new FalhaApi("limite_geracoes");
   }
@@ -129,6 +132,7 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
     id: plano.id,
     titulo: plano.titulo,
     objetivo: plano.objetivo,
+    ...(perfilDiagnosticoValido(plano.diagnostico) && { diagnostico: plano.diagnostico }),
     origem: origemDoConteudo(plano.origem),
     ...(plano.capa ? { capa: plano.capa } : {}),
     ...(plano.tema && (TEMAS as readonly string[]).includes(plano.tema) ? { tema: plano.tema as Tema } : {}),
@@ -277,7 +281,8 @@ async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoP
   try {
     await banco.$transaction([
       banco.planoAprendizado.create({
-        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem) },
+        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem),
+          ...(plano.diagnostico && { diagnostico: plano.diagnostico as unknown as Prisma.InputJsonValue }) },
       }),
       banco.fluxo.createMany({ data: fluxos }),
       banco.licao.createMany({ data: licoes }),
@@ -445,9 +450,19 @@ export async function concluirLicao(
       throw new FalhaApi("avaliacao_invalida");
     }
 
-    await banco.registroEstudo.createMany({
-      data: [{ usuarioId, licaoId: id, pratica: pratica ?? null, ...(resumo ?? {}) }],
-      skipDuplicates: true,
+    await banco.$transaction(async tx => {
+      const concluidoEm = new Date();
+      const criada = await tx.registroEstudo.createMany({
+        data: [{ usuarioId, licaoId: id, concluidoEm, pratica: pratica ?? null, ...(resumo ?? {}) }],
+        skipDuplicates: true,
+      });
+      if (criada.count) {
+        const { fuso } = await tx.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { fuso: true } });
+        await tx.diaDeEstudo.createMany({
+          data: [{ usuarioId, dia: dataLocalDoEstudo(concluidoEm, fuso) }],
+          skipDuplicates: true,
+        });
+      }
     });
     conclusao = await banco.registroEstudo.findUniqueOrThrow({
       where: { usuarioId_licaoId: { usuarioId, licaoId: id } },

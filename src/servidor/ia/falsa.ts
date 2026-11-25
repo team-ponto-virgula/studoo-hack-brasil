@@ -1,3 +1,4 @@
+import { GERADOR_DIAGNOSTICO_FALSO, planoFalsoDiagnostico } from './falsa-diagnostico';
 import type { ConteudoLicao, EsqueletoPlano, PlanoInterno } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
@@ -224,8 +225,11 @@ function planoDoObjetivo(objetivo: string): { plano: EstruturaDoPlano & { origem
  */
 export function criarGeradorFalso(): GeradorTrilha {
   return {
-    async *gerarEstrutura(objetivo, sinal, { aoVivo }) {
-      const { plano, gerador } = planoDoObjetivo(objetivo);
+    async *gerarEstrutura(objetivo, sinal, { aoVivo, diagnostico }) {
+      const adaptado = diagnostico && planoFalsoDiagnostico(objetivo, diagnostico);
+      const { plano, gerador } = adaptado
+        ? { plano: adaptado, gerador: GERADOR_DIAGNOSTICO_FALSO }
+        : planoDoObjetivo(objetivo);
       const pausa = aoVivo ? pausaConfigurada() : 0;
       for (const evento of eventosDoPlano(plano)) {
         if (!await dormir(pausa, sinal)) return undefined;
@@ -239,6 +243,10 @@ export function criarGeradorFalso(): GeradorTrilha {
     async gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal) {
       sinal.throwIfAborted();
       if (!await dormir(pausaDoConteudoConfigurada(), sinal)) sinal.throwIfAborted();
+      if (esqueleto.gerador === GERADOR_DIAGNOSTICO_FALSO && esqueleto.diagnostico) {
+        const plano = planoFalsoDiagnostico(esqueleto.objetivo, esqueleto.diagnostico);
+        if (plano) return conteudoDoPlano(plano, fluxo, licao);
+      }
       if (esqueleto.gerador === GERADOR_SQL) return conteudoDoPlano(planoSql, fluxo, licao);
       if (esqueleto.gerador === GERADOR_GENERICO) {
         const conteudo = conteudoGenerico(esqueleto.objetivo, fluxo, licao);

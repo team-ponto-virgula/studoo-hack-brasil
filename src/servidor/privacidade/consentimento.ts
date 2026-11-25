@@ -18,6 +18,10 @@ export function consentimentoNecessario(): boolean {
   return provedorIaAtivo() !== "falsa";
 }
 
+export function provedoresConfiguradosIa() {
+  return provedoresDaIa(provedorIaAtivo(), transcricaoDisponivel() || vozAoVivoAtiva());
+}
+
 function montarEstado(aceito: { em: Date | null; versao: string | null }): EstadoPrivacidade {
   const necessario = consentimentoNecessario();
   const vigente = aceito.em !== null && aceito.versao === VERSAO_CONSENTIMENTO_IA;
@@ -26,7 +30,7 @@ function montarEstado(aceito: { em: Date | null; versao: string | null }): Estad
       necessario,
       versao: VERSAO_CONSENTIMENTO_IA,
       aceitoEm: vigente ? aceito.em!.toISOString() : null,
-      provedores: provedoresDaIa(provedorIaAtivo(), transcricaoDisponivel() || vozAoVivoAtiva()),
+      provedores: provedoresConfiguradosIa(),
     },
     politica: CAMINHO_POLITICA,
   };

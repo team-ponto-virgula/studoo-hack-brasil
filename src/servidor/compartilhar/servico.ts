@@ -1,3 +1,4 @@
+import { progressoNoPerfil } from '@/servidor/aprendizado/progresso-perfil';
 import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomBytes, randomUUID } from "node:crypto";
 import {
@@ -155,7 +156,7 @@ const alcanceDe = (links: { adicoes: number }[]) => ({ trilhas: links.length, pe
 export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   const usuario = await banco.usuario.findUniqueOrThrow({
     where: { id: usuarioId },
-    select: { email: true, perfilModeracao: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true, moderacao: true } } },
+    select: { email: true, fuso: true, perfilModeracao: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true, moderacao: true } } },
   });
   const links = await banco.linkTrilha.findMany({
     where: { usuarioId },
@@ -180,6 +181,7 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
     publico: usuario.perfilModeracao === "aprovado" && links.some((link) => link.noPerfil && link.moderacao === "aprovado"),
     email: usuario.email,
     visitante: ehEmailVisitante(usuario.email),
+    estudo: await progressoNoPerfil(usuarioId, usuario.fuso),
     links: links.map((link) => linkPublico(link, link.plano.titulo, valeus ? valeus.get(link.codigo) ?? 0 : undefined)),
   };
 }

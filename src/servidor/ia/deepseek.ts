@@ -1,3 +1,4 @@
+import { contextoDiagnostico, instrucoesDaEstruturaAdaptada, maximoDeLicoesDiagnostico } from './comum';
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
@@ -9,7 +10,6 @@ import {
   TEMPO_ESTRUTURA_MS,
   analisarJson,
   criarMontador,
-  instrucoesDaEstrutura,
   instrucoesDaLicao,
   lerLinha,
   correcaoDoFormato,
@@ -326,13 +326,14 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
   const origem = ORIGEM_GERADA;
 
   return {
-    async *gerarEstrutura(objetivo, sinal) {
+    async *gerarEstrutura(pedido, sinal, { diagnostico }) {
+      const objetivo = pedido + contextoDiagnostico(diagnostico);
       const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_ESTRUTURA_MS);
-      const montador = criarMontador(objetivo);
+      const montador = criarMontador(pedido, maximoDeLicoesDiagnostico(diagnostico));
       try {
         const resposta = await pedir(config, {
           messages: [
-            { role: "system", content: instrucoesDaEstrutura },
+            { role: "system", content: instrucoesDaEstruturaAdaptada(diagnostico) },
             { role: "user", content: `Objetivo de estudo: ${objetivo}` },
           ],
           stream: true,

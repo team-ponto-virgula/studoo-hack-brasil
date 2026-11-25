@@ -162,3 +162,12 @@
   [data-fase='criada'] .previa-placa { animation: none; opacity: 0; }
   .previa-circulo { display: none; }
 }
+
+.previa-diagnostico {
+  padding: 8px 20px;
+  max-height: 9rem;
+  overflow: auto;
+}
+.previa-diagnostico p { margin: 4px 0; }
+.previa-salvar { grid-column: 1 / -1; flex-basis: 100%; text-align: center; }
+.previa-salvar p { margin: 0; color: var(--texto2); font-size: .875rem; }

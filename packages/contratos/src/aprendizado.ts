@@ -1,4 +1,4 @@
-import type { PassoDiagnostico, PerfilDiagnostico } from './diagnostico';
+import type { EstudoNoPerfil, PassoDiagnostico, PerfilDiagnostico } from './diagnostico';
 export * from './diagnostico';
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
@@ -432,6 +432,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     enviarCapa: (id: string, base64: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "PUT", { base64 }),
     removerCapa: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "DELETE"),
     /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
+    estudoNoPerfil: () => solicitar<EstudoNoPerfil>("/perfil/estudo"),
     obterPerfil: () => solicitar<Perfil>("/perfil"),
     /** Sem `resumo` ou `interesses`, o que já existe fica como está. */
     salvarPerfil: (nome: string, cor: CorPerfil, extra?: { resumo?: string; interesses?: Tema[] }) => solicitar<Perfil>("/perfil", "PUT", { nome, cor, ...extra }),

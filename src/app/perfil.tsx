@@ -242,6 +242,18 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
     }
   }
 
+  const [dadosEstudo, setDadosEstudo] = useState(perfil?.estudo);
+  useEffect(() => {
+    let ativo = true;
+    const carregar = () => {
+      void cliente.estudoNoPerfil().then(dados => { if (ativo) setDadosEstudo(dados); }).catch(() => undefined);
+    };
+    carregar();
+    window.addEventListener('focus', carregar);
+    const atualizacao = window.setInterval(carregar, 60_000);
+    return () => { ativo = false; window.removeEventListener('focus', carregar); window.clearInterval(atualizacao); };
+  }, []);
+
   return (
     <section className="painel painel--perfil">
       <h1 ref={titulo} tabIndex={-1} className="titulo-pagina painel--perfil__titulo">{p.titulo}</h1>
@@ -347,6 +359,14 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
 
         </>
       )}
+      {dadosEstudo && <section className="perfil-secao" aria-labelledby="perfil-estudo">
+        <h2 id="perfil-estudo" className="perfil-secao__titulo">Seu estudo</h2>
+        <dl>
+          <div><dt>Trilhas concluídas</dt><dd>{dadosEstudo.trilhasConcluidas}</dd></div>
+          <div><dt>Dias seguidos</dt><dd>{dadosEstudo.diasSeguidos}</dd></div>
+          <div><dt>Dias de estudo</dt><dd>{dadosEstudo.diasDeEstudo}</dd></div>
+        </dl>
+      </section>}
       <SecaoSomPerfil />
       <SecaoPrivacidade visitante={visitante} />
       {compartilhar && <BloqueadasPerfil />}

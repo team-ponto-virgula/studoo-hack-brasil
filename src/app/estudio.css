@@ -887,3 +887,5 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
 @keyframes reforco-pulo { 50% { transform: translateY(-8px); } }
 @keyframes reforco-aparece { from { transform: translateY(8px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .reforco *, .reforco *::before { animation: none !important; transition: none !important; } }
+
+.estudio-ensino > summary[hidden] { display: none; }

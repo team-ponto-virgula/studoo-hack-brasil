@@ -10,6 +10,7 @@ import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { DURACAO_ACOMPANHAR_MS, DURACAO_ATE_O_NO_1_MS, entradaMaisNova, rolagemParaCentrarNo, rolarAte, trocarDicasDaEspera, type EstadoDaEspera } from './previa-trilha-regras';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
+import { ResumoDiagnostico } from './diagnostico';
 
 export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
@@ -78,9 +79,10 @@ export function PlacaDaGeracao({ texto, anunciado }: { texto: string; anunciado:
   );
 }
 
-export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, remontar, existente, abrirExistente }: {
+export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, salvar, visitante, remontar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao; aceite: EstadoAceite; passagem: PassagemCriada | null;
   sair: () => void; cancelar: () => void; ajustar: () => void; aceitar: (painel: HTMLElement) => void;
+  salvar?: (painel: HTMLElement) => void; visitante?: boolean;
   remontar: () => void; existente?: PlanoResumo; abrirExistente: (id: string) => void;
 }) {
   const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
@@ -329,9 +331,14 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
         </button>
       )}
     </div>
+    {proposta?.diagnostico && <div className="previa-diagnostico"><ResumoDiagnostico perfil={proposta.diagnostico} /></div>}
     <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined} data-falha={falhou || undefined}>
       <div className="previa-botoes">
         {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
+        {proposta && salvar && !salvando && aceite !== 'expirada' && <div className="previa-salvar">
+          <Botao variante="texto" onClick={() => { if (painel.current) salvar(painel.current); }}>Salvar para depois</Botao>
+          <p>{visitante ? 'Depois de salvar, disponível por até 24 h a partir da entrada neste navegador.' : 'A proposta entra em Minhas trilhas ao salvar ou começar.'}</p>
+        </div>}
         {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || undefined}>
           <span className="previa-espera__linha" data-saindo={espera.saindo || undefined}>{textoDaLinha}</span>
         </p>}
