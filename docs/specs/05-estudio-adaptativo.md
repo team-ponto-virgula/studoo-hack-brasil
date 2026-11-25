@@ -4,7 +4,7 @@ A web e o app Android compartilham contrato, limites e textos. O servidor decide
 
 ## Material → trilha
 
-No pedido, selecione imagem JPG/PNG/WebP, PDF (até seis páginas), DOCX ou CSV, até 5 MB. O texto extraído é limitado a 24 mil caracteres; CSV a 200 registros e 20 colunas, em UTF-8. A câmera é opcional. Antes do envio, a interface informa o uso da OpenAI e pede material sem dados pessoais.
+No pedido, selecione imagem JPG/PNG/WebP, PDF (até seis páginas), DOCX ou CSV, até 5 MB. O texto extraído é limitado a 24 mil caracteres; CSV a 200 registros e 20 colunas, em UTF-8. A câmera é opcional. Antes do envio, a interface informa que a OpenAI recebe o material para leitura, verificação de segurança e criação da trilha. Envie material sem dados pessoais.
 
 O servidor confere tamanho, assinatura e formato. PDF com texto passa pelo PDF.js, sem executar scripts do documento; imagem é normalizada pelo Sharp, removendo metadados e limitando pixels. Imagens e páginas digitalizadas usam leitura pela OpenAI. A interface permite conferir o texto página a página e remover o material antes de gerar. Uma leitura incorreta deve ser substituída por uma imagem mais legível.
 
@@ -14,7 +14,7 @@ CSV usa Papa Parse para reconhecer vírgula, ponto e vírgula, tabulação ou ba
 
 Cada lição gerada leva localização (página, parágrafos ou linhas) e trecho literal. O servidor rejeita citações ausentes do texto lido. Isso verifica a existência do trecho; não comprova que a interpretação da IA está correta. Referências de OCR são identificadas. Arquivos e falas são dados, nunca instruções do sistema; o modelo não recebe ferramentas de navegação ou execução.
 
-O upload bruto não é gravado pelo Studoo. O texto extraído fica acessível por 24 horas; uma proposta guarda cópia imutável por 30 minutos. As citações ficam nas lições aceitas. Execute `npm run estudio:limpar` a cada hora no ambiente do servidor para remover registros expirados. A expiração bloqueia o acesso mesmo antes da limpeza. O comando não remove planos ou citações salvas. O provedor externo segue sua própria política de tratamento de dados; na OpenAI, `store:false` é usado nas chamadas Responses, sem prometer retenção zero pelo provedor (na DeepSeek `/chat/completions`, não há `store:false`).
+O upload bruto não é gravado pelo Studoo. O texto extraído fica acessível por 24 horas; uma proposta guarda cópia imutável por 30 minutos. As citações ficam nas lições aceitas. Execute `npm run estudio:limpar` a cada hora no ambiente do servidor para remover registros expirados. A expiração bloqueia o acesso mesmo antes da limpeza. O comando não remove planos ou citações salvas. O Studoo envia `store: false` nas chamadas à Responses API. A OpenAI trata os dados de acordo com sua própria política de retenção.
 
 Em `IA=falsa`, o botão **Experimentar com frações** usa três páginas autorais e três lições preparadas. PDF textual, DOCX e CSV também funcionam, com atividades de reconhecimento explicitamente simuladas. Fotos e voz exigem IA real; nunca há uma transcrição inventada.
 

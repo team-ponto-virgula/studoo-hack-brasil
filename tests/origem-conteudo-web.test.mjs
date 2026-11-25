@@ -5,7 +5,7 @@ import { mensagens } from '../packages/contratos/src/experiencia.ts';
 import { origemDoConteudo, ORIGEM_GERADA } from '../src/dominio/aprendizado/plano.ts';
 
 test('a leitura de planos antigos remove o provedor e mantém a referência ao próprio material', () => {
-  for (const origem of ['IA da DeepSeek (deepseek-flash)', 'IA da OpenAI (gpt-4.1)', 'gpt-4o']) {
+  for (const origem of ['IA da Oficina (modelo-legado)', 'IA do Provedor (modelo-legado)', 'gpt-4o']) {
     assert.equal(origemDoConteudo(origem), ORIGEM_GERADA);
   }
   for (const origem of ['Página 2 do seu material', 'Modo demonstração: oratória']) {
@@ -23,6 +23,6 @@ test('lição, proposta, prévias, perfis e imagens públicas omitem créditos t
   }
   for (const nome of arquivos) {
     const fonte = readFileSync(nome, 'utf8');
-    assert.doesNotMatch(fonte, /origemLegivel|DeepSeek|OpenAI|gpt-[\w.-]+/i, nome);
+    assert.doesNotMatch(fonte, /origemLegivel|modelo-legado|OpenAI|gpt-[\w.-]+/i, nome);
   }
 });
