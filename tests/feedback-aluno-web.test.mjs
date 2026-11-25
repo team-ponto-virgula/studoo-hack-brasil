@@ -580,7 +580,7 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });
 
-test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as lições ao salvar', async t => {
+test('DeepSeek simulado: corrige gabaritos de exposição em duas rodadas e conserva todas as lições ao salvar', async t => {
   const { id, cookie } = await novoVisitante();
   const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1', STUDOO_IA_RESERVA: 'nenhuma' };
   const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
@@ -630,6 +630,9 @@ test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as
 
   const revisoes = [];
   const geradas = [];
+  let recusarNaUltima = false;
+  const corrigirPares = { exercicio: 1, gabarito: ['e1=d2', 'e2=d1'], feedbackCorreto: 'Fechar pede mais tempo. Abrir pede menos tempo.', feedbackIncorreto: 'Veja se a abertura deixou entrar mais ou menos luz.' };
+  const corrigirTempo = { exercicio: 2, gabarito: ['o0'], feedbackCorreto: 'Fechar dois passos pede cerca de quatro vezes o tempo.', feedbackIncorreto: 'Conte os passos de f/4 até f/8.' };
   const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
   t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(url, 'http://127.0.0.1:1/chat/completions');
@@ -651,6 +654,8 @@ test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as
     if (sistema.includes('Avalie todas as lições recebidas')) {
       const { licoes } = JSON.parse(entrada);
       revisoes.push(licoes.map(l => l.numero));
+      const rodada = (revisoes.length - 1) % 3 + 1;
+      assert.match(sistema, /Resolva separadamente cada exercício numerado/);
       return respostaJson({ avaliacoes: licoes.map(({ numero, exercicios }) => {
         const aprovado = { numero, resultado: 'avanca', motivo: '', correcoes: [] };
         if (numero !== 3) return aprovado;
@@ -660,17 +665,22 @@ test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as
         assert.deepEqual(pares.direita, associacao.direita);
         assert.equal(escolha.enunciado, fotografias[2].exercicios[1].enunciado);
         assert.deepEqual(escolha.opcoes, fotografias[2].exercicios[1].opcoes);
-        if (revisoes.length === 1) {
+        assert.deepEqual(exercicios.map(e => e.numero), [1, 2]);
+        if (rodada === 1) {
           assert.deepEqual(pares.gabarito, ['e1=d1', 'e2=d2']);
           assert.deepEqual(escolha.gabarito, ['o2']);
-          return { numero, resultado: 'ajustar', motivo: 'Os pares estão invertidos. De f/4 para f/8, o tempo correto é próximo de 1/60 s.', correcoes: [
-            { exercicio: 1, gabarito: ['e1=d2', 'e2=d1'], feedbackCorreto: 'Fechar pede mais tempo. Abrir pede menos tempo.', feedbackIncorreto: 'Veja se a abertura deixou entrar mais ou menos luz.' },
-            { exercicio: 2, gabarito: ['o0'], feedbackCorreto: 'Fechar dois passos pede cerca de quatro vezes o tempo.', feedbackIncorreto: 'Conte os passos de f/4 até f/8.' },
-          ] };
+          return { numero, resultado: 'ajustar', motivo: 'Os pares estão invertidos.', correcoes: [corrigirPares] };
         }
         assert.deepEqual(pares.gabarito, ['e1=d2', 'e2=d1']);
-        assert.deepEqual(escolha.gabarito, ['o0']);
         assert.match(pares.feedbackCorreto, /Fechar pede mais tempo/);
+        if (rodada === 2) {
+          assert.deepEqual(escolha.gabarito, ['o2']);
+          return { numero, resultado: 'ajustar', motivo: 'De f/4 para f/8, o tempo correto é próximo de 1/60 s.', correcoes: [corrigirTempo] };
+        }
+        assert.deepEqual(escolha.gabarito, ['o0']);
+        if (recusarNaUltima) {
+          return { numero, resultado: 'ajustar', motivo: 'O feedback ainda precisa de ajuste.', correcoes: [corrigirTempo] };
+        }
         return aprovado;
       }) });
     }
@@ -686,7 +696,7 @@ test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as
   const previa = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo, diagnosticoId: demonstrado.id })));
   const { reaberto } = await salvarEReabrir(cookie, previa);
   assert.deepEqual([...geradas].sort(), [1, 2, 3, 4]);
-  assert.deepEqual(revisoes, [[1, 2, 3, 4], [3]]);
+  assert.deepEqual(revisoes, [[1, 2, 3, 4], [3], [3]]);
 
   const ids = reaberto.fluxos[0].licoes.map(l => l.id);
   const aulas = await Promise.all(ids.map(id => ok(licao(req('aprendizado/licoes/' + id, cookie), ctx(id)))));
@@ -707,4 +717,11 @@ test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as
   assert.equal(pares.correta, true);
   assert.match(pares.feedback, /Fechar pede mais tempo/);
   assert.equal((await verificar(terceira.exercicios[1].opcoes.find(o => o.texto === '1/60 s').id, 1)).correta, true);
+  assert.equal((await verificar(terceira.exercicios[1].opcoes.find(o => o.texto === '1/1000 s').id, 1)).correta, false);
+
+  recusarNaUltima = true;
+  const outra = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo, diagnosticoId: demonstrado.id })));
+  assert.equal((await salvar(req('aprendizado/planos', cookie, { token: outra.token }))).status, 503);
+  assert.deepEqual(revisoes, [[1, 2, 3, 4], [3], [3], [1, 2, 3, 4], [3], [3]]);
+  assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 1);
 });
