@@ -21,6 +21,14 @@ cinco de entrada. O procedimento confere a conta antes de cada caso e remove ape
 pela comparação da lista. Com o ambiente nativo de teste já preparado, o seletor local é
 `CONFERENCIA_TELAS=feedback-aluno` no passo `ios.sh fluxo-telas` ou `android.sh no-emulador`.
 
+O iPhone inicia o primeiro perfil no mapa que o login acabou de comprovar. A partida a frio continua no fluxo de entrada
+e a abertura após salvar continua em cada perfil. O segundo perfil faz sua própria partida. No Android, uma falha com
+ADB indisponível após a espera permite religar o mesmo AVD sem apagar o disco, uma vez por execução, e recomeçar
+o perfil desde o diagnóstico. A recuperação exige boot, APK preservado, encaminhamentos da API e do Metro e a lista
+original da conta sintética. O primeiro erro recebe registros próprios; no reteste, as capturas novas prevalecem quando
+têm o mesmo nome. Se a limpeza for ambígua, a prova para. Se o emulador estiver disponível depois de uma falha de roteiro,
+o outro perfil ainda é tentado e o job termina em falha.
+
 ## De onde vêm os dados
 
 Da API do próprio repositório, rodando na mesma máquina, com `IA=falsa`. Nenhum segredo e nada do site publicado.

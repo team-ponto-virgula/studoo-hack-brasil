@@ -2,7 +2,21 @@
 appId: host.exp.Exponent
 name: feedback-aluno
 ---
-- runFlow: ../partes/reabrir.yaml
+- runFlow:
+    when:
+      true: ${PARTIDA == 'mapa'}
+    commands:
+      - extendedWaitUntil:
+          visible:
+            id: titulo-plano
+          timeout: 30000
+      - assertVisible:
+          id: nav-objetivo
+- runFlow:
+    when:
+      true: ${PARTIDA != 'mapa'}
+    commands:
+      - runFlow: ../partes/reabrir.yaml
 - tapOn:
     id: nav-objetivo
     waitToSettleTimeoutMs: 1500

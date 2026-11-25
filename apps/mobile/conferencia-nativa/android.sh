@@ -232,8 +232,8 @@ preparar_aparelho() {
   echo "Janelas de erro do sistema: hide_error_dialogs=$(adb -s "$id" shell settings get global hide_error_dialogs | tr -d '\r'), anr_show_background=$(adb -s "$id" shell settings get secure anr_show_background | tr -d '\r')"
 
   # A API (HTTPS) e a cache do Metro chegam ao emulador como 127.0.0.1, como no iPhone.
-  adb -s "$id" reverse "tcp:$PORTA_API" "tcp:$PORTA_API" > /dev/null
-  adb -s "$id" reverse "tcp:$PORTA_METRO" "tcp:$PORTA_METRO" > /dev/null
+  timeout 20 adb -s "$id" reverse "tcp:$PORTA_API" "tcp:$PORTA_API" > /dev/null || return 1
+  timeout 20 adb -s "$id" reverse "tcp:$PORTA_METRO" "tcp:$PORTA_METRO" > /dev/null || return 1
 
 }
 
@@ -270,7 +270,10 @@ reviver_aparelho() {
   while [ "$(date +%s)" -lt "$fim" ]; do
     id="$(dispositivo)"
     if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
-      preparar_aparelho "$id"
+      if ! timeout 20 adb -s "$id" shell pm path "$PACOTE_ANDROID" | grep -q '^package:' || ! preparar_aparelho "$id"; then
+        echo "$(date -u +%H:%M:%S) emulador religado sem o app instalado ou sem acesso às portas da API e do Metro" >> "$REGISTROS/carga-da-maquina.log"
+        return 1
+      fi
       echo "$(date -u +%H:%M:%S) emulador de volta ($id)" >> "$REGISTROS/carga-da-maquina.log"
       return 0
     fi

@@ -352,7 +352,7 @@ rodar_maestro() {
   # running on port [37701]" e, 0,3 s depois, "Failed to bind to address [::]:37701" no gRPC do próprio driver, e o
   # Maestro desiste com DeviceServerDiedException em 'deviceInfo'). Não é o app nem o fluxo: o fluxo roda de novo uma vez,
   # com o driver parado e os encaminhamentos dele desfeitos (limpar_driver_maestro, do android.sh; o adb reverse fica).
-  if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}" ] \
+  if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}${MAESTRO_SEM_REPETICAO:-}" ] \
     && grep -qE "DeviceServerDiedException|Failed to bind to address|Device server died" "$REGISTROS/maestro-$fase.log"; then
     resumo "⚠️ O driver do Maestro caiu na partida da fase \`$fase\` (antes do primeiro comando); a fase rodou de novo uma vez."
     cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
@@ -495,25 +495,57 @@ fluxo_criacao() {
   esac
 }
 
-# Cada perfil usa a mesma conta sintética e parte da lista do preparo. Confere e remove só a sua trilha temporária
-# antes de passar ao perfil seguinte, inclusive quando o Maestro falha depois de salvar.
-fluxo_feedback_aluno() {
-  local perfil fase antes depois codigo linha
-  for perfil in inicial demonstrada; do
-    fase="feedback-$perfil"
-    antes="$REGISTROS/$fase-antes.json"
-    depois="$REGISTROS/$fase-depois.json"
-    trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$antes" \
-      || erro "A conta sintética não corresponde ao preparo antes de $fase."
-    codigo=0
-    rodar_maestro "$fase" "$PASTA_DOS_FLUXOS/feedback/feedback-aluno.yaml" -e "PERFIL=$perfil" || codigo=$?
-    linha="$(trilhas_da_criacao depois --antes "$antes" --saida "$depois" --apagar)" \
-      || erro "Falhou a conferência da trilha temporária em $fase. $linha"
-    resumo "$linha"
-    [ "$codigo" -eq 0 ] || erro "Falhou $fase. Veja maestro-$fase.log e a tela registrada."
+# Cada tentativa começa com os IDs do preparo e encerra sua própria trilha, mesmo se o Maestro falhar.
+tentativa_feedback_aluno() {
+  local fase="$1" perfil="$2" partida="$3" antes depois codigo=0 linha
+  antes="$REGISTROS/$fase-antes.json"
+  depois="$REGISTROS/$fase-depois.json"
+  trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$antes" \
+    || erro "A conta sintética não corresponde ao preparo antes de $fase."
+  resumo "$fase: partida $partida."
+  # Uma segunda execução só pode começar depois desta limpeza, inclusive se o driver cair.
+  MAESTRO_SEM_REPETICAO=1 rodar_maestro "$fase" "$PASTA_DOS_FLUXOS/feedback/feedback-aluno.yaml" \
+    -e "PERFIL=$perfil" -e "PARTIDA=$partida" || codigo=$?
+  linha="$(trilhas_da_criacao depois --antes "$antes" --saida "$depois" --apagar --titulo-esperado 'Equação do primeiro grau')" \
+    || erro "Falhou a conferência da trilha temporária em $fase. $linha"
+  resumo "$linha"
+  if [ "$codigo" -eq 0 ]; then
     [ "$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).caso' "$depois")" = "apagada" ] \
       || erro "$fase não criou exatamente uma trilha temporária."
+  else
+    resumo "❌ Falhou $fase. Veja maestro-$fase.log e a tela registrada."
+  fi
+  return "$codigo"
+}
+
+fluxo_feedback_aluno() {
+  local perfil fase partida falhas="" android=0 religamento_tentado=0 recuperacao_falhou=0
+  if declare -F aparelho_responde > /dev/null; then android=1; fi
+  for perfil in inicial demonstrada; do
+    fase="feedback-$perfil"
+    partida=fria
+    # O fluxo de login do iPhone já comprovou o mapa. A abertura a frio da entrada e a reabertura após salvar continuam separadas.
+    if [ "$android" -eq 0 ] && [ "$perfil" = inicial ]; then partida=mapa; fi
+    if [ "$android" -eq 1 ] && [ -n "$falhas" ] && { [ "$recuperacao_falhou" -eq 1 ] || ! aparelho_responde; }; then
+      resumo "❌ $fase não rodou porque o emulador não ficou pronto."
+      break
+    fi
+    if tentativa_feedback_aluno "$fase" "$perfil" "$partida"; then continue; fi
+    if [ "$android" -eq 1 ] && ! aparelho_responde; then
+      if [ "$religamento_tentado" -eq 0 ] && [ "${REVIVIDOS:-0}" -eq 0 ]; then
+        religamento_tentado=1
+        if reviver_aparelho; then
+          aviso "O emulador foi religado após $fase. O mesmo perfil começa do zero; os registros da primeira tentativa foram preservados."
+          if tentativa_feedback_aluno "$fase-reteste" "$perfil" fria; then continue; fi
+        else
+          recuperacao_falhou=1
+          aviso "O emulador não ficou pronto após religar. Veja a carga da máquina e o registro do emulador."
+        fi
+      fi
+    fi
+    falhas="$falhas $fase"
   done
+  [ -z "$falhas" ] || erro "Falha na conferência de feedback:$falhas."
   resumo "✅ Feedback do aluno: exercícios distintos após salvar e reabrir nos dois perfis de equação. No caso inicial, Ensine ao Stu, retorno e lição concluída em 1/3."
 }
 
@@ -669,7 +701,13 @@ coletar_inicio() {
   encurtar_registros_do_simulador
   # O Maestro guarda cada captura em <saída>/<sessão>/<fluxo>/takeScreenshot/<nome>.png. A imagem do material observado
   # (material_observado, abaixo) vai junto das capturas.
-  find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' ! -path "$SAIDA_MAESTRO/feedback-*-reteste/*" \
+    -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  # Se houve reteste, a nova captura prevalece quando há o mesmo nome. Ambas ficam na saída do Maestro.
+  if [ "${CONFERENCIA_TELAS:-}" = feedback-aluno ]; then
+    find "$SAIDA_MAESTRO"/feedback-*-reteste -type f -name '[0-9][0-9]-*.png' \
+      -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  fi
   find "$SAIDA_MAESTRO" -type f -name 'material-observado-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   escrever_origem "$1"
 }
