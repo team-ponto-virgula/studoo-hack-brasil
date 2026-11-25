@@ -1,0 +1,1843 @@
+{
+  "startedAt": "2026-11-25T18:48:27.781Z",
+  "finishedAt": "2026-11-25T18:53:43.018Z",
+  "surface": "React Native Web/Chromium, API MOBILE real e PostgreSQL sintético",
+  "ai": "falsa",
+  "email": "falso",
+  "passed": true,
+  "nativeExecuted": false,
+  "sourceBefore": {
+    "apps/mobile/src/acesso-mobile.tsx": "cb0cb83034a882f0894304b5c807640b7954e15d73d7954a9b43ef97e44de6f6",
+    "apps/mobile/src/cadastro.tsx": "9743c768053cfbaf20fb39d129a7bc425407938eabdf9a73106ec472ae05eaf2",
+    "apps/mobile/src/sessao.tsx": "46e7639c62d0710cd498b528abcc2f38d76de60d23d9ae693deb4aeef1fd33a6",
+    "apps/mobile/src/jornada-conta.tsx": "c048e4beccd778ba904cf2c892b22d07db469930d45d0be73d83ad4f0f19754b",
+    "apps/mobile/src/estudo.tsx": "d759ebfa6e10e25721c17ea1dfde01be1e4fcf0331f3de2b874485032ee39234",
+    "apps/mobile/src/licao.tsx": "c27c9c5348cfb96551d4619b0bae4b57f7dc4c020df0b71c82168ce25bd0131d",
+    "src/servidor/onboarding/servico.ts": "51caa8d6341c607384cb541952ef0cddf583cc741dbd161b9b6c42235b658b51",
+    "packages/contratos/src/onboarding.ts": "dd57d24500946fc8712afccd595cf8f27c1f6e1a7456a90017c163222e38ea8b"
+  },
+  "sourceAfter": {
+    "apps/mobile/src/acesso-mobile.tsx": "cb0cb83034a882f0894304b5c807640b7954e15d73d7954a9b43ef97e44de6f6",
+    "apps/mobile/src/cadastro.tsx": "9743c768053cfbaf20fb39d129a7bc425407938eabdf9a73106ec472ae05eaf2",
+    "apps/mobile/src/sessao.tsx": "46e7639c62d0710cd498b528abcc2f38d76de60d23d9ae693deb4aeef1fd33a6",
+    "apps/mobile/src/jornada-conta.tsx": "c048e4beccd778ba904cf2c892b22d07db469930d45d0be73d83ad4f0f19754b",
+    "apps/mobile/src/estudo.tsx": "d759ebfa6e10e25721c17ea1dfde01be1e4fcf0331f3de2b874485032ee39234",
+    "apps/mobile/src/licao.tsx": "c27c9c5348cfb96551d4619b0bae4b57f7dc4c020df0b71c82168ce25bd0131d",
+    "src/servidor/onboarding/servico.ts": "51caa8d6341c607384cb541952ef0cddf583cc741dbd161b9b6c42235b658b51",
+    "packages/contratos/src/onboarding.ts": "dd57d24500946fc8712afccd595cf8f27c1f6e1a7456a90017c163222e38ea8b"
+  },
+  "revision": "56ace2dd6e14831df960641887d43ee6797ce540",
+  "runtimeBase": "22e8329",
+  "evidenceComposition": {
+    "firstLessonRun": "rnweb-final-1795632507775",
+    "retentionAndResumeRun": "rnweb-final-retencao-1795632810489",
+    "originalFirstRunPassed": false,
+    "originalHarnessFailure": {
+      "phase": "retencao",
+      "message": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Não foi possível salvar sua meta. Tente novamente.', { exact: true }) to be visible\u001b[22m\n",
+      "name": "TimeoutError"
+    },
+    "explanation": "A jornada do cadastro até a conclusão real passou na primeira rodada. O runner parou depois ao esperar a copy da web no erro MOBILE de rede. A continuação reutilizou a mesma conta e repetiu a etapa: alerta real visível, GET sem alteração, retry confirmado, retomada e troca de conta passaram. O relatório bruto original é preservado com passed=false; a aprovação desta síntese corresponde às duas provas combinadas."
+  },
+  "steps": [
+    {
+      "name": "cadastro-MOBILE-real-201-email-falso",
+      "at": "2026-11-25T18:48:38.292Z"
+    },
+    {
+      "name": "preparacao-meta2-salva-no-servidor",
+      "at": "2026-11-25T18:48:41.575Z"
+    },
+    {
+      "name": "trilha-SQL-real-aceita",
+      "at": "2026-11-25T18:48:46.842Z",
+      "progress": {
+        "concluidas": 0,
+        "total": 5,
+        "percentual": 0
+      }
+    },
+    {
+      "name": "avaliacao-real-erro-e-acerto",
+      "at": "2026-11-25T18:48:52.791Z"
+    },
+    {
+      "name": "ensine-Stu-texto-real-200",
+      "at": "2026-11-25T18:48:55.696Z"
+    },
+    {
+      "name": "conclusao-real-meta1de2-progresso1de5",
+      "at": "2026-11-25T18:48:59.113Z"
+    },
+    {
+      "name": "storage-limpo-login-direto-progresso1de5",
+      "at": "2026-11-25T18:53:34.589Z"
+    },
+    {
+      "name": "falha-rede-alerta-sem-salvamento-falso",
+      "at": "2026-11-25T18:53:35.613Z"
+    },
+    {
+      "name": "retry-meta3-preserva-contagem1",
+      "at": "2026-11-25T18:53:35.953Z"
+    },
+    {
+      "name": "meta1-atingida-por-conclusao-real",
+      "at": "2026-11-25T18:53:36.715Z"
+    },
+    {
+      "name": "continuar-abre-proxima-licao-real",
+      "at": "2026-11-25T18:53:37.716Z"
+    },
+    {
+      "name": "reabrir-preserva-onboarding-e-meta",
+      "at": "2026-11-25T18:53:38.948Z"
+    },
+    {
+      "name": "conta-incompleta-entra-direto-oferece-retomada-isolada",
+      "at": "2026-11-25T18:53:40.720Z"
+    },
+    {
+      "name": "retomar-reabre-checkpoint-real",
+      "at": "2026-11-25T18:53:40.995Z"
+    },
+    {
+      "name": "voltar-ao-pedido-preserva-objetivo-real",
+      "at": "2026-11-25T18:53:41.278Z"
+    },
+    {
+      "name": "duas-contas-mesmo-navegador-sem-vazamento",
+      "at": "2026-11-25T18:53:43.018Z"
+    }
+  ],
+  "captures": [
+    {
+      "name": "01-boas-vindas",
+      "file": "rnweb-final-comprovado/01-boas-vindas.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Seu assunto vira\numa trilha.",
+            "rect": {
+              "x": 28,
+              "y": 250,
+              "width": 334,
+              "height": 76,
+              "top": 250,
+              "right": 362,
+              "bottom": 326,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "01-boas-vindas-360",
+      "file": "rnweb-final-comprovado/01-boas-vindas-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Seu assunto vira\numa trilha.",
+            "rect": {
+              "x": 24,
+              "y": 250,
+              "width": 312,
+              "height": 72,
+              "top": 250,
+              "right": 336,
+              "bottom": 322,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "02-boas-vindas-explicacao",
+      "file": "rnweb-final-comprovado/02-boas-vindas-explicacao.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Um erro abre\noutro caminho.",
+            "rect": {
+              "x": 28,
+              "y": 254,
+              "width": 334,
+              "height": 76,
+              "top": 254,
+              "right": 362,
+              "bottom": 330,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "02-boas-vindas-explicacao-360",
+      "file": "rnweb-final-comprovado/02-boas-vindas-explicacao-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Um erro abre\noutro caminho.",
+            "rect": {
+              "x": 24,
+              "y": 254,
+              "width": 312,
+              "height": 72,
+              "top": 254,
+              "right": 336,
+              "bottom": 326,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "03-boas-vindas-retomada",
+      "file": "rnweb-final-comprovado/03-boas-vindas-retomada.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Continue de\nonde parou.",
+            "rect": {
+              "x": 28,
+              "y": 237,
+              "width": 334,
+              "height": 76,
+              "top": 237,
+              "right": 362,
+              "bottom": 313,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "03-boas-vindas-retomada-360",
+      "file": "rnweb-final-comprovado/03-boas-vindas-retomada-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Continue de\nonde parou.",
+            "rect": {
+              "x": 24,
+              "y": 237,
+              "width": 312,
+              "height": 72,
+              "top": 237,
+              "right": 336,
+              "bottom": 309,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "04-cadastro-email",
+      "file": "rnweb-final-comprovado/04-cadastro-email.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Vamos começar.",
+            "rect": {
+              "x": 28,
+              "y": 112,
+              "width": 334,
+              "height": 38,
+              "top": 112,
+              "right": 362,
+              "bottom": 150,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "04-cadastro-email-360",
+      "file": "rnweb-final-comprovado/04-cadastro-email-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Vamos começar.",
+            "rect": {
+              "x": 24,
+              "y": 112,
+              "width": 312,
+              "height": 36,
+              "top": 112,
+              "right": 336,
+              "bottom": 148,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "05-cadastro-codigo",
+      "file": "rnweb-final-comprovado/05-cadastro-codigo.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Confira seu e-mail.",
+            "rect": {
+              "x": 28,
+              "y": 112,
+              "width": 334,
+              "height": 38,
+              "top": 112,
+              "right": 362,
+              "bottom": 150,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "05-cadastro-codigo-360",
+      "file": "rnweb-final-comprovado/05-cadastro-codigo-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Confira seu e-mail.",
+            "rect": {
+              "x": 24,
+              "y": 112,
+              "width": 312,
+              "height": 36,
+              "top": 112,
+              "right": 336,
+              "bottom": 148,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "06-cadastro-senha",
+      "file": "rnweb-final-comprovado/06-cadastro-senha.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Proteja sua conta.",
+            "rect": {
+              "x": 28,
+              "y": 112,
+              "width": 334,
+              "height": 38,
+              "top": 112,
+              "right": 362,
+              "bottom": 150,
+              "left": 28
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "06-cadastro-senha-360",
+      "file": "rnweb-final-comprovado/06-cadastro-senha-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Proteja sua conta.",
+            "rect": {
+              "x": 24,
+              "y": 112,
+              "width": 312,
+              "height": 36,
+              "top": 112,
+              "right": 336,
+              "bottom": 148,
+              "left": 24
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "07-onboarding-objetivo",
+      "file": "rnweb-final-comprovado/07-onboarding-objetivo.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "O que você quer aprender?",
+            "rect": {
+              "x": 28,
+              "y": 232.5,
+              "width": 334,
+              "height": 72,
+              "top": 232.5,
+              "right": 362,
+              "bottom": 304.5,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "onboarding-continuar",
+            "text": "Continuar",
+            "rect": {
+              "x": 28,
+              "y": 519.5,
+              "width": 334,
+              "height": 56,
+              "top": 519.5,
+              "right": 362,
+              "bottom": 575.5,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "07-onboarding-objetivo-360",
+      "file": "rnweb-final-comprovado/07-onboarding-objetivo-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "O que você quer aprender?",
+            "rect": {
+              "x": 28,
+              "y": 232.5,
+              "width": 304,
+              "height": 72,
+              "top": 232.5,
+              "right": 332,
+              "bottom": 304.5,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "onboarding-continuar",
+            "text": "Continuar",
+            "rect": {
+              "x": 28,
+              "y": 519.5,
+              "width": 304,
+              "height": 56,
+              "top": 519.5,
+              "right": 332,
+              "bottom": 575.5,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "08-onboarding-meta",
+      "file": "rnweb-final-comprovado/08-onboarding-meta.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Um passo por dia.",
+            "rect": {
+              "x": 28,
+              "y": 232.5,
+              "width": 227.375,
+              "height": 36,
+              "top": 232.5,
+              "right": 255.375,
+              "bottom": 268.5,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "onboarding-preparar",
+            "text": "Preparar meu estudo",
+            "rect": {
+              "x": 28,
+              "y": 607,
+              "width": 334,
+              "height": 56,
+              "top": 607,
+              "right": 362,
+              "bottom": 663,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "08-onboarding-meta-360",
+      "file": "rnweb-final-comprovado/08-onboarding-meta-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Um passo por dia.",
+            "rect": {
+              "x": 28,
+              "y": 232.5,
+              "width": 227.375,
+              "height": 36,
+              "top": 232.5,
+              "right": 255.375,
+              "bottom": 268.5,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "onboarding-preparar",
+            "text": "Preparar meu estudo",
+            "rect": {
+              "x": 28,
+              "y": 607,
+              "width": 304,
+              "height": 56,
+              "top": 607,
+              "right": 332,
+              "bottom": 663,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "09-diagnostico-opcional",
+      "file": "rnweb-final-comprovado/09-diagnostico-opcional.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Por onde começamos?",
+            "rect": {
+              "x": 20,
+              "y": 150,
+              "width": 350,
+              "height": 40,
+              "top": 150,
+              "right": 370,
+              "bottom": 190,
+              "left": 20
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "09-diagnostico-opcional-360",
+      "file": "rnweb-final-comprovado/09-diagnostico-opcional-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Por onde começamos?",
+            "rect": {
+              "x": 20,
+              "y": 150,
+              "width": 320,
+              "height": 80,
+              "top": 150,
+              "right": 340,
+              "bottom": 230,
+              "left": 20
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "10-proposta",
+      "file": "rnweb-final-comprovado/10-proposta.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 76,
+              "y": 17,
+              "width": 294,
+              "height": 30,
+              "top": 17,
+              "right": 370,
+              "bottom": 47,
+              "left": 76
+            }
+          },
+          {
+            "text": "Parte 1",
+            "rect": {
+              "x": 144.734375,
+              "y": 281,
+              "width": 100.53125,
+              "height": 36,
+              "top": 281,
+              "right": 245.265625,
+              "bottom": 317,
+              "left": 144.734375
+            }
+          },
+          {
+            "text": "Parte 2",
+            "rect": {
+              "x": 143.46875,
+              "y": 679,
+              "width": 103.046875,
+              "height": 36,
+              "top": 679,
+              "right": 246.515625,
+              "bottom": 715,
+              "left": 143.46875
+            }
+          },
+          {
+            "text": "Parte 3",
+            "rect": {
+              "x": 143.6875,
+              "y": 1113,
+              "width": 102.609375,
+              "height": 36,
+              "top": 1113,
+              "right": 246.296875,
+              "bottom": 1149,
+              "left": 143.6875
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "10-proposta-360",
+      "file": "rnweb-final-comprovado/10-proposta-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 76,
+              "y": 17,
+              "width": 264,
+              "height": 30,
+              "top": 17,
+              "right": 340,
+              "bottom": 47,
+              "left": 76
+            }
+          },
+          {
+            "text": "Parte 1",
+            "rect": {
+              "x": 129.734375,
+              "y": 281,
+              "width": 100.53125,
+              "height": 36,
+              "top": 281,
+              "right": 230.265625,
+              "bottom": 317,
+              "left": 129.734375
+            }
+          },
+          {
+            "text": "Parte 2",
+            "rect": {
+              "x": 128.46875,
+              "y": 679,
+              "width": 103.046875,
+              "height": 36,
+              "top": 679,
+              "right": 231.515625,
+              "bottom": 715,
+              "left": 128.46875
+            }
+          },
+          {
+            "text": "Parte 3",
+            "rect": {
+              "x": 128.6875,
+              "y": 1113,
+              "width": 102.609375,
+              "height": 36,
+              "top": 1113,
+              "right": 231.296875,
+              "bottom": 1149,
+              "left": 128.6875
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "11-licao-conceito",
+      "file": "rnweb-final-comprovado/11-licao-conceito.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Filtrar com WHERE incluindo o valor no limite",
+            "rect": {
+              "x": 16,
+              "y": 120,
+              "width": 358,
+              "height": 72,
+              "top": 120,
+              "right": 374,
+              "bottom": 192,
+              "left": 16
+            }
+          },
+          {
+            "text": "O Stu explica",
+            "rect": {
+              "x": 103,
+              "y": 289,
+              "width": 254,
+              "height": 23.40625,
+              "top": 289,
+              "right": 357,
+              "bottom": 312.40625,
+              "left": 103
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "11-licao-conceito-360",
+      "file": "rnweb-final-comprovado/11-licao-conceito-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Filtrar com WHERE incluindo o valor no limite",
+            "rect": {
+              "x": 16,
+              "y": 120,
+              "width": 328,
+              "height": 108,
+              "top": 120,
+              "right": 344,
+              "bottom": 228,
+              "left": 16
+            }
+          },
+          {
+            "text": "O Stu explica",
+            "rect": {
+              "x": 103,
+              "y": 325,
+              "width": 224,
+              "height": 23.40625,
+              "top": 325,
+              "right": 327,
+              "bottom": 348.40625,
+              "left": 103
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "12-exercicio",
+      "file": "rnweb-final-comprovado/12-exercicio.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 36.5,
+              "y": 189.5,
+              "width": 317,
+              "height": 180,
+              "top": 189.5,
+              "right": 353.5,
+              "bottom": 369.5,
+              "left": 36.5
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "12-exercicio-360",
+      "file": "rnweb-final-comprovado/12-exercicio-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 35,
+              "y": 188,
+              "width": 290,
+              "height": 216,
+              "top": 188,
+              "right": 325,
+              "bottom": 404,
+              "left": 35
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "13-feedback-erro",
+      "file": "rnweb-final-comprovado/13-feedback-erro.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 36.5,
+              "y": 189.5,
+              "width": 317,
+              "height": 180,
+              "top": 189.5,
+              "right": 353.5,
+              "bottom": 369.5,
+              "left": 36.5
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "13-feedback-erro-360",
+      "file": "rnweb-final-comprovado/13-feedback-erro-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 35,
+              "y": -73,
+              "width": 290,
+              "height": 216,
+              "top": -73,
+              "right": 325,
+              "bottom": 143,
+              "left": 35
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "14-feedback-acerto",
+      "file": "rnweb-final-comprovado/14-feedback-acerto.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 36.5,
+              "y": 124.5,
+              "width": 317,
+              "height": 180,
+              "top": 124.5,
+              "right": 353.5,
+              "bottom": 304.5,
+              "left": 36.5
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "14-feedback-acerto-360",
+      "file": "rnweb-final-comprovado/14-feedback-acerto-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+            "rect": {
+              "x": 35,
+              "y": 51,
+              "width": 290,
+              "height": 216,
+              "top": 51,
+              "right": 325,
+              "bottom": 267,
+              "left": 35
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "15-ensine-ao-stu",
+      "file": "rnweb-final-comprovado/15-ensine-ao-stu.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Explique a ideia com suas palavras.",
+            "rect": {
+              "x": 16,
+              "y": 71,
+              "width": 358,
+              "height": 72,
+              "top": 71,
+              "right": 374,
+              "bottom": 143,
+              "left": 16
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "15-ensine-ao-stu-360",
+      "file": "rnweb-final-comprovado/15-ensine-ao-stu-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Explique a ideia com suas palavras.",
+            "rect": {
+              "x": 16,
+              "y": 6,
+              "width": 328,
+              "height": 72,
+              "top": 6,
+              "right": 344,
+              "bottom": 78,
+              "left": 16
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "16-ensine-ao-stu-retorno",
+      "file": "rnweb-final-comprovado/16-ensine-ao-stu-retorno.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Explique a ideia com suas palavras.",
+            "rect": {
+              "x": 16,
+              "y": -664,
+              "width": 358,
+              "height": 72,
+              "top": -664,
+              "right": 374,
+              "bottom": -592,
+              "left": 16
+            }
+          },
+          {
+            "text": "O que fez sentido",
+            "rect": {
+              "x": 54,
+              "y": 148.4375,
+              "width": 282,
+              "height": 19.5,
+              "top": 148.4375,
+              "right": 336,
+              "bottom": 167.9375,
+              "left": 54
+            }
+          },
+          {
+            "text": "O que revisar",
+            "rect": {
+              "x": 54,
+              "y": 343.9375,
+              "width": 282,
+              "height": 19.5,
+              "top": 343.9375,
+              "right": 336,
+              "bottom": 363.4375,
+              "left": 54
+            }
+          },
+          {
+            "text": "Leve a ideia adiante",
+            "rect": {
+              "x": 116,
+              "y": 464.625,
+              "width": 220,
+              "height": 19.5,
+              "top": 464.625,
+              "right": 336,
+              "bottom": 484.125,
+              "left": 116
+            }
+          },
+          {
+            "text": "Próximo passo",
+            "rect": {
+              "x": 54,
+              "y": 604.90625,
+              "width": 282,
+              "height": 19.5,
+              "top": 604.90625,
+              "right": 336,
+              "bottom": 624.40625,
+              "left": 54
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "16-ensine-ao-stu-retorno-360",
+      "file": "rnweb-final-comprovado/16-ensine-ao-stu-retorno-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Explique a ideia com suas palavras.",
+            "rect": {
+              "x": 16,
+              "y": -686,
+              "width": 328,
+              "height": 72,
+              "top": -686,
+              "right": 344,
+              "bottom": -614,
+              "left": 16
+            }
+          },
+          {
+            "text": "O que fez sentido",
+            "rect": {
+              "x": 54,
+              "y": 148.203125,
+              "width": 252,
+              "height": 19.5,
+              "top": 148.203125,
+              "right": 306,
+              "bottom": 167.703125,
+              "left": 54
+            }
+          },
+          {
+            "text": "O que revisar",
+            "rect": {
+              "x": 54,
+              "y": 343.703125,
+              "width": 252,
+              "height": 19.5,
+              "top": 343.703125,
+              "right": 306,
+              "bottom": 363.203125,
+              "left": 54
+            }
+          },
+          {
+            "text": "Leve a ideia adiante",
+            "rect": {
+              "x": 116,
+              "y": 464.390625,
+              "width": 190,
+              "height": 19.5,
+              "top": 464.390625,
+              "right": 306,
+              "bottom": 483.890625,
+              "left": 116
+            }
+          },
+          {
+            "text": "Próximo passo",
+            "rect": {
+              "x": 54,
+              "y": 630.265625,
+              "width": 252,
+              "height": 19.5,
+              "top": 630.265625,
+              "right": 306,
+              "bottom": 649.765625,
+              "left": 54
+            }
+          }
+        ],
+        "controls": []
+      }
+    },
+    {
+      "name": "17-primeira-vitoria",
+      "file": "rnweb-final-comprovado/17-primeira-vitoria.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Primeira lição concluída!",
+            "rect": {
+              "x": 28,
+              "y": 190,
+              "width": 334,
+              "height": 36,
+              "top": 190,
+              "right": 362,
+              "bottom": 226,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "primeira-vitoria",
+            "text": "Uma lição concluída. Seu progresso está salvo.",
+            "rect": {
+              "x": 28,
+              "y": 238,
+              "width": 334,
+              "height": 48,
+              "top": 238,
+              "right": 362,
+              "bottom": 286,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 lições",
+            "rect": {
+              "x": 28,
+              "y": 340.5,
+              "width": 334,
+              "height": 39,
+              "top": 340.5,
+              "right": 362,
+              "bottom": 379.5,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-trilha",
+            "text": "Sua trilha · 1 de 5 lições concluídas",
+            "rect": {
+              "x": 28,
+              "y": 389.5,
+              "width": 334,
+              "height": 20,
+              "top": 389.5,
+              "right": 362,
+              "bottom": 409.5,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-proxima",
+            "text": "Relacionar tabelas com INNER JOIN",
+            "rect": {
+              "x": 28,
+              "y": 459.5,
+              "width": 334,
+              "height": 26,
+              "top": 459.5,
+              "right": 362,
+              "bottom": 485.5,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "proxima-licao",
+            "text": "Ir para a próxima lição",
+            "rect": {
+              "x": 28,
+              "y": 501.5,
+              "width": 334,
+              "height": 56,
+              "top": 501.5,
+              "right": 362,
+              "bottom": 557.5,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-detalhes",
+            "text": "O que você praticou",
+            "rect": {
+              "x": 28,
+              "y": 621.5,
+              "width": 334,
+              "height": 44,
+              "top": 621.5,
+              "right": 362,
+              "bottom": 665.5,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "17-primeira-vitoria-360",
+      "file": "rnweb-final-comprovado/17-primeira-vitoria-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Primeira lição concluída!",
+            "rect": {
+              "x": 28,
+              "y": 190,
+              "width": 304,
+              "height": 72,
+              "top": 190,
+              "right": 332,
+              "bottom": 262,
+              "left": 28
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "primeira-vitoria",
+            "text": "Uma lição concluída. Seu progresso está salvo.",
+            "rect": {
+              "x": 28,
+              "y": 274,
+              "width": 304,
+              "height": 48,
+              "top": 274,
+              "right": 332,
+              "bottom": 322,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 lições",
+            "rect": {
+              "x": 28,
+              "y": 399,
+              "width": 304,
+              "height": 39,
+              "top": 399,
+              "right": 332,
+              "bottom": 438,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-trilha",
+            "text": "Sua trilha · 1 de 5 lições concluídas",
+            "rect": {
+              "x": 28,
+              "y": 448,
+              "width": 304,
+              "height": 20,
+              "top": 448,
+              "right": 332,
+              "bottom": 468,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-proxima",
+            "text": "Relacionar tabelas com INNER JOIN",
+            "rect": {
+              "x": 28,
+              "y": 518,
+              "width": 304,
+              "height": 52,
+              "top": 518,
+              "right": 332,
+              "bottom": 570,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "proxima-licao",
+            "text": "Ir para a próxima lição",
+            "rect": {
+              "x": 28,
+              "y": 586,
+              "width": 304,
+              "height": 56,
+              "top": 586,
+              "right": 332,
+              "bottom": 642,
+              "left": 28
+            },
+            "hit": true
+          },
+          {
+            "id": "primeira-vitoria-detalhes",
+            "text": "O que você praticou",
+            "rect": {
+              "x": 28,
+              "y": 706,
+              "width": 304,
+              "height": 44,
+              "top": 706,
+              "right": 332,
+              "bottom": 750,
+              "left": 28
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "18-mapa-progresso-salvo",
+      "file": "rnweb-final-comprovado/18-mapa-progresso-salvo.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 20,
+              "y": 28.5,
+              "width": 290,
+              "height": 20.15625,
+              "top": 28.5,
+              "right": 310,
+              "bottom": 48.65625,
+              "left": 20
+            }
+          },
+          {
+            "text": "Parte 11 de 2 concluídas",
+            "rect": {
+              "x": 88,
+              "y": 111.25,
+              "width": 213.984375,
+              "height": 40,
+              "top": 111.25,
+              "right": 301.984375,
+              "bottom": 151.25,
+              "left": 88
+            }
+          },
+          {
+            "text": "Parte 20 de 2 concluídas",
+            "rect": {
+              "x": 86.65625,
+              "y": 649.75,
+              "width": 216.671875,
+              "height": 40,
+              "top": 649.75,
+              "right": 303.328125,
+              "bottom": 689.75,
+              "left": 86.65625
+            }
+          },
+          {
+            "text": "Parte 30 de 1 concluída",
+            "rect": {
+              "x": 89.84375,
+              "y": 1009.25,
+              "width": 210.296875,
+              "height": 40,
+              "top": 1009.25,
+              "right": 300.140625,
+              "bottom": 1049.25,
+              "left": 89.84375
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 lições",
+            "rect": {
+              "x": 20,
+              "y": 52.65625,
+              "width": 290,
+              "height": 22,
+              "top": 52.65625,
+              "right": 310,
+              "bottom": 74.65625,
+              "left": 20
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "18-mapa-progresso-salvo-360",
+      "file": "rnweb-final-comprovado/18-mapa-progresso-salvo-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 20,
+              "y": 28.5,
+              "width": 260,
+              "height": 20.15625,
+              "top": 28.5,
+              "right": 280,
+              "bottom": 48.65625,
+              "left": 20
+            }
+          },
+          {
+            "text": "Parte 11 de 2 concluídas",
+            "rect": {
+              "x": 73,
+              "y": 111.25,
+              "width": 213.984375,
+              "height": 40,
+              "top": 111.25,
+              "right": 286.984375,
+              "bottom": 151.25,
+              "left": 73
+            }
+          },
+          {
+            "text": "Parte 20 de 2 concluídas",
+            "rect": {
+              "x": 71.65625,
+              "y": 649.75,
+              "width": 216.671875,
+              "height": 40,
+              "top": 649.75,
+              "right": 288.328125,
+              "bottom": 689.75,
+              "left": 71.65625
+            }
+          },
+          {
+            "text": "Parte 30 de 1 concluída",
+            "rect": {
+              "x": 74.84375,
+              "y": 1009.25,
+              "width": 210.296875,
+              "height": 40,
+              "top": 1009.25,
+              "right": 285.140625,
+              "bottom": 1049.25,
+              "left": 74.84375
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 lições",
+            "rect": {
+              "x": 20,
+              "y": 52.65625,
+              "width": 260,
+              "height": 22,
+              "top": 52.65625,
+              "right": 280,
+              "bottom": 74.65625,
+              "left": 20
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "19-retencao",
+      "file": "rnweb-final-comprovado/19-retencao.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "headings": [
+          {
+            "text": "Minhas trilhas",
+            "rect": {
+              "x": 20,
+              "y": 98.59375,
+              "width": 350,
+              "height": 40,
+              "top": 98.59375,
+              "right": 370,
+              "bottom": 138.59375,
+              "left": 20
+            }
+          },
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 38,
+              "y": 376.59375,
+              "width": 314,
+              "height": 28.59375,
+              "top": 376.59375,
+              "right": 352,
+              "bottom": 405.1875,
+              "left": 38
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 liçõesMudar meta",
+            "rect": {
+              "x": 38,
+              "y": 413.1875,
+              "width": 314,
+              "height": 53,
+              "top": 413.1875,
+              "right": 352,
+              "bottom": 466.1875,
+              "left": 38
+            },
+            "hit": true
+          },
+          {
+            "id": "proxima-licao-retencao",
+            "text": "Próxima: Relacionar tabelas com INNER JOIN",
+            "rect": {
+              "x": 38,
+              "y": 535.1875,
+              "width": 314,
+              "height": 22,
+              "top": 535.1875,
+              "right": 352,
+              "bottom": 557.1875,
+              "left": 38
+            },
+            "hit": true
+          },
+          {
+            "id": "abrir-destaque",
+            "text": "Continuar",
+            "rect": {
+              "x": 38,
+              "y": 571.1875,
+              "width": 314,
+              "height": 52,
+              "top": 571.1875,
+              "right": 352,
+              "bottom": 623.1875,
+              "left": 38
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "19-retencao-360",
+      "file": "rnweb-final-comprovado/19-retencao-360.png",
+      "metrics": {
+        "width": 360,
+        "height": 800,
+        "scrollWidth": 360,
+        "headings": [
+          {
+            "text": "Minhas trilhas",
+            "rect": {
+              "x": 20,
+              "y": 98.59375,
+              "width": 320,
+              "height": 40,
+              "top": 98.59375,
+              "right": 340,
+              "bottom": 138.59375,
+              "left": 20
+            }
+          },
+          {
+            "text": "SQL para a prova",
+            "rect": {
+              "x": 38,
+              "y": 376.59375,
+              "width": 284,
+              "height": 28.59375,
+              "top": 376.59375,
+              "right": 322,
+              "bottom": 405.1875,
+              "left": 38
+            }
+          }
+        ],
+        "controls": [
+          {
+            "id": "meta-hoje",
+            "text": "Hoje: 1 de 2 liçõesMudar meta",
+            "rect": {
+              "x": 38,
+              "y": 413.1875,
+              "width": 284,
+              "height": 53,
+              "top": 413.1875,
+              "right": 322,
+              "bottom": 466.1875,
+              "left": 38
+            },
+            "hit": true
+          },
+          {
+            "id": "proxima-licao-retencao",
+            "text": "Próxima: Relacionar tabelas com INNER JOIN",
+            "rect": {
+              "x": 38,
+              "y": 535.1875,
+              "width": 284,
+              "height": 44,
+              "top": 535.1875,
+              "right": 322,
+              "bottom": 579.1875,
+              "left": 38
+            },
+            "hit": true
+          },
+          {
+            "id": "abrir-destaque",
+            "text": "Continuar",
+            "rect": {
+              "x": 38,
+              "y": 593.1875,
+              "width": 284,
+              "height": 52,
+              "top": 593.1875,
+              "right": 322,
+              "bottom": 645.1875,
+              "left": 38
+            },
+            "hit": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "retencao-01-retencao-real-uma-meta",
+      "file": "rnweb-final-comprovado/01-retencao-real-uma-meta.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-02-falha-meta",
+      "file": "rnweb-final-comprovado/02-falha-meta.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-03-meta3-real",
+      "file": "rnweb-final-comprovado/03-meta3-real.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-04-meta1-atingida",
+      "file": "rnweb-final-comprovado/04-meta1-atingida.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-05-proxima-licao-real",
+      "file": "rnweb-final-comprovado/05-proxima-licao-real.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-06-conta-incompleta-retomar",
+      "file": "rnweb-final-comprovado/06-conta-incompleta-retomar.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-07-checkpoint-retomado",
+      "file": "rnweb-final-comprovado/07-checkpoint-retomado.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    },
+    {
+      "name": "retencao-08-objetivo-preservado",
+      "file": "rnweb-final-comprovado/08-objetivo-preservado.png",
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390
+      }
+    }
+  ],
+  "findings": [],
+  "progress": {
+    "etapa": "concluido",
+    "meta": 3,
+    "licoesHoje": 1,
+    "totalLicoesConcluidas": 1,
+    "proximaLicao": "Relacionar tabelas com INNER JOIN"
+  },
+  "firstCompletion": {
+    "etapa": "concluido",
+    "meta": 2,
+    "licoesHoje": 1,
+    "totalLicoesConcluidas": 1
+  },
+  "limitations": [
+    "React Native Web em Chromium, sem aparelho iOS/Android",
+    "API MOBILE e banco PostgreSQL reais locais",
+    "HTTPS sintético encaminhado para HTTP local; sem validação de TLS",
+    "SecureStore.web substituído por localStorage somente no harness",
+    "Foco/accessibility events nativos sem implementação no adaptador web: no-op somente no harness",
+    "IA=falsa e EMAIL=falso: não valida provedores reais nem entrega de e-mail externo",
+    "Nenhum OAuth Google/Apple real, microfone, notificações push ou build TestFlight executado nesta rodada de navegador",
+    "200% de texto foi medido na web; este adaptador não comprova Dynamic Type ou TalkBack/VoiceOver nativos"
+  ]
+}

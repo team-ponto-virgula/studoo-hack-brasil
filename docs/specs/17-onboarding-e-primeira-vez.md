@@ -1,6 +1,8 @@
 # Onboarding e primeira vez (revisão de UX com o Duolingo como régua)
 
-**Estado:** revisão do Designer de 22/11, a pedido do dono: "revisar o Studoo, web, app Android e iPhone, a parte de UX: se tem um onboarding bom, se está conciso, se está tudo certo. Leve como inspiração o Duolingo." Só documentação, nada implementado.
+**Estado histórico (22/11):** revisão do Designer, a pedido do dono: "revisar o Studoo, web, app Android e iPhone, a parte de UX: se tem um onboarding bom, se está conciso, se está tudo certo. Leve como inspiração o Duolingo." Naquela rodada, só documentação, nada implementado.
+
+**Atualização de escopo em 25/11:** o dono pediu explicitamente um fluxo inteiro de onboarding aplicado e o ponto de partida de um esquema de retenção. O contrato vigente dessa integração está em [Onboarding aplicado e retenção](../ONBOARDING-RETENCAO.md): cadastro inicia o percurso; login existente entra direto; objetivo/material e meta de 1, 2 ou 3 lições têm efeito real e ficam salvos por conta. As decisões de adiamento abaixo permanecem como histórico, mas não bloqueiam esse pedido posterior. Não se afirma que desenho, prévia de navegador e distribuição nativa sejam a mesma validação.
 - **Prazos:** o app congela na noite de 25/11 (build 4); a web publica na hora.
 - **Escopo:** a jornada de quem nunca viu o Studoo (entrada, tour, Nova trilha, aceite de IA, geração, proposta, primeira lição, primeiro erro, conclusão, volta ao mapa) e a de quem volta.
 - **Complementa a spec 16** (auditoria de telas). Itens que já estão lá são citados pelo número, sem repetir a regra.
@@ -162,15 +164,17 @@ O item 1 (a proposta pronta mostra a lição 1), o item 10 (o Stu na entrada do 
 |---|---|
 | Web, agora | Mudanças 1, 2, 4 e 6 (a 6 é do servidor e vale para todos) |
 | Build 4 do app (até 25/11) | Mudanças 1, 2 e 4, com os textos vindos do contrato; a 6 já chega pelo servidor |
-| Depois do hackathon | Mudança 3, quando o servidor levar o progresso do visitante para a conta; mudança 5, depois da revisão da Apple; teste de nível para quem já sabe o assunto; lembrete de volta (notificação) depois da primeira lição concluída; meta diária leve, se o dono quiser (seção 4) |
+| Depois do hackathon (plano histórico) | Mudança 3, quando o servidor levar o progresso do visitante para a conta; mudança 5, depois da revisão da Apple; teste de nível para quem já sabe o assunto; lembrete de volta (notificação) depois da primeira lição concluída. A meta diária foi antecipada pelo pedido explícito de 25/11, conforme o contrato novo. |
 
 ## 4. O que não vale mudar, e por quê
+
+**Ressalva de 25/11:** esta seção preserva a decisão original sobre evitar etapas sem valor. O pedido posterior autoriza a preparação do onboarding e uma meta diária privada e ajustável, descritas no [contrato aplicado](../ONBOARDING-RETENCAO.md). Permanecem a ausência de promessas não medidas, o tom encorajador, o consentimento antes do uso de IA e a separação entre login existente e conta nova.
 
 **Regra geral para os textos do produto** (vale daqui para frente): nenhum texto afirma número, prazo ou promessa que não medimos ou garantimos ("leva 3 minutos", "fica salvo para sempre"). O que depende de conta ou de visitante é dito de um jeito verdadeiro para os dois, ou separado por estado.
 
 
-- **Perguntas antes da primeira lição** (motivo, nível, meta diária, como o Duolingo faz): o Studoo pergunta uma coisa só e abre a primeira lição em 9 toques (medido). Cada pergunta a mais atrasa o valor. A seção 7 define a exceção pulável para ajustar o ponto de partida na criação por pedido.
-- **Sequência de dias e meta diária agora** (de memória, no Duolingo): é pressão de compromisso, e não há tempo para fazer direito até 30/11. A conclusão sugere o que rever. A sequência pedida em 25/11 é informativa e privada, conforme a seção 7. Meta diária segue adiada.
+- **Perguntas antes da primeira lição — decisão original:** o percurso medido em 22/11 perguntava uma coisa e abria a primeira lição em 9 toques. Cada etapa deve entregar valor. A seção 7 mantém a exceção pulável para ajustar o ponto de partida por pedido; o onboarding aplicado de 25/11 acrescenta objetivo/material e meta, sem questionário de perfil sem uso.
+- **Sequência e meta — decisão revista:** a sequência continua informativa e privada. A meta antes adiada entrou no pedido de 25/11: 1, 2 ou 3 primeiras conclusões por dia, ajustável na conta, sem ranking, culpa ou contagem fictícia. Isso não comprova aumento de retenção.
 - **Pedido de notificação:** o app não pede, e não deve pedir antes de mostrar valor. Não entra neste ciclo.
 - **Tom de culpa do mascote** (Appcues chama a coruja de "guilt-tripping"): o Stu fica encorajador (spec 13).
 - **Retomar a lição pelo mapa em 2 toques** (o nó e depois "Continuar" no balão): é o balão decidido para todos os nós (spec 01). Ele mostra o que a lição é antes de abrir e evita abrir uma lição por um toque sem querer.
@@ -261,7 +265,7 @@ Escopo comum para Web, Android e iPhone. Os textos de interface vêm do contrato
 ### Perfil e sequência
 
 - No Perfil privado, usar **“Trilhas concluídas”** (`trilhasConcluidas`), **“Dias seguidos”** (`diasSeguidos`) e **“Dias de estudo”** (`diasDeEstudo`). O último é o total de datas distintas com ao menos uma primeira conclusão de lição confirmada. A sequência conta datas consecutivas até hoje ou ontem no fuso da pessoa gravado pelo servidor. Se o intervalo for maior, a sequência fica em zero e o total histórico permanece. Duas primeiras conclusões na mesma data contam um dia. Reenvio, reabertura ou refazer uma lição preservam a data da primeira conclusão.
-- Usar os campos do servidor. Zero confirmado aparece como zero. Campo ausente em servidor antigo fica oculto. A sequência é privada e informativa, sem meta, ranking, alerta de perda ou calendário novo. Se já houver datas no histórico visível, o servidor entrega datas locais numa janela limitada. A retomada continua em **Minhas trilhas**, com **“Continuar”** para a próxima ação recuperável.
+- Usar os campos do servidor. Zero confirmado aparece como zero. Campo ausente em servidor antigo fica oculto. A sequência é privada e informativa, sem ranking, alerta de perda ou calendário novo. A meta pessoal adicionada pelo pedido de 25/11 é um indicador separado, baseado em primeiras conclusões e no fuso da conta; não transforma sequência em punição. Se já houver datas no histórico visível, o servidor entrega datas locais numa janela limitada. A retomada continua em **Minhas trilhas**, com **“Continuar”** para a próxima ação recuperável.
 
 ### Aceite com dados sintéticos
 

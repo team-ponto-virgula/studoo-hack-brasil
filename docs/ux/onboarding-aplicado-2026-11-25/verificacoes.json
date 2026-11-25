@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-25",
+  "runtimeRevision": "22e8329",
+  "releaseIntegrated": "675226c",
+  "environment": {
+    "database": "PostgreSQL local isolado",
+    "ai": "falsa",
+    "email": "falso",
+    "accounts": "sintéticas"
+  },
+  "checks": [
+    {
+      "command": "npm run test:onboarding",
+      "total": 40,
+      "passed": 40,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:estudio:interface",
+      "total": 703,
+      "passed": 703,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:dominio",
+      "total": 18,
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:formatos",
+      "total": 271,
+      "passed": 271,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:paridade",
+      "total": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:movimento",
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:visitante-mobile",
+      "total": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:privacidade",
+      "total": 4,
+      "passed": 4,
+      "failed": 0
+    }
+  ],
+  "typechecks": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run typecheck --workspace @studoo/mobile",
+      "exitCode": 0
+    }
+  ],
+  "build": {
+    "command": "npm run build",
+    "isolatedCheckout": true,
+    "exitCode": 0
+  },
+  "mobileExport": {
+    "command": "expo export --platform all --max-workers 2",
+    "exitCode": 0,
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "nativeExecution": false
+  },
+  "limitations": [
+    "Não houve login real nos provedores Google/Apple.",
+    "IA falsa não valida qualidade nem latência de geração real.",
+    "Não houve execução em iPhone, Android ou emulador nativo.",
+    "Export de Hermes não é IPA/APK nem distribuição TestFlight.",
+    "Sem analytics de coortes D1/D7 ou notificações novos nesta entrega.",
+    "A tarefa não possui HTTP Preview configurado; a porta local da web é3000."
+  ]
+}
