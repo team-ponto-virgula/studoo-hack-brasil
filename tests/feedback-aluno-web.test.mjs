@@ -239,6 +239,16 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
         recortes: amplo ? [{ titulo: 'Fotografar movimento', questao: aplicacao }, { titulo: 'Exposição manual', questao: exposicao }] : [],
       }) });
     }
+    if (payload.text?.format?.name === 'diagnostico_abertura') {
+      return Response.json({ output_text: JSON.stringify({
+        titulo: 'Criar rastro sem perder a exposição', desafio: 'Equilibrar tempo de exposição e abertura ao criar um rastro de movimento.',
+      }) });
+    }
+    if (payload.text?.format?.name === 'diagnostico_verificar_licao') {
+      const { licao } = JSON.parse(payload.input[0].content[0].text);
+      assert.match(licao.exercicio.enunciado, /rastro/);
+      return Response.json({ output_text: JSON.stringify({ resultado: 'avanca' }) });
+    }
     const entrada = payload.input[1].content;
     const avancado = entrada.includes('Fotografar movimento') && entrada.includes('Escolher velocidade para movimento');
     const ajuste = entrada.includes('Compensar exposição com o obturador');
@@ -381,4 +391,121 @@ test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rót
   ];
   assert.equal((await pedir()).status, 503);
   assert.equal(fetch.mock.callCount(), 4);
+});
+
+test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no primeiro exercício salvo', async t => {
+  const { id, cookie } = await novoVisitante();
+  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1', STUDOO_IA_RESERVA: 'nenhuma', STUDOO_LIMITE_GERACOES_VISITANTE: '4' };
+  const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
+  Object.assign(process.env, ambiente);
+  t.after(() => {
+    for (const [chave, valor] of Object.entries(anterior)) {
+      if (valor === undefined) delete process.env[chave];
+      else process.env[chave] = valor;
+    }
+  });
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+
+  const objetivo = 'Aprender a resolver equações do primeiro grau com uma única incógnita';
+  const habilidade = 'Isolar a incógnita em equação simples';
+  const tituloRepetido = 'Igualdade e operações inversas';
+  const tituloNovo = 'Traduzir um problema em equação';
+  const desafio = 'Escolher a equação que representa uma taxa fixa e um valor por unidade.';
+  const fundamentos = 'Qual valor de x torna x + 5 = 12 verdadeira?';
+  const repeticao = 'Em x + 4 = 9, qual operação ajuda a isolar x?';
+  const aplicacao = 'Uma corrida cobra R$ 5 fixos e R$ 3 por km. Qual equação representa um total de R$ 20?';
+  const revisoes = [];
+  let deixarRepetir = false;
+
+  const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    assert.doesNotMatch(init.body, /example.test/);
+    const requisicao = JSON.parse(init.body);
+    const [sistema, entrada] = requisicao.messages.map(m => m.content);
+    if (requisicao.stream) {
+      const demonstrou = entrada.includes(`"demonstrados":["${habilidade}"]`);
+      const linhas = [
+        { tipo: 'plano', titulo: 'Equações do primeiro grau' },
+        { tipo: 'fluxo', titulo: 'Primeiros passos' },
+        { tipo: 'licao', titulo: demonstrou ? tituloRepetido : 'O que é uma equação', resumo: 'Aprender a isolar x.' },
+      ].map(x => JSON.stringify(x)).join('\n') + '\n';
+      return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: linhas } }] })}\n\ndata: [DONE]\n\n`);
+    }
+    if (sistema.includes('Classifique a abrangência')) {
+      return respostaJson({ escopo: 'Equações do primeiro grau', nivelDeclarado: 'nao_declarado', recortes: [], questao: {
+        habilidade, enunciado: 'Na equação 3x + 5 = 20, qual é o valor de x?', opcoes: ['5', '8', '15'], correta: 0,
+      } });
+    }
+    if (sistema.includes('Revise a primeira lição proposta')) {
+      const dados = JSON.parse(entrada);
+      assert.equal(dados.objetivo, objetivo);
+      assert.deepEqual(dados.diagnostico.demonstrados, [habilidade]);
+      assert.equal(dados.diagnostico.nivel, 'basico');
+      assert.equal(dados.candidata.titulo, tituloRepetido);
+      return respostaJson({ titulo: tituloNovo, desafio });
+    }
+    if (sistema.includes('Avalie o conteúdo real da primeira lição')) {
+      const dados = JSON.parse(entrada);
+      assert.equal(dados.desafioInicial, desafio);
+      const exercicio = dados.licao.exercicio;
+      const enunciado = exercicio.enunciado;
+      revisoes.push(enunciado);
+      const certa = exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto;
+      if (enunciado === aplicacao && certa === '3k + 5 = 20') return respostaJson({ resultado: 'avanca' });
+      assert.equal(enunciado, repeticao);
+      assert.equal(certa, 'Subtrair 4');
+      return respostaJson({ resultado: 'repete' });
+    }
+
+    const adaptada = entrada.includes('Desafio inicial');
+    if (adaptada) {
+      assert.ok(entrada.includes(desafio));
+      assert.ok(entrada.includes(tituloNovo));
+    }
+    const nova = adaptada && !deixarRepetir && entrada.includes('A primeira versão não mostrou avanço no conteúdo');
+    const opcoes = nova ? ['3k + 5 = 20', '5k + 3 = 20', '3k = 20 + 5']
+      : adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
+    return respostaJson({
+      objetivo: nova ? desafio : habilidade,
+      conceito: nova ? 'Combine a taxa fixa com o produto do preço unitário pela quantidade.' : 'Aplique a mesma operação nos dois lados para isolar a incógnita.',
+      exemplo: nova ? 'Com R$ 8 fixos e R$ 2 por kg, um total de R$ 18 é representado por 2k + 8 = 18.' : 'Em x + 3 = 8, subtraia 3 para encontrar x = 5.',
+      exercicio: {
+        tipo: 'multipla_escolha', enunciado: nova ? aplicacao : adaptada ? repeticao : fundamentos,
+        opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })), gabarito: ['0'],
+        feedbackCorreto: 'Está certo.', feedbackIncorreto: 'Observe cada parte do problema.',
+      },
+    });
+  });
+
+  const amostra = await ok(diagnostico(req('aprendizado/diagnostico', cookie, { objetivo })));
+  assert.match(amostra.pergunta.enunciado, /3x \+ 5 = 20/);
+  const pedir = diagnosticoId => ok(proposta(req('aprendizado/propostas', cookie, { objetivo, diagnosticoId })));
+  for (const resposta of ['8', 'Ainda não sei']) {
+    const perfil = await responder(cookie, amostra, resposta);
+    assert.deepEqual(perfil.perfil.lacunas, resposta === '8' ? [habilidade] : []);
+    const { primeira } = await salvarEReabrir(cookie, await pedir(perfil.id));
+    assert.equal(primeira.exercicio.enunciado, fundamentos);
+  }
+  assert.deepEqual(revisoes, []);
+
+  const corrigida = await responder(cookie, amostra, '5');
+  assert.deepEqual(corrigida.perfil.demonstrados, [habilidade]);
+  assert.deepEqual(corrigida.perfil.lacunas, []);
+  const stream = await eventosProposta(req('aprendizado/propostas/ao-vivo', cookie, { objetivo, diagnosticoId: corrigida.id }));
+  assert.equal(stream.status, 200);
+  const eventos = (await stream.text()).trim().split('\n').map(JSON.parse);
+  assert.equal(eventos.find(e => e.tipo === 'licao').resumo, desafio);
+  const { primeira } = await salvarEReabrir(cookie, eventos.at(-1).proposta);
+  assert.equal(primeira.titulo, tituloNovo);
+  assert.equal(primeira.exercicio.enunciado, aplicacao);
+  const opcao = primeira.exercicio.opcoes.find(o => o.texto === '3k + 5 = 20');
+  assert.equal((await ok(avaliar(req('aprendizado/licoes/' + primeira.id + '/avaliar', cookie, { resposta: opcao.id }), ctx(primeira.id)))).correta, true);
+  assert.deepEqual(revisoes, [repeticao, aplicacao]);
+
+  deixarRepetir = true;
+  const invalida = await pedir(corrigida.id);
+  assert.equal((await salvar(req('aprendizado/planos', cookie, { token: invalida.token }))).status, 503);
+  assert.deepEqual(revisoes, [repeticao, aplicacao, repeticao, repeticao]);
+  assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });

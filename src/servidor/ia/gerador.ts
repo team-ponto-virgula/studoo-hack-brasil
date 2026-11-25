@@ -4,6 +4,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { criarGeradorFalso } from "./falsa";
 import { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek } from "./deepseek";
 import { GERADOR_OPENAI, configuracaoOpenAi, criarGeradorOpenAi } from "./openai";
+import { comProgressaoDiagnostica } from "./progressao";
 
 export { REGRAS_ORDEM_DA_TRILHA, instrucoesDeOrdem } from "./ordem";
 
@@ -11,7 +12,7 @@ export { REGRAS_ORDEM_DA_TRILHA, instrucoesDeOrdem } from "./ordem";
 export type EventoEstrutura = Extract<EventoGeracao, { tipo: "plano" | "fluxo" | "licao" }>;
 
 /** Devolvido ao fim da estrutura: quem gerou (para o aceite) e a origem exibida na proposta. */
-export type MetaPlano = { gerador: string; origem: string };
+export type MetaPlano = { gerador: string; origem: string; desafioInicial?: string };
 
 /**
  * Fronteira da IA (SEGURANCA.md §5). O pedido leva só o objetivo: nenhum dado da conta.
@@ -31,7 +32,7 @@ export interface GeradorTrilha {
     opcoes: { aoVivo: boolean; diagnostico?: PerfilDiagnostico },
   ): AsyncGenerator<EventoEstrutura, MetaPlano | undefined>;
   /** Cria o conteúdo de uma lição do esqueleto aceito. Recusa (`proposta_invalida`) um esqueleto de outro gerador. */
-  gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;
+  gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal, corrigirAbertura?: boolean): Promise<ConteudoLicao>;
 }
 
 export type ProvedorIa = "falsa" | "openai" | "deepseek";
@@ -61,7 +62,7 @@ export function obterGerador(): GeradorTrilha {
       console.error(JSON.stringify({ rota: "ia-openai", codigo: "reserva", motivo: "sem_configuracao" }));
       return reserva;
     }
-    return comReserva(criarGeradorOpenAi(config), reserva, GERADOR_OPENAI, "ia-openai");
+    return comReserva(comProgressaoDiagnostica(criarGeradorOpenAi(config)), reserva, GERADOR_OPENAI, "ia-openai");
   }
   if (process.env.IA === "deepseek") {
     const reserva = (process.env.STUDOO_IA_RESERVA ?? "falsa").trim() === "nenhuma" ? null : criarGeradorFalso();
@@ -71,7 +72,7 @@ export function obterGerador(): GeradorTrilha {
       console.error(JSON.stringify({ rota: "ia-deepseek", codigo: "reserva", motivo: "sem_configuracao" }));
       return reserva;
     }
-    return comReserva(criarGeradorDeepSeek(config), reserva, GERADOR_DEEPSEEK, "ia-deepseek");
+    return comReserva(comProgressaoDiagnostica(criarGeradorDeepSeek(config)), reserva, GERADOR_DEEPSEEK, "ia-deepseek");
   }
   throw new FalhaApi("ia_indisponivel");
 }

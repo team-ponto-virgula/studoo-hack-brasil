@@ -180,11 +180,11 @@ function corpoDaEstrutura(objetivo: string, diagnostico?: PerfilDiagnostico) {
 }
 
 /** O pedido da lição. Só a lição de matemática leva o bloco de fórmulas e figuras, o esquema com `visuais` e `resolucao` e mais espaço para a resposta. */
-export function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, correcao = "", matematica = false) {
+export function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, correcao = "", matematica = false, corrigirAbertura = false) {
   return {
     input: [
       { role: "system", content: matematica ? instrucoesDaLicaoDeMatematica : instrucoesDaLicao },
-      { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
+      { role: "user", content: promptDaLicao(esqueleto, fluxo, licao, corrigirAbertura) },
       ...(correcao ? [{ role: "user", content: correcao }] : []),
     ],
     text: {
@@ -244,7 +244,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
       return meta;
     },
 
-    async gerarConteudo(esqueleto, fluxo, licao, sinal) {
+    async gerarConteudo(esqueleto, fluxo, licao, sinal, corrigirAbertura) {
       // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
       let ultimoMotivo: string | undefined;
       const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
@@ -268,7 +268,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
         let corpo: unknown;
         try {
-          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
+          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica, corrigirAbertura), comPrazo);
           corpo = await resposta.json();
         } catch (erro) {
           if (reserva) {

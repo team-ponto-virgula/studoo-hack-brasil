@@ -114,7 +114,8 @@ export function instrucoesDaEstruturaAdaptada(perfil?: PerfilDiagnostico): strin
   return instrucoesDaEstrutura
     .replace('3 trechos com 2 a 4 lições cada (de 7 a 10 lições no total)', `1 a 3 trechos com até ${maximoDeLicoesDiagnostico(perfil)} lições no total`)
     .replace('Comece do nível que o objetivo indica e avance até o que a pessoa quer alcançar.', 'Comece pela primeira lacuna ou aplicação nova, segundo a evidência do diagnóstico.')
-    .replace('Inclua ao menos uma lição de revisão, com o título começando por "Revisão:".', 'Só inclua revisão opcional se ela couber no escopo e sem repetir o começo.');
+    .replace('Inclua ao menos uma lição de revisão, com o título começando por "Revisão:".', 'Só inclua revisão opcional se ela couber no escopo e sem repetir o começo.')
+    + '\nSe há habilidade demonstrada, use-a como pré-requisito. Escreva no resumo da primeira lição qual nova ação ou decisão a pessoa praticará dentro do nível pedido. Mudar números, exemplos, nomes ou redação sem mudar a decisão não conta como avanço.';
 }
 
 /**
@@ -306,13 +307,16 @@ export function contextoDiagnostico(perfil: PerfilDiagnostico | undefined): stri
     + '\nRespeite o escopo e a profundidade desejada, mas comece pelo que ainda falta. Use apenas demonstrados como evidência de domínio. Trate conhecimentos demonstrados como revisão opcional.';
 }
 
-export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number): string {
+export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, corrigirAbertura = false): string {
   const titulos = esqueleto.fluxos.flatMap((trecho) => trecho.licoes.map(({ titulo }) => titulo));
   const posicao = esqueleto.fluxos.slice(0, fluxo).reduce((soma, trecho) => soma + trecho.licoes.length, 0) + licao;
   const lista = titulos.map((titulo, indice) => `${indice + 1}. ${titulo}${indice === posicao ? "  <- esta lição" : ""}`).join("\n");
   // Na primeira lição da trilha o balão do Stu é ainda mais curto (spec 17, mudança 6): é a tela mais longa do primeiro caminho.
-  const primeira = fluxo === 0 && licao === 0 ? "\nEsta é a primeira lição da trilha: o conceito tem no máximo 2 frases." : "";
-  return `Objetivo da pessoa: ${esqueleto.objetivo}${contextoDiagnostico(esqueleto.diagnostico)}\nTrilha: ${esqueleto.titulo}\nLições da trilha, em ordem:\n${lista}\n\nEscreva a lição ${posicao + 1}: "${titulos[posicao]}".${primeira}`;
+  const primeira = posicao === 0 ? "\nEsta é a primeira lição da trilha: o conceito tem no máximo 2 frases." : "";
+  const desafio = posicao === 0 && esqueleto.desafioInicial
+    ? `\nDesafio inicial (dado do plano): ${JSON.stringify(esqueleto.desafioInicial)}. Ensine essa ação ou decisão nova no conceito e no exemplo. Faça o primeiro exercício exigir essa decisão para chegar à resposta. Use a habilidade demonstrada só como ferramenta. Se trocar valores ou contexto ainda deixa a mesma ação de antes, refaça o exercício sem subir o nível.` : "";
+  const correcao = corrigirAbertura ? "\nA primeira versão não mostrou avanço no conteúdo. Reescreva a lição e seu primeiro exercício a partir do desafio inicial. Antes de responder, confira se o gabarito depende da nova decisão e não apenas da habilidade demonstrada." : "";
+  return `Objetivo da pessoa: ${esqueleto.objetivo}${contextoDiagnostico(esqueleto.diagnostico)}\nTrilha: ${esqueleto.titulo}\nLições da trilha, em ordem:\n${lista}\n\nEscreva a lição ${posicao + 1}: "${titulos[posicao]}".${primeira}${desafio}${correcao}`;
 }
 
 /** Texto aparado, ou vazio. */

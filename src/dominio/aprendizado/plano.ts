@@ -830,6 +830,7 @@ export function calcularProgresso(concluidas: number, total: number): Progresso 
 export type EsqueletoPlano = {
   materialId?: string;
   diagnostico?: PerfilDiagnostico;
+  desafioInicial?: string;
   gerador: string;
   titulo: string;
   objetivo: string;
@@ -844,6 +845,7 @@ export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
   if (!objeto(valor) || !textoAte(valor.gerador, 40) || !textoAte(valor.titulo, LIMITES_ESQUELETO.titulo) ||
       !textoAte(valor.objetivo, LIMITES_ESQUELETO.objetivo) || !textoAte(valor.origem, LIMITES_ESQUELETO.titulo) ||
       !opcional(valor.diagnostico, perfilDiagnosticoValido) ||
+      !opcional(valor.desafioInicial, (desafio) => textoAte(desafio, 160)) ||
       !Array.isArray(valor.fluxos) || valor.fluxos.length === 0 || valor.fluxos.length > LIMITES_ESQUELETO.fluxos) {
     return false;
   }

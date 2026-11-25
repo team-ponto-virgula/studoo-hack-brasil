@@ -273,7 +273,7 @@ function converterAnexosDeepSeek(anexos: unknown[]): unknown[] {
  * Opções de um pedido JSON do Estúdio. `prazoMs` (padrão 60 s) e `tentativas` (padrão 2) limitam o tempo; `matematica` conserta, antes do
  * parse, a barra do LaTeX que o modelo não dobrou (`\frac`, `\div`). Sem opções, o pedido é o de sempre.
  */
-export type OpcoesDoPedidoJson = { prazoMs?: number; tentativas?: number; matematica?: boolean };
+export type OpcoesDoPedidoJson = { prazoMs?: number; tentativas?: number; matematica?: boolean; sinal?: AbortSignal };
 
 /** Pedido JSON do Estúdio (reforço, ensinar Stu, leitura de material e geração de trilha a partir do material). */
 export async function pedirJsonDeepSeek(
@@ -296,6 +296,8 @@ export async function pedirJsonDeepSeek(
 
   for (let tentativa = 0; tentativa < (opcoes.tentativas ?? 2); tentativa += 1) {
     try {
+      const prazo = AbortSignal.timeout(opcoes.prazoMs ?? 60_000);
+      const sinal = opcoes.sinal ? AbortSignal.any([opcoes.sinal, prazo]) : prazo;
       const resposta = await pedir(config, {
         messages: [
           { role: "system", content: sistema },
@@ -303,7 +305,7 @@ export async function pedirJsonDeepSeek(
         ],
         response_format: { type: "json_object" },
         max_tokens: 8192,
-      }, AbortSignal.timeout(opcoes.prazoMs ?? 60_000));
+      }, sinal);
       const texto = textoDaRespostaChat(await resposta.json());
       if (!texto.trim()) {
         registrar("ia_indisponivel", { motivo: "vazio", tentativa });
@@ -370,7 +372,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
       return meta;
     },
 
-    async gerarConteudo(esqueleto, fluxo, licao, sinal) {
+    async gerarConteudo(esqueleto, fluxo, licao, sinal, corrigirAbertura) {
       // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
       let ultimoMotivo: string | undefined;
       const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
@@ -403,7 +405,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           resposta = await pedir(config, {
             messages: [
               { role: "system", content: matematica ? instrucoesLicaoJsonDeMatematica : instrucoesLicaoJson },
-              { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
+              { role: "user", content: promptDaLicao(esqueleto, fluxo, licao, corrigirAbertura) },
               ...(correcao ? [{ role: "user", content: correcao }] : []),
             ],
             response_format: { type: "json_object" },
