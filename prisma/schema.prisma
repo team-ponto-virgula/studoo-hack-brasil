@@ -37,6 +37,9 @@ model Usuario {
   recuperacao RecuperacaoSenha?
   codigosMobile CodigoGoogleMobile[]
   fuso      String
+  /// Meta pessoal de primeiras conclusões diárias; contas antigas mantêm o padrão sem repetir onboarding.
+  metaLicoesDia Int @default(1)
+  onboarding OnboardingConta?
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
   diagnosticos DiagnosticoAprendizado[]
@@ -89,6 +92,8 @@ model Sessao {
   tokenHash String      @id
   usuarioId String
   canal     CanalSessao @default(WEB)
+  /// Somente a sessão criada junto de uma conta nova inicia o onboarding automaticamente.
+  onboardingInicial Boolean @default(false)
   criadaEm  DateTime    @default(now()) @db.Timestamptz(3)
   expiraEm  DateTime    @db.Timestamptz(3)
   usuario   Usuario     @relation(fields: [usuarioId], references: [id])
@@ -273,9 +278,28 @@ model CodigoGoogleMobile {
   codigoHash String @id
   usuarioId String
   desafio String
+  onboardingInicial Boolean @default(false)
   expiraEm DateTime @db.Timestamptz(3)
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   @@index([expiraEm])
+}
+
+/// Jornada privada por conta. A ausência de linha identifica contas anteriores, sem enrolamento retroativo.
+model OnboardingConta {
+  usuarioId String @id
+  versao Int @default(1)
+  etapa String @default("preparacao")
+  objetivo String?
+  modo String @default("assunto")
+  /// Id privado de trilha verificado por dono; sem FK para permitir apagar a trilha sem bloquear a conta.
+  planoId String?
+  iniciadoEm DateTime @default(now()) @db.Timestamptz(3)
+  /// Última preparação de objetivo; o fallback não recupera trilhas anteriores a uma troca de assunto.
+  preparadoEm DateTime? @db.Timestamptz(3)
+  atualizadoEm DateTime @updatedAt @db.Timestamptz(3)
+  adiadoEm DateTime? @db.Timestamptz(3)
+  concluidoEm DateTime? @db.Timestamptz(3)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
 
 /// Código de posse do e-mail antes de criar a conta. A chave é um HMAC do e-mail (o endereço não fica salvo).
