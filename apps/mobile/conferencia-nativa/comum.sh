@@ -328,7 +328,7 @@ iniciar_metro() {
 # Uso: rodar_maestro <fase> <arquivo ou pasta> [opções do `maestro test`]. Cada sistema define `dispositivo` (o
 # identificador que o Maestro usa) e `capturar_tela_do_aparelho <arquivo>`.
 rodar_maestro() {
-  local fase="$1" alvo="$2" codigo linha
+  local fase="$1" alvo="$2" codigo linha erro_partida='DeviceServerDiedException|Failed to bind to address|Device server died'
   local parametros=()
   shift 2
   [ -x "$MAESTRO" ] || erro "O Maestro não está instalado: o passo dele não rodou."
@@ -352,10 +352,17 @@ rodar_maestro() {
   # running on port [37701]" e, 0,3 s depois, "Failed to bind to address [::]:37701" no gRPC do próprio driver, e o
   # Maestro desiste com DeviceServerDiedException em 'deviceInfo'). Não é o app nem o fluxo: o fluxo roda de novo uma vez,
   # com o driver parado e os encaminhamentos dele desfeitos (limpar_driver_maestro, do android.sh; o adb reverse fica).
+  # Depois do reboot do iPhone, o XCTest pode expirar antes de interpretar qualquer comando do login (45586375185).
+  if [ "${MAESTRO_REPETIR_PARTIDA_IOS:-}" = 1 ] && [ "$fase" = entrar ]; then
+    erro_partida="$erro_partida|IOSDriverTimeoutException"
+  fi
   if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}${MAESTRO_SEM_REPETICAO:-}" ] \
-    && grep -qE "DeviceServerDiedException|Failed to bind to address|Device server died" "$REGISTROS/maestro-$fase.log"; then
+    && grep -qE "$erro_partida" "$REGISTROS/maestro-$fase.log"; then
     resumo "⚠️ O driver do Maestro caiu na partida da fase \`$fase\` (antes do primeiro comando); a fase rodou de novo uma vez."
     cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
+    if [ "${MAESTRO_REPETIR_PARTIDA_IOS:-}" = 1 ]; then
+      capturar_tela_do_aparelho "$REGISTROS/tela-no-fim-de-$fase-primeira-tentativa.png"
+    fi
     if declare -F limpar_driver_maestro > /dev/null; then limpar_driver_maestro; fi
     sleep 5
     MAESTRO_JA_REPETIU=1 rodar_maestro "$fase" "$alvo" "$@"

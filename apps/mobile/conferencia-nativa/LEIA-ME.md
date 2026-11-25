@@ -21,6 +21,11 @@ cinco de entrada. O procedimento confere a conta antes de cada caso e remove ape
 pela comparação da lista. Com o ambiente nativo de teste já preparado, o seletor local é
 `CONFERENCIA_TELAS=feedback-aluno` no passo `ios.sh fluxo-telas` ou `android.sh no-emulador`.
 
+Para conferir apenas o iPhone, use `feedback_aluno=true`, `so_iphone=true` e deixe `so_android=false`. Antes da
+primeira abertura, o Metro recebe um pedido `expo-root` de cada vez, pelo mesmo caminho usado pelo Expo Go. O próprio
+Expo CLI prepara o arquivo de configuração. Após o reboot do simulador, só o timeout de partida do driver XCTest no
+login ganha uma repetição. O registro da primeira tentativa fica disponível e uma segunda falha encerra o passo.
+
 O iPhone inicia o primeiro perfil no mapa que o login acabou de comprovar. A partida a frio continua no fluxo de entrada
 e a abertura após salvar continua em cada perfil. O segundo perfil faz sua própria partida. No Android, uma falha com
 ADB indisponível após a espera permite religar o mesmo AVD sem apagar o disco, uma vez por execução, e recomeçar

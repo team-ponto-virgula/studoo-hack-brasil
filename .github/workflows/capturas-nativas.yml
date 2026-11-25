@@ -29,6 +29,10 @@ on:
         description: Rodar só o Android (o iPhone não roda)
         type: boolean
         default: false
+      so_iphone:
+        description: Rodar só o iPhone (o Android não roda)
+        type: boolean
+        default: false
   push:
     branches: [feat/hackathon-integracao]
     paths:
@@ -175,6 +179,7 @@ jobs:
 
   android:
     name: Android (emulador)
+    if: ${{ !inputs.so_iphone }}
     # Rota A1 de docs/BUILD-ANDROID.md: o build de debug do projeto (com a CA local só no debug), num emulador com KVM.
     runs-on: ubuntu-latest
     # O primeiro build do Gradle, sem cache, é o passo mais longo; cada passo tem o próprio limite, abaixo deste.
