@@ -157,10 +157,10 @@ test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do t
   assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
 });
 
-test('item 24: com o "Explique" aberto, o acerto é uma linha só: "✓ Isso aí!" à esquerda e "Continuar" à direita, sem o texto', async () => {
+test('item 24: compacto em tela larga; no mobile a ação permanece inteira, sem repetir o texto', async () => {
   const licao = await ler('licao.tsx');
   assert.match(licao, /compacto=\{expliqueAberto\}/);
-  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa\);/);
+  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa && janela\.width > 600\);/);
   assert.match(licao, /linhaCompacta && licaoEstilos\.painelLinha\]\}>/);
   // O texto do retorno já fica fora no compacto; o "Continuar" sai da metade e vai à direita do título.
   assert.match(licao, /\{!compacto && \(\n\s*<View style=\{licaoEstilos\.encolhe\}>/);

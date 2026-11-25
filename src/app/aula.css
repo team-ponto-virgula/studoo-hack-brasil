@@ -422,6 +422,14 @@
 .aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes > .botao { width: auto; min-width: auto; min-height: 48px; padding-inline: 18px; white-space: nowrap; }
 /* O "Ver mais abaixo" flutua sobre o conteúdo, logo acima da linha (como no app), em vez de somar uns 35 px ao rodapé: a linha do acerto mede os 64 px. */
 .aula-rodape[data-retorno='certa'][data-compacto] .aula-mais-abaixo { position: absolute; inset: auto auto calc(100% + 8px) 50%; margin: 0; translate: -50% 0; }
+/* Jornada Azul: até600, mesmo no Explique, a ação principal preenche o rodapé. */
+@media (max-width: 600px) {
+  .aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 10px; }
+  .aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno { flex: none; }
+  .aula-rodape[data-retorno='certa'][data-compacto] .aula-retorno h2 { white-space: normal; overflow: visible; }
+  .aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes { width: 100%; }
+  .aula-rodape[data-retorno='certa'][data-compacto] .aula-rodape__acoes > .botao { width: 100%; min-height: 52px; white-space: normal; }
+}
 .sem-quebra { white-space: nowrap; }
 .aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
 .como-foi__sem-cronometro { margin: -4px 0 10px; padding: 4px 0; border: 0; background: none; color: var(--acao); font: inherit;

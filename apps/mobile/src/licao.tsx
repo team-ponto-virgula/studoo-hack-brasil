@@ -1219,10 +1219,9 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   const icone = useAparecer(80, 460, true);
   const area = useRef<ComponentRef<typeof View>>(null);
   const comStu = reacao !== undefined && !compacto;
-  // Spec 16, item 24: com o "Explique" aberto, o acerto vira uma linha de 64: "✓ Isso aí!" à esquerda e "Continuar" à
-  // direita, compacto, no mesmo verde claro; o texto do retorno sai (já foi lido). Ao fechar o "Explique", volta ao normal.
-  const linhaCompacta = Boolean(compacto && certa);
   const janela = useWindowDimensions();
+  // Jornada Azul: no mobile a ação mantém a largura útil inteira; em tela larga conserva a linha compacta.
+  const linhaCompacta = Boolean(compacto && certa && janela.width > 600);
   const margens = useSafeAreaInsets();
   const alturaMaxima = Math.max(200, Math.floor(janela.height * 0.5) - MOLDURA_DO_RODAPE - margens.bottom - reservaAcima);
   // O texto que rola: só quando passa do que cabe; o esmaecer some no fim.
