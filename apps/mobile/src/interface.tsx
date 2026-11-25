@@ -135,7 +135,7 @@ export function useAvisoDoAppRaiz() {
 }
 
 /** A faixa do aviso: até 480 de largura, fundo #0B1B5C, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
-function FaixaDoAviso({ aviso, baixo, alto }: { aviso: AvisoAtual; baixo?: number; alto?: number }) {
+function FaixaDoAviso({ aviso, baixo, alto, emFluxo = false }: { aviso: AvisoAtual; baixo?: number; alto?: number; emFluxo?: boolean }) {
   const deCima = alto !== undefined;
   const reduzir = useMovimentoReduzido();
   const { dispensar } = useContext(AvisoDoApp);
@@ -147,7 +147,7 @@ function FaixaDoAviso({ aviso, baixo, alto }: { aviso: AvisoAtual; baixo?: numbe
     return () => animacao.stop();
   }, [aviso.vez, reduzir, entrada]);
   return (
-    <View pointerEvents="box-none" style={[estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}>
+    <View pointerEvents="box-none" style={emFluxo ? { alignItems: 'center', marginBottom: 12 } : [estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}>
       {/* Spec 12 e 16 (item 14): fora da faixa, nada é bloqueado (o lugar é box-none); dentro dela, só a ação responde. */}
       <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
         opacity: entrada,
@@ -177,7 +177,7 @@ export function AvisoSobreAFolha({ baixo }: { baixo: number }) {
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, acimaDaFaixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante, fimSobABarra = false }: {
+export function Tela({ children, acoes, topo, rodape, pagina, avisoNoFluxo, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, acimaDaFaixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante, fimSobABarra = false }: {
   /**
    * O fim do conteúdo passa por baixo da cápsula da barra de abas e a tela pinta esse espaço (o mapa: o morro do troféu
    * continua por baixo dela, com `EspacoDaBarra` a mais). Sem isso, o fim da rolagem reserva a cápsula e mais 16.
@@ -191,6 +191,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   topo?: ReactNode;
   rodape?: ReactNode;
   pagina: string;
+  avisoNoFluxo?: boolean;
   semCabecalho?: boolean;
   /** Sem a linha embaixo da faixa do alto, como a barra da aula na web. */
   semLinha?: boolean;
@@ -367,6 +368,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     </View>
   );
   const { aviso } = useContext(AvisoDoApp);
+  const avisoEmFluxo = aviso?.noAlto && avisoNoFluxo;
+  const [alturaAviso, setAlturaAviso] = useState(0);
   const avisoNoAlto = useRef(false);
   avisoNoAlto.current = Boolean(aviso?.noAlto);
   useEffect(() => {
@@ -443,9 +446,12 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
           <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}
             onLayout={(evento) => { alturaDoConteudo.current = evento.nativeEvent.layout.height; informarNatural(); }}>
+            {avisoEmFluxo && <View onLayout={evento => setAlturaAviso(evento.nativeEvent.layout.height)}>
+              <FaixaDoAviso key={aviso.vez} aviso={aviso} emFluxo />
+            </View>}
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) || (comAcima && !alturaAcima) ? null
-              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0)}>
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0) + (avisoEmFluxo ? alturaAviso : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
                 <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor, medir }}>
                   <TecladoAberto.Provider value={teclado}>
@@ -463,7 +469,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           {fimDaRolagem > 0 && <View style={{ height: fimDaRolagem }} />}
         </ScrollView>
         {/* O aviso do alto fica dentro desta área (abaixo da área segura e da barra fixa do alto), por cima da rolagem. */}
-        {aviso?.noAlto && <FaixaDoAviso key={aviso.vez} aviso={aviso} alto={altoDoAviso} />}
+        {aviso?.noAlto && !avisoEmFluxo && <FaixaDoAviso key={aviso.vez} aviso={aviso} alto={altoDoAviso} />}
         {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
         {rodape && !rodapePreso && (() => {
           const base = StyleSheet.flatten([estilos.rodapeConteudo, estiloRodapeConteudo])?.paddingBottom;

@@ -259,11 +259,13 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     window: { requestAnimationFrame: () => 1, cancelAnimationFrame() {}, matchMedia: () => ({ matches: true }) },
   };
   vm.runInNewContext(fontes[nativo ? 1 : 0], contexto);
+  let rodapeEnsino = null;
   const props = {
     cliente,
     licao: { id: 'licao', objetivo: 'Entender a lição', exercicio: {} },
     avaliacao: { correta: false },
     pedidoPonte: 0,
+    ...(nativo && { ensinoEmEtapa: true, definirRodapeEnsino: valor => { rodapeEnsino = valor; } }),
   };
   function render() {
     cursor = 0;
@@ -304,7 +306,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     return buscarTipo(no.props?.children, tipo);
   }
   function clicar(nome) {
-    const b = buscar(arvore, nome);
+    const b = buscar([arvore, rodapeEnsino], nome);
     assert.ok(b, `Botão ${nome}`);
     return (b.props.onClick ?? b.props.acao ?? b.props.alternar)();
   }
@@ -325,7 +327,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       props.pedidoPonte += 1;
       render();
     },
-    botao: (nome) => buscar(arvore, nome),
+    botao: (nome) => buscar([arvore, rodapeEnsino], nome),
+    desmontar: () => slots.forEach(slot => slot.cleanup?.()),
     tipo: (nome) => buscarTipo(arvore, nome),
     texto: () => conteudo(arvore),
     documento,
@@ -396,10 +399,6 @@ for (const nativo of [false, true]) {
     const ui = montar(nativo, { permissao });
     await esperar();
     ui.render();
-    if (nativo) {
-      ui.clicar(mensagens.estudio.ensinar);
-      ui.render();
-    }
     ui.clicar(mensagens.estudio.gravar);
     if (nativo) {
       ui.appState.currentState = 'background';
@@ -418,8 +417,6 @@ test('app: segundo plano durante preparo libera modo de gravação', async () =>
   const ui = montar(true, { preparar });
   await esperar();
   ui.render();
-  ui.clicar(mensagens.estudio.ensinar);
-  ui.render();
   ui.clicar(mensagens.estudio.gravar);
   await esperar();
   ui.appState.currentState = 'background';
@@ -435,10 +432,6 @@ for (const nativo of [false, true])
     const ui = montar(nativo);
     await esperar();
     ui.render();
-    if (nativo) {
-      ui.clicar(mensagens.estudio.ensinar);
-      ui.render();
-    }
     ui.clicar(mensagens.estudio.gravar);
     await esperar();
     ui.render();
@@ -456,8 +449,6 @@ test('app: sem a voz liberada (aparelho ou visitante sem a flag), o Explique fic
   const ui = montar(true, { voz: { liberada: false } });
   await esperar();
   ui.render();
-  ui.clicar(mensagens.estudio.ensinar);
-  ui.render();
   await esperar();
   ui.render();
   assert.equal(ui.tipo('EntradaVozAoVivo'), null);
@@ -470,8 +461,6 @@ test('app: com a voz liberada, entrada → aviso → conversa; queda leva a fala
   const voz = { liberada: true, avisoVisto: false };
   const ui = montar(true, { voz });
   await esperar();
-  ui.render();
-  ui.clicar(mensagens.estudio.ensinar);
   ui.render();
   await esperar();
   ui.render();
@@ -534,9 +523,8 @@ test('app: com a voz liberada, entrada → aviso → conversa; queda leva a fala
   const descartesAntes = voz.descartes ?? 0;
   ui.tipo('EntradaVozAoVivo').props.aoAbrir();
   ui.render();
-  ui.clicar(mensagens.estudio.ensinar);
-  ui.render();
-  assert.ok((voz.descartes ?? 0) > descartesAntes, 'fechar o Explique desliga a conversa');
+  ui.desmontar();
+  assert.ok((voz.descartes ?? 0) > descartesAntes, 'sair da etapa de ensino desliga a conversa');
 });
 
 // Especificidade de um seletor (a, b, c), com :is/:has/:not pelo argumento mais forte e :where zerado.

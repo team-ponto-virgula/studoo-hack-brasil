@@ -56,6 +56,26 @@ function TituloSecao({ children }: { children: ReactNode }) {
   return <Text accessibilityRole="header" style={perfilEstilos.secaoTitulo}>{children}</Text>;
 }
 
+function PainelDeEstudo({ estudo, continuarEstudo }: {
+  estudo: Perfil['estudo'];
+  continuarEstudo?: () => void;
+}) {
+  if (!estudo) return null;
+  const indicadores = [
+    [p.estudo.trilhasConcluidas, estudo.trilhasConcluidas],
+    [p.estudo.diasSeguidos, estudo.diasSeguidos],
+    [p.estudo.diasDeEstudo, estudo.diasDeEstudo],
+  ] as const;
+  return <View style={perfilEstilos.secao} testID="perfil-estudo">
+    <TituloSecao>{p.estudo.titulo}</TituloSecao>
+    <View style={perfilEstilos.cartao}>
+      {indicadores.map(([rotulo, quantidade]) => Number.isInteger(quantidade) && quantidade >= 0 &&
+        <Text key={rotulo} style={estilos.texto}>{rotulo}: {quantidade}</Text>)}
+      {continuarEstudo && <Botao testID="perfil-continuar-estudo" rotulo={p.estudo.continuar} variante="secundario" acao={continuarEstudo} />}
+    </View>
+  </View>;
+}
+
 function ContaTemporaria({ entrar, desativado }: { entrar: () => void; desativado: boolean }) {
   return (
     <View style={perfilEstilos.cartao}>
@@ -72,7 +92,7 @@ function ContaTemporaria({ entrar, desativado }: { entrar: () => void; desativad
  * "Compartilhar perfil", e as Novidades logo abaixo dele (com a comunidade). Depois, as trilhas que a pessoa compartilha
  * (com o total no título), os cartões "Como os outros veem" (com a comunidade), o perfil público, a conta e "Sair".
  */
-export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
+export function TelaPerfil({ continuarEstudo, cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
   abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, entradaDaConta, novaTrilha, focarNome: focarNomeAoAbrir = false }: {
   /** "Nova trilha" da folha "Postar no perfil" sem trilhas (spec 10). */
   novaTrilha?: () => void;
@@ -80,6 +100,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   focarNome?: boolean;
   cliente: ClienteNativo;
   perfil: Perfil | null;
+  continuarEstudo?: () => void;
   comunidade: boolean;
   acoes?: ReactNode;
   aoMudarPerfil: (perfil: Perfil) => void;
@@ -342,6 +363,8 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 )}
               </View>
             )}
+
+            {!perfil.visitante && <PainelDeEstudo estudo={perfil.estudo} continuarEstudo={continuarEstudo} />}
 
             {/* Som, logo antes de Conta, para quem tem conta e para visitante (spec 12). */}
             <View style={perfilEstilos.secao}>
@@ -750,27 +773,31 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
  * conta": Apple 5.1.2(i) e 5.1.1(v)) e Conta, com Sair. Se é visitante vem de /api/sessao. Como a web na revisão do
  * TestFlight (20/11): o caminho para revogar a IA e excluir a conta nunca depende do compartilhar.
  */
-export function PerfilSemSocial({ cliente, acoes, desativado, visitante: visitanteInicial, entrar, sair, aoSessaoTerminada }: {
+export function PerfilSemSocial({ cliente, acoes, desativado, visitante: visitanteInicial, entrar, sair, continuarEstudo, aoSessaoTerminada }: {
   cliente: ClienteNativo;
   visitante: boolean;
   aoSessaoTerminada?: () => void;
+  continuarEstudo?: () => void;
   acoes?: ReactNode;
   desativado: boolean;
   entrar: () => void;
   sair: () => void;
 }) {
   const [visitante, setVisitante] = useState(visitanteInicial);
+  const [estudo, setEstudo] = useState<Perfil['estudo']>();
   useEffect(() => {
     let ativo = true;
     cliente.sessao().then((dados) => { if (ativo) setVisitante(dados.visitante === true); })
       .catch((falha) => { if (ativo && sessaoInvalida(falha)) aoSessaoTerminada?.(); });
+    if (!visitanteInicial) void cliente.estudoNoPerfil().then(dados => { if (ativo) setEstudo(dados); }).catch(() => undefined);
     return () => { ativo = false; };
-  }, [cliente]);
+  }, [cliente, visitanteInicial]);
   return (
     <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
       <View style={perfilEstilos.painel}>
         <Titulo testID="titulo-perfil" foco>{p.titulo}</Titulo>
         {visitante && <ContaTemporaria entrar={entrar} desativado={desativado} />}
+        {!visitante && <PainelDeEstudo estudo={estudo} continuarEstudo={continuarEstudo} />}
         <View style={perfilEstilos.secao}>
           <TituloSecao>{mensagens.som.titulo}</TituloSecao>
           <SomNoPerfil />

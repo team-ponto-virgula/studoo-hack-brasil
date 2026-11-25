@@ -123,14 +123,15 @@ test('item 32: com trilhas com link, a linha diz que só quem tem o link abre e 
   assert.match(contrato, /compartilhadasTotal: \(n: number\) => `Trilhas com link/);
 });
 
-test('item 14: o aviso "Música de fundo ligada." fica no alto, 8 abaixo do que está preso, em todas as telas', async () => {
+test('item 14: o aviso "Música de fundo ligada." fica no alto e pode reservar espaço no conteúdo', async () => {
   const som = await ler('som.tsx');
   const interfaceApp = await ler('interface.tsx');
   assert.match(som, /avisar\(t\.musicaAviso, \{ som: null, noAlto: true, acao:/);
   // A Tela desenha o aviso do alto dentro da área abaixo da área segura e da barra fixa; o de baixo continua para os outros.
-  assert.match(interfaceApp, /\{aviso\?\.noAlto && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} alto=\{altoDoAviso\} \/>\}/);
+  assert.match(interfaceApp, /\{aviso\?\.noAlto && !avisoEmFluxo && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} alto=\{altoDoAviso\} \/>\}/);
   assert.match(interfaceApp, /\{aviso && !aviso\.noAlto && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} baixo=\{baixoDoAviso\} \/>\}/);
   assert.match(interfaceApp, /const altoDoAviso = 8 \+ \(faixaFixa\n\s*\? Math\.max\(0, inicioDaFaixa - roladoDoAviso\) \+ alturaFaixa\n\s*: cabecalhoNaRolagem \? Math\.max\(0, alturaCabecalho - roladoDoAviso\) : 0\);/);
+  assert.match(interfaceApp, /<FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} emFluxo \/>/);
   assert.match(interfaceApp, /deCima \? \{ top: alto \} : \{ bottom: baixo \}/);
 });
 
@@ -156,17 +157,16 @@ test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do t
   assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
 });
 
-test('item 24: com o "Explique" aberto, o acerto é uma linha só: "✓ Isso aí!" à esquerda e "Continuar" à direita, sem o texto', async () => {
+test('a explicação tem etapa própria, mantém o envio no rodapé e deixa seguir após o retorno ou pular', async () => {
   const licao = await ler('licao.tsx');
-  assert.match(licao, /compacto=\{expliqueAberto\}/);
-  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa\);/);
-  assert.match(licao, /linhaCompacta && licaoEstilos\.painelLinha\]\}>/);
-  // O texto do retorno já fica fora no compacto; o "Continuar" sai da metade e vai à direita do título.
-  assert.match(licao, /\{!compacto && \(\n\s*<View style=\{licaoEstilos\.encolhe\}>/);
-  assert.match(licao, /<View style=\{certa && !linhaCompacta \? licaoEstilos\.metade : undefined\}>/);
-  assert.match(licao, /painelLinha: \{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 \}/);
-  assert.match(licao, /retornoTituloLinha: \{ fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, letterSpacing: 0, color: cores\.sucesso \}/);
-  assert.match(await ler('tema.ts'), /sucesso: '#1F7A5A'/);
+  const apoio = await ler('estudio-adaptativo.tsx');
+  assert.doesNotMatch(licao, /convite-explique/);
+  assert.match(licao, /const ensinando = etapa\.tipo === 'ensino';/);
+  assert.match(licao, /else if \(ensinando\) \{[\s\S]+?\{rodapeEnsino\}[\s\S]+?testID="ensino-seguir"/);
+  assert.match(licao, /ensinou \? \(ultima \? 'Concluir lição' : 'Ir para a prática'\) : \(ultima \? 'Pular e concluir' : 'Pular'\)/);
+  assert.match(apoio, /testID="enviar-explicacao"/);
+  assert.match(apoio, /definirRodapeEnsino\?\.\(prenderEnvio \? botaoEnviar : null\)/);
+  assert.match(licao, /migrarPassoAula\(etapas, salvo\.passo, salvo\.versao\)/);
 });
 
 test('item 25: os passos do "Explique" são uma linha de indicador não tocável, "Passo 1 de 3 · Gravar ou escrever"', async () => {
@@ -195,7 +195,7 @@ test('item 14 (ee85828): o balão do nó fecha o aviso do alto na hora; o aviso 
   assert.match(interfaceApp, /const dispensar = useCallback\(\(\) => setAviso\(null\), \[\]\);/);
   // (2) O lugar do aviso deixa passar o toque (box-none); dentro da faixa, o único tocável é a ação ("Desligar").
   const faixa = interfaceApp.slice(interfaceApp.indexOf('function FaixaDoAviso('), interfaceApp.indexOf('export function AvisoSobreAFolha('));
-  assert.match(faixa, /<View pointerEvents="box-none" style=\{\[estilos\.avisoLugar,/);
+  assert.match(faixa, /<View pointerEvents="box-none" style=\{emFluxo \? [^\n]+ : \[estilos\.avisoLugar,/);
   assert.equal((faixa.match(/<Pressable /g) ?? []).length, 1, 'só a ação é tocável');
   assert.match(faixa, /<Pressable testID="aviso-acao" accessibilityRole="button"/);
   assert.doesNotMatch(faixa, /onPress=\{dispensar\}|onTouch/);

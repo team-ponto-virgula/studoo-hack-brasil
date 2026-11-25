@@ -133,7 +133,7 @@ export function criarClienteNativo(token?: string) {
   return {
     ...cliente,
     configuracaoAcesso: semSessao.configuracaoAcesso,
-    gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal) => gerarTrilhaAoVivo(objetivo, sinal, token),
+    gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal, diagnosticoId?: string) => gerarTrilhaAoVivo(objetivo, sinal, token, diagnosticoId),
     responderSuaVez: (id: string, escolha: EscolhaNoSuaVez) => responderSuaVez(transporteNativo(token), id, escolha),
   };
 }
@@ -156,7 +156,7 @@ async function responderSuaVez(transporte: TransporteStudoo, id: string, escolha
  * vira um evento validado pelo contrato. O tempo limite vale até a resposta começar; depois, a trilha segue chegando enquanto
  * a pessoa acompanha, e `sinal` (Cancelar, sair da tela) interrompe o pedido, como na web. O servidor não guarda nada até o aceite.
  */
-async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: string): AsyncGenerator<EventoGeracao> {
+async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: string, diagnosticoId?: string): AsyncGenerator<EventoGeracao> {
   const origem = origemConfigurada().origin;
   const controle = new AbortController();
   const interromper = () => controle.abort();
@@ -177,7 +177,7 @@ async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: 
         Accept: 'application/x-ndjson',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ objetivo }),
+      body: JSON.stringify({ objetivo, diagnosticoId }),
     });
     if (token && resposta.status === 401) throw new ErroStudoo('nao_autenticado');
     // Erro antes do início (validação, limite, sessão): o servidor responde no JSON de erro de sempre.

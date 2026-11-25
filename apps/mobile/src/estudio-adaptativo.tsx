@@ -330,13 +330,14 @@ export function ApoioDaLicao({
   licao,
   avaliacao,
   pedidoPonte = 0,
-  ultimo = true,
+  ensinoEmEtapa = false,
+  rascunhoEnsino = '',
+  recuperarEnsino = false,
+  aoMudarRascunhoEnsino,
+  aoOcuparEnsino,
   aoMostrarEnsino,
   aoConcluirPonte,
   aoMostrarRetornoPonte,
-  pedidoEnsino = 0,
-  aoPedirEnsino,
-  aoAbrirExplique,
   aoEnsinar,
   ultimaResposta = '',
   aoMostrarCena,
@@ -368,20 +369,17 @@ export function ApoioDaLicao({
   avaliacao: Avaliacao | null;
   /** Cada vez que muda, o reforço é pedido (o "Ver outro jeito de entender" do painel de retorno), se ainda não existir. */
   pedidoPonte?: number;
-  /** Último exercício da lição: só nele aparece o "Ensine ao Stu", como na web. */
-  ultimo?: boolean;
+  ensinoEmEtapa?: boolean;
+  rascunhoEnsino?: string;
+  recuperarEnsino?: boolean;
+  aoMudarRascunhoEnsino?: (texto: string) => void;
+  aoOcuparEnsino?: (ocupado: boolean) => void;
   /** O retorno do "Ensine ao Stu" chegou: onde ele começa, a partir do topo do apoio (a lição rola até lá). */
   aoMostrarEnsino?: (y: number) => void;
   /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel. Como na web. */
   aoConcluirPonte?: () => void;
   /** O retorno da pergunta do reforço apareceu: onde ele está, a partir do topo do apoio (a lição rola até lá). */
   aoMostrarRetornoPonte?: (y: number) => void;
-  /** Cada vez que muda, o "Explique" abre (o convite do painel de retorno no acerto). Como na web. */
-  pedidoEnsino?: number;
-  /** O "Explique" abriu pelo convite: onde o cartão começa, a partir do topo do apoio (a lição rola até lá). */
-  aoPedirEnsino?: (y: number) => void;
-  /** O "Explique" abriu ou fechou: a lição deixa o painel de retorno só com as ações enquanto ele está aberto. Como na web. */
-  aoAbrirExplique?: (aberto: boolean) => void;
   /** A explicação foi enviada: a lição tira o convite para explicar. Como na web. */
   aoEnsinar?: () => void;
 }) {
@@ -396,7 +394,8 @@ export function ApoioDaLicao({
     revisaoApoio.current += 1;
     setApoio(valor);
   }
-  const [texto, setTexto] = useState('');
+  const [texto, setTexto] = useState(rascunhoEnsino);
+  useEffect(() => { aoMudarRascunhoEnsino?.(texto); }, [texto, aoMudarRascunhoEnsino]);
   const [enviado, setEnviado] = useState('');
   /** O rascunho mais recente, para o fim da conversa ao vivo juntar a fala com ele (como textoRef da web). */
   const textoRef = useRef('');
@@ -428,7 +427,6 @@ export function ApoioDaLicao({
   const [erroPonte, setErroPonte] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
-  const [ensinar, setEnsinar] = useState(false);
   const [fontes, setFontes] = useState(false);
   const [gravando, setGravando] = useState(false);
   // A gravação e o som (spec 12): o toca-sons entra antes do modo de áudio do microfone (não troca o modo nem toca outros
@@ -483,7 +481,12 @@ export function ApoioDaLicao({
     cliente
       .apoioLicao(licao.id)
       .then((a) => {
-        if (ok && revisao === revisaoApoio.current) setApoio(a);
+        if (!ok || revisao !== revisaoApoio.current) return;
+        setApoio(a);
+        if (recuperarEnsino && a.ensino) {
+          setEnsino(a.ensino);
+          setEnviado(rascunhoEnsino);
+        }
       })
       .catch((e) => {
         if (ok && revisao === revisaoApoio.current) setErro(erroTexto(e));
@@ -579,17 +582,6 @@ export function ApoioDaLicao({
       }
     });
   }
-  useEffect(() => {
-    aoAbrirExplique?.(ensinar);
-    // Como o onToggle da web: fechar o Explique desliga a conversa ao vivo e volta à entrada.
-    if (!ensinar) {
-      controladorVoz.current?.descartar();
-      controladorVoz.current = null;
-      setEtapaVoz('inativa');
-    }
-    // Só a abertura e o fechamento avisam a lição.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ensinar]);
   // Voz ao vivo (spec 12, como a web): com a conversa aberta, o fundo para e os outros efeitos esperam; ao fechar, o bipe de fim.
   useEffect(() => {
     if (etapaVoz !== 'ativa') return;
@@ -688,13 +680,6 @@ export function ApoioDaLicao({
     // Só a chegada do aviso move a tela.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etapaVoz, estadoVoz.avisoTempo]);
-  useEffect(() => {
-    if (pedidoEnsino === 0) return;
-    setEnsinar(true);
-    aoPedirEnsino?.(cartaoEnsinoY.current);
-    // Só o pedido do convite dispara.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoEnsino]);
   /** A ponte em passos, como a web 4D: 1, o outro jeito de explicar; 2, o exemplo novo; 3, o desafio. */
   const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
   /** O reforço deste pedido chegou: antes, o cartão diz "pensando" (e não mostra a ponte de um erro anterior). */
@@ -835,7 +820,12 @@ export function ApoioDaLicao({
     });
   }
 
-  const prenderEnvio = Boolean(definirRodapeEnsino && ultimo && ensinar && !ponteAberta && (!ensino || texto.trim() !== enviado));
+  useEffect(() => {
+    aoOcuparEnsino?.(ocupado || gravando || etapaVoz !== 'inativa');
+  }, [aoOcuparEnsino, ocupado, gravando, etapaVoz]);
+  useEffect(() => () => aoOcuparEnsino?.(false), [aoOcuparEnsino]);
+
+  const prenderEnvio = Boolean(definirRodapeEnsino && ensinoEmEtapa && (!ensino || texto.trim() !== enviado));
   const botaoEnviar = <Botao testID="enviar-explicacao" rotulo={ocupado ? m.pensando : m.enviar} ocupado={ocupado}
     desativado={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20} acao={enviarEnsino} />;
   useEffect(() => {
@@ -952,12 +942,7 @@ export function ApoioDaLicao({
         </View>
       )}
       {ponteAberta && cartaoOrigem}
-      {/* Só a ponte em cena (b75134a): o "Explique" volta com o exercício original. Com uma gravação ou conversa em curso,
-          ele fica até ela acabar (o "Parar" continua à vista; o reforço espera a gravação). */}
-      {ultimo && !(ponteAberta && !gravando && etapaVoz !== 'ativa') && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
-        <LinhaAbrir rotulo={m.ensinar} aberto={ensinar} desativado={gravando || ocupado} alternar={() => setEnsinar(!ensinar)} />
-        {ensinar && (
-          <>
+      {ensinoEmEtapa && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
             {/* O Stu como aluno (rodada 1.1): com dúvida, ouvindo enquanto grava, anotando quando o retorno chega. Na conversa
                 ao vivo, ouvindo ou falando, com o estado dela no balão (como a web). */}
             <StuAluno
@@ -1017,6 +1002,7 @@ export function ApoioDaLicao({
               </View>
             )}
             <Campo
+              testID="ensino-texto"
               rotulo={m.explicacao}
               estiloRotulo={s.rotuloExplicacao}
               campoRef={campoEnsino}
@@ -1049,7 +1035,6 @@ export function ApoioDaLicao({
                 </Text>
               </View>
             )}
-            {!prenderEnvio && botaoEnviar}
             {/* Como a web (<p role="status"> depois das ações): o aviso da gravação, da permissão e da fala trazida da conversa. */}
             {!!aviso && <Text role="status" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text>}
             {ensino && (
@@ -1063,8 +1048,6 @@ export function ApoioDaLicao({
                 <View style={s.caderno}><CadernoDoStu ensino={ensino} /></View>
               </View>
             )}
-          </>
-        )}
       </Card></View>}
       {ocupado && <T>{m.pensando}</T>}
       {/* Como na web (<p role="alert">): o erro (rede, voz, transcrição) é texto neutro, sem ícone; o leitor de tela vai até ele. */}

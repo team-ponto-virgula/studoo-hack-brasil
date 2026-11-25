@@ -43,5 +43,5 @@ test('3: durante a correção de uma resposta, dá para sair da lição; a respo
   assert.match(estudo, /if \(emCurso\.current && !\(etapa\.tipo === 'licao' && abandonarCorrecao\(\)\)\) return true;/);
   // Ao abrir o mapa, a lição sai da tela (o esqueleto entra), e a resposta digitada fica no andamento guardado.
   assert.match(estudo, /if \(pendente === 'plano'\) return <Tela pagina="carregando-trilha"/);
-  assert.match(licao, /andamentos\.set\(licao\.id, \{\n\s*passo, respostas,/);
+  assert.match(licao, /andamentos\.set\(licao\.id, \{\n\s*versao: VERSAO_ETAPAS_AULA, rascunhoEnsino, passo, respostas,/);
 });

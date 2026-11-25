@@ -34,6 +34,14 @@ name: 90-criacao-da-trilha
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: gerar-trilha
+# A prova da geração segue direto com o pedido já escrito. As perguntas ficam no percurso de diagnóstico.
+- extendedWaitUntil:
+    visible:
+      id: diagnostico-pular
+    timeout: 30000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: diagnostico-pular
 # Em criação: a faixa presa com o pedido (faixa-geracao) está na tela desde o primeiro evento da geração. O cartão do
 # título (titulo-geracao) só aparece com a proposta pronta, então não serve para provar "em criação".
 - extendedWaitUntil:
