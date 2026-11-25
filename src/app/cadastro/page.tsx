@@ -8,10 +8,12 @@ import { Cadastro } from './cadastro';
 
 export const dynamic = 'force-dynamic';
 
-/** Criar conta por e-mail. Desligado no servidor, volta para o login (o botão nem aparece lá). */
+/** E-mail respeita a flag; Google continua podendo criar uma identidade nova pelo seu fluxo próprio. */
 export default async function PaginaCadastro() {
   const token = (await cookies()).get(nomeCookieSessao())?.value;
   if (token && (await usuarioDaSessao(token, 'WEB'))) redirect('/');
-  if (!cadastroAtivo()) redirect('/login');
-  return <Cadastro googleDisponivel={Boolean(configuracaoGoogle())} />;
+  const emailDisponivel = cadastroAtivo();
+  const googleDisponivel = Boolean(configuracaoGoogle());
+  if (!emailDisponivel && !googleDisponivel) redirect('/login');
+  return <Cadastro googleDisponivel={googleDisponivel} emailDisponivel={emailDisponivel} />;
 }

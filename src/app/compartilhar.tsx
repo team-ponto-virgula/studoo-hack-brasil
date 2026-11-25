@@ -53,10 +53,10 @@ export const CHAVE_ABRIR_PLANO = 'studoo.abrirPlano';
 const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|\/p\/[A-Za-z0-9_-]{16}|\/explorar)$/;
 
 /** O caminho guardado para depois do login, só se for o de um link de trilha (nada de redirecionar para fora). */
-export function caminhoDepoisDoLogin(): string | null {
+export function caminhoDepoisDoLogin(consumir = true): string | null {
   try {
     const caminho = sessionStorage.getItem(CHAVE_DEPOIS_DO_LOGIN);
-    sessionStorage.removeItem(CHAVE_DEPOIS_DO_LOGIN);
+    if (consumir) sessionStorage.removeItem(CHAVE_DEPOIS_DO_LOGIN);
     return caminho && CAMINHO_SEGURO.test(caminho) ? caminho : null;
   } catch {
     return null;

@@ -34,6 +34,9 @@ import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoe
 import { IrAoExplorar, ProvedorBloqueio, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 import { FolhaPostarNoPerfil, erroDePostar, estadoNoPerfil, ligadaNoPerfil, useAcoesDePostar } from './postar-perfil';
 import { tocaSons } from './sons';
+import type { AcaoOnboarding, MetaLicoesDia, RespostaOnboarding } from '@studoo/contratos/onboarding';
+import { MetaDoDiaMobile, PrepararPrimeiroEstudo, type ModoPrimeiroEstudo } from './jornada-conta';
+import { BotaoAcesso, LinkAcesso } from './acesso-mobile';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -43,7 +46,7 @@ import { tocaSons } from './sons';
 type Etapa =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
-  | { tipo: 'objetivo' }
+  | { tipo: 'objetivo'; modoInicial?: 'ideia' | 'material'; abertura?: number }
   | { tipo: 'diagnostico' }
   | { tipo: 'geracao' }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
@@ -142,6 +145,201 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const [trilhaGuardada, setTrilhaGuardada] = useState<string | null>(null);
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
+  const [jornada, setJornada] = useState<RespostaOnboarding | null>(null);
+  const [jornadaConsultada, setJornadaConsultada] = useState(false);
+  const jornadaAtual = useRef(jornada);
+  jornadaAtual.current = jornada;
+  const clienteJornada = useRef(cliente);
+  clienteJornada.current = cliente;
+  const [preparandoPrimeiroEstudo, setPreparandoPrimeiroEstudo] = useState(false);
+  const [salvandoJornada, setSalvandoJornada] = useState(false);
+  const [erroJornada, setErroJornada] = useState<string | null>(null);
+  const [primeiraVitoria, setPrimeiraVitoria] = useState(false);
+  const [retencaoConclusao, setRetencaoConclusao] = useState<RespostaOnboarding['retencao'] | null>(null);
+  const destinoAposPrimeiroEstudo = useRef(destino);
+  const requisicaoJornada = useRef(0);
+  const filaJornada = useRef<Promise<unknown>>(Promise.resolve());
+  const acaoJornada = useRef(false);
+  useEffect(() => {
+    tocaSons.definirAreaPermitida((visitante || jornadaConsultada) && !preparandoPrimeiroEstudo);
+    return () => tocaSons.definirAreaPermitida(false);
+  }, [preparandoPrimeiroEstudo, jornadaConsultada, visitante]);
+
+  function guardarJornada(dados: RespostaOnboarding) {
+    jornadaAtual.current = dados;
+    setJornada(dados);
+    setErroJornada(null);
+  }
+
+  function gravarJornada(acao: AcaoOnboarding) {
+    const clienteDaAcao = cliente;
+    // Uma leitura iniciada antes da intenção de salvar não substitui o checkpoint confirmado.
+    requisicaoJornada.current += 1;
+    const operacao = filaJornada.current.catch(() => undefined).then(async () => {
+      if (!montado.current || clienteJornada.current !== clienteDaAcao) throw new ErroStudoo('nao_autenticado');
+      requisicaoJornada.current += 1;
+      try { return await clienteDaAcao.atualizarOnboarding(acao); }
+      finally { requisicaoJornada.current += 1; }
+    });
+    filaJornada.current = operacao;
+    return operacao;
+  }
+
+  async function atualizarJornada() {
+    if (visitante) return null;
+    const clienteDaLeitura = cliente;
+    const vez = ++requisicaoJornada.current;
+    try {
+      const dados = await cliente.obterOnboarding();
+      if (!montado.current || clienteJornada.current !== clienteDaLeitura || vez !== requisicaoJornada.current) return null;
+      guardarJornada(dados);
+      return dados;
+    } catch (falha) {
+      if (montado.current && clienteJornada.current === clienteDaLeitura && vez === requisicaoJornada.current) {
+        if (sessaoInvalida(falha)) await expirarAtual.current();
+        else setErroJornada(mensagemDeErro(falha));
+      }
+      return null;
+    }
+  }
+
+  async function carregarJornadaInicial() {
+    const clienteDaLeitura = cliente;
+    const dados = await atualizarJornada();
+    if (!montado.current || clienteJornada.current !== clienteDaLeitura || !dados?.iniciarAutomaticamente
+      || !dados.onboarding || dados.onboarding.etapa === 'concluido' || dados.onboarding.adiadoEm) return;
+    setPreparandoPrimeiroEstudo(true);
+    setJornadaConsultada(true);
+    try {
+      const confirmada = await gravarJornada({ acao: 'iniciar' });
+      if (montado.current && clienteJornada.current === clienteDaLeitura) guardarJornada(confirmada);
+    } catch (falha) {
+      if (montado.current && clienteJornada.current === clienteDaLeitura) setErroJornada(mensagemDeErro(falha));
+    }
+  }
+
+  useEffect(() => {
+    if (visitante) return;
+    let ativo = true;
+    void carregarJornadaInicial().finally(() => { if (ativo) setJornadaConsultada(true); });
+    return () => { ativo = false; requisicaoJornada.current += 1; };
+    // A sessão identifica a conta; o servidor decide se foi criada agora, nunca uma chave da instalação.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cliente, visitante]);
+
+  async function prepararPrimeiroEstudo(texto: string, meta: MetaLicoesDia, modo: ModoPrimeiroEstudo) {
+    if (acaoJornada.current) return;
+    acaoJornada.current = true; setSalvandoJornada(true); setErroJornada(null);
+    const clienteDaAcao = cliente;
+    try {
+      const fuso = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const dados = await gravarJornada({ acao: 'preparar', objetivo: texto, metaLicoesDia: meta, modo, fuso });
+      if (!montado.current || clienteJornada.current !== clienteDaAcao) return;
+      guardarJornada(dados);
+      setObjetivo(texto);
+      setPreparandoPrimeiroEstudo(false);
+      if (modo === 'material') navegar({ tipo: 'objetivo', modoInicial: 'material', abertura: Date.now() });
+      else iniciarPedido(texto);
+    } catch (falha) {
+      if (montado.current && clienteJornada.current === clienteDaAcao) {
+        if (sessaoInvalida(falha)) await expirarAtual.current();
+        else setErroJornada(mensagemDeErro(falha));
+      }
+    } finally { acaoJornada.current = false; if (montado.current) setSalvandoJornada(false); }
+  }
+
+  async function adiarPrimeiroEstudo() {
+    if (acaoJornada.current) return;
+    acaoJornada.current = true; setSalvandoJornada(true); setErroJornada(null);
+    const clienteDaAcao = cliente;
+    try {
+      const dados = await gravarJornada({ acao: 'adiar' });
+      if (!montado.current || clienteJornada.current !== clienteDaAcao) return;
+      guardarJornada(dados);
+      setPreparandoPrimeiroEstudo(false);
+      const retorno = destinoAposPrimeiroEstudo.current;
+      if (retorno) { destinoAposPrimeiroEstudo.current = undefined; navegar({ ...retorno, voltar: { tipo: 'planos' } }); }
+    } catch (falha) {
+      if (montado.current && clienteJornada.current === clienteDaAcao) {
+        if (sessaoInvalida(falha)) await expirarAtual.current();
+        else setErroJornada(mensagemDeErro(falha));
+      }
+    }
+    finally { acaoJornada.current = false; if (montado.current) setSalvandoJornada(false); }
+  }
+
+  async function retomarPrimeiroEstudo() {
+    if (acaoJornada.current) return;
+    acaoJornada.current = true; setSalvandoJornada(true); setErroJornada(null);
+    const clienteDaAcao = cliente;
+    try {
+      const dados = await gravarJornada({ acao: 'retomar' });
+      if (!montado.current || clienteJornada.current !== clienteDaAcao) return;
+      guardarJornada(dados);
+      const atual = dados.onboarding;
+      if (!atual || atual.etapa === 'concluido') return;
+      if (atual.etapa === 'preparacao' || !atual.objetivo) setPreparandoPrimeiroEstudo(true);
+      else if (atual.planoId) {
+        if (dados.retencao.proximoPasso?.planoId === atual.planoId) await continuarProximoPasso();
+        else await abrirPlano(atual.planoId);
+      } else {
+        setObjetivo(atual.objetivo);
+        if (atual.modo === 'material') navegar({ tipo: 'objetivo', modoInicial: 'material', abertura: Date.now() });
+        else iniciarPedido(atual.objetivo);
+      }
+    } catch (falha) {
+      if (montado.current && clienteJornada.current === clienteDaAcao) {
+        if (sessaoInvalida(falha)) await expirarAtual.current();
+        else setErroJornada(mensagemDeErro(falha));
+      }
+    }
+    finally { acaoJornada.current = false; if (montado.current) setSalvandoJornada(false); }
+  }
+
+  async function mudarMeta(meta: MetaLicoesDia) {
+    const clienteDaAcao = cliente;
+    const dados = await gravarJornada({ acao: 'definir-meta', metaLicoesDia: meta });
+    if (montado.current && clienteJornada.current === clienteDaAcao) guardarJornada(dados);
+  }
+
+  async function vincularPlanoDaJornada(planoId: string) {
+    const atual = jornadaAtual.current?.onboarding;
+    if (visitante || !atual || atual.etapa === 'concluido' || atual.planoId === planoId) return;
+    const clienteDaAcao = cliente;
+    try {
+      const dados = await gravarJornada({ acao: 'vincular-plano', planoId });
+      if (montado.current && clienteJornada.current === clienteDaAcao) guardarJornada(dados);
+    }
+    catch (falha) {
+      // A trilha já está salva. A leitura seguinte reconcilia o checkpoint sem criar outra trilha.
+      if (montado.current && clienteJornada.current === clienteDaAcao) setErroJornada(mensagemDeErro(falha));
+    }
+  }
+
+  async function continuarProximoPasso() {
+    const proximo = jornadaAtual.current?.retencao.proximoPasso;
+    if (!proximo || emCurso.current) return;
+    const resultado = await executar('plano', () => cliente.obterPlano(proximo.planoId));
+    if (!resultado.ok) return;
+    atualizarPlano(resultado.dados);
+    await abrirLicao(resultado.dados, proximo.licaoId);
+  }
+
+  function pendenciaDaJornada() {
+    if (visitante || preparandoPrimeiroEstudo) return null;
+    const pendente = jornada?.onboarding && jornada.onboarding.etapa !== 'concluido';
+    if (!pendente && !erroJornada) return null;
+    return <View style={{ gap: 8, marginBottom: 16 }}>
+      {erroJornada && <EstadoErro mensagem={erroJornada} testID="erro-atualizar-jornada"
+        acao={{ rotulo: 'Tentar novamente', testID: 'tentar-jornada', acao: () => { void carregarJornadaInicial(); } }} />}
+      {pendente && <Pressable accessibilityRole="button" testID="retomar-onboarding" disabled={salvandoJornada || ocupado}
+        onPress={() => void retomarPrimeiroEstudo()} style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#2854f4', fontWeight: '500' }}>
+          {salvandoJornada ? 'Retomando…' : 'Continuar primeiro estudo'}
+        </Text>
+      </Pressable>}
+    </View>;
+  }
   useEffect(() => {
     let ativo = true;
     void lerTinhaTrilhas().then((tem) => { if (ativo) setTinhaTrilhas(tem); });
@@ -290,6 +488,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     const atual = etapaAtual.current;
     if (emCurso.current || (atual.tipo !== 'planos' && atual.tipo !== 'plano')) return;
     if (Date.now() - ultimaBusca.current < 5_000) return;
+    void atualizarJornada();
     const vez = ++versaoPlanos.current;
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
@@ -321,6 +520,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (Platform.OS === 'web') return;
     // O mesmo voltar serve ao botão do Android e ao gesto de borda do iPhone (voltar.ts); em Minhas trilhas, o gesto não começa.
     const assinatura = ouvirVoltar(() => {
+      // A preparação tem seu próprio voltar entre objetivo/meta; não navegar por trás dela.
+      if (preparandoPrimeiroEstudo) return false;
       // Voltar durante "Criando sua trilha…": sai sem cancelar no servidor; a trilha aparece em Minhas trilhas.
       if (criacaoAtual.current === 'criando' || criacaoAtual.current === 'guardando') {
         sairDaCriacao();
@@ -347,9 +548,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       else if (etapa.tipo === 'configuracoes' && etapa.volta === 'plano') void abrirPlano(etapa.planoId);
       else navegar({ tipo: 'planos' });
       return true;
-    }, etapa.tipo !== 'planos');
+    }, !preparandoPrimeiroEstudo && etapa.tipo !== 'planos');
     return () => assinatura.remove();
-  }, [etapa, geracao]);
+  }, [etapa, geracao, preparandoPrimeiroEstudo]);
 
   /** Fim da apresentação (concluída, pulada ou com o voltar do aparelho): não aparece mais neste aparelho e o pedido abre. */
   async function concluirApresentacao(area?: IdTema) {
@@ -395,6 +596,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
   /** Troca de etapa. Sair da geração ao vivo cancela o pedido em andamento; cada tela nova começa do topo. */
   function navegar(destino: Etapa) {
+    if (destino.tipo !== 'concluida') { setPrimeiraVitoria(false); setRetencaoConclusao(null); }
     // Saindo do perfil com os dados abertos e alteração não salva: o editor pergunta antes ("Sair sem salvar?"), como na web.
     if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     diagnosticoVisivel.current = destino.tipo === 'diagnostico';
@@ -651,6 +853,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     // A trilha existe no servidor: entra em Minhas trilhas mesmo se a pessoa já saiu daqui.
     if (!montado.current) return;
     atualizarPlano(plano);
+    await vincularPlanoDaJornada(plano.id);
+    if (!montado.current) return;
     if (!abrirPrimeira && ultimaIntencaoDeAceite.current === vez) {
       void guardarRetornoDaTrilha(plano.id);
       setTrilhaGuardada(plano.id);
@@ -836,6 +1040,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       const lista = await cliente.listarPlanos();
       if (vez === versaoPlanos.current) setPlanos(lista);
     } catch { /* A lista se atualiza na próxima sincronia. */ }
+    await vincularPlanoDaJornada(planoId);
     void abrirPlano(planoId, undefined, jaTinha ? undefined : mensagens.compartilhar.adicionada(nomeDono));
   }
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
@@ -864,6 +1069,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
+    const candidatoPrimeiraVitoria = Boolean(jornadaAtual.current?.onboarding && jornadaAtual.current.onboarding.etapa !== 'concluido'
+      && jornadaAtual.current.retencao.totalLicoesConcluidas === 0);
     const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica,
       resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
@@ -872,7 +1079,16 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
       void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
       atualizarPlano(atualizado);
+      setRetencaoConclusao(null);
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
+      void atualizarJornada().then((dados) => {
+        const tela = etapaAtual.current;
+        if (dados && montado.current && tela.tipo === 'concluida' && tela.licao.id === licao.id) {
+          setRetencaoConclusao(dados.retencao);
+          setPrimeiraVitoria(candidatoPrimeiraVitoria && dados.onboarding?.etapa === 'concluido'
+            && dados.onboarding.planoId === plano.id && dados.retencao.totalLicoesConcluidas === 1);
+        }
+      });
       return true;
     }
     // Como na web: sem a conclusão registrada (rede, confirmação expirada), a aula guarda o andamento e volta ao último
@@ -905,7 +1121,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
   // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
   const carregandoInicio = !planos && !erro;
-  const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
+  const comNavegacao = (visitante || jornadaConsultada) && !preparandoPrimeiroEstudo && ((carregandoInicio && tinhaTrilhas) || comNavegacaoAgora);
   return <AvisoDoApp.Provider value={avisoDoApp}><ProvedorBloqueio cliente={cliente}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
     planos: tocarMinhasTrilhas, criar: () => abrir({ tipo: 'objetivo' }),
@@ -937,6 +1153,11 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   </NavegacaoContexto.Provider></ProvedorBloqueio></AvisoDoApp.Provider>;
 
   function renderizarTela() {
+    if (!visitante && !jornadaConsultada) return <Tela pagina="carregando-jornada"><SkeletonTrilha /></Tela>;
+    if (preparandoPrimeiroEstudo && jornada?.onboarding) {
+      return <PrepararPrimeiroEstudo estado={jornada.onboarding} ocupado={salvandoJornada} erro={erroJornada}
+        preparar={prepararPrimeiroEstudo} adiar={adiarPrimeiroEstudo} />;
+    }
     const retomar = etapa.tipo === 'perfil' ? planos?.find(plano => plano.progresso.concluidas < plano.progresso.total &&
       (temAndamentoNoPlano(plano.id) || plano.progresso.concluidas > 0)) : undefined;
     const continuarEstudo = retomar ? () => void abrirPlano(retomar.id) : undefined;
@@ -968,22 +1189,28 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         etapa.plano.fluxos.flatMap(fluxo => fluxo.licoes).find(licao => licao.rever)?.id;
       return (
         <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado} visitante={visitante}
+          primeiraVitoria={primeiraVitoria} retencao={visitante ? undefined : retencaoConclusao ?? undefined}
           compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} rodape={<>
-          {completa ? (
+          {primeiraVitoria ? <BotaoAcesso rotulo={completa ? paraRever ? 'Rever uma lição' : 'Começar outra trilha' : mensagens.licao.avancar}
+            testID={completa ? paraRever ? 'trilha-rever' : 'novo-assunto' : 'proxima-licao'} desativado={ocupado} seta
+            acao={() => completa ? paraRever ? void abrirLicao(etapa.plano, paraRever) : abrir({ tipo: 'objetivo' }) : proxima ? void abrirLicao(etapa.plano, proxima) : abrir(voltarATrilha(etapa))} /> : completa ? (
             <Botao plano rotulo={paraRever ? 'Rever uma lição' : 'Começar outra trilha'} testID={paraRever ? 'trilha-rever' : 'novo-assunto'}
               desativado={ocupado} estilo={estudoEstilos.acaoPiloto}
               acao={() => paraRever ? void abrirLicao(etapa.plano, paraRever) : abrir({ tipo: 'objetivo' })} />
           ) : proxima && <Botao plano rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado}
             estilo={estudoEstilos.acaoPiloto} acao={() => void abrirLicao(etapa.plano, proxima)} />}
-          <Botao plano rotulo={completa ? 'Ver mapa da trilha' : mensagens.licao.voltar} testID="voltar-plano"
+          {primeiraVitoria ? <LinkAcesso rotulo="Ver meu caminho" testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} /> : <Botao plano rotulo={completa ? 'Ver mapa da trilha' : mensagens.licao.voltar} testID="voltar-plano"
             variante={proxima || completa ? 'secundario' : 'primario'} desativado={ocupado}
-            estilo={proxima || completa ? undefined : estudoEstilos.acaoPiloto} acao={() => abrir(voltarATrilha(etapa))} />
+            estilo={proxima || completa ? undefined : estudoEstilos.acaoPiloto} acao={() => abrir(voltarATrilha(etapa))} />}
+          {primeiraVitoria && destinoAposPrimeiroEstudo.current && <Botao variante="texto" rotulo="Ver conteúdo compartilhado" testID="retomar-destino-onboarding"
+            acao={() => { const retorno = destinoAposPrimeiroEstudo.current; if (!retorno) return; destinoAposPrimeiroEstudo.current = undefined; navegar({ ...retorno, voltar: { tipo: 'planos' } }); }} />}
         </>} />
       );
     }
 
     if (etapa.tipo === 'plano') {
       return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
+        jornadaTopo={pendenciaDaJornada()} retencao={visitante ? undefined : jornada?.retencao}
         abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })}
         compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined}
         configurar={() => abrir({ tipo: 'configuracoes', planoId: etapa.plano.id, volta: 'plano' })} />;
@@ -1059,7 +1286,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao') {
-      return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
+      return <Pedido key={etapa.tipo === 'objetivo' ? `objetivo-${etapa.abertura ?? 0}-${etapa.modoInicial ?? 'ideia'}` : 'geracao'}
+        cliente={cliente} modoInicial={etapa.tipo === 'objetivo' ? etapa.modoInicial : undefined} jornadaTopo={pendenciaDaJornada()}
+        onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
         aviso={aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={iniciarPedido}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
@@ -1081,6 +1310,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título, sem margem em cima e a 16 dele. */}
         {erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} estilo={estudoEstilos.erroNaLista} />}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
+        {pendenciaDaJornada()}
         {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
         {planos && planos.length === 0 ? (
           <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
@@ -1096,12 +1326,14 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
           </Text>}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
-          const destaque = guardada ?? planoInicial(planos);
+          const destaque = guardada ?? planos.find(plano => plano.id === jornada?.retencao.proximoPasso?.planoId) ?? planoInicial(planos);
           const restantes = planos.filter((plano) => plano.id !== destaque?.id);
           return (
             <>
               {destaque && (
                 <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
+                  retencao={visitante ? undefined : jornada?.retencao} mudarMeta={mudarMeta}
+                  continuar={jornada?.retencao.proximoPasso?.planoId === destaque.id ? () => void continuarProximoPasso() : undefined}
                   abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)}
                   configurar={() => abrir({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })}
                   compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} postar={postarDe(destaque)} />
@@ -1157,7 +1389,9 @@ function VigiaDaOpcao({ alvo, medida, aoMedir }: { alvo: { current: ComponentRef
   return null;
 }
 
-function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink }: {
+function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink, modoInicial = 'ideia', jornadaTopo }: {
+  modoInicial?: 'ideia' | 'material';
+  jornadaTopo?: ReactNode;
   /** "Adicionar por link" (com o compartilhar), antes de "Ver como funciona", como na web. */
   porLink?: ReactNode;
   cliente: ClienteNativo;
@@ -1178,7 +1412,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
-  const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  const [modo, setModo] = useState<'ideia' | 'material'>(modoInicial);
   /** Provedor de IA do servidor: o aviso de privacidade do material diz quem lê (OpenAI, DeepSeek ou ninguém). */
   const [ia, setIa] = useState<ProvedorIa | undefined>();
   useEffect(() => {
@@ -1283,6 +1517,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
 
   return (
     <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta} {...telaDoMaterial}>
+      {jornadaTopo}
       {/* O troféu da criação já decodificado antes do mapa (banca P2-1: no iPhone, um disco branco nos primeiros quadros). */}
       <PreCargaDoStu arquivos={TROFEU_DA_CRIACAO} />
       {antesDeEscolher && <VigiaDaOpcao alvo={ultimaOpcao} medida={alturaVisivel} aoMedir={setFimDasOpcoes} />}
@@ -2316,7 +2551,9 @@ function SkeletonLicao({ texto }: { texto: string }) {
  * Como na web, no celular o próximo passo vira o rodapé fixo e, a partir de 768 px, fica dentro da faixa.
  * Voltando de uma lição, a trilha rola até o nó liberado, o próximo ou a lição de origem, se ele estiver fora da vista.
  */
-function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia, compartilhar, configurar }: {
+function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia, compartilhar, configurar, jornadaTopo, retencao }: {
+  jornadaTopo?: ReactNode;
+  retencao?: RespostaOnboarding['retencao'];
   /** Abre a folha "Compartilhar trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
   /** A engrenagem leva às configurações da trilha (capa, nome, descrição, tema, quem pode ver, apagar). */
@@ -2441,6 +2678,9 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
           <View style={estudoEstilos.barraPlanoTexto}>
             <Text style={[estudoEstilos.barraPlanoRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             <Titulo testID="titulo-plano" foco linhas={2} equilibrado estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
+            {retencao && <Text testID="meta-hoje" style={{ fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#626b7e', marginTop: 4 }}>
+              Hoje: {retencao.licoesHoje} de {retencao.metaLicoesDia} {retencao.metaLicoesDia === 1 ? 'lição' : 'lições'}
+            </Text>}
             {marcaDoTopo}
           </View>
           <AnelProgresso progresso={plano.progresso} tamanho={44} />
@@ -2458,6 +2698,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
         rolagemY.current = y;
         avaliarAtual();
       }}>
+      {jornadaTopo}
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       {largo && <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>}
       {largo && capa && <View testID="capa-do-mapa" style={estudoEstilos.capaTrilhaLarga}>{capa}</View>}
@@ -2466,6 +2707,9 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
           <View style={estudoEstilos.topoTrilhaTexto}>
             <Text style={[estudoEstilos.topoTrilhaRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             <Titulo testID="titulo-plano" foco equilibrado estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+            {retencao && <Text testID="meta-hoje" style={{ fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#626b7e', marginTop: 4 }}>
+              Hoje: {retencao.licoesHoje} de {retencao.metaLicoesDia} {retencao.metaLicoesDia === 1 ? 'lição' : 'lições'}
+            </Text>}
             {marcaDoTopo}
           </View>
           <AnelProgresso progresso={plano.progresso} />
@@ -2628,7 +2872,10 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
  * sincronia, o título, o progresso com a porcentagem e o único botão primário da tela. Com tudo concluído, o rótulo vira
  * "Você concluiu suas trilhas!" e a ação, rever. O "Apagar" continua discreto, como nos outros cartões.
  */
-function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar, configurar, postar }: {
+function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar, configurar, postar, retencao, mudarMeta, continuar }: {
+  retencao?: RespostaOnboarding['retencao'];
+  mudarMeta?: (meta: MetaLicoesDia) => Promise<void>;
+  continuar?: () => void;
   postar?: AtalhoPostar;
   plano: PlanoResumo;
   indice: number;
@@ -2678,10 +2925,15 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo, estudoEstilos.destaqueTituloTamanho]}>{plano.titulo}</Text>
         <MarcaCompartilhar marcas={plano} />
+        {retencao && <MetaDoDiaMobile resumo={retencao} mudarMeta={mudarMeta} />}
         <BarraProgresso progresso={plano.progresso} comPercentual />
+        {retencao?.proximoPasso?.planoId === plano.id && <Text testID="proxima-licao-retencao"
+          style={{ fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#626b7e' }}>Próxima: {retencao.proximoPasso.licaoTitulo}</Text>}
         {/* 14 da linha do progresso (21) até o botão, como .plano-destaque na web (o corpo tem vão de 8). */}
-        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir}
+        <Botao rotulo={continuar ? 'Continuar' : acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${continuar ? 'Continuar' : acao}: ${plano.titulo}`} desativado={ocupado} acao={continuar ?? abrir}
           estilo={{ marginTop: 6 }} />
+        {continuar && <Pressable testID="ver-caminho-destaque" accessibilityRole="button" onPress={abrir} disabled={ocupado}
+          style={{ minHeight: 44, justifyContent: 'center', alignItems: 'center' }}><Text style={{ fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#2854f4' }}>Meu caminho</Text></Pressable>}
       </View>
     </View>
     </Animated.View>
@@ -2787,7 +3039,9 @@ function formatarTempo(segundos: number) {
  * Conclusão Clareza: uma reação do Stu, progresso confirmado, próximo passo e objetivo;
  * os detalhes da sessão permanecem abaixo do núcleo, sem camadas decorativas em loop.
  */
-function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, compartilhar }: {
+function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, compartilhar, primeiraVitoria = false, retencao }: {
+  primeiraVitoria?: boolean;
+  retencao?: RespostaOnboarding['retencao'];
   etapa: Extract<Etapa, { tipo: 'concluida' }>;
   acoes: ReactNode;
   mensagem: ReactNode;
@@ -2797,12 +3051,47 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
   /** Com a trilha concluída, "Compartilhar esta trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
 }) {
+  const [mostrarDetalhes, setMostrarDetalhes] = useState(false);
   const { plano, antes, licao, liberadas, resumo } = etapa;
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
   // A última lição fecha a trilha: a comemoração é da trilha inteira.
   const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
   // Ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil (sem confete nem raios).
   const comLembrete = Boolean(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao'));
+
+  if (primeiraVitoria) {
+    const proxima = retencao?.proximoPasso?.planoId === plano.id ? retencao.proximoPasso.licaoTitulo
+      : plano.fluxos.flatMap(fluxo => fluxo.licoes).find(item => !item.concluida)?.titulo;
+    return <Tela pagina="primeira-vitoria" semCabecalho estiloConteudo={primeiroPassoEstilos.pagina}>
+      <View style={primeiroPassoEstilos.heroi}>
+        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={primeiroPassoEstilos.stu}><Stu nome="stu-celebrando" tamanho={150} /></View>
+        <Titulo foco testID="titulo-conclusao" estilo={primeiroPassoEstilos.titulo}>Primeira lição concluída!</Titulo>
+        <Text testID="primeira-vitoria" accessibilityLiveRegion="polite" style={primeiroPassoEstilos.texto}>
+          Uma lição concluída. Seu progresso está salvo.
+        </Text>
+      </View>
+      <Text style={primeiroPassoEstilos.licao}>{licao.titulo}</Text>
+      {retencao && <View style={primeiroPassoEstilos.meta}><MetaDoDiaMobile resumo={retencao} compacto /></View>}
+      <Text testID="primeira-vitoria-trilha" style={primeiroPassoEstilos.trilha}>
+        Sua trilha · {plano.progresso.concluidas} de {plano.progresso.total} {plano.progresso.total === 1 ? 'lição concluída' : 'lições concluídas'}
+      </Text>
+      {proxima && <View style={primeiroPassoEstilos.proxima}>
+        <Text style={primeiroPassoEstilos.rotulo}>Próxima lição</Text>
+        <Text testID="primeira-vitoria-proxima" style={primeiroPassoEstilos.proximaTitulo}>{proxima}</Text>
+      </View>}
+      {mensagem}
+      <View style={primeiroPassoEstilos.acoes}>{rodape}</View>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrarDetalhes }} testID="primeira-vitoria-detalhes"
+        onPress={() => setMostrarDetalhes(v => !v)} style={primeiroPassoEstilos.detalhesBotao}>
+        <Text style={primeiroPassoEstilos.detalhesRotulo}>{mostrarDetalhes ? 'Ocultar detalhes' : 'O que você praticou'}</Text>
+      </Pressable>
+      {mostrarDetalhes && <View style={primeiroPassoEstilos.detalhes}>
+        <TextoComFormulas texto={licao.objetivo} estilo={primeiroPassoEstilos.textoDetalhes} />
+        {resumo?.rever && <Text style={primeiroPassoEstilos.textoDetalhes}>{textoParaRever(resumo)}</Text>}
+        {resumo && <NumerosDaLicao resumo={resumo} />}
+      </View>}
+    </Tela>;
+  }
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape} estiloConteudo={estudoEstilos.fimQuarenta}>
@@ -2817,6 +3106,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
         <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{trilhaFeita ? plano.titulo : licao.titulo}</Text>
       </View>
       <View style={estudoEstilos.conclusaoNucleo}>
+        {retencao && <MetaDoDiaMobile resumo={retencao} compacto />}
         <View style={[estudoEstilos.bloco, estudoEstilos.blocoProgresso]}>
           <Text accessibilityRole="header" style={[estilos.tituloBloco, estudoEstilos.tituloProgresso]}>{mensagens.licao.progresso}</Text>
           <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual discreta />
@@ -2863,6 +3153,24 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
     </Tela>
   );
 }
+
+const primeiroPassoEstilos = StyleSheet.create({
+  pagina: { paddingTop: 24, paddingHorizontal: 28, paddingBottom: 24, maxWidth: 620, gap: 0 },
+  heroi: { gap: 0 }, stu: { alignSelf: 'center', height: 150, marginBottom: 16 },
+  titulo: { fontFamily: 'Inter', fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -.99, color: '#17213d', marginTop: 0 },
+  texto: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, color: '#626b7e', marginTop: 12 },
+  licao: { fontFamily: 'Inter', fontSize: 15, lineHeight: 22.5, fontWeight: '600', color: '#17213d', marginVertical: 16 },
+  meta: { gap: 4 },
+  trilha: { fontFamily: 'Inter', fontSize: 13, lineHeight: 20, color: '#626b7e', marginTop: 10 },
+  proxima: { marginTop: 24, marginBottom: 16, gap: 6 },
+  acoes: { gap: 8 },
+  rotulo: { fontFamily: 'Inter', fontSize: 13, lineHeight: 20, color: '#626b7e' },
+  proximaTitulo: { fontFamily: 'Inter', fontSize: 18, lineHeight: 26, fontWeight: '600', color: '#17213d' },
+  detalhesBotao: { minHeight: 44, marginTop: 12, justifyContent: 'center' },
+  detalhesRotulo: { fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#2854f4', fontWeight: '500' },
+  detalhes: { gap: 12, paddingTop: 8 },
+  textoDetalhes: { fontFamily: 'Inter', fontSize: 15, lineHeight: 24, color: '#626b7e' },
+});
 
 /** Um cartão da história da lição; o da ponte traz as tábuas da travessia, o do ensino, o tom verde. Entram em sequência. */
 function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto: string; tipo?: 'ponte' | 'ensino'; ordem: number }) {
