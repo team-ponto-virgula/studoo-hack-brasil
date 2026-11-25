@@ -21,6 +21,10 @@ on:
         description: "Android: só estas telas (ex.: 70-exemplo-curto,10-mapa), sem a prova da criação; vazio roda tudo"
         default: ""
         required: false
+      feedback_aluno:
+        description: Conferir diagnóstico, salvamento e primeira lição nos dois perfis de equação
+        type: boolean
+        default: false
       so_android:
         description: Rodar só o Android (o iPhone não roda)
         type: boolean
@@ -63,6 +67,7 @@ jobs:
       LC_ALL: en_US.UTF-8
       CONFERENCIA_APARELHO: ${{ inputs.aparelho || 'iPhone 17 Pro' }}
       CONFERENCIA_IOS: ${{ inputs.ios || '26.5' }}
+      CONFERENCIA_TELAS: ${{ inputs.feedback_aluno && 'feedback-aluno' || '' }}
       # Expo Go de simulador para o SDK 58 (a versão que https://api.expo.dev/v2/versions/latest indica). Ao subir o SDK
       # do app, troque o endereço e o sha256 juntos.
       EXPO_GO_IOS_URL: https://github.com/expo/expo-go-releases/releases/download/Expo-Go-58.0.7/Expo-Go-58.0.7.tar.gz
@@ -178,7 +183,7 @@ jobs:
       NEXT_TELEMETRY_DISABLED: "1"
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
-      CONFERENCIA_TELAS: ${{ inputs.telas_android || '' }}
+      CONFERENCIA_TELAS: ${{ inputs.feedback_aluno && 'feedback-aluno' || inputs.telas_android || '' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
