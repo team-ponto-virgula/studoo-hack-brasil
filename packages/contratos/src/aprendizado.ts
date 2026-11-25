@@ -52,6 +52,7 @@ export interface PropostaPlano {
 }
 
 export interface PlanoResumo extends MarcasCompartilhar {
+  diagnostico?: PerfilDiagnostico;
   id: string;
   titulo: string;
   progresso: Progresso;
@@ -61,7 +62,6 @@ export interface PlanoResumo extends MarcasCompartilhar {
 }
 
 export interface PlanoDetalhe extends PlanoResumo {
-  diagnostico?: PerfilDiagnostico;
   objetivo: string;
   origem: string;
   fluxos: {

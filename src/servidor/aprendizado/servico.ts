@@ -191,8 +191,8 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 
   const marcas = await marcasDasTrilhas(usuarioId, planos);
   return planos.map((plano) => {
-    const { id, titulo, progresso, capa, tema } = apresentarPlano(plano);
-    return { id, titulo, progresso, ...(capa ? { capa } : {}), ...(tema ? { tema } : {}), ...marcas.get(id) };
+    const { id, titulo, progresso, capa, tema, diagnostico } = apresentarPlano(plano);
+    return { id, titulo, progresso, ...(capa ? { capa } : {}), ...(tema ? { tema } : {}), ...(diagnostico && { diagnostico }), ...marcas.get(id) };
   });
 }
 
