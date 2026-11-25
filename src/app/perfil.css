@@ -223,6 +223,10 @@
 .editor-perfil { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 @media (min-width: 768px) { .editor-perfil { padding: 22px 24px; } }
 .editor-perfil__linha { margin: 0; color: var(--texto2); font-weight: 700; line-height: 1.45; }
+.perfil-estudo__dados { display: grid; gap: 8px; margin: 0; }
+.perfil-estudo__dados > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.perfil-estudo__dados dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.perfil-cartao[aria-labelledby='perfil-estudo'] > .botao { justify-self: start; }
 .editar-foto__circulo { position: relative; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
 .editar-foto__circulo .avatar { border: 4px solid #fff; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
 .editar-foto__circulo:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }

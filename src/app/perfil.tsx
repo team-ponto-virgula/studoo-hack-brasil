@@ -360,9 +360,9 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
 
         </>
       )}
-      {dadosEstudo && <section className="perfil-secao" aria-labelledby="perfil-estudo">
+      {dadosEstudo && <section className="perfil-cartao" aria-labelledby="perfil-estudo">
         <h2 id="perfil-estudo" className="perfil-secao__titulo">{p.estudo.titulo}</h2>
-        <dl>
+        <dl className="perfil-estudo__dados">
           <div><dt>{p.estudo.trilhasConcluidas}</dt><dd>{dadosEstudo.trilhasConcluidas}</dd></div>
           <div><dt>{p.estudo.diasSeguidos}</dt><dd>{dadosEstudo.diasSeguidos}</dd></div>
           <div><dt>{p.estudo.diasDeEstudo}</dt><dd>{dadosEstudo.diasDeEstudo}</dd></div>
