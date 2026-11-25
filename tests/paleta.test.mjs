@@ -7,12 +7,20 @@ import { join, relative, resolve } from 'node:path';
 
 const raiz = resolve(import.meta.dirname, '..');
 const globais = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
-const raizCss = globais.slice(globais.indexOf(':root {'), globais.indexOf('}', globais.indexOf(':root {')));
+const tokens = readFileSync(join(raiz, 'src/ui/jornada-tokens.css'), 'utf8');
+// O CSS gerado é importado pelos globais antes das definições auxiliares do kit.
+assert.match(globais, /@import ['\"]\.\.\/ui\/jornada-tokens\.css['\"]/);
+const raizCss = tokens + globais.slice(globais.indexOf(':root {'), globais.indexOf('}', globais.indexOf(':root {')));
 const cor = (nome) => {
-  const achado = raizCss.match(new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{3,6})`));
-  assert.ok(achado, `--${nome} no :root`);
-  return achado[1].toLowerCase();
+  const achado = raizCss.match(new RegExp(`--${nome}:\\s*([^;]+);`));
+  assert.ok(achado, `--${nome} nos tokens ou :root`);
+  const valor = achado[1].trim();
+  const alias = /^var\(--([\w-]+)\)$/.exec(valor);
+  if (alias) return cor(alias[1]);
+  assert.match(valor, /^#[0-9a-fA-F]{3,6}$/);
+  return valor.toLowerCase();
 };
+
 const canal = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
 const luminancia = (hex) => {
   const h = hex.length === 4 ? `#${[...hex.slice(1)].map((c) => c + c).join('')}` : hex;
@@ -22,22 +30,22 @@ const luminancia = (hex) => {
 const contraste = (a, b) => { const [x, y] = [luminancia(a), luminancia(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
 const BRANCO = '#ffffff';
 
-test('as cores de marca são as do kit', () => {
-  assert.equal(cor('acao'), '#2563ff');
-  assert.equal(cor('acao-escura'), '#1d4ed8');
-  assert.equal(cor('texto'), '#0b1b5c');
+test('as cores de interface são as da Jornada Azul e o kit do Stu é preservado', () => {
+  assert.equal(cor('acao'), '#2457dd');
+  assert.equal(cor('acao-escura'), '#173b9c');
+  assert.equal(cor('texto'), '#15275b');
   assert.equal(cor('ouro'), '#fbbf24');
   assert.equal(cor('violeta'), '#8b5cf6');
   assert.equal(cor('violeta-texto'), '#6d28d9');
   assert.equal(cor('azul-claro'), '#3b82f6');
   assert.equal(cor('lavanda'), '#e9e7ff');
   assert.equal(cor('ceu'), '#e9e7ff', 'o fundo suave é a lavanda');
-  // Ficam: texto secundário, sucesso, alerta e erro.
-  assert.equal(cor('texto2'), '#5e6a85');
+  // Os estados semânticos permanecem; o texto secundário acompanha a nova direção.
+  assert.equal(cor('texto2'), '#50607a');
   assert.equal(cor('sucesso'), '#1f7a5a');
   assert.equal(cor('alerta'), '#9a5b00');
   assert.equal(cor('erro'), '#c23b4e');
-  assert.equal(cor('fundo-aviso-comunidade'), '#1b2a5e');
+  assert.equal(cor('fundo-aviso-comunidade'), '#15275b');
 });
 
 test('as contas de contraste da B5 passam', () => {
@@ -58,7 +66,7 @@ test('as contas de contraste da B5 passam', () => {
     assert.ok(valor >= minimo, `${nome}: ${valor.toFixed(2)}:1 abaixo de ${minimo}:1`);
   }
   // O que a B5 proíbe como texto: a ação sobre a lavanda, o destaque no branco, o azul claro e a violeta em texto miúdo.
-  assert.ok(contraste(cor('acao'), cor('lavanda')) < 4.5);
+  assert.ok(contraste('#2563ff', cor('lavanda')) < 4.5, 'regressão histórica: o azul anterior não bastava sobre lavanda');
   assert.ok(contraste(cor('ouro'), BRANCO) < 3);
 });
 

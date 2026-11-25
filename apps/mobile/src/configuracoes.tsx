@@ -21,6 +21,7 @@ import { RecorteImagem, escolherImagem, type ImagemParaRecortar } from './recort
 import { Esqueleto, Ficha, codigoDoErro, socialEstilos, textoDoErro } from './social';
 import { tocaSons } from './sons';
 import { cores, fontes, raios } from './tema';
+import { CabecalhoSecao, CartaoStudoo } from './componentes-jornada';
 import type { NomeIcone } from './trilha';
 
 /*
@@ -159,10 +160,10 @@ function ErroDoCampo({ texto }: { texto: string }) {
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <View style={confEstilos.secao}>
-      <Text accessibilityRole="header" style={confEstilos.secaoTitulo}>{titulo}</Text>
+    <CartaoStudoo estilo={confEstilos.secao}>
+      <CabecalhoSecao titulo={titulo} />
       {children}
-    </View>
+    </CartaoStudoo>
   );
 }
 
@@ -205,17 +206,28 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
   // O que está na tela agora, para salvar o que ficou pendente quando a pessoa sai sem tirar o foco do campo (no app,
   // tocar em "Voltar" ou na barra de baixo não tira o foco sozinho, como o clique faz na web).
   const montada = useRef(true);
+  const contexto = useRef({ planoId });
+  if (contexto.current.planoId !== planoId) contexto.current = { planoId };
+  const sequencias = useRef<Record<CampoDaTela, number>>({ titulo: 0, descricao: 0, tema: 0, capa: 0 });
+  // A API devolve a configuração inteira. Uma fila mantém a ordem das intenções, inclusive blurs rápidos.
+  const fila = useRef<Promise<void>>(Promise.resolve());
+  const ultimasEmFila = useRef<Partial<Record<CampoDaTela, string>>>({});
   const atual = useRef({ conf, titulo, descricao });
   atual.current = { conf, titulo, descricao };
-  const emEnvio = useRef<Partial<Record<CampoDaTela, boolean>>>({});
   const relogios = useRef<Partial<Record<CampoDaTela, ReturnType<typeof setTimeout>>>>({});
+
+  useEffect(() => {
+    setConf(null); setTitulo(''); setDescricao(''); setErros({}); setErroCarregar(null);
+    setEstados(SEM_ESTADO); setGaleria(false); setOrigemDaFoto(false); setParaRecortar(null);
+    for (const relogio of Object.values(relogios.current)) clearTimeout(relogio);
+  }, [planoId]);
 
   useEffect(() => {
     let ativo = true;
     cliente.obterConfiguracoes(planoId).then((dados) => {
       if (!ativo) return;
       // Relê ao voltar da folha de compartilhar (versao); os campos em edição ficam como estão.
-      if (!atual.current.conf) { setTitulo(dados.titulo); setDescricao(dados.descricao ?? ''); }
+      if (!atual.current.conf || atual.current.conf.planoId !== planoId) { setTitulo(dados.titulo); setDescricao(dados.descricao ?? ''); }
       setConf(dados);
     }).catch((falha) => { if (ativo) setErroCarregar(codigoDoErro(falha)); });
     return () => { ativo = false; };
@@ -225,38 +237,48 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
     clearTimeout(relogios.current[campo]);
     if (!montada.current) return;
     setEstados((antes) => ({ ...antes, [campo]: estado }));
-    if (estado === 'salvo') relogios.current[campo] = setTimeout(() => marcar(campo, 'livre'), SALVO_VISIVEL_MS);
+    if (estado === 'salvo') {
+      const origem = contexto.current;
+      relogios.current[campo] = setTimeout(() => { if (contexto.current === origem) marcar(campo, 'livre'); }, SALVO_VISIVEL_MS);
+    }
   }
 
   async function salvar(campo: CampoDaTela, mudanca: MudancaConfiguracoes): Promise<boolean> {
-    if (emEnvio.current[campo]) return false;
-    emEnvio.current[campo] = true;
+    const assinatura = JSON.stringify(mudanca);
+    if (ultimasEmFila.current[campo] === assinatura) return false;
+    ultimasEmFila.current[campo] = assinatura;
+    const origem = contexto.current;
+    const sequencia = ++sequencias.current[campo];
+    const vigente = () => montada.current && contexto.current === origem && sequencias.current[campo] === sequencia;
     marcar(campo, 'salvando');
     if (montada.current) setErros((antes) => ({ ...antes, [campo]: undefined }));
+    // A intenção mantém o plano de origem. Sair não perde o último blur, mas uma resposta antiga não muda outra tela.
+    const pedido = fila.current.then(() => cliente.salvarConfiguracoes(origem.planoId, mudanca));
+    fila.current = pedido.then(() => undefined, () => undefined);
     try {
-      const novo = await cliente.salvarConfiguracoes(planoId, mudanca);
-      aoMudar(novo);
-      if (montada.current) setConf(novo);
-      marcar(campo, 'salvo');
-      // O aviso do app já lê "Capa salva."; nos outros campos, o leitor de tela ouve a frase do campo.
-      if (campo !== 'capa' && montada.current) AccessibilityInfo.announceForAccessibility(k.salvoLeitor[campo]);
-      // Spec 12: salvar um campo alterado toca "salvo" (só se chega aqui com mudança). A capa toca pelo aviso "Capa salva.".
-      if (campo !== 'capa') void tocaSons.tocarEfeito('salvo');
+      const novo = await pedido;
+      if (!vigente()) return false;
+      setConf(novo); aoMudar(novo); marcar(campo, 'salvo');
+      if (campo !== 'capa') {
+        AccessibilityInfo.announceForAccessibility(k.salvoLeitor[campo]);
+        void tocaSons.tocarEfeito('salvo');
+      }
       return true;
     } catch (falha) {
-      if (montada.current) setErros((antes) => ({ ...antes, [campo]: textoDoErro(codigoDoErro(falha)) }));
+      if (!vigente()) return false;
+      setErros((antes) => ({ ...antes, [campo]: textoDoErro(codigoDoErro(falha)) }));
       marcar(campo, 'livre');
       return false;
     } finally {
-      emEnvio.current[campo] = false;
+      if (sequencias.current[campo] === sequencia) delete ultimasEmFila.current[campo];
     }
   }
 
   function sairDoTitulo() {
     const { conf: salvo, titulo: escrito } = atual.current;
-    if (!salvo) return;
+    if (!salvo || salvo.planoId !== planoId) return;
     const normal = normalizarTituloTrilha(escrito);
-    if (normal === salvo.titulo) { if (montada.current) setTitulo(salvo.titulo); return; }
+    if (normal === salvo.titulo && !ultimasEmFila.current.titulo) { if (montada.current) setTitulo(salvo.titulo); return; }
     const motivo = motivoTituloTrilhaInvalido(normal);
     if (motivo) { if (montada.current) setErros((antes) => ({ ...antes, titulo: k.nomeErros[motivo] })); return; }
     if (montada.current) setTitulo(normal);
@@ -265,9 +287,9 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
 
   function sairDaDescricao() {
     const { conf: salvo, descricao: escrita } = atual.current;
-    if (!salvo) return;
+    if (!salvo || salvo.planoId !== planoId) return;
     const normal = normalizarResumoPerfil(escrita);
-    if (normal === (salvo.descricao ?? '')) return;
+    if (normal === (salvo.descricao ?? '') && !ultimasEmFila.current.descricao) return;
     const motivo = motivoLegendaInvalida(normal);
     if (motivo) { if (montada.current) setErros((antes) => ({ ...antes, descricao: mensagens.comunidade.legendaErros[motivo] })); return; }
     if (montada.current) setDescricao(normal);
@@ -276,27 +298,39 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
 
   /** A galeria ou a câmera do sistema (P18); o recorte é o do Studoo. */
   async function buscarFoto(camera: boolean) {
+    const origem = contexto.current;
     setErros((antes) => ({ ...antes, capa: undefined }));
     try {
       const imagem = await escolherImagem(camera);
-      if (imagem && montada.current) setParaRecortar(imagem);
+      if (imagem && montada.current && contexto.current === origem) setParaRecortar(imagem);
     } catch {
-      if (montada.current) setErros((antes) => ({ ...antes, capa: mensagens.perfil.fotoIlegivel }));
+      if (montada.current && contexto.current === origem) setErros((antes) => ({ ...antes, capa: mensagens.perfil.fotoIlegivel }));
     }
   }
 
   async function enviarFoto(base64: string) {
-    const novo = await cliente.enviarCapa(planoId, base64);
-    aoMudar(novo);
-    if (montada.current) { setConf(novo); setParaRecortar(null); }
-    // Spec 14: a foto nova fica em revisão; o aviso nunca diz que ela já aparece para os outros.
-    avisar(novo.capaModeracao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : k.capaSalva, { icone: 'check', som: 'salvo' });
+    const origem = contexto.current;
+    const sequencia = ++sequencias.current.capa;
+    marcar('capa', 'salvando');
+    const pedido = fila.current.then(() => cliente.enviarCapa(origem.planoId, base64));
+    fila.current = pedido.then(() => undefined, () => undefined);
+    try {
+      const novo = await pedido;
+      if (!montada.current || contexto.current !== origem || sequencias.current.capa !== sequencia) return;
+      setConf(novo); setParaRecortar(null); aoMudar(novo); marcar('capa', 'salvo');
+      // Foto em revisão continua privada até a aprovação; a confirmação não promete publicação.
+      avisar(novo.capaModeracao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : k.capaSalva, { icone: 'check', som: 'salvo' });
+    } catch (falha) {
+      if (montada.current && contexto.current === origem && sequencias.current.capa === sequencia) marcar('capa', 'livre');
+      throw falha;
+    }
   }
 
   // Ao sair da tela (Voltar, barra de baixo, voltar do aparelho), o que ficou escrito e ainda vale é salvo.
   const aoSair = useRef(() => undefined as void);
   aoSair.current = () => { sairDoTitulo(); sairDaDescricao(); };
   useEffect(() => {
+    montada.current = true;
     const pendentes = relogios.current;
     return () => {
       montada.current = false;
@@ -330,7 +364,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
           <Titulo testID="titulo-configuracoes" foco>{k.titulo}</Titulo>
         </View>
 
-        {!conf ? (
+        {!conf || conf.planoId !== planoId ? (
           <View style={confEstilos.secao} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Esqueleto /></View>
         ) : (
           <>
@@ -424,7 +458,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
         )}
       </View>
 
-      {conf && (
+      {conf && conf.planoId === planoId && (
         <GaleriaDeCapas visivel={galeria} atual={conf.capa} semente={conf.semente} tema={conf.tema} aoFechar={() => setGaleria(false)}
           // A foto usa a mesma flag da foto do perfil (com o compartilhar ligado).
           aoUsarFoto={compartilhar ? () => (toque ? setOrigemDaFoto(true) : void buscarFoto(false)) : undefined}
@@ -434,13 +468,13 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
             return salvou;
           }} />
       )}
-      <FolhaDeAcoes visivel={origemDaFoto} titulo={k.usarFoto} cancelarRotulo={mensagens.perfil.fotoMenuCancelar} testID="folha-capa-foto"
+      <FolhaDeAcoes visivel={origemDaFoto && conf?.planoId === planoId} titulo={k.usarFoto} cancelarRotulo={mensagens.perfil.fotoMenuCancelar} testID="folha-capa-foto"
         aoFechar={() => setOrigemDaFoto(false)}
         acoes={[
           { rotulo: mensagens.perfil.fotoGaleria, icone: 'imagem', testID: 'capa-foto-galeria', aoEscolher: () => void buscarFoto(false) },
           { rotulo: mensagens.perfil.fotoCamera, icone: 'camera', testID: 'capa-foto-camera', aoEscolher: () => void buscarFoto(true) },
         ]} />
-      {paraRecortar && (
+      {paraRecortar && conf?.planoId === planoId && (
         // A foto da capa: o mesmo recorte do perfil, na proporção da capa (2:1), com a área dos selos marcada.
         <RecorteImagem imagem={paraRecortar} proporcao={2} titulo={k.capaFotoTitulo} dica={k.capaFotoDica} aviso={k.capaFotoAviso} comSelos
           aoCancelar={() => setParaRecortar(null)} enviar={enviarFoto} />
@@ -592,8 +626,8 @@ const confEstilos = StyleSheet.create({
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 23.2,
   },
   // .configuracoes__secao: borda de 2, raio de 20 (o --raio-bloco da web), 18 de respiro e 14 entre os itens.
-  secao: { gap: 14, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
-  secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
+  secao: { gap: 16 },
+  secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
   // A prévia da capa (revisão de 19/11, item 5): a largura da seção, em 2:1 e raio de 16.
   previa: { aspectRatio: 2, borderRadius: 16, overflow: 'hidden' },
   capa: { overflow: 'hidden' },
@@ -601,7 +635,7 @@ const confEstilos = StyleSheet.create({
   capaVeu: { position: 'absolute', left: 0, right: 0, top: 0, height: '45%' },
   // "Trocar capa": pílula branca de 40, a 10 do canto de baixo à direita, com a sombra 0 2px 8px rgba(15, 23, 42, .25).
   trocar: {
-    position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 14,
+    position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14,
     borderRadius: raios.pilula, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 4,
   },
@@ -638,7 +672,7 @@ const confEstilos = StyleSheet.create({
   folhaAlca: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: cores.bordaCampo },
   folhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   // .folha-titulo da web: 22/27,5.
-  folhaTitulo: { flexShrink: 1, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5, letterSpacing: -0.33 },
+  folhaTitulo: { flexShrink: 1, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
   folhaConteudo: { gap: 14, paddingBottom: 4 },
   usarFoto: { gap: 6 },
   // A grade: 12 entre as colunas e 14 entre as linhas.

@@ -31,12 +31,12 @@ const RODAPE = 140;
 const MOLA = Easing.bezier(0.2, 0.9, 0.3, 1.2);
 /**
  * Cores da spec 08 com a paleta do kit (spec 13, B5): os três azuis antigos da spec viram a ação, a ação escura e o claro
- * #EEF2FF do kit; o resto como na spec.
+ * da Jornada Azul; estados de correção mantêm os tons semânticos da spec.
  */
 const COR = {
-  borda: '#C9D1EA', alca: '#8A94B3', claro: '#EEF2FF',
-  certo: cores.sucessoClaro, certoFundo: '#EEFAF3', certoDegrau: '#9AD8B5',
-  errado: '#E3A24A', erradoFundo: '#FFF6EA', erradoDegrau: '#F2CF96',
+  borda: cores.gelo, alca: cores.textoSecundario, claro: cores.nevoa,
+  certo: cores.sucessoClaro, certoFundo: cores.sucessoFundo, certoDegrau: '#9AD8B5',
+  errado: '#E3A24A', erradoFundo: cores.alertaFundo, erradoDegrau: '#F2CF96',
 };
 
 /**
@@ -395,8 +395,8 @@ function CartaoDaOrdem({ id, texto, posicao, total, estado, travado, escondido, 
         <Pressable accessibilityRole="button" accessibilityLabel={rotulo} accessibilityState={{ selected: estado === 'escolhido', disabled: !tocavel }}
           aria-pressed={estado === 'escolhido'} accessibilityActions={acoes} onAccessibilityAction={aoAcao} onPress={aoTocar}
           onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
-          style={({ pressed }) => [estilosOrdenar.fora, { backgroundColor: corDegrau, paddingBottom: pressed && tocavel ? 0 : degrau,
-            marginTop: pressed && tocavel ? degrau : 0 }, focado && estilos.foco]}>
+          style={({ pressed }) => [estilosOrdenar.fora, { backgroundColor: corDegrau, paddingBottom: pressed && tocavel && !reduzir ? 0 : degrau,
+            marginTop: pressed && tocavel && !reduzir ? degrau : 0 }, focado && estilos.foco]}>
           <Face texto={texto} posicao={posicao} estado={estado} brilho={brilho} reduzir={reduzir}
             alca={
               estado === 'certo' || estado === 'errado' ? null : (
@@ -433,7 +433,7 @@ function Face({ texto, posicao, estado, brilho = 0, reduzir = false, arrastando 
   arrastando?: boolean;
   alca?: ReactNode;
 }) {
-  // O brilho #EEF2FF depois da troca: some em 400 ms; com movimento reduzido, fica 600 ms e sai de uma vez (só cor).
+  // O brilho da superfície azul depois da troca: some em 400 ms; com movimento reduzido, fica 600 ms e sai de uma vez (só cor).
   const [luz] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (!brilho) return;
@@ -449,8 +449,8 @@ function Face({ texto, posicao, estado, brilho = 0, reduzir = false, arrastando 
 
   const face = estado === 'escolhido' ? estilosOrdenar.faceEscolhida : estado === 'certo' ? estilosOrdenar.faceCerta
     : estado === 'errado' ? estilosOrdenar.faceErrada : null;
-  const numero = estado === 'escolhido' ? { backgroundColor: cores.acao } : estado === 'certo' ? { backgroundColor: COR.certo }
-    : estado === 'errado' ? { backgroundColor: COR.errado } : null;
+  const numero = estado === 'escolhido' ? { backgroundColor: cores.acao } : estado === 'certo' ? { backgroundColor: cores.sucesso }
+    : estado === 'errado' ? { backgroundColor: cores.alerta } : null;
   const numeroBranco = estado !== 'normal';
   return (
     <View style={[estilosOrdenar.face, face, arrastando && estilosOrdenar.sombra]}>

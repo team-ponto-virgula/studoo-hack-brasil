@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 
 const raiz = resolve(import.meta.dirname, '..');
 const entrada = readFileSync(join(raiz, 'src/app/login/entrada.tsx'), 'utf8');
-const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
+const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8').replace(/((?:font-size|line-height):\s*)([\d.]+)rem/g, (_, nome, valor) => `${nome}${Number(valor) * 16}px`);
 
 test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidade adequada', () => {
   const cadastro = readFileSync(join(raiz, 'src/app/cadastro/cadastro.tsx'), 'utf8');
@@ -55,9 +55,9 @@ test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minh
   assert.match(entrada, /variante=\{visitanteDisponivel \? 'secundario' : 'primario'\}/, 'secundário com o visitante, principal sem ele');
 });
 
-test('no celular: sem faixa até 860 px de altura (120 px acima), título 28/34, texto 15/22 e Entrar de 48 na largura toda', () => {
+test('no celular: sem faixa até 860 px de altura (120 px acima), título 28/34, texto 15/22 e Entrar de 52 na largura toda', () => {
   const bloco = css.slice(css.lastIndexOf('/* Entrada no celular'));
-  assert.match(bloco, /\.entrada-entrar > \.botao \{ width: 100%; min-height: 48px; \}/);
+  assert.match(bloco, /\.entrada-entrar > \.botao \{ width: 100%; min-height: var\(--jornada-acao\); \}/);
   assert.match(bloco, /\.entrada-banner \{ height: 120px;/);
   assert.match(bloco, /\.entrada-cabecalho h1 \{ font-size: 28px; line-height: 34px;/);
   assert.match(bloco, /\.entrada-cabecalho \.introducao \{ font-size: 15px; line-height: 22px; \}/);
@@ -73,6 +73,9 @@ test('no pedido as sugestões formam uma fileira rolável e Surpreenda-me fecha 
   assert.ok(ideias > 0 && pedido.indexOf('onClick={surpreender}') > ideias);
   assert.doesNotMatch(pedido, /pedido-alternar__selo|pedido\.seuMaterial/);
   assert.match(estilo, /\.pedido-ideias\s*\{[^}]*overflow-x: auto/);
-  assert.match(estilo, /\.pedido-ideias\s*\{[^}]*flex-wrap: nowrap/);
+  const ideiasCss = /\.pedido-ideias\s*\{([^}]*)\}/.exec(estilo)?.[1] ?? '';
+  assert.match(ideiasCss, /display: flex;/);
+  assert.doesNotMatch(ideiasCss, /flex-wrap: (?:wrap|wrap-reverse);/, 'nowrap é o padrão flex; não pode virar uma grade ou quebrar a fileira');
+  assert.match(estilo, /\.pedido-ideia\s*\{[^}]*flex: none/, 'cada sugestão preserva sua largura na fileira rolável');
   assert.match(estilo, /\.pedido-ideia\s*\{[^}]*min-height: 44px/);
 });

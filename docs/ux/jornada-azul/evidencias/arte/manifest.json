@@ -1,0 +1,104 @@
+{
+  "candidate": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "historicalSource": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "nativeExecuted": false,
+  "selection": "explícita; nenhuma pasta inteira copiada",
+  "scores": {
+    "C4_observedSample": 9,
+    "C3_visualObservedSample": 9,
+    "whole44Families": null,
+    "native": null,
+    "userResearch": null
+  },
+  "openFinding": {
+    "id": "AR8",
+    "severity": "baixo",
+    "status": "aberto/planejado; não há aprovação integral de C15"
+  },
+  "files": [
+    {
+      "file": "capturas/r2/confirmacao-390-100.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR3/AR6 depois da correção, componente real de bancada, texto local",
+      "sha256": "c13bda72c883c87325e62e2e1b8884e8b89698bffc9da7566f0062db0f1a698c",
+      "bytes": 135451
+    },
+    {
+      "file": "capturas/r2/confirmacao-390-200.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR3/AR6 depois da correção, componente real de bancada, texto local",
+      "sha256": "80f842ac94bb669975abf2a7188f8f64154114339cfaf15e5df5c99bb396ce29",
+      "bytes": 135970
+    },
+    {
+      "file": "capturas/r2/confirmacao-360-100.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR3/AR6 depois da correção, componente real de bancada, texto local",
+      "sha256": "f0b66742aea05eab682b5ec4d1377c9c1895281a72af3ceb9076471d8fabae1a",
+      "bytes": 123761
+    },
+    {
+      "file": "capturas/r2/confirmacao-360-200.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR3/AR6 depois da correção, componente real de bancada, texto local",
+      "sha256": "457a19903287e8e46aa19d7c3f1e00cf53e1a5318ac5ce89aa00cdec241e3191",
+      "bytes": 121449
+    },
+    {
+      "file": "capturas/r2/ar8-anterior-dispensa-musica-390.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR8 residual baixo: anterior à dispensa normal do aviso, já na R2; não é antes do fix do CTA",
+      "sha256": "bd610d381377142f5f6459e1f9426de06380863ae2406a1f630678d6f172c9b5",
+      "bytes": 65873
+    },
+    {
+      "file": "capturas/r2/ar8-anterior-dispensa-musica-360.png",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "AR8 residual baixo: anterior à dispensa normal do aviso, já na R2; não é antes do fix do CTA",
+      "sha256": "ada0ba7008d794b19c1c540936ff50a75b0c989ab03956bd7684f4689b076584",
+      "bytes": 62649
+    },
+    {
+      "file": "capturas/r1/ar6-antes-correcao-confirmacao-360-200.png",
+      "source": "fa4be429992037cdaa1be055f52be6a529d32f76",
+      "scope": "AR6 antes da correção: título coberto pelo aviso a200%, R1 histórica",
+      "sha256": "6e09b3f1f7b5fc58e131feaf81e66f3732f0e92412870ebb19fe15af96daef5d",
+      "bytes": 120559
+    },
+    {
+      "file": "dados/confirmacao-r2.json",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "Quatro focais da confirmação; sem operações de conta",
+      "sha256": "814ac5b660819e830598ea725ebaf3ff1885585c05853447fa93a74cb40f17b3",
+      "bytes": 10466
+    },
+    {
+      "file": "dados/equivalencia-r1-r2.json",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "Diff R1→R2 e9unidades pertinentes idênticas; não é rerun integral",
+      "sha256": "986b7153399e7af09acf6ba92cb7299eae1c0f60dbd27c3bfb5d4d0bdf2642cf",
+      "bytes": 2868
+    },
+    {
+      "file": "dados/ar8-metadados.json",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "Metadados das evidências calma/transitória originais; PNGs calmos referenciados no pacote RNWeb",
+      "sha256": "509d090ca800393b73de14f7b5853ce74228e36ab144e5eb656c3033e67ddec6",
+      "bytes": 4835
+    },
+    {
+      "file": "dados/ar6-antes-metricas.json",
+      "source": "fa4be429992037cdaa1be055f52be6a529d32f76",
+      "scope": "Medição histórica da sobreposição do título na R1",
+      "sha256": "a502e96e6fa786b9562841586e2d556dc244e0ae5605d07182869129fc0d1a95",
+      "bytes": 1570
+    },
+    {
+      "file": "LEIA-ME.md",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "scope": "Índice e fechamento por amostra, limites e residual explícitos",
+      "sha256": "71ddf9668a9594b00ce2f0408acfb961df74f92633a65b3fa0e131783866b5ec",
+      "bytes": 2543
+    }
+  ]
+}

@@ -8,12 +8,21 @@
 .configuracoes__estado[data-estado='salvo'] { color: var(--sucesso); }
 .configuracoes__estado .icone { width: 18px; height: 18px; }
 .configuracoes__recebida { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ceu); font-weight: 700; line-height: 1.45; }
-.configuracoes__secao { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+.configuracoes__secao { display: grid; gap: 16px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
 @media (min-width: 768px) { .configuracoes__secao { padding: 22px 24px; } }
-.configuracoes__capa { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.configuracoes__previa { display: block; flex: 0 0 auto; width: min(100%, 15rem); aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
+.configuracoes__capa { display: grid; gap: 8px; min-width: 0; }
+.configuracoes__previa { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 16px; }
 .configuracoes__previa svg { display: block; width: 100%; height: 100%; }
-.configuracoes__capa-acoes { display: grid; flex: 1 1 12rem; gap: 8px; justify-items: start; }
+.configuracoes__capa-abrir { position: relative; display: block; width: 100%; aspect-ratio: 2 / 1; padding: 0; border: 0; border-radius: 16px; overflow: hidden; background: var(--nevoa); cursor: pointer; }
+.configuracoes__trocar { position: absolute; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; max-width: calc(100% - 20px); padding: 8px 14px; border-radius: 999px; background: var(--fundo); color: var(--acao-escura); box-shadow: 0 2px 8px rgb(15 23 42 / .2); font-size: .9375rem; line-height: 1.25rem; font-weight: 800; }
+.configuracoes__trocar .icone { width: 18px; height: 18px; flex: none; }
+.configuracoes__rotulo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.configuracoes__campo-estado { display: inline-flex; align-items: center; gap: 4px; color: var(--sucesso); font-size: .8125rem; line-height: 1.125rem; font-weight: 800; }
+.configuracoes__campo-estado .icone { width: 14px; height: 14px; }
+.configuracoes__campo-estado[data-estado="salvando"] { color: var(--texto2); }
+.configuracoes__giro { width: 14px; height: 14px; border: 2px solid var(--gelo); border-top-color: var(--texto2); border-radius: 50%; animation: configuracoes-girar .8s linear infinite; }
+@keyframes configuracoes-girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .configuracoes__giro { animation: none; } }
 .configuracoes__capa-acoes .botao .icone, .configuracoes__botao .icone { width: 18px; height: 18px; }
 .configuracoes__linha { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 800; }
 .configuracoes__linha .icone { width: 20px; height: 20px; color: var(--acao); }
@@ -35,10 +44,15 @@
 @media (hover: hover) { .galeria-capas__opcao:hover .galeria-capas__desenho { box-shadow: 0 0 0 2px #8792bd; } }
 
 /* A capa escolhida no alto do mapa e no cartão de Minhas trilhas (no lugar da ilustração). */
-.trilha-capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 140px; overflow: hidden; border-radius: 20px; margin-bottom: 4px; }
+.trilha-capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 140px; overflow: hidden; border-radius: 24px; margin-bottom: 4px; }
 .trilha-capa svg { display: block; width: 100%; height: 100%; }
 .plano-cartao__capa, .plano-destaque__capa { position: absolute; inset: 0; display: block; }
 .plano-cartao__capa svg, .plano-destaque__capa svg { display: block; width: 100%; height: 100%; }
 .trilha-topo__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .trilha-configurar { display: inline-grid; width: 48px; min-width: 48px; height: 48px; min-height: 48px; place-items: center; padding: 0; }
 .trilha-configurar .icone { width: 24px; height: 24px; stroke-width: 2; }
+
+/* O visto confirma a escolha sem alterar a caixa da capa ou depender só da cor da borda. */
+.galeria-capas__visto { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--fundo); border-radius: 50%; color: var(--fundo); background: var(--acao); pointer-events: none; }
+.galeria-capas__visto .icone { width: 14px; height: 14px; }
+.galeria-capas__nome small { display: block; font-size: .8125rem; line-height: 1.125rem; }

@@ -1,0 +1,310 @@
+{
+  "packageType": "safe_documentation",
+  "candidate": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "pngCount": 25,
+  "pairedStateCount": 12,
+  "supplementaryUnpairedCount": 1,
+  "pngBytes": 1580768,
+  "artifacts": [
+    {
+      "path": "capturas/sql-proposta-390.png",
+      "state": "sql-proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "12073cd1927a4da4ea85f926a1f14049f4fd7fc19a446467c20639eb995b75b7",
+      "bytes": 64370
+    },
+    {
+      "path": "capturas/sql-exercicio-390.png",
+      "state": "sql-exercicio",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "441140b4ba1146663d4e6a6382898141400b39318db3294f53bf37b3741c6544",
+      "bytes": 54933
+    },
+    {
+      "path": "capturas/sql-feedback-erro-390.png",
+      "state": "sql-feedback-erro",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "ad5bc738a39a07b23a780d879794ac01ad32d14aa10c14bb8f5652e100f60de5",
+      "bytes": 71731
+    },
+    {
+      "path": "capturas/sql-conclusao-390.png",
+      "state": "sql-conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "26fee61bd05cf6ce57a1d599945fdf68a97a98967f6c41c8d850c4bcfa7fa8cb",
+      "bytes": 70295
+    },
+    {
+      "path": "capturas/sql-retomada-inner-join-390.png",
+      "state": "sql-retomada-inner-join",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "16cd76cb15627c3aedbfd3d9807bbbeb3344a35171560bd684a9db31b281100d",
+      "bytes": 47173
+    },
+    {
+      "path": "capturas/sql-proposta-360.png",
+      "state": "sql-proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "6919798ecca9d31f59765866feac5a4fb34db3ddcaa8b10b5c2c1c2d51090a7e",
+      "bytes": 62451
+    },
+    {
+      "path": "capturas/sql-exercicio-360.png",
+      "state": "sql-exercicio",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "e42d61b756978eb54bed51db119323220f439a443d11a8a33a18583a4a1c6891",
+      "bytes": 50655
+    },
+    {
+      "path": "capturas/sql-feedback-erro-360.png",
+      "state": "sql-feedback-erro",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "022a52ec23b957932d47d524db814736cf0e9d44dc8eb188a4103f4b7892727c",
+      "bytes": 66551
+    },
+    {
+      "path": "capturas/sql-conclusao-360.png",
+      "state": "sql-conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "4a17952291975c01a0a5dc16d5fed41d9e49fd8804ca32e55e988b3978d35a66",
+      "bytes": 64216
+    },
+    {
+      "path": "capturas/sql-retomada-inner-join-360.png",
+      "state": "sql-retomada-inner-join",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "d423383782b4edd603a181d247a9645c7e13103606892f0ef914ebcd10f7e050",
+      "bytes": 46794
+    },
+    {
+      "path": "capturas/pedido-390-100.png",
+      "state": "pedido-100",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "7db1e7963180ce8cd71d2750880cbfb57d75aeda33096d5cfd1057669ac74e6b",
+      "bytes": 64214
+    },
+    {
+      "path": "capturas/pedido-390-200.png",
+      "state": "pedido-200",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "dfa479b0aaec5b4228cdc15b4ff058b18489dbcd26210578b4ecc12efca6e78a",
+      "bytes": 57759
+    },
+    {
+      "path": "capturas/minhas-trilhas-progresso-390.png",
+      "state": "minhas-trilhas-progresso",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "d8b652cea92f89ac34113ed40a6e77c1da5eadfc7812dc704c2bfc3da4d5d069",
+      "bytes": 50398
+    },
+    {
+      "path": "capturas/pedido-360-100.png",
+      "state": "pedido-100",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "1fa563ad82af456245e703a1d1bf092a7a6f9d932e0d33ca2ca58a449b60f7d1",
+      "bytes": 62919
+    },
+    {
+      "path": "capturas/pedido-360-200.png",
+      "state": "pedido-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "a53797567bbae02fff40fa78cf3381f831d0fe43aa9f8ec6fdd135b6f57ab33b",
+      "bytes": 53796
+    },
+    {
+      "path": "capturas/minhas-trilhas-progresso-360.png",
+      "state": "minhas-trilhas-progresso",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "0dbcf9ef326e0d75e11c9ab769db50e8e99ade5ad078889a157e9b1369e42245",
+      "bytes": 49189
+    },
+    {
+      "path": "capturas/navbar-200-planos-360.png",
+      "state": "navbar-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "041838b1378420f6e9ca75ad4aec1d877eb11f7a1bb6917e0dc6c889adb22720",
+      "bytes": 73722
+    },
+    {
+      "path": "capturas/configuracoes-390.png",
+      "state": "configuracoes",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "86aebff6cffb7ebd607570980511c330c6e874da1a0d957df90913195fa9a9a1",
+      "bytes": 73798
+    },
+    {
+      "path": "capturas/menu-cartao-proprio-390.png",
+      "state": "menu-cartao-proprio",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "e5eda8cc3063dc2fbb20da9d82f6ba94cba18d0382f4f2e1a20d8f40ea3b7906",
+      "bytes": 70037
+    },
+    {
+      "path": "capturas/configuracoes-360.png",
+      "state": "configuracoes",
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "41b11e61ef0c1fa10320dbaca68d97c97d18c1fbf919c1e5fd45a49e27f51966",
+      "bytes": 69490
+    },
+    {
+      "path": "capturas/menu-cartao-proprio-360.png",
+      "state": "menu-cartao-proprio",
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "c8754f1a6b8450bfdbbaaf2204ebab214e6d5ea3af13c59264e2c72755f8b942",
+      "bytes": 67450
+    },
+    {
+      "path": "capturas/menu-publicacao-390.png",
+      "state": "menu-publicacao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "00a95beb30d4c0f3a5719539de3d9983a16d9394b881829a1542f542a0ccb6ea",
+      "bytes": 96740
+    },
+    {
+      "path": "capturas/menu-publicacao-360.png",
+      "state": "menu-publicacao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "7826fb1c0a66ad2e7adecdd5940030e059a09f75920b49f8fb1310bf1b1adc9f",
+      "bytes": 84504
+    },
+    {
+      "path": "capturas/confirmacao-200-390.png",
+      "state": "confirmacao-200",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "8e73b6cca2764624fbf1b625a5e5b7d767553462aa646ee3434c7ea96fc8ff9b",
+      "bytes": 56515
+    },
+    {
+      "path": "capturas/confirmacao-200-360.png",
+      "state": "confirmacao-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "f4b76d64fa31e421de04ae9475a2ccaea09f3a4af92349c578a58d86ca8de0c5",
+      "bytes": 51068
+    }
+  ]
+}

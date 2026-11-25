@@ -56,7 +56,7 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   assert.match(interface_, /\{giro && <Giro cor=\{corTexto\} \/>\}/);
   assert.match(interface_, /<Text numberOfLines=\{giro \|\| umaLinha \? 1 : undefined\}/);
   assert.match(geracao, /estilo=\{empilhar \? estudoEstilos\.geracaoBotaoSecundario : dividir \? estudoEstilos\.botaoDividido : undefined\} umaLinha \/>/, '"Ajustar pedido" numa linha');
-  assert.match(interface_, /degrauFora\(4, 16, labio, pressed \|\| afundado\)/);
+  assert.match(interface_, /degrauFora\(principal \? 4 : 0, raios\.campo, labio, principal && \(\(pressed && reduzir === false\) \|\| afundado\)\)/);
   assert.match(interface_, /giro: \{ width: 16, height: 16, borderRadius: 8, borderWidth: 2 \}/);
 });
 

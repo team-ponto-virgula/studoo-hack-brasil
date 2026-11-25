@@ -159,7 +159,7 @@ const visual = StyleSheet.create({
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   apple: { width: '100%', height: 52 },
   simbolo: { width: 56, height: 56, borderRadius: 18, backgroundColor: cores.nevoa, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  aviso: { padding: 14, borderRadius: 14, backgroundColor: cores.nevoa },
+  aviso: { padding: 16, borderRadius: 16, backgroundColor: cores.nevoa },
   // Como .acesso-link da web: 44 de altura, texto no centro.
   link: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center' },

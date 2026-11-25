@@ -168,12 +168,12 @@ const seg = StyleSheet.create({
   erro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 22 },
   estado: { gap: 6, alignItems: 'flex-start' },
   // Selo neutro da spec 10 (#F1F4FD / #5E6A85, 13 px 800) e o de alerta (#9A5B00 sobre #FFF6EA).
-  selo: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: '#F1F4FD' },
-  seloTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  selo: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: cores.nevoa },
+  seloTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   seloAlerta: { backgroundColor: '#FFF6EA' },
   seloAlertaTexto: { color: '#9A5B00' },
   estadoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
   link: { color: cores.acao, fontWeight: '800', textDecorationLine: 'underline' },
   // Designer (20/11): 12 acima, depois do último cartão de nível, e 16 abaixo, antes do bloco seguinte.
-  regras: { color: '#5E6A85', fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20, marginTop: 12, marginBottom: 16 },
+  regras: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20, marginTop: 12, marginBottom: 16 },
 });

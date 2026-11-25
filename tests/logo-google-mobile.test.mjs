@@ -37,6 +37,6 @@ test('a imagem é decorativa (sem nome acessível), com 12 até o texto e 38% qu
   const imagem = fonte.slice(fonte.indexOf('{imagemAntes && ('), fonte.indexOf('/>', fonte.indexOf('{imagemAntes && (')));
   assert.match(imagem, /<Image source=\{imagemAntes\.fonte\} resizeMode="contain" accessible=\{false\} accessibilityElementsHidden importantForAccessibility="no"/);
   assert.doesNotMatch(imagem, /accessibilityLabel|alt=/);
-  assert.match(imagem, /width: imagemAntes\.tamanho, height: imagemAntes\.tamanho, marginRight: 4, opacity: apagado \? 0\.38 : 1/);
-  assert.match(fonte, /botaoConteudo: \{[^}]*gap: 8/, 'gap de 8 + margem de 4 = 12 até o texto');
+  assert.match(imagem, /width: imagemAntes\.tamanho, height: imagemAntes\.tamanho, marginRight: 2, opacity: apagado \? 0\.38 : 1/);
+  assert.match(fonte, /botaoConteudo: \{[^}]*gap: 10/, 'gap de 10 + margem de 2 = 12 até o texto');
 });

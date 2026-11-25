@@ -1,0 +1,2371 @@
+{
+  "schemaVersion": 1,
+  "packageType": "documentation_only_no_new_execution",
+  "surface": "web",
+  "primaryFinalCandidate": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "historicalFullSqlSource": "before final fa4 freeze; exact source snapshot hashes below",
+  "native": null,
+  "global44ComponentsScore": null,
+  "globalWeightedScore": null,
+  "scopeScore": 9,
+  "scopeScoreMeaning": "Only the observed WEB tasks/branches; not all44, not a new score forR2/C2.",
+  "sql": [
+    {
+      "scenario": "SQL_UI_390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "candidateCommit": null,
+      "pass": true,
+      "source": {
+        "beforeSetSha256": "44aef75bde9c0c9ec228575bcae6f5f05ea9948b16083fc1585091b7bf86cc72",
+        "afterSetSha256": "44aef75bde9c0c9ec228575bcae6f5f05ea9948b16083fc1585091b7bf86cc72",
+        "fileCount": 232,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "bf3488c810eeb0c2d9195c23f96059fce641600de4f74d0c74a5b70bc2e4b551",
+          "src/app/globals.css": "6bb0d707ed464b2ff1ad42840d477adb4848d06e39fa03e9e8e513761b87f5de",
+          "src/app/pedido.css": "060f05fe4c6ab488581d685d1536f4c3afd6afee0a8230d64cdf863d02959a28",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "ccb495a21e577b1dca87c62d9f449db5e35bbe5c7a4f38e72f86359314f7ac37",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "steps": [
+        {
+          "name": "login-ui",
+          "at": "2026-11-25T04:39:48.467Z"
+        },
+        {
+          "name": "erro-rede-com-pedido-preservado",
+          "at": "2026-11-25T04:39:50.652Z"
+        },
+        {
+          "name": "proposta-gerada",
+          "at": "2026-11-25T04:39:51.121Z",
+          "durationMs": 133
+        },
+        {
+          "name": "trilha-aceita",
+          "at": "2026-11-25T04:39:51.557Z",
+          "status": 200,
+          "progresso": {
+            "concluidas": 0,
+            "total": 5,
+            "percentual": 0
+          }
+        },
+        {
+          "name": "resposta-errada-e-feedback",
+          "at": "2026-11-25T04:39:53.780Z",
+          "status": 200
+        },
+        {
+          "name": "resposta-correta",
+          "at": "2026-11-25T04:39:54.441Z",
+          "status": 200
+        },
+        {
+          "name": "conclusao-confirmada-e-progresso1de5",
+          "at": "2026-11-25T04:39:55.354Z",
+          "status": 200,
+          "progresso": {
+            "concluidas": 1,
+            "total": 5,
+            "percentual": 20
+          }
+        },
+        {
+          "name": "sessao-e-progresso-restaurados",
+          "at": "2026-11-25T04:39:57.049Z"
+        },
+        {
+          "name": "retomada-na-licao2",
+          "at": "2026-11-25T04:39:57.462Z"
+        }
+      ],
+      "states": [
+        {
+          "state": "sql-proposta",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 724,
+              "width": 350,
+              "height": 52,
+              "bottom": 776,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-proposta-390.png"
+        },
+        {
+          "state": "sql-exercicio",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 776,
+              "width": 350,
+              "height": 52,
+              "bottom": 828,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-exercicio-390.png"
+        },
+        {
+          "state": "sql-feedback-erro",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 692.015625,
+              "width": 350,
+              "height": 52,
+              "bottom": 744.015625,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-feedback-erro-390.png"
+        },
+        {
+          "state": "sql-conclusao",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 724,
+              "width": 350,
+              "height": 52,
+              "bottom": 776,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-conclusao-390.png"
+        },
+        {
+          "state": "sql-retomada-inner-join",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 776,
+              "width": 350,
+              "height": 52,
+              "bottom": 828,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-retomada-inner-join-390.png"
+        }
+      ],
+      "font200": {
+        "pedidoFont200": {
+          "before": {
+            "font": "30px",
+            "line": "36px"
+          },
+          "after": {
+            "font": "60px",
+            "line": "72px"
+          }
+        },
+        "exercicioFont200": {
+          "before": {
+            "font": "22px",
+            "line": "30px"
+          },
+          "after": {
+            "font": "44px",
+            "line": "60px"
+          }
+        }
+      },
+      "sqlContrast": {
+        "found": true,
+        "foreground": "rgb(237, 243, 255)",
+        "background": "rgb(21, 39, 91)",
+        "backgroundClass": "licao-codigo",
+        "ratio": 12.805904137645557
+      },
+      "pageErrorCount": 0,
+      "network": [
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/login"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/perfil"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/propostas/ao-vivo"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/avaliar"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/avaliar"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/concluir"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/perfil"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        }
+      ],
+      "requestFailures": [
+        {
+          "method": "GET",
+          "error": "net::ERR_ABORTED",
+          "path": "/"
+        },
+        {
+          "method": "POST",
+          "error": "net::ERR_INTERNET_DISCONNECTED",
+          "path": "/api/aprendizado/propostas/ao-vivo"
+        },
+        {
+          "method": "POST",
+          "error": "net::ERR_ABORTED",
+          "path": "/api/aprendizado/propostas/ao-vivo"
+        }
+      ],
+      "networkFaultInjected": true
+    },
+    {
+      "scenario": "SQL_UI_360",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "candidateCommit": null,
+      "pass": true,
+      "source": {
+        "beforeSetSha256": "44aef75bde9c0c9ec228575bcae6f5f05ea9948b16083fc1585091b7bf86cc72",
+        "afterSetSha256": "44aef75bde9c0c9ec228575bcae6f5f05ea9948b16083fc1585091b7bf86cc72",
+        "fileCount": 232,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "bf3488c810eeb0c2d9195c23f96059fce641600de4f74d0c74a5b70bc2e4b551",
+          "src/app/globals.css": "6bb0d707ed464b2ff1ad42840d477adb4848d06e39fa03e9e8e513761b87f5de",
+          "src/app/pedido.css": "060f05fe4c6ab488581d685d1536f4c3afd6afee0a8230d64cdf863d02959a28",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "ccb495a21e577b1dca87c62d9f449db5e35bbe5c7a4f38e72f86359314f7ac37",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "steps": [
+        {
+          "name": "login-ui",
+          "at": "2026-11-25T04:39:47.980Z"
+        },
+        {
+          "name": "proposta-gerada",
+          "at": "2026-11-25T04:39:50.432Z",
+          "durationMs": 143
+        },
+        {
+          "name": "trilha-aceita",
+          "at": "2026-11-25T04:39:50.873Z",
+          "status": 200,
+          "progresso": {
+            "concluidas": 0,
+            "total": 5,
+            "percentual": 0
+          }
+        },
+        {
+          "name": "resposta-errada-e-feedback",
+          "at": "2026-11-25T04:39:53.145Z",
+          "status": 200
+        },
+        {
+          "name": "resposta-correta",
+          "at": "2026-11-25T04:39:53.586Z",
+          "status": 200
+        },
+        {
+          "name": "conclusao-confirmada-e-progresso1de5",
+          "at": "2026-11-25T04:39:54.574Z",
+          "status": 200,
+          "progresso": {
+            "concluidas": 1,
+            "total": 5,
+            "percentual": 20
+          }
+        },
+        {
+          "name": "sessao-e-progresso-restaurados",
+          "at": "2026-11-25T04:39:56.679Z"
+        },
+        {
+          "name": "retomada-na-licao2",
+          "at": "2026-11-25T04:39:57.113Z"
+        }
+      ],
+      "states": [
+        {
+          "state": "sql-proposta",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 680,
+              "width": 320,
+              "height": 52,
+              "bottom": 732,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-proposta-360.png"
+        },
+        {
+          "state": "sql-exercicio",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 732,
+              "width": 320,
+              "height": 52,
+              "bottom": 784,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-exercicio-360.png"
+        },
+        {
+          "state": "sql-feedback-erro",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 630.03125,
+              "width": 320,
+              "height": 52,
+              "bottom": 682.03125,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-feedback-erro-360.png"
+        },
+        {
+          "state": "sql-conclusao",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 680,
+              "width": 320,
+              "height": 52,
+              "bottom": 732,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-conclusao-360.png"
+        },
+        {
+          "state": "sql-retomada-inner-join",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "windowOffsets": {
+              "x": 0,
+              "y": 0
+            },
+            "overflow": false,
+            "primary": {
+              "x": 20,
+              "y": 732,
+              "width": 320,
+              "height": 52,
+              "bottom": 784,
+              "fontSize": "17px",
+              "lineHeight": "24px"
+            }
+          },
+          "screenshot": "capturas/sql-retomada-inner-join-360.png"
+        }
+      ],
+      "font200": {
+        "pedidoFont200": {
+          "before": {
+            "font": "30px",
+            "line": "36px"
+          },
+          "after": {
+            "font": "60px",
+            "line": "72px"
+          }
+        },
+        "exercicioFont200": {
+          "before": {
+            "font": "22px",
+            "line": "30px"
+          },
+          "after": {
+            "font": "44px",
+            "line": "60px"
+          }
+        }
+      },
+      "sqlContrast": {
+        "found": true,
+        "foreground": "rgb(237, 243, 255)",
+        "background": "rgb(21, 39, 91)",
+        "backgroundClass": "licao-codigo",
+        "ratio": 12.805904137645557
+      },
+      "pageErrorCount": 0,
+      "network": [
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/login"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/perfil"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/propostas/ao-vivo"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/avaliar"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/avaliar"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/estudio/licoes/:id"
+        },
+        {
+          "method": "POST",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id/concluir"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/sessao"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/auth/config"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/perfil"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/planos/:id"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "path": "/api/aprendizado/licoes/:id"
+        }
+      ],
+      "requestFailures": [
+        {
+          "method": "POST",
+          "error": "net::ERR_ABORTED",
+          "path": "/api/aprendizado/propostas/ao-vivo"
+        }
+      ],
+      "networkFaultInjected": false
+    }
+  ],
+  "finalFa4": {
+    "pinnedGoalAndProgress": {
+      "source": {
+        "beforeSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 235,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "cases": [
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "pass": true,
+          "states": [
+            {
+              "fontPercent": 100,
+              "asserts": {
+                "aboveNavigation": true,
+                "centerUnobstructed": true,
+                "pointerActionabilityTrial": true,
+                "noHorizontalOverflow": true,
+                "fieldFocused": false
+              },
+              "metrics": {
+                "viewport": {
+                  "width": 390,
+                  "height": 844
+                },
+                "windowOffsets": {
+                  "x": 0,
+                  "y": 0
+                },
+                "overflow": false,
+                "primary": {
+                  "x": 25,
+                  "y": 675,
+                  "width": 340,
+                  "height": 52,
+                  "bottom": 727,
+                  "fontSize": "17px",
+                  "lineHeight": "24px"
+                }
+              },
+              "screenshot": "capturas/pedido-390-100.png"
+            },
+            {
+              "fontPercent": 200,
+              "asserts": {
+                "aboveNavigation": true,
+                "centerUnobstructed": true,
+                "pointerActionabilityTrial": true,
+                "noHorizontalOverflow": true,
+                "fieldFocused": false
+              },
+              "metrics": {
+                "viewport": {
+                  "width": 390,
+                  "height": 844
+                },
+                "windowOffsets": {
+                  "x": 0,
+                  "y": 0
+                },
+                "overflow": false,
+                "primary": {
+                  "x": 25,
+                  "y": 501,
+                  "width": 340,
+                  "height": 124,
+                  "bottom": 625,
+                  "fontSize": "34px",
+                  "lineHeight": "48px"
+                }
+              },
+              "screenshot": "capturas/pedido-390-200.png"
+            }
+          ],
+          "progress": {
+            "x": 41,
+            "y": 343,
+            "width": 308,
+            "parentWidth": 350,
+            "gridColumn": "1 / -1",
+            "completed": 1,
+            "total": 5,
+            "usesNativeProgressElement": true
+          },
+          "retomadaScreenshot": "capturas/minhas-trilhas-progresso-390.png",
+          "pageErrorCount": 0
+        },
+        {
+          "viewport": {
+            "width": 360,
+            "height": 800
+          },
+          "pass": true,
+          "states": [
+            {
+              "fontPercent": 100,
+              "asserts": {
+                "aboveNavigation": true,
+                "centerUnobstructed": true,
+                "pointerActionabilityTrial": true,
+                "noHorizontalOverflow": true,
+                "fieldFocused": false
+              },
+              "metrics": {
+                "viewport": {
+                  "width": 360,
+                  "height": 800
+                },
+                "windowOffsets": {
+                  "x": 0,
+                  "y": 0
+                },
+                "overflow": false,
+                "primary": {
+                  "x": 25,
+                  "y": 631,
+                  "width": 310,
+                  "height": 52,
+                  "bottom": 683,
+                  "fontSize": "17px",
+                  "lineHeight": "24px"
+                }
+              },
+              "screenshot": "capturas/pedido-360-100.png"
+            },
+            {
+              "fontPercent": 200,
+              "asserts": {
+                "aboveNavigation": true,
+                "centerUnobstructed": true,
+                "pointerActionabilityTrial": true,
+                "noHorizontalOverflow": true,
+                "fieldFocused": false
+              },
+              "metrics": {
+                "viewport": {
+                  "width": 360,
+                  "height": 800
+                },
+                "windowOffsets": {
+                  "x": 0,
+                  "y": 0
+                },
+                "overflow": false,
+                "primary": {
+                  "x": 25,
+                  "y": 457,
+                  "width": 310,
+                  "height": 124,
+                  "bottom": 581,
+                  "fontSize": "34px",
+                  "lineHeight": "48px"
+                }
+              },
+              "screenshot": "capturas/pedido-360-200.png"
+            }
+          ],
+          "progress": {
+            "x": 41,
+            "y": 367,
+            "width": 278,
+            "parentWidth": 320,
+            "gridColumn": "1 / -1",
+            "completed": 1,
+            "total": 5,
+            "usesNativeProgressElement": true
+          },
+          "retomadaScreenshot": "capturas/minhas-trilhas-progresso-360.png",
+          "pageErrorCount": 0
+        }
+      ]
+    },
+    "goal200RealKeyboardAndGeneration": {
+      "source": {
+        "beforeSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 235,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "cases": [
+        {
+          "viewportWidth": 390,
+          "pass": true,
+          "focusVisible": true,
+          "active": true,
+          "centerUnobstructed": true,
+          "pageErrorCount": 0,
+          "requestFailures": [
+            {
+              "method": "POST",
+              "error": "net::ERR_ABORTED",
+              "path": "/api/aprendizado/propostas/ao-vivo"
+            }
+          ]
+        },
+        {
+          "viewportWidth": 360,
+          "pass": true,
+          "focusVisible": true,
+          "active": true,
+          "centerUnobstructed": true,
+          "pageErrorCount": 0,
+          "requestFailures": [
+            {
+              "method": "POST",
+              "error": "net::ERR_ABORTED",
+              "path": "/api/aprendizado/propostas/ao-vivo"
+            }
+          ]
+        }
+      ]
+    },
+    "navbar200": {
+      "source": {
+        "beforeSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 235,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "states": [
+        {
+          "state": "01-normal-planos",
+          "rootFont": "16px",
+          "documentWidth": 360,
+          "navRect": {
+            "x": 16,
+            "y": 704,
+            "width": 328,
+            "height": 80,
+            "right": 344,
+            "bottom": 784
+          },
+          "buttons": [
+            {
+              "rect": {
+                "x": 20,
+                "y": 708,
+                "width": 80,
+                "height": 72,
+                "right": 100,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 38,
+                "y": 714,
+                "width": 43.984375,
+                "height": 60,
+                "right": 81.984375,
+                "bottom": 774
+              },
+              "fontSize": "13px",
+              "lineHeight": "17px"
+            },
+            {
+              "rect": {
+                "x": 100,
+                "y": 708,
+                "width": 80,
+                "height": 72,
+                "right": 180,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 123.296875,
+                "y": 714,
+                "width": 33.40625,
+                "height": 60,
+                "right": 156.703125,
+                "bottom": 774
+              },
+              "fontSize": "13px",
+              "lineHeight": "17px"
+            },
+            {
+              "rect": {
+                "x": 180,
+                "y": 708,
+                "width": 80,
+                "height": 72,
+                "right": 260,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 193.5625,
+                "y": 714,
+                "width": 52.875,
+                "height": 43,
+                "right": 246.4375,
+                "bottom": 757
+              },
+              "fontSize": "13px",
+              "lineHeight": "17px"
+            },
+            {
+              "rect": {
+                "x": 260,
+                "y": 708,
+                "width": 80,
+                "height": 72,
+                "right": 340,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 283.078125,
+                "y": 714,
+                "width": 33.828125,
+                "height": 43,
+                "right": 316.90625,
+                "bottom": 757
+              },
+              "fontSize": "13px",
+              "lineHeight": "17px"
+            }
+          ]
+        },
+        {
+          "state": "02-200-planos",
+          "rootFont": "32px",
+          "documentWidth": 360,
+          "navRect": {
+            "x": 16,
+            "y": 602,
+            "width": 328,
+            "height": 182,
+            "right": 344,
+            "bottom": 784
+          },
+          "buttons": [
+            {
+              "rect": {
+                "x": 20,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 100,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 26.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 162,
+                "right": 93.390625,
+                "bottom": 774
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 100,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 180,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 106.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 94,
+                "right": 173.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 180,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 260,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 192.59375,
+                "y": 612,
+                "width": 54.796875,
+                "height": 94,
+                "right": 247.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 260,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 340,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 266.171875,
+                "y": 612,
+                "width": 67.65625,
+                "height": 60,
+                "right": 333.828125,
+                "bottom": 672
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            }
+          ]
+        },
+        {
+          "state": "03-200-pedido",
+          "rootFont": "32px",
+          "documentWidth": 360,
+          "navRect": {
+            "x": 16,
+            "y": 602,
+            "width": 328,
+            "height": 182,
+            "right": 344,
+            "bottom": 784
+          },
+          "buttons": [
+            {
+              "rect": {
+                "x": 20,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 100,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 26.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 162,
+                "right": 93.390625,
+                "bottom": 774
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 100,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 180,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 106.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 94,
+                "right": 173.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 180,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 260,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 192.59375,
+                "y": 612,
+                "width": 54.796875,
+                "height": 94,
+                "right": 247.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 260,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 340,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 266.171875,
+                "y": 612,
+                "width": 67.65625,
+                "height": 60,
+                "right": 333.828125,
+                "bottom": 672
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            }
+          ]
+        },
+        {
+          "state": "03-200-explorar",
+          "rootFont": "32px",
+          "documentWidth": 360,
+          "navRect": {
+            "x": 16,
+            "y": 602,
+            "width": 328,
+            "height": 182,
+            "right": 344,
+            "bottom": 784
+          },
+          "buttons": [
+            {
+              "rect": {
+                "x": 20,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 100,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 26.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 162,
+                "right": 93.390625,
+                "bottom": 774
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 100,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 180,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 106.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 94,
+                "right": 173.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 180,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 260,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 192.59375,
+                "y": 612,
+                "width": 54.796875,
+                "height": 94,
+                "right": 247.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 260,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 340,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 266.171875,
+                "y": 612,
+                "width": 67.65625,
+                "height": 60,
+                "right": 333.828125,
+                "bottom": 672
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            }
+          ]
+        },
+        {
+          "state": "03-200-perfil",
+          "rootFont": "32px",
+          "documentWidth": 360,
+          "navRect": {
+            "x": 16,
+            "y": 602,
+            "width": 328,
+            "height": 182,
+            "right": 344,
+            "bottom": 784
+          },
+          "buttons": [
+            {
+              "rect": {
+                "x": 20,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 100,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 26.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 162,
+                "right": 93.390625,
+                "bottom": 774
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 100,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 180,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 106.59375,
+                "y": 612,
+                "width": 66.796875,
+                "height": 94,
+                "right": 173.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 180,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 260,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 192.59375,
+                "y": 612,
+                "width": 54.796875,
+                "height": 94,
+                "right": 247.390625,
+                "bottom": 706
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            },
+            {
+              "rect": {
+                "x": 260,
+                "y": 606,
+                "width": 80,
+                "height": 174,
+                "right": 340,
+                "bottom": 780
+              },
+              "textRange": {
+                "x": 266.171875,
+                "y": 612,
+                "width": 67.65625,
+                "height": 60,
+                "right": 333.828125,
+                "bottom": 672
+              },
+              "fontSize": "26px",
+              "lineHeight": "34px"
+            }
+          ]
+        }
+      ],
+      "screenshot": "capturas/navbar-200-planos-360.png",
+      "pairing": "Only360px was executed for this specific navbar200 series; no390px pair is fabricated.",
+      "pageErrorCount": 0
+    },
+    "configuration": {
+      "candidateBefore": "fa4be429992037cdaa1be055f52be6a529d32f76",
+      "candidateAfter": "fa4be429992037cdaa1be055f52be6a529d32f76",
+      "source": {
+        "beforeSetSha256": "c9a2b00b5f39011d76cc6035d81f51905b6e3c2f028a74de5eedc5fd0307d8e4",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 232,
+        "stable": false,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "cases": [
+        {
+          "case": 1,
+          "description": "Dois blurs rápidos no mesmo campo, primeira resposta retida",
+          "pass": true,
+          "requestCount": 2,
+          "requests": [
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            },
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            }
+          ]
+        },
+        {
+          "case": 2,
+          "description": "Campos distintos conservam os valores durante respostas completas",
+          "pass": true,
+          "requestCount": 2,
+          "requests": [
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            },
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            }
+          ]
+        },
+        {
+          "case": 3,
+          "description": "Trocar de trilha na UI antes do ack preserva destino da intenção em fila e trilha nova",
+          "pass": true,
+          "requestCount": 2,
+          "requests": [
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            },
+            {
+              "method": "PATCH",
+              "status": 200,
+              "path": "/api/aprendizado/planos/:id/configuracoes"
+            }
+          ]
+        }
+      ],
+      "pageErrorCount": 0,
+      "requestFailures": [],
+      "screenshots": [
+        "capturas/configuracoes-390.png",
+        "capturas/menu-cartao-proprio-390.png",
+        "capturas/configuracoes-360.png",
+        "capturas/menu-cartao-proprio-360.png"
+      ],
+      "accessChecks": [
+        {
+          "kind": "own-account",
+          "path": "/api/aprendizado/planos/:id/configuracoes",
+          "status": 200
+        },
+        {
+          "kind": "own-account",
+          "path": "/api/aprendizado/planos/:id/configuracoes",
+          "status": 200
+        },
+        {
+          "kind": "anonymous-own-fixture",
+          "path": "/api/aprendizado/planos/:id/configuracoes",
+          "status": 401
+        },
+        {
+          "kind": "nonexistent-fixture",
+          "path": "/api/aprendizado/planos/:id/configuracoes",
+          "status": 404
+        }
+      ]
+    },
+    "ownPlanMenu": {
+      "source": {
+        "beforeSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 235,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "pointerChecks": [
+        {
+          "width": 390,
+          "pass": true,
+          "action": "pointer click"
+        },
+        {
+          "width": 390,
+          "pass": true,
+          "action": "pointer click"
+        },
+        {
+          "width": 360,
+          "pass": true,
+          "action": "pointer click"
+        },
+        {
+          "width": 360,
+          "pass": true,
+          "action": "pointer click"
+        }
+      ],
+      "keyboardChecks": [
+        {
+          "viewportWidth": 390,
+          "pass": true,
+          "paths": [
+            {
+              "action": "open",
+              "firstItemFocused": true
+            },
+            {
+              "action": "End",
+              "lastItemFocused": true
+            },
+            {
+              "action": "Home",
+              "firstItemFocused": true
+            },
+            {
+              "action": "ArrowUp",
+              "wrapToLast": true
+            },
+            {
+              "action": "ArrowDown",
+              "wrapToFirst": true
+            },
+            {
+              "action": "Escape",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "Tab",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "Shift+Tab",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "outside pointer click on Perfil navigation",
+              "closed": true,
+              "focusReturnedToSummary": true,
+              "sameActionDidNotNavigate": true
+            }
+          ]
+        },
+        {
+          "viewportWidth": 360,
+          "pass": true,
+          "paths": [
+            {
+              "action": "open",
+              "firstItemFocused": true
+            },
+            {
+              "action": "End",
+              "lastItemFocused": true
+            },
+            {
+              "action": "Home",
+              "firstItemFocused": true
+            },
+            {
+              "action": "ArrowUp",
+              "wrapToLast": true
+            },
+            {
+              "action": "ArrowDown",
+              "wrapToFirst": true
+            },
+            {
+              "action": "Escape",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "Tab",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "Shift+Tab",
+              "closed": true,
+              "focusReturnedToSummary": true
+            },
+            {
+              "action": "outside pointer click on Perfil navigation",
+              "closed": true,
+              "focusReturnedToSummary": true,
+              "sameActionDidNotNavigate": true
+            }
+          ]
+        }
+      ],
+      "pageErrorCount": 0
+    },
+    "publicPublicationMenu": {
+      "candidate": "fa4be429992037cdaa1be055f52be6a529d32f76",
+      "sourceStable": true,
+      "sources": [
+        {
+          "file": "src/app/seguranca-comunidade.tsx",
+          "observedBefore": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "observedAfter": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "frozenSha256": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "exactMatch": true
+        },
+        {
+          "file": "src/app/comunidade.tsx",
+          "observedBefore": "70e35902dff22f24144ea52d04c9124e87670805a5700339f7803e902563bb70",
+          "observedAfter": "70e35902dff22f24144ea52d04c9124e87670805a5700339f7803e902563bb70",
+          "frozenSha256": "70e35902dff22f24144ea52d04c9124e87670805a5700339f7803e902563bb70",
+          "exactMatch": true
+        },
+        {
+          "file": "src/app/comunidade.css",
+          "observedBefore": "46f39e6c56036988126f5e3e8171b92ad071152677db9d8e9f18a28830d5aa31",
+          "observedAfter": "46f39e6c56036988126f5e3e8171b92ad071152677db9d8e9f18a28830d5aa31",
+          "frozenSha256": "46f39e6c56036988126f5e3e8171b92ad071152677db9d8e9f18a28830d5aa31",
+          "exactMatch": true
+        },
+        {
+          "file": "src/app/globals.css",
+          "observedBefore": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "observedAfter": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "frozenSha256": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "exactMatch": true
+        }
+      ],
+      "cases": [
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "pass": true,
+          "firstFocused": true,
+          "arrows": [
+            {
+              "key": "End",
+              "expectedFocused": true
+            },
+            {
+              "key": "Home",
+              "expectedFocused": true
+            },
+            {
+              "key": "ArrowUp",
+              "expectedFocused": true
+            },
+            {
+              "key": "ArrowDown",
+              "expectedFocused": true
+            }
+          ],
+          "exits": [
+            {
+              "key": "Tab",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            },
+            {
+              "key": "Shift+Tab",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            },
+            {
+              "key": "Escape",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            }
+          ],
+          "outsideClosed": true,
+          "actionsSubmitted": false,
+          "screenshot": "capturas/menu-publicacao-390.png"
+        },
+        {
+          "viewport": {
+            "width": 360,
+            "height": 800
+          },
+          "pass": true,
+          "firstFocused": true,
+          "arrows": [
+            {
+              "key": "End",
+              "expectedFocused": true
+            },
+            {
+              "key": "Home",
+              "expectedFocused": true
+            },
+            {
+              "key": "ArrowUp",
+              "expectedFocused": true
+            },
+            {
+              "key": "ArrowDown",
+              "expectedFocused": true
+            }
+          ],
+          "exits": [
+            {
+              "key": "Tab",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            },
+            {
+              "key": "Shift+Tab",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            },
+            {
+              "key": "Escape",
+              "closed": true,
+              "focusRestored": true,
+              "expanded": "false"
+            }
+          ],
+          "outsideClosed": true,
+          "actionsSubmitted": false,
+          "screenshot": "capturas/menu-publicacao-360.png"
+        }
+      ],
+      "pageErrorCount": 0
+    },
+    "confirmation": {
+      "source": {
+        "beforeSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "afterSetSha256": "0fa86e6654012594919939422f17d06104ea114038e9420c43c7808263ebaa28",
+        "fileCount": 235,
+        "stable": true,
+        "selectedAfterSha256": {
+          "src/app/estudo.tsx": "c7d653ab02c4b261ba985d9549597a5e2b3da666d999dc6dee2cbce3fbb1920c",
+          "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+          "src/app/pedido.css": "46d6b0e6f0e1fcb9c6317616245741490c0f069c596273b1e0f7ce3e2356186a",
+          "src/app/aula.css": "797448fb022b9c4580c25762c07ab475c35f6c0933a051ccb27bbe39286cff02",
+          "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+          "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+          "src/app/configuracoes.tsx": "b3b8afbdb911f245fba8a367bd1528ad6e94c9062afcf804bca322b306a68fdc",
+          "src/app/seguranca-comunidade.tsx": "8d16c582f9927d52e7fe10c9eee6695d8dac79c6e45ee3bdbec79632fabd1a4b",
+          "src/ui/caminho.tsx": "8eaf6a0c055feab78305a03c698c77193396ca68f9022a3e40c317e1e396b4a1",
+          "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7"
+        }
+      },
+      "cases": [
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "initialSafeFocus": true,
+          "safeFocusAfterScale": true,
+          "forwardWrap": true,
+          "backwardWrap": true,
+          "focusReturned": true,
+          "safeFocusOnReopen": true,
+          "allDisabled": true,
+          "busyRemains": true,
+          "busyFocusInside": true,
+          "photoPreserved": true,
+          "interceptedDeletes": 1,
+          "forwardedDeletes": 0,
+          "injectedHttp": 503,
+          "pass": true,
+          "screenshot": "capturas/confirmacao-200-390.png"
+        },
+        {
+          "viewport": {
+            "width": 360,
+            "height": 800
+          },
+          "initialSafeFocus": true,
+          "safeFocusAfterScale": true,
+          "forwardWrap": true,
+          "backwardWrap": true,
+          "focusReturned": true,
+          "safeFocusOnReopen": true,
+          "allDisabled": true,
+          "busyRemains": true,
+          "busyFocusInside": true,
+          "photoPreserved": true,
+          "interceptedDeletes": 1,
+          "forwardedDeletes": 0,
+          "injectedHttp": 503,
+          "pass": true,
+          "screenshot": "capturas/confirmacao-200-360.png"
+        }
+      ],
+      "pageErrorCount": 0,
+      "requestFailures": [],
+      "noticeActiveAtOpeningProved": null,
+      "note": "First active music notice withmodal was only tested later inR2; do not infer that from theseFA4 captures."
+    }
+  },
+  "r2Equivalence": {
+    "candidate": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "runtimeDeltaFromFa4": [
+      "apps/mobile/src/licao.tsx",
+      "src/app/aula.css",
+      "src/ui/aviso.css"
+    ],
+    "remainingTrackedRuntimeFilesIdenticalWithin": [
+      "src",
+      "apps/mobile",
+      "packages"
+    ],
+    "focalR2Results": "Separate R2PUBLICAVEL package; not rerun or copied asFA4.",
+    "newQaExecutedForThisPackagingTask": false
+  },
+  "limitations": [
+    "FullSQL is historical before the final isolatedCTA/menu/progress changes; affected controls were retested atfa4.",
+    "All44component families, complete parity, native accessibility, audio output and people testing remain unevaluated by this package.",
+    "Only the declared states/viewports were executed; Config and ownMenu360captures use844px height, unlike SQL360×800.",
+    "Twelve paired states and one supplementary360-only navbar capture are included.",
+    "Request errors are retained as method/path/error; deliberate network fault, aborted NDJSON afterready and navigation aborts prevent claiming all requests succeeded.",
+    "Previous heuristic primary-outside-viewport at200was not by itself an access failure: realTab/click and finalpin were tested separately.",
+    "Raw private reports, provisioning, scripts, credentials, session material and setup-photo files are excluded."
+  ],
+  "sanitization": {
+    "strategy": "explicit whitelist rebuilt from records; no raw report copied",
+    "networkFields": [
+      "method",
+      "path",
+      "status",
+      "error"
+    ],
+    "dynamicPathsTemplated": true,
+    "requestResponseBodiesIncluded": false,
+    "authenticationMaterialIncluded": false,
+    "personalAccountIdentifiersIncluded": false
+  },
+  "artifacts": [
+    {
+      "path": "capturas/sql-proposta-390.png",
+      "state": "sql-proposta",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "12073cd1927a4da4ea85f926a1f14049f4fd7fc19a446467c20639eb995b75b7",
+      "bytes": 64370
+    },
+    {
+      "path": "capturas/sql-exercicio-390.png",
+      "state": "sql-exercicio",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "441140b4ba1146663d4e6a6382898141400b39318db3294f53bf37b3741c6544",
+      "bytes": 54933
+    },
+    {
+      "path": "capturas/sql-feedback-erro-390.png",
+      "state": "sql-feedback-erro",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "ad5bc738a39a07b23a780d879794ac01ad32d14aa10c14bb8f5652e100f60de5",
+      "bytes": 71731
+    },
+    {
+      "path": "capturas/sql-conclusao-390.png",
+      "state": "sql-conclusao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "26fee61bd05cf6ce57a1d599945fdf68a97a98967f6c41c8d850c4bcfa7fa8cb",
+      "bytes": 70295
+    },
+    {
+      "path": "capturas/sql-retomada-inner-join-390.png",
+      "state": "sql-retomada-inner-join",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "16cd76cb15627c3aedbfd3d9807bbbeb3344a35171560bd684a9db31b281100d",
+      "bytes": 47173
+    },
+    {
+      "path": "capturas/sql-proposta-360.png",
+      "state": "sql-proposta",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "6919798ecca9d31f59765866feac5a4fb34db3ddcaa8b10b5c2c1c2d51090a7e",
+      "bytes": 62451
+    },
+    {
+      "path": "capturas/sql-exercicio-360.png",
+      "state": "sql-exercicio",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "e42d61b756978eb54bed51db119323220f439a443d11a8a33a18583a4a1c6891",
+      "bytes": 50655
+    },
+    {
+      "path": "capturas/sql-feedback-erro-360.png",
+      "state": "sql-feedback-erro",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "022a52ec23b957932d47d524db814736cf0e9d44dc8eb188a4103f4b7892727c",
+      "bytes": 66551
+    },
+    {
+      "path": "capturas/sql-conclusao-360.png",
+      "state": "sql-conclusao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "4a17952291975c01a0a5dc16d5fed41d9e49fd8804ca32e55e988b3978d35a66",
+      "bytes": 64216
+    },
+    {
+      "path": "capturas/sql-retomada-inner-join-360.png",
+      "state": "sql-retomada-inner-join",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "historical_complete_sql_before_final_freeze",
+      "sha256": "d423383782b4edd603a181d247a9645c7e13103606892f0ef914ebcd10f7e050",
+      "bytes": 46794
+    },
+    {
+      "path": "capturas/pedido-390-100.png",
+      "state": "pedido-100",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "7db1e7963180ce8cd71d2750880cbfb57d75aeda33096d5cfd1057669ac74e6b",
+      "bytes": 64214
+    },
+    {
+      "path": "capturas/pedido-390-200.png",
+      "state": "pedido-200",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "dfa479b0aaec5b4228cdc15b4ff058b18489dbcd26210578b4ecc12efca6e78a",
+      "bytes": 57759
+    },
+    {
+      "path": "capturas/minhas-trilhas-progresso-390.png",
+      "state": "minhas-trilhas-progresso",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "d8b652cea92f89ac34113ed40a6e77c1da5eadfc7812dc704c2bfc3da4d5d069",
+      "bytes": 50398
+    },
+    {
+      "path": "capturas/pedido-360-100.png",
+      "state": "pedido-100",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "1fa563ad82af456245e703a1d1bf092a7a6f9d932e0d33ca2ca58a449b60f7d1",
+      "bytes": 62919
+    },
+    {
+      "path": "capturas/pedido-360-200.png",
+      "state": "pedido-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "a53797567bbae02fff40fa78cf3381f831d0fe43aa9f8ec6fdd135b6f57ab33b",
+      "bytes": 53796
+    },
+    {
+      "path": "capturas/minhas-trilhas-progresso-360.png",
+      "state": "minhas-trilhas-progresso",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "0dbcf9ef326e0d75e11c9ab769db50e8e99ade5ad078889a157e9b1369e42245",
+      "bytes": 49189
+    },
+    {
+      "path": "capturas/navbar-200-planos-360.png",
+      "state": "navbar-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "041838b1378420f6e9ca75ad4aec1d877eb11f7a1bb6917e0dc6c889adb22720",
+      "bytes": 73722
+    },
+    {
+      "path": "capturas/configuracoes-390.png",
+      "state": "configuracoes",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "86aebff6cffb7ebd607570980511c330c6e874da1a0d957df90913195fa9a9a1",
+      "bytes": 73798
+    },
+    {
+      "path": "capturas/menu-cartao-proprio-390.png",
+      "state": "menu-cartao-proprio",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "e5eda8cc3063dc2fbb20da9d82f6ba94cba18d0382f4f2e1a20d8f40ea3b7906",
+      "bytes": 70037
+    },
+    {
+      "path": "capturas/configuracoes-360.png",
+      "state": "configuracoes",
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "41b11e61ef0c1fa10320dbaca68d97c97d18c1fbf919c1e5fd45a49e27f51966",
+      "bytes": 69490
+    },
+    {
+      "path": "capturas/menu-cartao-proprio-360.png",
+      "state": "menu-cartao-proprio",
+      "viewport": {
+        "width": 360,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "c8754f1a6b8450bfdbbaaf2204ebab214e6d5ea3af13c59264e2c72755f8b942",
+      "bytes": 67450
+    },
+    {
+      "path": "capturas/menu-publicacao-390.png",
+      "state": "menu-publicacao",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "00a95beb30d4c0f3a5719539de3d9983a16d9394b881829a1542f542a0ccb6ea",
+      "bytes": 96740
+    },
+    {
+      "path": "capturas/menu-publicacao-360.png",
+      "state": "menu-publicacao",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 100,
+      "evidencePhase": "final_fa4",
+      "sha256": "7826fb1c0a66ad2e7adecdd5940030e059a09f75920b49f8fb1310bf1b1adc9f",
+      "bytes": 84504
+    },
+    {
+      "path": "capturas/confirmacao-200-390.png",
+      "state": "confirmacao-200",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "8e73b6cca2764624fbf1b625a5e5b7d767553462aa646ee3434c7ea96fc8ff9b",
+      "bytes": 56515
+    },
+    {
+      "path": "capturas/confirmacao-200-360.png",
+      "state": "confirmacao-200",
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "fontPercent": 200,
+      "evidencePhase": "final_fa4",
+      "sha256": "f4b76d64fa31e421de04ae9475a2ccaea09f3a4af92349c578a58d86ca8de0c5",
+      "bytes": 51068
+    }
+  ]
+}

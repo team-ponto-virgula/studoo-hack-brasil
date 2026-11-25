@@ -1,0 +1,308 @@
+{
+  "sources": {
+    "fa4": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "r2": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3"
+  },
+  "files": [
+    {
+      "file": "PARECER-RNWEB.md",
+      "bytes": 3316,
+      "sha256": "49a705d66fe16af01e4882197e0796322b31fff46735d001ed49b6f132dca752"
+    },
+    {
+      "file": "avaliacao.json",
+      "bytes": 1144,
+      "sha256": "36c430ac8273d72c1d4ec40c7adc252b97032f1e91b2b86d807ade8be80baf70"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-acerto-360.png",
+      "bytes": 58505,
+      "sha256": "a0a9f80221d1b79a01bbf801e863fa53f04104bc0539c18bc4c2b3244a1a2e36"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-acerto-390.png",
+      "bytes": 64376,
+      "sha256": "5be001e15dd4d5cc2477b70ba859e5c76c3755b67f521bfdc6ed9a32008c88ef"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-conceito-360.png",
+      "bytes": 51202,
+      "sha256": "0067373072ca51cd5a0033bffc954e216f22fcfb7ff4fee968995337724e8339"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-conceito-390.png",
+      "bytes": 51173,
+      "sha256": "b3cfc73acd734130fc65e37887855f71d661b9a123ef60a393d6afa13cdf7631"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-erro-360.png",
+      "bytes": 64850,
+      "sha256": "b0ad9dd70da38e1c99fa8535b80a44ef54234142380fcee8b81212f884ca8842"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-erro-390.png",
+      "bytes": 67826,
+      "sha256": "00f6dffc233ebaf271760d92dcb4b269b3e16ce56427b0569e6db526f7cf6ec7"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-exemplo-360.png",
+      "bytes": 38046,
+      "sha256": "0186073c95b2c3f3b5f7a23a12d7337469a27fd7de8fad1a57b9693b60c9696b"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-exemplo-390.png",
+      "bytes": 38742,
+      "sha256": "e632b0e31597d954a44034628d87403475477d77f31e96fb6a8f6ca009968037"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-exercicio-360.png",
+      "bytes": 48381,
+      "sha256": "329bda00414e4f389ca16861d3cc3eed5209f8f50fc02dae333c66a9459efed4"
+    },
+    {
+      "file": "capturas/fa4/rnweb-aula-exercicio-390.png",
+      "bytes": 54592,
+      "sha256": "2ca97c31f8532a416c37f82511234e271e80b0def8b99fdee269c1653a5b7b75"
+    },
+    {
+      "file": "capturas/fa4/rnweb-conclusao-360.png",
+      "bytes": 65180,
+      "sha256": "7f3fe999ebeaf5a616ef49ccd9dfca2a545ea88eb6f71b1a05f5e9f76cebb41a"
+    },
+    {
+      "file": "capturas/fa4/rnweb-conclusao-390.png",
+      "bytes": 70923,
+      "sha256": "54420ac5a4a1d26bc7550a1c22617d16a6c6b2264f4b7849c0497201ada77172"
+    },
+    {
+      "file": "capturas/fa4/rnweb-confirmacao-entrar-360.png",
+      "bytes": 56250,
+      "sha256": "553a2efd231927d65e53e344ee61a0e49ad9100422c2d97cf7ec6d8268dddef3"
+    },
+    {
+      "file": "capturas/fa4/rnweb-confirmacao-entrar-390.png",
+      "bytes": 63918,
+      "sha256": "64ba9f898779f531039440b45168de9592ccf874efaa08acb067ba2b5ae1775c"
+    },
+    {
+      "file": "capturas/fa4/rnweb-entrada-360.png",
+      "bytes": 54018,
+      "sha256": "a39ce048a5fade1bb03b742ce2d37f992c0089954dfc2e8a1dcda4ade6d29fac"
+    },
+    {
+      "file": "capturas/fa4/rnweb-entrada-390.png",
+      "bytes": 53422,
+      "sha256": "a3ca80e19cfac0a8c098d8a3e9a265564c2aa3ced222f900e535b11064f85a7c"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explique-360.png",
+      "bytes": 51274,
+      "sha256": "a3af4b04f2534438b32c56792482152ce7695deb3e684d683bc61d215e6e23f0"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explique-390.png",
+      "bytes": 58018,
+      "sha256": "14e1b8472cd45b169c09bdcf91b46c09c57e100e24678d72d23a32ca7527dfa8"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explique-retorno-360.png",
+      "bytes": 59090,
+      "sha256": "fe3b43478c5c75bbe72ebdaaaf9a47ac91e0634a85531072a5f2df1413babe14"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explique-retorno-390.png",
+      "bytes": 65889,
+      "sha256": "77c04231b55d97910e89d08fc63af30925289f76d82f5fb3199b9993945ce961"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explorar-360.png",
+      "bytes": 81529,
+      "sha256": "3097771cb8334846210c306f336bbecfb41d554a6456d1a9b12c9726744027ce"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explorar-390.png",
+      "bytes": 89410,
+      "sha256": "79cad405861759f56b8e709a936b4ab00fe61a3abf3718349f782d9dcc3ecfbd"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explorar-seguindo-visitante-360.png",
+      "bytes": 66275,
+      "sha256": "1bd153c01a7f54c6dbe2ea5278d027b046f2537ea02d82a6c6c34eaeb419c781"
+    },
+    {
+      "file": "capturas/fa4/rnweb-explorar-seguindo-visitante-390.png",
+      "bytes": 67251,
+      "sha256": "5e055ff2211e11ba12c347e551a37fa5a4eb5383390c06eb0e45606bcc4803ea"
+    },
+    {
+      "file": "capturas/fa4/rnweb-inicio-retomada-360.png",
+      "bytes": 48855,
+      "sha256": "67788453d63babb8892f55c1deb95a3e1404dad1b5d5809635a63e80ee9c42f8"
+    },
+    {
+      "file": "capturas/fa4/rnweb-inicio-retomada-390.png",
+      "bytes": 49283,
+      "sha256": "fa41d76bade7d2763688eb204bc3d7739ef4ba34adf6857834c9b71ccfaf07df"
+    },
+    {
+      "file": "capturas/fa4/rnweb-mapa-progresso-360.png",
+      "bytes": 77581,
+      "sha256": "fb70ad368b529b0622395e103a216e597ab6c346dc9e5c494f984edbb0741d3a"
+    },
+    {
+      "file": "capturas/fa4/rnweb-mapa-progresso-390.png",
+      "bytes": 80553,
+      "sha256": "a0090e9bc29b0852d0f7ad147b1134e6c7094ba10666689a63d972984f367c53"
+    },
+    {
+      "file": "capturas/fa4/rnweb-pedido-360.png",
+      "bytes": 62811,
+      "sha256": "7024b0e55bd0daefa5453916fa561280f819692770eaff5e65f9d724b9281d49"
+    },
+    {
+      "file": "capturas/fa4/rnweb-pedido-390.png",
+      "bytes": 63850,
+      "sha256": "ca226f2152f04d316ad78accab94700ab7ffdaa16b4921d9fa3550c24eea1388"
+    },
+    {
+      "file": "capturas/fa4/rnweb-perfil-publico-360.png",
+      "bytes": 85182,
+      "sha256": "7bf164908c7d6e19fa4fec2057087b0ca8d3416cb3937a18f44526fc3267c875"
+    },
+    {
+      "file": "capturas/fa4/rnweb-perfil-publico-390.png",
+      "bytes": 91284,
+      "sha256": "0cc8517814cc999d75a61abdd12477c9a9f0ea2f677e025b3524f31fa1af80b9"
+    },
+    {
+      "file": "capturas/fa4/rnweb-perfil-visitante-360.png",
+      "bytes": 49812,
+      "sha256": "fb3ecd4ff3179b046b2fb971e516d0692ca5a8b94645181781240d89939cbc2b"
+    },
+    {
+      "file": "capturas/fa4/rnweb-perfil-visitante-390.png",
+      "bytes": 57506,
+      "sha256": "e2f011f2512849369a8ed48bdb74809ffbc246f15db30cb32d197c5e70151769"
+    },
+    {
+      "file": "capturas/fa4/rnweb-previa-publica-360.png",
+      "bytes": 70528,
+      "sha256": "130d1eb0edfa715c554ad86c835a2ab7e60997d76b9c190c1217488cbaa435aa"
+    },
+    {
+      "file": "capturas/fa4/rnweb-previa-publica-390.png",
+      "bytes": 74322,
+      "sha256": "937bcf0643b14d8a8325300fba0f227b2d9220b22f27eaaddf53130eef136172"
+    },
+    {
+      "file": "capturas/fa4/rnweb-proposta-360.png",
+      "bytes": 67004,
+      "sha256": "154e7e894cb6cbb04669e6fb9af6b4fc392240bbc10b3f724f058c65983210be"
+    },
+    {
+      "file": "capturas/fa4/rnweb-proposta-390.png",
+      "bytes": 69809,
+      "sha256": "27c23135e76381ff291f9f78beece66ea41fb82d758cf31ec4c5fa0d91005801"
+    },
+    {
+      "file": "capturas/fa4/rnweb-reforco-360.png",
+      "bytes": 46651,
+      "sha256": "795ffe3e599b4fd14285ddda11278ea293b83926c67aa5ca9dd395cf504c9323"
+    },
+    {
+      "file": "capturas/fa4/rnweb-reforco-390.png",
+      "bytes": 47381,
+      "sha256": "d8397986bc6c5debc4c88354865e94cc514122c3afa63ffdd8db914309bfe41b"
+    },
+    {
+      "file": "capturas/fa4/rnweb-retomada-proxima-licao-360.png",
+      "bytes": 48822,
+      "sha256": "318ebd27b146155d0ee29b21a45358e59e2c57a27cd3afcc16d7ad3379d680c9"
+    },
+    {
+      "file": "capturas/fa4/rnweb-retomada-proxima-licao-390.png",
+      "bytes": 49136,
+      "sha256": "73b81ea1dd32ceebdaa17988cc54dcfd0b73c4dcb12d4428c5e9260e308b0b17"
+    },
+    {
+      "file": "capturas/fa4/rnweb-retomada-reload-360.png",
+      "bytes": 77691,
+      "sha256": "1085b0f273695df7ceadd2e82fd2f2a18908df32ab0c8e885bb8d54f73a8a45d"
+    },
+    {
+      "file": "capturas/fa4/rnweb-retomada-reload-390.png",
+      "bytes": 80695,
+      "sha256": "bca45319356296a01aa3773c594671ed87389d9219b8b59ac94fb4c6fde908a8"
+    },
+    {
+      "file": "capturas/r2/rnweb-aula-acerto-360.png",
+      "bytes": 58574,
+      "sha256": "96323fc3e76f5fa3c0b9a4ffab84806d941ae15c17cf4939e63bbe384d8cff3d"
+    },
+    {
+      "file": "capturas/r2/rnweb-aula-acerto-390.png",
+      "bytes": 64441,
+      "sha256": "22f3491f1a90a3a63c40425bd2a4aaf6f2a4f8b581085c7a86ed32cbe3ff1bb4"
+    },
+    {
+      "file": "capturas/r2/rnweb-conclusao-360.png",
+      "bytes": 63819,
+      "sha256": "462a0723b3d30a836daa967d2c83615b9d46420fdf510f225dc47d85f6497536"
+    },
+    {
+      "file": "capturas/r2/rnweb-conclusao-390.png",
+      "bytes": 64703,
+      "sha256": "35edc0262066ae98c0a2aa8b8c503c3eeec18344bd43ca00043cb83688f0869f"
+    },
+    {
+      "file": "capturas/r2/rnweb-explique-retorno-360.png",
+      "bytes": 56208,
+      "sha256": "411229167ae78854f3af28bf99b661c0fea1ca61b608c22df583fdba63a24e69"
+    },
+    {
+      "file": "capturas/r2/rnweb-explique-retorno-390.png",
+      "bytes": 59439,
+      "sha256": "f8787bd1204dab2a1116d797b3c463ecf0d95bc7c8ec53cca43261fc84226ee1"
+    },
+    {
+      "file": "capturas/r2/rnweb-retomada-reload-360.png",
+      "bytes": 81036,
+      "sha256": "061e7ca4b54c65f024d2d839e1f9aafb976a6b925a0c7dd0c0311e70d715a636"
+    },
+    {
+      "file": "capturas/r2/rnweb-retomada-reload-390.png",
+      "bytes": 83958,
+      "sha256": "21608d1f1b381dfa0281dff3bd467dc8a74ed5b08d890bb831513b3332b62dfb"
+    },
+    {
+      "file": "capturas.json",
+      "bytes": 71943,
+      "sha256": "720460b0efde36c439b67e481223799f418f73f3e18d71829307ae18ad8dbcca"
+    },
+    {
+      "file": "contraste-sql.json",
+      "bytes": 411,
+      "sha256": "4d2add64e2c8160af481b8911f5f3bb778e6eaefbbf98eb2abc4ff843c824d24"
+    },
+    {
+      "file": "fontes.json",
+      "bytes": 58254,
+      "sha256": "7c1a5f6d386e617970c9c3266167a8dd89c8f2f6f5c9d51c90378ab7722e76be"
+    },
+    {
+      "file": "historico-harness.json",
+      "bytes": 1858,
+      "sha256": "32ca5101271376285504b53b2aaa2d20eb6d7ddf0ad89906590d7879ef7d25e6"
+    },
+    {
+      "file": "resumo.json",
+      "bytes": 2015,
+      "sha256": "34a48cbfa4a8c40e964f61adfc221b186524bfeec7ab49e46fd008d2e7db0f57"
+    },
+    {
+      "file": "verificacoes.json",
+      "bytes": 23817,
+      "sha256": "ef051641d28f320bb38a35dd6d010004e2d61468130b66816fc65a4bc1310995"
+    }
+  ]
+}

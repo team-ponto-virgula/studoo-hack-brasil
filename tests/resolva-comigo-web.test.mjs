@@ -254,14 +254,14 @@ test('a tela: o selo no lugar de "Exemplo" (sem etapa nova), o lápis, o rodapé
   assert.match(estudo, /responderSuaVez=\{\(escolha\) => responderSuaVez\(tela\.licao\.id, escolha\)\}/);
 });
 
-test('o CSS: opções dos exercícios também aqui, traços de 6 (o atual com 34), cartão com borda de 2 e raio 20, pesos 400 e 700, entrada de 200 ms só sem movimento reduzido', () => {
+test('o CSS: opções dos exercícios também aqui, traços de 6 (o atual com 34), cartão com borda de 1,5 e raio 24, pesos 400 e 700, entrada de 200 ms só sem movimento reduzido', () => {
   const css = ler('src/app/aula.css');
   assert.match(css, /:is\(\.aula-quadro, \.estudio-desafio, \.resolva\) \.opcoes label \{/, 'as opções do "Sua vez" são as dos exercícios');
   assert.match(css, /\.resolva-traco \{ width: 18px; height: 6px; border-radius: 3px;/);
   assert.match(css, /\.resolva-traco\[data-atual\] \{ width: 34px; \}/);
-  assert.match(css, /\.resolva-cartao \{[^}]*padding: 16px; border: 2px solid var\(--gelo\); border-radius: 20px;/);
+  assert.match(css, /\.resolva-cartao \{[^}]*padding: 20px; border: 1\.5px solid var\(--gelo\); border-radius: 24px;/);
   assert.match(css, /\.aula-miolo \.resolva-problema \{ margin: 0; font-size: 1\.0625rem; font-weight: 700; line-height: 1\.4375rem;/, 'o problema em 17/23 700 (em rem)');
-  assert.match(css, /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.375rem;/, 'a frase do passo em 400');
+  assert.match(css, /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.5rem;/, 'a frase do passo em 400');
   assert.match(css, /\.resolva-pergunta \{ margin: 0; font-size: 1rem; font-weight: 700; line-height: 1\.375rem; \}/, 'a pergunta em 700');
   assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{\s*\.resolva-cartao \{ animation: resolva-entrar 200ms ease-out both; \}/);
   assert.match(css, /@keyframes resolva-entrar \{ from \{ opacity: 0; transform: translateY\(8px\); \}/, 'sobe 8 px');
@@ -278,10 +278,10 @@ test('texto grande (WCAG 1.4.4): todo texto e toda fórmula do Resolva comigo é
   const bloco = blocoDoResolva();
   assert.ok(bloco.length > 1000, 'o bloco do Resolva comigo existe');
   assert.deepEqual(bloco.match(/(?:font-size|line-height): [\d.]+px/g) ?? [], [], 'nenhum tamanho de letra nem de linha em px');
-  // Os mesmos tamanhos do app, em rem (16 px = 1 rem): problema 17/23, frase e pergunta 16/22, feito 14/20, porquê 15/21, selo 13/18.
+  // Os mesmos tamanhos do app, em rem (16 px = 1 rem): problema 17/23, frase 16/24, pergunta 16/22, feito 14/20, porquê 15/21, selo 13/18.
   for (const regra of [
     /\.aula-miolo \.resolva-problema \{[^}]*font-size: 1\.0625rem; font-weight: 700; line-height: 1\.4375rem;/,
-    /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.375rem;/,
+    /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.5rem;/,
     /\.resolva-pergunta \{[^}]*font-size: 1rem; font-weight: 700; line-height: 1\.375rem;/,
     /\.resolva-feito__nome \{[^}]*font-size: 0\.875rem; font-weight: 800; line-height: 1\.25rem;/,
     /\.resolva-feito__formula \{[^}]*font-size: 0\.875rem; font-weight: 400; line-height: 1\.25rem;/,

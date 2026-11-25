@@ -25,9 +25,21 @@ export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { lo
   const idMenu = useId();
   useEffect(() => {
     if (!aberto) return;
-    const fora = (evento: PointerEvent) => { if (!caixa.current?.contains(evento.target as Node)) setAberto(false); };
+    const fora = (evento: MouseEvent) => {
+      if (!caixa.current?.contains(evento.target as Node)) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        setAberto(false);
+        botao.current?.focus();
+      }
+    };
     const tecla = (evento: KeyboardEvent) => {
-      if (evento.key === 'Escape') { setAberto(false); botao.current?.focus(); return; }
+      if (evento.key === 'Escape' || evento.key === 'Tab') {
+        evento.preventDefault();
+        setAberto(false);
+        botao.current?.focus();
+        return;
+      }
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(evento.key)) return;
       const itens = Array.from(caixa.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
       const atual = itens.indexOf(document.activeElement as HTMLElement);
@@ -37,10 +49,10 @@ export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { lo
         (atual + (evento.key === 'ArrowDown' ? 1 : -1) + itens.length) % itens.length;
       itens[indice].focus();
     };
-    document.addEventListener('pointerdown', fora);
+    document.addEventListener('click', fora, true);
     document.addEventListener('keydown', tecla);
     caixa.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
-    return () => { document.removeEventListener('pointerdown', fora); document.removeEventListener('keydown', tecla); };
+    return () => { document.removeEventListener('click', fora, true); document.removeEventListener('keydown', tecla); };
   }, [aberto]);
   function escolher(acao: Acao) {
     botao.current?.focus();

@@ -1,5 +1,9 @@
 # Refinamento de UI e UX: auditoria do Designer
 
+**Atualização Jornada Azul, 25/11/2026:** o item24 histórico continua documentando a linha compacta em telas acima600px. Até600px, a direção escolhida mantém feedback conciso e coloca o primário em uma linha própria, com largura útil inteira e mínimo52px, nas duas implementações. Isso conserva o Explique opcional e a lógica de correção. A altura do rodapé é medida; a área segura e a rolagem continuam reservadas.
+
+
+
 **Estado:** lote 1, de 21/11, sobre o site publicado (`2bab6aa`). Pedido do dono: passar pela UI e UX inteiras e deixar tudo muito refinado, nas três plataformas.
 
 **Fontes:**

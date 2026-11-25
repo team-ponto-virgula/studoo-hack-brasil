@@ -20,7 +20,7 @@ test('item 28: os seletores de arquivo usam Botao secundário acessível por tec
   assert.doesNotMatch(fonte, /<label className="estudio-arquivo">/, 'nenhum ficou só com a classe do tracejado');
 });
 
-test('item 28: o tracejado só existe a partir de 768 px; até 767 px o seletor é o botão secundário de sempre (borda sólida, relevo)', () => {
+test('item 28: o tracejado só existe a partir de 768 px; até 767 px o seletor é o botão secundário da Jornada (borda sólida, sem relevo)', () => {
   const css = ler('src/app/estudio.css');
   const inicio = css.indexOf('.estudio-arquivo { position: relative; }');
   assert.ok(inicio > 0, 'a base comum: só o posicionamento do campo de arquivo');
@@ -38,8 +38,8 @@ test('item 28: o tracejado só existe a partir de 768 px; até 767 px o seletor 
   // O campo de arquivo transparente por cima e o anel de foco seguem em todas as larguras.
   assert.match(css, /\.estudio-arquivo input \{\s*position: absolute;\s*inset: 0;\s*opacity: 0;\s*width: 100%;\s*cursor: pointer;\s*\}/);
   assert.match(css, /\.estudio-arquivo:focus-within \{\s*outline: 3px solid var\(--acao\);/);
-  // O botão secundário de verdade (borda sólida no gelo e relevo) é o de globals.css.
-  assert.match(ler('src/app/globals.css'), /\.botao--secundario \{ --labio: var\(--gelo\); border-color: var\(--gelo\); \}/);
+  // O secundário usa contorno legível e não disputa o relevo da ação principal.
+  assert.match(ler('src/app/globals.css'), /\.botao--secundario \{ border-width: 1\.5px; border-color: var\(--borda-campo\); background: var\(--fundo\); \}/);
 });
 
 // Spec 16, item 35 (web): com o material lido (a prévia), "Criar trilha deste material" é a ação presa da tela. Até 767 px ela fica 12 px acima da cápsula, com as margens da ilha (16), até 480 px

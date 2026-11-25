@@ -71,7 +71,7 @@ test('item 24: com o "Explique" aberto, o rodapé do acerto é UMA linha de 64 p
   assert.equal(8 + 48 + 8, 64);
   // O título herda o verde do sucesso (#1F7A5A), e o fundo é o verde claro do acerto de sempre.
   assert.match(css, /--sucesso: #1f7a5a|\.aula-retorno h2 \{ color: var\(--sucesso\);/);
-  assert.match(ler('src/app/globals.css'), /--sucesso: #1f7a5a;/);
+  assert.match(ler('src/ui/jornada-tokens.css'), /--sucesso: #1f7a5a;/i);
   assert.match(css, /\.aula-rodape\[data-retorno='certa'\] \{ --fundo-rodape: #e3f6ea; --linha-rodape: #e3f6ea; \}/, 'o mesmo verde claro');
 });
 

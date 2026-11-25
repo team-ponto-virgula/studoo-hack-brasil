@@ -60,13 +60,13 @@ test('item 6: o quadrinho da letra cresce com o texto (1,75 × a letra, mínimo 
   assert.match(css, /:is\(\.aula-quadro, \.estudio-desafio, \.resolva\) \.opcoes label > :not\(input, \.opcao-tecla\) \{ flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; \}/, 'o texto ocupa o resto da largura e quebra sem passar por baixo do quadrinho');
 });
 
-test('item 8: o contador é cinza #5E6A85 (sem laranja), guarda o espaço quando escondido e o leitor só o ouve enquanto aparece', () => {
+test('item 8: o contador usa o texto secundário da Jornada (sem laranja), guarda o espaço quando escondido e o leitor só o ouve enquanto aparece', () => {
   assert.match(aula, /const contando = mostrarContagemDaAberta\(usados, exercicio\.minimo\);/);
   assert.match(aula, /aria-describedby=\{contando \? 'aberta-dica aberta-contador' : 'aberta-dica'\}/);
   assert.match(aula, /<p id="aberta-contador" className="campo__contador" data-oculto=\{contando \? undefined : ''\}>/);
   assert.doesNotMatch(aula, /data-pronto=\{tamanhoDaResposta/, 'o verde de "N letras" saiu');
   assert.match(css, /\.campo--aberta \.campo__contador \{ color: var\(--texto2\); \}/);
-  assert.match(ler('src/app/globals.css'), /--texto2: #5e6a85;/, 'a cor do contador é a #5E6A85 da spec');
+  assert.match(ler('src/ui/jornada-tokens.css'), /--texto2: #50607A;/i, 'a cor do contador vem do token de texto secundário');
   assert.match(css, /\.campo--aberta \.campo__contador\[data-oculto\] \{ visibility: hidden; \}/, 'escondido, o espaço fica (o campo não pula)');
   assert.doesNotMatch(css, /\.campo__contador\[data-pronto\]/);
 });

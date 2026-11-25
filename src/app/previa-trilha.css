@@ -7,14 +7,49 @@
   width: 100%; height: calc(100dvh - 108px); min-height: min(340px,80dvh); max-height: 56rem;
   overflow: hidden; border: 1px solid #d5dff6; border-radius: 24px; background: white;
 }
-.previa-cabecalho { display: flex; align-items: center; gap: 10px; padding: 8px 18px; background: white; border-bottom: 1px solid var(--gelo); }
-.previa-cabecalho h1 { color: var(--texto); font-size: clamp(1rem, 2vw, 1.4rem); line-height: 1.22; overflow-wrap: anywhere; }
-.previa-voltar { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--nevoa); color: var(--texto2); cursor: pointer; }
+.previa-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: white;
+  border-bottom: 1px solid var(--gelo);
+}
+.previa-cabecalho h1 {
+  color: var(--texto);
+  font-size: 1.5rem;
+  line-height: 1.875rem;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+.previa-voltar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  border-radius: 16px;
+  background: var(--nevoa);
+  color: var(--texto);
+  cursor: pointer;
+}
 .previa-voltar .icone { width: 20px; transform: rotate(180deg); }
 .previa-palco { position: relative; display: grid; grid-template-rows: auto minmax(0,1fr); min-height: 0; background: #e3f3e8; }
 .previa-placa {
-  z-index: 3; align-self: start; width: min(calc(100% - 32px), 44rem); margin: 12px auto 0; padding: 10px 14px;
-  border: 1px solid #f0cb74; border-radius: 16px; color: var(--texto); background: #fff9ea; font-size: .94rem; font-weight: 800;
+  z-index: 3;
+  align-self: start;
+  width: min(calc(100% - 40px), 44rem);
+  margin: 12px auto 0;
+  padding: 12px 16px;
+  border: 1px solid var(--gelo);
+  border-radius: 20px;
+  color: var(--texto);
+  background: var(--fundo);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 16px;
+  line-height: 1.5rem;
 }
 .previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; container-type: size; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
 .previa-seguir {
@@ -64,11 +99,36 @@
 .previa-no__alvo:disabled { opacity: 1; cursor: default; }
 .previa-no__face { display: grid; place-items: center; width: var(--ladono); height: var(--ladono); border: 2px dashed #9cb4f5; border-radius: 50%; background: white; color: var(--acao); }
 .previa-no__face .icone { width: 24px; height: 24px; }
-.previa-no__titulo { padding: 4px 9px; border-radius: 9px; background: #fff; font-weight: 800; font-size: .875rem; line-height: 1.25; text-align: center; text-wrap: balance; }
+.previa-no__titulo {
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: #fff;
+  font-weight: 800;
+  font-size: 0.875rem;
+  line-height: 1.3125rem;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--texto);
+}
 .previa-stu { position: absolute; z-index: 2; left: calc(var(--x) + 39px); top: calc(var(--centro) - 49px); width: 76px; pointer-events: none; }
 .previa-stu .mascote-pe { display: block; width: 100%; }
 .previa-stu[data-esquerda] { left: auto; right: calc(100% - var(--x) + 39px); }
-.previa-no__explicacao { position: absolute; z-index: 5; bottom: 55%; left: 50%; transform: translateX(-50%); width: min(88%,22rem); padding: 10px 14px; border: 2px solid var(--gelo); border-radius: 14px; background: white; color: var(--texto); box-shadow: 0 3px 0 var(--gelo); }
+.previa-no__explicacao {
+  position: absolute;
+  z-index: 5;
+  bottom: 55%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88%,22rem);
+  padding: 16px;
+  border: 1px solid var(--gelo);
+  border-radius: 24px;
+  background: white;
+  color: var(--texto);
+  box-shadow: 0 8px 24px rgb(21 39 91 / 0.12);
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
 .previa-vaga, .previa-chegada { display: grid; justify-items: center; align-content: center; gap: 6px; min-height: 130px; background: var(--chao,#e3f3e8); }
 .previa-vaga { position: relative; display:flex; justify-content:center; align-items:center; }
 .previa-vaga > span:first-child { width: 62px; height: 62px; border: 2px dashed #9cb4f5; border-radius: 50%; opacity: .65; }
@@ -79,12 +139,30 @@
 .previa-chegada > span:not(.previa-ligacao), .previa-chegada > small { position: relative; z-index: 2; }
 
 .previa-chegada > span:not(.previa-ligacao) { border-radius: 12px; padding: 3px 10px; background: white; }
-.previa-chegada small { color: #4b5675; font-size: .8125rem; font-weight: 600; }
-.previa-rodape { position: relative; z-index: 4; display: grid; gap: 8px; padding: 12px 16px 16px; border-top: 1px solid var(--gelo); background: white; }
+.previa-chegada small {
+  color: var(--texto2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+.previa-rodape {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--gelo);
+  background: white;
+}
 .previa-botoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: min(100%,36rem); margin-inline: auto; }
-.previa-botoes > .botao { flex: 1 1 0; min-width: 0; min-height: 48px; padding-inline: 10px; }
+.previa-botoes > .botao {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 52px;
+  padding-inline: 16px;
+}
 .previa-rodape .previa-botoes .previa-comecar[aria-disabled='true']:not(:disabled) { color: white; border-color: transparent; background: var(--acao-escura,#1d4ed8); box-shadow: none; transform: translateY(3px); cursor: progress; }
-.previa-espera, .previa-erro { width: min(100%,36rem); margin-inline: auto; color: #5e6a85; font-size: .875rem; text-align: center; }
+.previa-espera, .previa-erro { width: min(100%,36rem); margin-inline: auto; color: var(--texto2); font-size: .875rem; text-align: center; }
 .previa-rodape[data-salvando] .previa-ajustar, .previa-espera:not([data-visivel]) { display: none; }
 .previa-espera, .previa-erro { flex-basis: 100%; }
 /* Spec 17, mudança 1 (revista em 23/11): a linha embaixo do botão troca de "Escrevendo suas lições…" para as frases da espera, com efeito de 300 ms (a frase some em 150 ms e a próxima aparece em 150 ms;
@@ -92,7 +170,7 @@
 .previa-espera__linha { display: block; transition: opacity 150ms ease-out; }
 .previa-espera__linha[data-saindo] { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .previa-espera__linha { transition: none; } }
-.previa-erro { color: #c23b4e; }
+.previa-erro { color: var(--erro); }
 .previa-giro { width: 16px; height: 16px; border: 2px solid #ffffff70; border-top-color: white; border-radius: 50%; animation: previa-girar .8s linear infinite; }
 [data-fase='montando'] .previa-ligacao { animation: previa-desenhar 300ms ease-out both; }
 [data-fase='montando'] .previa-no__face { animation: previa-pousar 380ms 180ms both; }
@@ -134,8 +212,8 @@
   .painel--geracao { position: fixed; inset: 0; z-index: 6; width: 100%; height: 100dvh; min-height: 0; max-height: none; border: 0; border-radius: 0; }
   .estudo:has(.painel--geracao:not([inert])) .estudo-cabecalho { display: none; }
   .previa-mapa { scrollbar-width: none; }
-  .previa-cabecalho { padding: max(4px,env(safe-area-inset-top)) 12px 4px; }
-  .previa-rodape { padding: 10px max(16px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+  .previa-cabecalho { padding: max(8px,env(safe-area-inset-top)) 20px 8px; }
+  .previa-rodape { padding: 16px max(20px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left)); }
 }
 @media (max-width: 600px) {
   .previa-rodape[data-proposta] .previa-botoes {

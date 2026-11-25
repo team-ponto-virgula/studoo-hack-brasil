@@ -217,11 +217,11 @@ const cena = StyleSheet.create({
   faixaStu: { position: 'absolute', top: 0, left: 0, width: 36, height: 40, alignItems: 'center', justifyContent: 'flex-end' },
   faixaLinha: { flexDirection: 'row', alignItems: 'stretch', gap: 6, height: 44 },
   faixaMargem: { width: 58, minWidth: 58, alignItems: 'center', justifyContent: 'center' },
-  faixaMargemTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16, textAlign: 'center' },
+  faixaMargemTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16, textAlign: 'center' },
   faixaLugar: { flex: 1, justifyContent: 'center' },
   // O anel da tábua atual: a spec cita o azul antigo; aqui é a cor de ação do tema (a paleta da web, #2563FF).
   faixaAtual: { borderWidth: 3, borderColor: cores.acao },
-  faixaPasso: { marginTop: 8, color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  faixaPasso: { marginTop: 8, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   tabuaFalta: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349',
     borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
   tabua: { minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 10 },
@@ -254,7 +254,7 @@ const aluno = StyleSheet.create({
     borderBottomWidth: 2, borderColor: cores.gelo, transform: [{ rotate: '45deg' }] },
   balaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   // A linha do indicador, como "Passo n de 3 · …" da ponte (cena.faixaPasso).
-  etapaLinha: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  etapaLinha: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   // Como .ensino-ondas da web: cinco barras de 6 × 32 com vão de 5; sem o volume (aparelho que não informa), cheias.
   ondas: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 36 },
   barra: { width: 6, borderRadius: 3, backgroundColor: cores.acao },
@@ -267,12 +267,12 @@ const caderno = StyleSheet.create({
   acertos: { borderColor: cores.gelo, backgroundColor: '#F1F4FD' },
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
   pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: cores.ceu },
-  proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
+  proximo: { borderColor: '#9AD8B5', backgroundColor: cores.sucessoFundo },
   // .ensino-caderno__cartao h3: 0,9375rem com a entrelinha de 1,3 dos títulos do cartão (19,5).
   titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 19.5 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   // .ensino-caderno__visto: círculo de 22 em #EEFAF3 com o visto de 13 px em 900.
-  visto: { width: 22, height: 22, borderRadius: 11, overflow: 'hidden', textAlign: 'center', backgroundColor: '#EEFAF3', color: cores.sucesso,
+  visto: { width: 22, height: 22, borderRadius: 11, overflow: 'hidden', textAlign: 'center', backgroundColor: cores.sucessoFundo, color: cores.sucesso,
     fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 22 },
   // .ensino-caderno__stu: 48 de largura com o Stu de 44; o "?" é um círculo de 20 sem aro.
   perguntaStu: { width: 48, height: 50, justifyContent: 'center' },

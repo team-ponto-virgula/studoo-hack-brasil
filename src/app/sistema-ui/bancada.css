@@ -1,0 +1,27 @@
+.bancada-jornada { max-width: 1120px; margin: 0 auto; padding: 28px 20px 120px; }
+.bancada-jornada__marca { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid var(--gelo); }
+.bancada-jornada__marca > span { min-width: 0; overflow-wrap: anywhere; color: var(--texto2); font-size: 0.875rem; text-align: right; }
+.bancada-jornada__abertura { display: flex; align-items: center; gap: 24px; padding: 36px 0 24px; }
+.bancada-jornada__abertura > div { flex: 1; min-width: 0; }
+.bancada-jornada__abertura h1 { font-size: clamp(1.875rem, 4vw, 2.875rem); line-height: 1.2; margin: 8px 0 16px; }
+.bancada-jornada__abertura p:not(.jornada-contexto) { color: var(--texto2); font-size: 1rem; line-height: 1.5rem; }
+.bancada-jornada__aviso { padding: 16px 20px; color: var(--texto2); background: var(--nevoa); border-radius: 16px; font-size: 0.875rem; line-height: 1.3125rem; max-width: none; }
+.bancada-jornada__grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; margin-top: 36px; }
+.bancada-jornada__grade > section { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.bancada-jornada__grade > section > .jornada-cartao:last-child { flex-grow: 1; align-content: start; }
+.bancada-jornada__grade .botao { width: 100%; }
+.bancada-jornada__grade .skeleton { width: 100%; }
+.bancada-jornada__erro { color: var(--erro); font-weight: 800; font-size: 0.875rem; line-height: 1.3125rem; }
+.bancada-jornada__status { width: 100%; max-width: none; margin: 24px 0 0; padding: 12px 16px; border-radius: 16px; color: white; background: var(--texto); font-size: 0.875rem; line-height: 1.3125rem; box-shadow: 0 8px 24px #15275b24; }
+@media (max-width: 700px) {
+  .bancada-jornada__grade { grid-template-columns: minmax(0, 1fr); }
+  .bancada-jornada__abertura { gap: 12px; align-items: start; }
+  .bancada-jornada__abertura > .stu { flex-shrink: 0; width: 72px; }
+  .bancada-jornada__marca { align-items: flex-start; }
+  .bancada-jornada__marca > span { max-width: 140px; }
+}
+@media print {
+  .bancada-jornada { padding: 0; }
+  .bancada-jornada__grade > section { break-inside: avoid; }
+  .bancada-jornada__status { position: static; box-shadow: none; }
+}

@@ -10,7 +10,7 @@
 /* Cabeçalho do perfil: faixa na cor, foto sobreposta, nome, resumo, interesses e alcance. */
 .cabeca-perfil {
   --cor-perfil: var(--acao);
-  position: relative; overflow: hidden; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo);
+  position: relative; overflow: hidden; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--fundo);
 }
 .cabeca-perfil__faixa {
   position: relative; height: 104px;
@@ -18,7 +18,7 @@
 }
 @media (min-width: 768px) { .cabeca-perfil__faixa { height: 128px; } }
 .cabeca-perfil__desenho { position: absolute; inset: 0; width: 100%; height: 100%; }
-.cabeca-perfil__corpo { display: grid; gap: 8px; padding: 0 18px 18px; }
+.cabeca-perfil__corpo { display: grid; gap: 8px; padding: 0 20px 20px; }
 @media (min-width: 768px) { .cabeca-perfil__corpo { padding: 0 24px 22px; } }
 .cabeca-perfil__topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 12px; margin-top: -48px; }
 @media (min-width: 768px) { .cabeca-perfil__topo { margin-top: -56px; } }
@@ -38,7 +38,7 @@
 .cabeca-perfil__nome { margin: 4px 0 0; font-family: Quicksand, sans-serif; font-size: 1.625rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.035em; overflow-wrap: anywhere; }
 .cabeca-perfil__nome:focus { outline: none; }
 @media (min-width: 768px) { .cabeca-perfil__nome { font-size: 1.875rem; } }
-.cabeca-perfil__resumo { margin: 0; color: var(--texto); font-size: 1.0625rem; line-height: 1.5; overflow-wrap: anywhere; }
+.cabeca-perfil__resumo { margin: 0; color: var(--texto); font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
 .cabeca-perfil__convite {
   justify-self: start; min-height: 44px; padding: 8px 14px; border: 2px dashed var(--borda-campo); border-radius: 14px;
   color: var(--acao); background: none; font: inherit; font-weight: 800; text-align: start; cursor: pointer;
@@ -69,7 +69,7 @@
 .selo-so-voce { justify-self: start; padding: 2px 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; }
 .link-texto { padding: 0; border: 0; background: none; color: var(--acao); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .link-texto:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
-.perfil-completar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.perfil-completar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--nevoa); }
 .perfil-completar .stu { width: 80px; height: auto; flex: none; }
 .perfil-completar > div { display: grid; flex: 1 1 14rem; gap: 8px; justify-items: start; }
 .perfil-completar .botao .icone { width: 18px; height: 18px; }
@@ -84,7 +84,7 @@
   .editar-perfil__grade { grid-template-columns: minmax(0, 1fr) minmax(19rem, 25rem); align-items: start; gap: 32px; }
   .editar-perfil__previa { position: sticky; top: 24px; }
 }
-.editar-perfil__form { display: grid; gap: 22px; }
+.editar-perfil__form { display: grid; gap: 24px; }
 .editar-perfil__rotulo { margin: 0; font-size: 1rem; }
 .editar-perfil__previa { display: grid; gap: 10px; }
 .editar-perfil__previa .cabeca-perfil { box-shadow: 0 10px 30px rgb(11 27 92 / 0.08); }
@@ -135,7 +135,7 @@
 .editar-perfil__estado[data-estado='salvo'] { color: var(--sucesso); }
 .editar-perfil__estado[data-estado='salvando'] { color: var(--texto2); }
 .editar-perfil__barra .campo-erro { flex-basis: 100%; order: 3; }
-.editar-perfil__barra .botao { min-height: 48px; min-width: 9rem; }
+.editar-perfil__barra .botao { min-height: 52px; min-width: 9rem; }
 /* Em 360, estado e botão cabem lado a lado (165 + 12 + 128 px em 320). */
 @media (max-width: 379px) { .editar-perfil__barra { flex-wrap: nowrap; } .editar-perfil__barra .botao { min-width: 8rem; padding-inline: 16px; } }
 @media (max-width: 339px) { .editar-perfil__barra { flex-wrap: wrap; } .editar-perfil__barra .botao { flex: 1 1 100%; } }
@@ -194,7 +194,7 @@
   @keyframes stu-chega { from { opacity: 0; transform: translateY(14px) rotate(-6deg); } }
   @keyframes balao-chega { from { opacity: 0; transform: translateX(-6px) scale(0.96); } }
 }
-.quem-compartilhou { display: flex; align-items: flex-start; gap: 14px; margin-top: 4px; padding: 16px; border: 2px solid var(--gelo); border-radius: 18px; background: var(--nevoa); }
+.quem-compartilhou { display: flex; align-items: flex-start; gap: 14px; margin-top: 4px; padding: 16px; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--nevoa); }
 .quem-compartilhou .avatar { border: 3px solid #fff; }
 .quem-compartilhou__texto { display: grid; gap: 2px; min-width: 0; }
 .quem-compartilhou__texto p { margin: 0; overflow-wrap: anywhere; }
@@ -204,7 +204,7 @@
 .quem-compartilhou__link { display: inline-flex; align-items: center; min-height: 44px; color: var(--acao); font-weight: 800; }
 
 /* Página /p: o cabeçalho e a lista de trilhas. */
-.perfil-publico__titulo { margin: 28px 0 12px; font-size: 1.25rem; }
+.perfil-publico__titulo { margin: 28px 0 12px; font-size: 1.5rem; line-height: 1.25; }
 
 /* App instalado na tela de início (iPhone e Android): as laterais respeitam o recorte da tela no modo paisagem. */
 @media (display-mode: standalone) and (max-width: 1023px) {
@@ -217,10 +217,10 @@
 
 /* Contorno de campo e de etiqueta não marcada com 3:1 sobre o branco (o contorno é o que identifica o campo). */
 .painel--editar-perfil .campo:not([data-erro]) input:not(:focus), .painel--editar-perfil .campo:not([data-erro]) textarea:not(:focus),
-.painel--editar-perfil .interesse input:not(:checked) + span { border-color: #8591c0; }
+.painel--editar-perfil .interesse input:not(:checked) + span { border-color: var(--borda-campo); }
 
 /* Perfil direto nos dados (lote 4): os campos abertos na aba Perfil, num bloco só. */
-.editor-perfil { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+.editor-perfil { display: grid; gap: 20px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
 @media (min-width: 768px) { .editor-perfil { padding: 22px 24px; } }
 .editor-perfil__linha { margin: 0; color: var(--texto2); font-weight: 700; line-height: 1.45; }
 .editar-foto__circulo { position: relative; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }

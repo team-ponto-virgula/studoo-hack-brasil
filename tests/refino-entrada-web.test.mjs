@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
-const css = ler('src/app/globals.css');
+const css = ler('src/app/globals.css').replace(/((?:font-size|line-height):\s*)([\d.]+)rem/g, (_, nome, valor) => `${nome}${Number(valor) * 16}px`);
 /** O corpo da primeira regra com este seletor exato. */
 const regra = (folha, seletor) => {
   const inicio = folha.indexOf(`${seletor} {`);
@@ -29,8 +29,8 @@ test('item 2: a frase da ilustração vai para um cartão no alto à esquerda, b
   assert.match(cartao, /background: rgb\(255 255 255 \/ 0\.92\);/);
   assert.match(cartao, /z-index: 1;/, 'acima dos temas da ilustração, que ficam atrás');
   assert.match(cartao, /backdrop-filter: blur\(8px\);/, 'com letra grande o cartão cresce e um tema não pode aparecer fantasma sob o texto');
-  assert.match(regra(css, '.entrada-mensagem__titulo'), /color: #0b1b5c;/);
-  assert.match(css, /\.entrada-mensagem p:not\(\.entrada-mensagem__titulo\) \{[^}]*color: #5e6a85;/);
+  assert.match(regra(css, '.entrada-mensagem__titulo'), /color: var\(--texto\);/);
+  assert.match(css, /\.entrada-mensagem p:not\(\.entrada-mensagem__titulo\) \{[^}]*color: var\(--texto2\);/);
 });
 
 test('item 2: o texto cinza passa de 4,5:1 sobre o cartão, mesmo com o verde mais escuro da ilustração por baixo', () => {
@@ -38,8 +38,8 @@ test('item 2: o texto cinza passa de 4,5:1 sobre o cartão, mesmo com o verde ma
   const sobre = (fundo) => fundo.map((canal) => Math.round(255 * cartaoA + canal * (1 - cartaoA)));
   for (const cenario of [[79, 157, 105], [196, 112, 77], [255, 255, 255], [214, 228, 255]]) {
     const fundo = sobre(cenario);
-    assert.ok(contraste(hex('#5e6a85'), fundo) >= 4.5, `texto sobre ${cenario}: ${contraste(hex('#5e6a85'), fundo).toFixed(2)}`);
-    assert.ok(contraste(hex('#0b1b5c'), fundo) >= 7, `título sobre ${cenario}`);
+    assert.ok(contraste(hex('#50607a'), fundo) >= 4.5, `texto sobre ${cenario}: ${contraste(hex('#50607a'), fundo).toFixed(2)}`);
+    assert.ok(contraste(hex('#15275b'), fundo) >= 7, `título sobre ${cenario}`);
   }
 });
 

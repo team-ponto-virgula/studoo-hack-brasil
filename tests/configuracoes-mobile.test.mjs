@@ -100,11 +100,11 @@ test('a capa com foto: galeria ou câmera do sistema, sem o recorte do sistema, 
   assert.match(recorte, /allowsEditing: false/);
   assert.doesNotMatch(app, /allowsEditing/);
   assert.match(app, /<RecorteImagem imagem=\{paraRecortar\} proporcao=\{2\} titulo=\{k\.capaFotoTitulo\} dica=\{k\.capaFotoDica\} aviso=\{k\.capaFotoAviso\} comSelos/);
-  assert.match(app, /cliente\.enviarCapa\(planoId, base64\)/);
+  assert.match(app, /cliente\.enviarCapa\(origem\.planoId, base64\)/);
   // "Usar uma foto" na largura da folha, com a ajuda embaixo, numa linha só; a escolha entre galeria e câmera é a folha do Studoo.
   assert.match(app, /<Botao rotulo=\{k\.usarFoto\} iconeAntes="camera" variante="secundario" testID="capa-usar-foto"/);
   assert.equal(k.usarFotoAjuda, 'JPG, PNG ou WebP, até 2 MB.');
-  assert.match(app, /<FolhaDeAcoes visivel=\{origemDaFoto\} titulo=\{k\.usarFoto\}/);
+  assert.match(app, /<FolhaDeAcoes visivel=\{origemDaFoto && conf\?\.planoId === planoId\} titulo=\{k\.usarFoto\}/);
   assert.equal(k.capaFotoDica, 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.');
   // O véu da foto só nos 45% de cima.
   assert.match(app, /capaVeu: \{ position: 'absolute', left: 0, right: 0, top: 0, height: '45%' \}/);
@@ -214,15 +214,18 @@ test('a engrenagem alinha pelo centro com "Compartilhar": com o botão, os 10 de
 
 test('salvar um campo alterado toca "salvo" (spec 12); a capa toca pelo aviso "Capa salva."', () => {
   const salvar = app.slice(app.indexOf('async function salvar('), app.indexOf('} catch (falha) {', app.indexOf('async function salvar(')));
-  assert.match(salvar, /marcar\(campo, 'salvo'\);[\s\S]*if \(campo !== 'capa'\) void tocaSons\.tocarEfeito\('salvo'\);/);
+  assert.match(salvar, /if \(!vigente\(\)\) return false;[\s\S]*marcar\(campo, 'salvo'\);/);
+  const campoSalvo = /if \(campo !== 'capa'\) \{([^}]+)\}/.exec(salvar)?.[1] ?? '';
+  assert.match(campoSalvo, /AccessibilityInfo\.announceForAccessibility\(k\.salvoLeitor\[campo\]\);/);
+  assert.match(campoSalvo, /void tocaSons\.tocarEfeito\('salvo'\);/);
   // "Capa salva." toca "salvo" pelo aviso do app (o padrão do aviso seria o efeito "aviso").
   // A capa com foto pode ficar em revisão (spec 14): o mesmo aviso, com o texto da revisão no lugar de "Capa salva.".
   assert.equal((app.match(/avisar\(k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/g) ?? []).length, 1);
   assert.match(app, /avisar\(novo\.capaModeracao === 'pendente' \? mensagens\.seguranca\.enviadaParaRevisao : k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/);
   assert.doesNotMatch(app, /avisar\(k\.capaSalva, \{ icone: 'check' \}\)/);
   // Só chega ao salvar com mudança: o nome e a descrição comparam com o que está salvo; o tema, com o tema atual.
-  assert.match(app, /if \(normal === salvo\.titulo\) \{/);
-  assert.match(app, /if \(normal === \(salvo\.descricao \?\? ''\)\) return;/);
+  assert.match(app, /if \(normal === salvo\.titulo && !ultimasEmFila\.current\.titulo\) \{/);
+  assert.match(app, /if \(normal === \(salvo\.descricao \?\? ''\) && !ultimasEmFila\.current\.descricao\) return;/);
   assert.match(app, /if \(!desativado && conf\.tema !== tema\) void salvar\('tema', \{ tema \}\);/);
 });
 

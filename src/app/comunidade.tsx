@@ -636,8 +636,8 @@ export function Explorar({
             <h2 className="explorar__secao">{c.seguindoVisitanteTitulo}</h2>
             <p className="folha-texto">{c.seguindoVisitanteTexto}</p>
             <div className="explorar__vazio-acoes">
-              <Botao variante="primario" onClick={() => { setTema(null); setAba('todos'); }}>{c.voltarComunidade}</Botao>
-              {aoSair && <Botao variante="secundario" onClick={aoSair}>{c.entrarOuCriar}</Botao>}
+              {aoSair && <Botao variante="primario" onClick={aoSair}>{c.entrarOuCriar}</Botao>}
+              <Botao variante="secundario" onClick={() => { setTema(null); setAba('todos'); }}>{c.voltarComunidade}</Botao>
             </div>
           </div>
         </div>

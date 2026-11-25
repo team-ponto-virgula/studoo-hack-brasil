@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
+import { AcaoPrincipal, Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
+import { medirAcaoFixa } from '../ui/rodape-movel';
 import './pedido.css';
 import { pedirAceiteIa } from './aceite-ia';
 import { MaterialParaTrilha } from './estudio';
@@ -199,7 +200,9 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           <small id="objetivo-privacidade" className="somente-leitor">{mensagens.pedido.privacidade}</small>
           {mostrarContador && <small id="objetivo-contador">{mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}</small>}
         </div>
-        <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
+        <AcaoPrincipal className="pedido-acao" ref={modo === 'ideia' ? medirAcaoFixa : undefined}>
+          <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
+        </AcaoPrincipal>
       </form>
       <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
         <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>

@@ -102,14 +102,21 @@ export function Avatar({ nome, cor, foto = null, grande = false, tamanho }: { no
 /** Foco preso no diálogo, Esc fecha (ou volta um passo) e, ao fechar, o foco volta para quem abriu. */
 /** Diálogos abertos, do mais antigo ao mais novo: só o de cima responde ao teclado (Esc e Tab). */
 const pilhaDeDialogos: symbol[] = [];
+const caixasDeDialogos = new Map<symbol, RefObject<HTMLElement | null>>();
 
 export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => void) {
   const aoEscRef = useRef(aoEsc);
+  const origem = useRef<HTMLElement | null>(null);
+  const restauracao = useRef<number | null>(null);
   aoEscRef.current = aoEsc;
   useEffect(() => {
-    const origem = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // Um efeito rearmado cancela a devolução anterior e conserva o botão original, inclusive no StrictMode.
+    if (restauracao.current !== null) { window.cancelAnimationFrame(restauracao.current); restauracao.current = null; }
+    if (!origem.current) origem.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const conteudo = caixa.current;
     const eu = Symbol('dialogo');
     pilhaDeDialogos.push(eu);
+    caixasDeDialogos.set(eu, caixa);
     function aoTeclar(evento: KeyboardEvent) {
       if (pilhaDeDialogos[pilhaDeDialogos.length - 1] !== eu) return;
       if (evento.key === 'Escape') {
@@ -119,24 +126,36 @@ export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => vo
       }
       if (evento.key !== 'Tab' || !caixa.current) return;
       const focaveis = Array.from(caixa.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])',
+        'a[href], button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])',
       )).filter((el) => el.offsetParent !== null);
-      if (focaveis.length === 0) return;
+      if (focaveis.length === 0) { evento.preventDefault(); caixa.current.focus(); return; }
       const primeiro = focaveis[0];
       const ultimo = focaveis[focaveis.length - 1];
       if (evento.shiftKey && (document.activeElement === primeiro || !caixa.current.contains(document.activeElement))) {
         evento.preventDefault();
         ultimo.focus();
-      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+      } else if (!evento.shiftKey && (document.activeElement === ultimo || !caixa.current.contains(document.activeElement))) {
         evento.preventDefault();
         primeiro.focus();
       }
     }
     window.addEventListener('keydown', aoTeclar);
     return () => {
-      pilhaDeDialogos.splice(pilhaDeDialogos.indexOf(eu), 1);
+      const indice = pilhaDeDialogos.indexOf(eu);
+      if (indice >= 0) pilhaDeDialogos.splice(indice, 1);
+      caixasDeDialogos.delete(eu);
       window.removeEventListener('keydown', aoTeclar);
-      window.requestAnimationFrame(() => origem?.isConnected && origem.focus());
+      restauracao.current = window.requestAnimationFrame(() => {
+        restauracao.current = null;
+        const destino = origem.current;
+        if (!destino?.isConnected) return;
+        // Outra folha ou o próximo destino podem já ter recebido foco: a janela antiga não o toma de volta.
+        const topo = caixasDeDialogos.get(pilhaDeDialogos[pilhaDeDialogos.length - 1])?.current;
+        if (topo && !topo.contains(destino)) return;
+        const atual = document.activeElement;
+        if (atual instanceof HTMLElement && atual !== document.body && atual !== destino && atual.isConnected && !conteudo?.contains(atual)) return;
+        destino.focus();
+      });
     };
   }, [caixa]);
 }
@@ -153,19 +172,44 @@ export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, destrutiv
   aoCancelar: () => void;
 }) {
   const caixa = useRef<HTMLDivElement>(null);
+  const cancelarRef = useRef<HTMLButtonElement>(null);
   const tituloId = useId();
   const textoId = useId();
-  useDialogo(caixa, aoCancelar);
-  // A ação segura (cancelar) recebe o foco.
-  useEffect(() => { caixa.current?.querySelector<HTMLButtonElement>('.folha-acoes button')?.focus(); }, []);
+  const [larguraJanela, setLarguraJanela] = useState(390);
+  const [escalaFonte, setEscalaFonte] = useState(1);
+  useEffect(() => {
+    const medir = () => {
+      setLarguraJanela(window.innerWidth);
+      const escala = Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize) / 16;
+      setEscalaFonte(Number.isFinite(escala) && escala > 0 ? escala : 1);
+    };
+    // Uma medida de 1rem muda mesmo quando o html tem altura fixa. O observador acompanha preferências de fonte sem polling.
+    const sonda = document.createElement('span');
+    sonda.setAttribute('aria-hidden', 'true');
+    sonda.style.cssText = 'position:fixed;left:0;top:0;width:1rem;height:1rem;visibility:hidden;pointer-events:none;contain:strict';
+    document.body.appendChild(sonda);
+    const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(medir) : null;
+    observador?.observe(sonda); observador?.observe(document.documentElement);
+    medir(); window.addEventListener('resize', medir);
+    return () => { window.removeEventListener('resize', medir); observador?.disconnect(); sonda.remove(); };
+  }, []);
+  // Mesma decisão do CartaoConfirmacao nativo: cartão até 400, padding24, gap8, Nunito16/800.
+  const metade = (Math.min(larguraJanela - 32, 400) - 48 - 8) / 2;
+  const cabe = (rotulo: string) => rotulo.length * 9.2 * escalaFonte + 36 + 4 <= metade;
+  const empilhar = !cabe(confirmar) || !cabe(cancelar);
+  useDialogo(caixa, () => { if (!ocupado) aoCancelar(); });
+  // A ordem visual muda ao empilhar; o foco continua explicitamente na ação segura.
+  useEffect(() => { cancelarRef.current?.focus(); }, []);
+  const botaoCancelar = <Botao key="cancelar" ref={cancelarRef} variante="secundario" disabled={ocupado} onClick={aoCancelar}>{cancelar}</Botao>;
+  const botaoConfirmar = <Botao key="confirmar" variante="primario" className={destrutivo ? 'modal-confirmar--destrutivo' : undefined}
+    disabled={ocupado} aria-busy={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>;
   return (
-    <div className="folha-fundo folha-fundo--centro" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoCancelar(); }}>
-      <div className="folha folha--confirmar" role="alertdialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
+    <div className="folha-fundo folha-fundo--centro folha-fundo--confirmar" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoCancelar(); }}>
+      <div className="folha folha--confirmar" role="alertdialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} aria-busy={ocupado} tabIndex={-1} ref={caixa}>
         <h2 id={tituloId} className="folha-titulo">{titulo}</h2>
-        <p id={textoId} className="folha-texto">{texto}</p>
-        <div className="folha-acoes folha-acoes--par">
-          <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>{cancelar}</Botao>
-          <Botao variante={destrutivo ? 'secundario' : 'primario'} className={destrutivo ? 'modal-confirmar--destrutivo' : undefined} disabled={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>
+        <div className="confirmacao-miolo"><p id={textoId} className="folha-texto">{texto}</p></div>
+        <div className="folha-acoes confirmacao-acoes" data-empilhado={empilhar || undefined}>
+          {empilhar ? <>{botaoConfirmar}{botaoCancelar}</> : <>{botaoCancelar}{botaoConfirmar}</>}
         </div>
       </div>
     </div>

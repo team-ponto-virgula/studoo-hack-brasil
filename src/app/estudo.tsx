@@ -44,7 +44,7 @@ import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } f
 import { ACAO_ABANDONAVEL, criarVezes } from './pedido-em-curso';
 import { Pedido, type IdTema } from './pedido';
 import { useCabecalhoPreso } from './cabecalho-preso';
-import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
+import { AdicionarPorLink, Avatar, DialogoConfirmar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
 import { PostarNoPerfil, usePostarNoPerfil } from './postar-no-perfil';
 import { perfilComLink } from './postar-estado';
@@ -61,9 +61,9 @@ import {
 import { useAtualizacaoComunidade } from './seguranca-comunidade';
 import { tocaSons } from './sons';
 import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
+import { CartaoStudoo, ProgressoStudoo } from '../ui/jornada';
 import './aula.css';
 import './trilha.css';
-import './clareza.css';
 
 type Tela =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
@@ -165,6 +165,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   const [agora, setAgora] = useState(() => Date.now());
   const [confirmacao, setConfirmacao] = useState<{
     mensagem: string;
+    texto?: string;
     confirmarRotulo: string;
     cancelarRotulo?: string;
     destrutivo?: boolean;
@@ -606,7 +607,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   function apagarPlano(plano: PlanoResumo, depois?: () => void) {
     origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConfirmacao({
-      mensagem: `${mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total))}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
+      mensagem: mensagens.planos.apagarTitulo(plano.titulo),
+      texto: `${mensagens.planos.apagarTexto(plano.progresso.total, plano.progresso.concluidas)}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
       confirmarRotulo: mensagens.planos.apagar,
       destrutivo: true,
       aoConfirmar: async () => {
@@ -839,7 +841,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   return (
     <PostarNoPerfil ativo={inicio === 'pronto' && comunidade && !visitante} planos={planos} perfil={perfil}
       atualizarPerfil={setPerfil} mudarLink={mudarLink} novaTrilha={() => navegar({ tipo: 'objetivo' })} editarNome={() => navegar({ tipo: 'perfil', focoNome: Date.now() })}>
-    <div className="estudo" data-direcao="clareza" data-navegacao={comNavegacao || undefined}>
+    <div className="estudo" data-direcao="jornada-azul" data-navegacao={comNavegacao || undefined}>
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
       <aside className="barra-lateral" inert={!!passagem}>
         <div className="barra-marca"><Logo /></div>
@@ -1046,6 +1048,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       {confirmacao && (
         <ConfirmacaoModal
           mensagem={confirmacao.mensagem}
+          texto={confirmacao.texto}
           confirmarRotulo={confirmacao.confirmarRotulo}
           cancelarRotulo={confirmacao.cancelarRotulo}
           destrutivo={confirmacao.destrutivo}
@@ -1159,8 +1162,8 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, c
         </div>
         <h2>{plano.titulo}</h2>
         <MarcaCompartilhar plano={plano} />
-        <BarraProgresso progresso={plano.progresso} comPercentual />
       </div>
+      <ProgressoStudoo className="plano-destaque__progresso" concluidas={concluidas} total={total} />
       <div className="plano-destaque__acoes">
         <Botao variante="primario" aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
@@ -1177,50 +1180,69 @@ function MenuCartao({ plano, ocupado, apagar, compartilhar, configurar }: { plan
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
-    function aoClicarFora(evento: PointerEvent) {
+    function aoClicarFora(evento: MouseEvent) {
       const el = detailsRef.current;
-      if (el?.open && evento.target instanceof Node && !el.contains(evento.target)) el.open = false;
+      if (el?.open && evento.target instanceof Node && !el.contains(evento.target)) {
+        evento.preventDefault(); evento.stopPropagation();
+        el.open = false; el.querySelector('summary')?.focus();
+      }
     }
     function aoTeclar(evento: KeyboardEvent) {
       const el = detailsRef.current;
-      if (el?.open && evento.key === 'Escape') {
+      if (!el?.open) return;
+      if (evento.key === 'Escape' || evento.key === 'Tab') {
         evento.preventDefault();
         el.open = false;
         el.querySelector('summary')?.focus();
+        return;
       }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(evento.key)) return;
+      const itens = [...el.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')];
+      if (!itens.length) return;
+      evento.preventDefault();
+      const atual = itens.indexOf(document.activeElement as HTMLButtonElement);
+      const indice = evento.key === 'Home' ? 0 : evento.key === 'End' ? itens.length - 1 : (atual + (evento.key === 'ArrowUp' ? -1 : 1) + itens.length) % itens.length;
+      itens[indice]?.focus();
     }
-    document.addEventListener('pointerdown', aoClicarFora);
+    document.addEventListener('click', aoClicarFora, true);
     window.addEventListener('keydown', aoTeclar);
     return () => {
-      document.removeEventListener('pointerdown', aoClicarFora);
+      document.removeEventListener('click', aoClicarFora, true);
       window.removeEventListener('keydown', aoTeclar);
     };
   }, []);
 
   return (
-    <details className="plano-cartao__menu" ref={detailsRef}>
-      <summary aria-label={mensagens.planos.maisOpcoesRotulo(titulo)}>•••</summary>
+    <details className="plano-cartao__menu" ref={detailsRef} onToggle={evento => {
+      const el = evento.currentTarget;
+      if (!el.open) { delete el.dataset.acima; return; }
+      const menu = el.querySelector<HTMLElement>('.plano-cartao__opcoes');
+      const base = document.querySelector('.navegacao-mobile')?.getBoundingClientRect().top || window.innerHeight;
+      if (menu && menu.getBoundingClientRect().bottom > base - 8 && el.getBoundingClientRect().top > menu.offsetHeight + 8) el.dataset.acima = 'true';
+      el.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus();
+    }}>
+      <summary aria-label={mensagens.planos.maisOpcoesRotulo(titulo)} aria-haspopup="menu">•••</summary>
       {/* Compartilhar, Configurações e Apagar, num menu do próprio app (sem folha do sistema). */}
-      <div className="plano-cartao__opcoes">
+      <div className="plano-cartao__opcoes" role="menu">
         {compartilhar && (
-          <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
+          <button type="button" role="menuitem" className="plano-cartao__compartilhar" aria-label={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
             onClick={() => { if (detailsRef.current) detailsRef.current.open = false; compartilhar(); }}>
-            {mensagens.compartilhar.entrada}
+            <Icone nome="compartilhar" />{mensagens.compartilhar.entrada}
           </button>
         )}
-        {post && <button type="button" className="plano-cartao__compartilhar" disabled={ocupado} onClick={() => {
+        {post && <button type="button" role="menuitem" className="plano-cartao__compartilhar" disabled={ocupado} onClick={() => {
           if (detailsRef.current) { detailsRef.current.open = false; detailsRef.current.querySelector('summary')?.focus(); }
           post.executar();
-        }}>{post.texto}</button>}
+        }}><Icone nome="pessoa" />{post.texto}</button>}
         {configurar && (
-          <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.configuracoes.entradaRotulo(titulo)} disabled={ocupado}
+          <button type="button" role="menuitem" className="plano-cartao__compartilhar" aria-label={mensagens.configuracoes.entradaRotulo(titulo)} disabled={ocupado}
             onClick={() => { if (detailsRef.current) detailsRef.current.open = false; configurar(); }}>
-            {mensagens.configuracoes.entrada}
+            <Icone nome="engrenagem" />{mensagens.configuracoes.entrada}
           </button>
         )}
-        <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
+        <button type="button" role="menuitem" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
           onClick={() => { if (detailsRef.current) detailsRef.current.open = false; apagar(); }}>
-          {mensagens.planos.apagar}
+          <Icone nome="lixeira" />{mensagens.planos.apagar}
         </button>
       </div>
     </details>
@@ -1527,10 +1549,10 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
         <p className="conclusao-licao">{licao.titulo}</p>
       </div>
       <div className="conclusao-nucleo">
-        <div className="conclusao-progresso">
+        <CartaoStudoo className="conclusao-progresso" tom="destaque">
           <h2>{mensagens.planos.progressoPlano}</h2>
           <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
-        </div>
+        </CartaoStudoo>
         <p className="conclusao-sincronia">
           {!visitante && <Icone nome="check" />}
           {visitante ? mensagens.licao.historia.sincroniaVisitante : mensagens.licao.historia.sincronia}
@@ -1604,8 +1626,9 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
 }
 
 /** Diálogo de confirmação no próprio produto: foco preso, Esc cancela e devolve o foco ao botão de origem. */
-function ConfirmacaoModal({ mensagem, confirmarRotulo, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado, aoCancelar, aoConfirmar }: {
+function ConfirmacaoModal({ mensagem, texto = '', confirmarRotulo, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado, aoCancelar, aoConfirmar }: {
   mensagem: string;
+  texto?: string;
   confirmarRotulo: string;
   cancelarRotulo?: string;
   destrutivo?: boolean;
@@ -1613,49 +1636,6 @@ function ConfirmacaoModal({ mensagem, confirmarRotulo, cancelarRotulo = mensagen
   aoCancelar: () => void;
   aoConfirmar: () => void;
 }) {
-  const tituloId = useId();
-  const acoesRef = useRef<HTMLDivElement>(null);
-  const aoCancelarRef = useRef(aoCancelar);
-  aoCancelarRef.current = aoCancelar;
-
-  useEffect(() => {
-    const botoesIniciais = Array.from(acoesRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
-    botoesIniciais[0]?.focus();
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === 'Escape') {
-        evento.preventDefault();
-        aoCancelarRef.current();
-        return;
-      }
-      if (evento.key !== 'Tab') return;
-      const botoes = Array.from(acoesRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
-      if (botoes.length < 2) return;
-      const atual = document.activeElement;
-      if (evento.shiftKey && atual === botoes[0]) {
-        evento.preventDefault();
-        botoes[botoes.length - 1].focus();
-      } else if (!evento.shiftKey && atual === botoes[botoes.length - 1]) {
-        evento.preventDefault();
-        botoes[0].focus();
-      }
-    }
-    window.addEventListener('keydown', aoTeclar);
-    return () => window.removeEventListener('keydown', aoTeclar);
-  }, []);
-
-  return (
-    <div className="modal-fundo" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoCancelar(); }}>
-      <div className="modal-cartao" role="dialog" aria-modal="true" aria-labelledby={tituloId}>
-        <p id={tituloId} className="modal-mensagem">{mensagem}</p>
-        <div className="modal-acoes" ref={acoesRef}>
-          <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>
-            {cancelarRotulo}
-          </Botao>
-          <Botao variante={destrutivo ? 'secundario' : 'primario'} className={destrutivo ? 'modal-confirmar--destrutivo' : undefined} disabled={ocupado} onClick={aoConfirmar}>
-            {confirmarRotulo}
-          </Botao>
-        </div>
-      </div>
-    </div>
-  );
+  return <DialogoConfirmar titulo={mensagem} texto={texto} confirmar={confirmarRotulo} cancelar={cancelarRotulo}
+    destrutivo={destrutivo} ocupado={ocupado} aoCancelar={aoCancelar} aoConfirmar={aoConfirmar} />;
 }

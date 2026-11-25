@@ -30,6 +30,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
+import { CabecalhoSecao, CartaoStudoo } from '../ui/jornada';
 import { medirAcaoFixa } from '../ui/rodape-movel';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, podeDivulgarLink, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil, useAvisoDoApp } from './comunidade';
@@ -251,13 +252,13 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
       {compartilhar && perfil && (
         <>
           {perfil.visitante ? (
-            <div className="perfil-cartao">
+            <CartaoStudoo tom="destaque" className="perfil-cartao">
               <p className="perfil-cartao__visitante">{p.visitante}</p>
               <p className="campo-dica">{p.visitanteAvisoTroca}</p>
               <div>
                 <Botao variante="secundario" onClick={sair}>{p.entrarOuCriar}</Botao>
               </div>
-            </div>
+            </CartaoStudoo>
           ) : !perfil.nome || editando ? (
             // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
             <EditorPerfil perfil={perfil} focoNome={focoNome} anunciar={anunciar} registrarGuarda={registrarGuarda}
@@ -282,7 +283,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
           {!perfil.visitante && (
             <section className="perfil-secao" aria-labelledby="perfil-compartilhadas">
               <div className="postar-cabecalho">
-                <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
+                <CabecalhoSecao tituloId="perfil-compartilhadas" titulo={perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas} />
                 {perfil.links.length > 0 && postagem && <Botao variante="secundario" onClick={postagem.abrir}>{p.postar.botao}</Botao>}
               </div>
               {/* Compartilhar é ter um link; aparecer no perfil é postar (spec 16, item 32): a linha diz a diferença. */}
@@ -337,7 +338,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
 
           {!perfil.visitante && perfil.nome && (
             <section className="perfil-secao" aria-labelledby="perfil-publico">
-              <h2 id="perfil-publico" className="perfil-secao__titulo">{p.publicoTitulo}</h2>
+              <CabecalhoSecao tituloId="perfil-publico" titulo={p.publicoTitulo} />
               <p className="folha-texto">{perfil.publico ? p.publico(linksPublicosNoPerfil(perfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</p>
               {perfil.publico && perfil.perfilId && (
                 <a className="botao botao--secundario perfil-ver" href={`/p/${perfil.perfilId}`} target="_blank" rel="noopener">{p.verComoOutros}</a>
@@ -350,12 +351,12 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
       <SecaoSomPerfil />
       <SecaoPrivacidade visitante={visitante} />
       {compartilhar && <BloqueadasPerfil />}
-      <section className="perfil-secao"><h2 className="perfil-secao__titulo">{mensagens.seguranca.ajudaTitulo}</h2>
+      <section className="perfil-secao"><CabecalhoSecao titulo={mensagens.seguranca.ajudaTitulo} />
         <div className="seguranca-lista seguranca-ajuda"><Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}<Icone nome="seta" /></Link>
         <Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}<Icone nome="seta" /></Link><Link href={mensagens.seguranca.rotas.politica}>{mensagens.seguranca.politica}<Icone nome="seta" /></Link></div>
       </section>
       <section className="perfil-secao" aria-labelledby="perfil-conta">
-        <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
+        <CabecalhoSecao tituloId="perfil-conta" titulo={p.conta} />
         {compartilhar && perfil && !visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
         <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
         <BotaoExcluirConta visitante={visitante} />

@@ -86,5 +86,5 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
 
 const visual = StyleSheet.create({
   simbolo: { width: 56, height: 56, borderRadius: 18, backgroundColor: cores.nevoa, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  aviso: { padding: 14, borderRadius: 14, backgroundColor: cores.nevoa },
+  aviso: { padding: 16, borderRadius: 16, backgroundColor: cores.nevoa },
 });

@@ -56,7 +56,7 @@ test('aceite b75134a: laço no selo, faixa da web, sem selo de demonstração, s
   const cenas = await ler('apps/mobile/src/estudio-cenas.tsx');
   assert.match(cenas, /<Icone nome="revisao" tamanho=\{20\} cor=\{cores\.acao\} \/>/);
   assert.match(cenas, /faixaPonte: \{ height: 88,[^}]*borderRadius: 16, backgroundColor: '#E4F1FF'/);
-  assert.match(cenas, /faixaMargemTexto: \{ color: '#5E6A85', fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16/);
+  assert.match(cenas, /faixaMargemTexto: \{ color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16/);
   assert.match(cenas, /\{comemorar \? <Stu nome="stu-animado" tamanho=\{36\} animado="uma-vez" \/> : <Stu nome="stu-perfil" tamanho=\{36\} \/>\}/);
   const apoio = await ler('apps/mobile/src/estudio-adaptativo.tsx');
   assert.match(apoio, /<SeloDaPonte \/>/, 'sem "Modo demonstração" no alto da ponte');

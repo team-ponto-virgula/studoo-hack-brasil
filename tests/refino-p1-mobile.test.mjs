@@ -54,8 +54,8 @@ test('item 9: "Exemplo" no selo neutro, sem o parágrafo explicativo, com o nome
   assert.match(contrato, /demonstracaoRotulo: 'Exemplo criado pelo Studoo para mostrar o app',/);
   assert.doesNotMatch(comunidade, /demonstracaoExplica|explorar-demo/);
   assert.match(comunidade, /accessible accessibilityLabel=\{c\.demonstracaoRotulo\} style=\{comunidadeEstilos\.seloNeutro\}/);
-  assert.match(comunidade, /seloNeutro: \{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 1, backgroundColor: '#F1F4FD' \}/);
-  assert.match(comunidade, /seloNeutroTexto: \{ color: '#5E6A85', fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 13/);
+  assert.match(comunidade, /seloNeutro: \{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 1, backgroundColor: cores\.nevoa \}/);
+  assert.match(comunidade, /seloNeutroTexto: \{ color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 13/);
 });
 
 test('item 9 (c103c3b): a apresentação não mostra selo de demonstração nem de exemplo', () => {
@@ -112,7 +112,8 @@ test('item 20: "Excluir conta" é o secundário de 44 com borda e texto #C23B4E,
   assert.match(privacidade, /testID="excluir-conta" variante="destrutivoBaixo"/);
   assert.match(interfaceApp, /botaoFaceDestrutivaBaixa: \{ minHeight: 44, borderColor: cores\.erro, backgroundColor: cores\.fundo \}/);
   assert.match(interfaceApp, /variante === 'destrutivoBaixo' \? cores\.erro :/);
-  assert.match(await ler('tema.ts'), /erro: '#C23B4E'/);
+  assert.match(await ler('tema.ts'), /export const cores = jornadaAzul\.cores;/);
+  assert.equal((await import('../packages/contratos/src/jornada-azul.ts')).jornadaAzul.cores.erro, '#C23B4E');
   for (const sair of perfil.matchAll(/testID="sair"[^\n]*\n\s*<BotaoExcluirConta /g)) assert.ok(sair);
   assert.equal([...perfil.matchAll(/testID="sair"[^\n]*\n\s*<BotaoExcluirConta /g)].length, 2, 'nas duas telas de perfil, logo depois de Sair');
 });
@@ -156,17 +157,18 @@ test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do t
   assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
 });
 
-test('item 24: com o "Explique" aberto, o acerto é uma linha só: "✓ Isso aí!" à esquerda e "Continuar" à direita, sem o texto', async () => {
+test('item 24: compacto em tela larga; no mobile a ação permanece inteira, sem repetir o texto', async () => {
   const licao = await ler('licao.tsx');
   assert.match(licao, /compacto=\{expliqueAberto\}/);
-  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa\);/);
+  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa && janela\.width > 600\);/);
   assert.match(licao, /linhaCompacta && licaoEstilos\.painelLinha\]\}>/);
   // O texto do retorno já fica fora no compacto; o "Continuar" sai da metade e vai à direita do título.
   assert.match(licao, /\{!compacto && \(\n\s*<View style=\{licaoEstilos\.encolhe\}>/);
   assert.match(licao, /<View style=\{certa && !linhaCompacta \? licaoEstilos\.metade : undefined\}>/);
-  assert.match(licao, /painelLinha: \{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 \}/);
+  assert.match(licao, /painelLinha: \{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 \}/);
   assert.match(licao, /retornoTituloLinha: \{ fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, letterSpacing: 0, color: cores\.sucesso \}/);
-  assert.match(await ler('tema.ts'), /sucesso: '#1F7A5A'/);
+  assert.match(await ler('tema.ts'), /export const cores = jornadaAzul\.cores;/);
+  assert.equal((await import('../packages/contratos/src/jornada-azul.ts')).jornadaAzul.cores.sucesso, '#1F7A5A');
 });
 
 test('item 25: os passos do "Explique" são uma linha de indicador não tocável, "Passo 1 de 3 · Gravar ou escrever"', async () => {
@@ -178,7 +180,7 @@ test('item 25: os passos do "Explique" são uma linha de indicador não tocável
   assert.match(etapas, /accessibilityLabel=\{`\$\{passo\}: \$\{etapas\[ativa\]\}`\}/);
   assert.match(etapas, /\{`\$\{passo\} · \$\{etapas\[ativa\]\}`\}/);
   assert.doesNotMatch(etapas, /Pressable|onPress|borderWidth/);
-  assert.match(cenas, /etapaLinha: \{ color: '#5E6A85', fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 \}/);
+  assert.match(cenas, /etapaLinha: \{ color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 \}/);
   assert.match(contrato, /ponteIndicador: \(n: number\) => `Passo \$\{n\} de 3`/);
 });
 

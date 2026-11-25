@@ -1126,13 +1126,13 @@ export const socialEstilos = StyleSheet.create({
   avatarInicial: { color: '#FFFFFF', fontFamily: fontes.titulo, fontWeight: '900', textAlign: 'center' },
 
   // .cabeca-perfil: borda de 2 em volta, cantos de 20, a faixa de 104 e o corpo com 18 nos lados.
-  cabeca: { overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
+  cabeca: { overflow: 'hidden', borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
   cabecaFaixa: { height: 104, overflow: 'hidden' },
-  cabecaCorpo: { gap: 8, paddingHorizontal: 18, paddingBottom: 18 },
+  cabecaCorpo: { gap: 8, paddingHorizontal: 20, paddingBottom: 20 },
   cabecaAvatar: { marginTop: -48, borderWidth: 4, borderColor: '#FFFFFF', shadowColor: cores.texto, shadowOpacity: 0.18, shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   cabecaNome: { marginTop: 4, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 26, lineHeight: 31.2, letterSpacing: -0.91 },
-  cabecaResumo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5 },
+  cabecaResumo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   cabecaInteresses: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
   cabecaInteresse: { paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1.5, borderRadius: 999 },
   cabecaInteresseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
@@ -1150,8 +1150,8 @@ export const socialEstilos = StyleSheet.create({
   seloCompartilhada: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10,
     paddingVertical: 3, borderRadius: 999, backgroundColor: cores.ceu },
   // Os selos da spec 14: neutro (#F1F4FD / #5E6A85) e âmbar (#FFF6EA / #9A5B00), 13 px 800, no lugar do "Compartilhada".
-  seloEstado: { alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#F1F4FD' },
-  seloEstadoTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  seloEstado: { alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: cores.nevoa },
+  seloEstadoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   seloEstadoAlerta: { backgroundColor: '#FFF6EA' },
   seloEstadoAlertaTexto: { color: '#9A5B00' },
   seloCompartilhadaTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900' },
@@ -1166,7 +1166,7 @@ export const socialEstilos = StyleSheet.create({
   seloNivelTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900' },
 
   chave: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
-  chaveTrilho: { width: 46, height: 28, borderRadius: 999, backgroundColor: '#C5CDE6' },
+  chaveTrilho: { width: 46, height: 28, borderRadius: 999, backgroundColor: cores.bordaCampo },
   chaveBolinha: { position: 'absolute', top: 3, left: 3, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF',
     shadowColor: '#0F172A', shadowOpacity: 0.3, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 2 },
   chaveTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
@@ -1206,7 +1206,7 @@ export const socialEstilos = StyleSheet.create({
 
   // .folha: sobe de baixo; 480 no máximo, 20 de respiro, borda de 2 sem a de baixo, cantos de 24 em cima.
   folhaFundo: { flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.45)' },
-  folha: { width: '100%', maxWidth: 480, maxHeight: '92%', paddingTop: 20, borderWidth: 2, borderBottomWidth: 0, borderColor: cores.gelo,
+  folha: { width: '100%', maxWidth: 480, maxHeight: '92%', paddingTop: 20, borderWidth: 1.5, borderBottomWidth: 0, borderColor: cores.gelo,
     borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: cores.fundo, shadowColor: '#0F172A', shadowOpacity: 0.2, shadowRadius: 40,
     shadowOffset: { width: 0, height: -12 }, elevation: 16 },
   folhaConteudo: { gap: 14, paddingHorizontal: 20 },
@@ -1217,7 +1217,7 @@ export const socialEstilos = StyleSheet.create({
     borderBottomWidth: 2, borderBottomColor: cores.nevoa, backgroundColor: cores.fundo, zIndex: 3 },
   folhaTopoTexto: { flex: 1, gap: 2, minWidth: 0 },
   folhaTopoTrilha: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  folhaTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5, letterSpacing: -0.33 },
+  folhaTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30, letterSpacing: -0.6 },
   folhaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   folhaTextoMiudo: { color: cores.textoSecundario, fontSize: 14, lineHeight: 21 },
   folhaAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
@@ -1234,7 +1234,7 @@ export const socialEstilos = StyleSheet.create({
   aviso: { gap: 6, paddingHorizontal: 14, paddingVertical: 12, borderLeftWidth: 4, borderLeftColor: cores.alerta, borderTopLeftRadius: 6,
     borderBottomLeftRadius: 6, borderTopRightRadius: 14, borderBottomRightRadius: 14, backgroundColor: '#FFF6EA' },
   avisoTexto: { color: '#5B3A00', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23.2 },
-  folhaLink: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 14,
+  folhaLink: { minHeight: 52, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1.5, borderColor: cores.bordaCampo, borderRadius: 16,
     color: cores.texto, backgroundColor: cores.nevoa, fontFamily: fontes.corpo, fontSize: 15 },
   esqueleto: { gap: 10 },
   esqueletoBarra: { height: 18, borderRadius: 8, backgroundColor: cores.gelo },
@@ -1249,7 +1249,7 @@ export const socialEstilos = StyleSheet.create({
   nivelTituloLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   // .nivel__agora: pílula verde-clara de 12/900.
   nivelAgora: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, backgroundColor: '#E3F6EA' },
-  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '900' },
+  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20, fontWeight: '900' },
   // .publicacao__ainda: a nota em branco sobre a névoa da publicação.
   publicacaoAinda: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FFFFFF', color: cores.texto, fontFamily: fontes.corpo,
     fontSize: 16, lineHeight: 24, fontWeight: '800', overflow: 'hidden' },
@@ -1279,7 +1279,7 @@ export const socialEstilos = StyleSheet.create({
   // No pedido, 26 do último exemplo até "Adicionar por link" (o bloco das ideias já deixa 5), fechado ou aberto.
   porLinkNoPedido: { marginTop: 21 },
   porLinkAbrirTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  porLink: { gap: 14, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
+  porLink: { gap: 16, padding: 20, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
   porLinkTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   porLinkForm: { gap: 6 },
   porLinkLinha: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 4 },

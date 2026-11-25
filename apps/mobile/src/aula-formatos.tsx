@@ -30,7 +30,7 @@ import {
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, CaixaDoCampo, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
+import { Botao, CaixaDoCampo, caixaAlta, degrauFora, estilos, RolagemDaTela, useMovimentoReduzido } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
@@ -97,11 +97,12 @@ function useTocando(fala: Fala) {
  * Caixa tocável com degrau, como os cartões da web (ordenar, associar, verdadeiro ou falso, "como foi"): a face com a borda
  * de 2 que fecha em volta e o degrau de 4 por fora, na cor da sombra da web (0 4px 0), sem ocupar lugar embaixo.
  */
-function CartaoDegrau({ face, corDegrau, raio = 14, estiloFora, children, ...resto }: Omit<PressableProps, 'style' | 'children'> & {
+function CartaoDegrau({ face, corDegrau, raio = 16, estiloFora, children, ...resto }: Omit<PressableProps, 'style' | 'children'> & {
   face: StyleProp<ViewStyle>; corDegrau: string; raio?: number; estiloFora?: StyleProp<ViewStyle>; children: ReactNode;
 }) {
+  const reduzir = useMovimentoReduzido();
   return (
-    <Pressable {...resto} style={({ pressed }) => [degrauFora(4, raio, corDegrau, pressed), estiloFora]}>
+    <Pressable {...resto} style={({ pressed }) => [degrauFora(4, raio, corDegrau, pressed && reduzir === false), estiloFora]}>
       <View style={face}>{children}</View>
     </Pressable>
   );
@@ -553,7 +554,7 @@ function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: str
         <Text key={posicao}>
           {comFormula ? <TextoComFormulas texto={parte} estilo={estilo} /> : parte}
           {posicao < partes.length - 1 && (preenchimento
-            ? <Text style={[formatos.lacuna, formatos.lacunaPreenchida]}>{preenchimento}</Text>
+            ? <Text style={[formatos.lacuna, formatos.lacunaPreenchida, puro && formatos.lacunaCodigoPreenchida]}>{preenchimento}</Text>
             : <View accessible accessibilityLabel="lacuna" style={barra} />)}
         </Text>
       ))}
@@ -858,7 +859,7 @@ function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
   );
 }
 
-const coresDosPares = [cores.acao, '#C25A8A', '#1F8A8A', '#B7791F', '#6B3FA0', '#5E6A85'];
+const coresDosPares = [cores.sucesso, '#993F6A', '#176B6B', cores.alerta, '#6B3FA0', cores.textoSecundario];
 
 /** Associar tocando: um item da esquerda e depois o par na direita; cada par ganha um número e uma cor. */
 export function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }: {
@@ -944,7 +945,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
         {par && (
           // Como na web: na coluna da direita, o número vira uma etiqueta no canto, e a definição usa a largura toda.
           <View style={[formatos.numeroPar, lado === 'direita' && formatos.numeroParCanto,
-            { backgroundColor: estado === 'certo' ? cores.sucessoClaro : estado === 'errado' ? '#E3A24A' : cor }]}>
+            { backgroundColor: estado === 'certo' ? cores.sucesso : estado === 'errado' ? cores.alerta : cor }]}>
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
@@ -996,7 +997,7 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
           return (
             <CartaoDegrau key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} aria-checked={marcada} disabled={desativado}
               testID={`vf-${opcao}`} onPress={() => { mudar(`${opcao}:${justificativa}`); void tocaSons.tocarEfeito('toque_opcao'); }} raio={16} estiloFora={[{ flex: 1 }, desativado && !marcada && { opacity: 0.55 }]}
-              corDegrau={marcada && retorno === 'certa' ? '#9AD8B5' : marcada && retorno === 'errada' ? '#F2CF96' : marcada ? '#9FB1F0' : cores.gelo}
+              corDegrau={marcada && retorno === 'certa' ? '#9AD8B5' : marcada && retorno === 'errada' ? '#F2CF96' : marcada ? cores.acao : cores.gelo}
               face={[formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
                 marcada && retorno === 'errada' && formatos.cartaoErrado]}>
               {/* .vf__valores label: o texto fica azul escuro na marcada, verde na certa e âmbar na errada. */}
@@ -1261,7 +1262,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           return (
             <CartaoDegrau key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }} aria-checked={marcada}
               disabled={travada} onPress={() => escolher(valor)} raio={16} estiloFora={[{ flex: 1 }, travada && { opacity: 0.55 }]}
-              corDegrau={marcada && valor === 'consegui' ? '#9AD8B5' : marcada && valor === 'quase' ? '#F2CF96' : marcada ? '#9FB1F0' : cores.gelo}
+              corDegrau={marcada && valor === 'consegui' ? '#9AD8B5' : marcada && valor === 'quase' ? '#F2CF96' : marcada ? cores.acao : cores.gelo}
               face={[formatos.valor, marcada && valor === 'consegui' && formatos.cartaoCerto,
                 marcada && valor === 'quase' && formatos.cartaoQuase, marcada && valor === 'ainda_nao' && formatos.cartaoEscolhido]}>
               <Text style={[formatos.valorTexto, { fontSize: 15, textAlign: 'center' }]}>{t.pratica.opcoes[valor]}</Text>
@@ -1313,6 +1314,7 @@ const formatos = StyleSheet.create({
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },
   lacunaPreenchida: { color: cores.acaoEscura, fontWeight: '800' },
+  lacunaCodigoPreenchida: { color: cores.nevoa },
   codigo: { padding: 14, borderRadius: 14, color: cores.fundo, backgroundColor: cores.texto, fontFamily: 'monospace', fontSize: 15, lineHeight: 22 },
   citacao: { paddingVertical: 14, paddingRight: 14, paddingLeft: 44, borderLeftWidth: 5, borderLeftColor: '#C9A24A', borderRadius: 14,
     backgroundColor: '#FBF6EA' },
@@ -1353,13 +1355,13 @@ const formatos = StyleSheet.create({
   eixoDiagrama: { position: 'absolute', textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
     fontSize: 11, lineHeight: 14 },
   batida: { flexDirection: 'row', gap: 4, width: '100%' },
-  batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: '#EEF2FF' },
+  batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: cores.nevoa },
   batidaSobe: { backgroundColor: '#F6F7FB' },
   batidaAtiva: { backgroundColor: cores.acao, transform: [{ translateY: -2 }] },
   batidaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
   falaResultado: { flexBasis: '100%', marginTop: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, overflow: 'hidden',
     fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
-  falaOtima: { backgroundColor: '#EEFAF3', color: cores.sucesso },
+  falaOtima: { backgroundColor: cores.sucessoFundo, color: cores.sucesso },
   falaQuase: { backgroundColor: '#FFF6D9', color: '#7A4A00' },
   falaTente: { backgroundColor: '#FFF1E0', color: cores.alerta },
   comparacao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%' },
@@ -1376,16 +1378,16 @@ const formatos = StyleSheet.create({
   acordeNome: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
   // .ordenar button, .associar button: face de 52 com borda de 2 em volta e 10 × 14 de respiro; o degrau de 4 vem por fora
   // (CartaoDegrau).
-  cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
+  cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 16,
     borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoPar: { paddingHorizontal: 10, gap: 8 },
   // .associar button até 600 px: 0,95rem (15,2) com a entrelinha de 1,5.
   cartaoParTexto: { fontSize: 15.2, lineHeight: 22.8 },
   cartaoTexto: { flex: 1, fontWeight: '700' },
-  cartaoEscolhido: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
-  cartaoEscolhidaAssociar: { borderColor: cores.acao, backgroundColor: '#EEF2FF' },
-  cartaoCerto: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
-  cartaoErrado: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
+  cartaoEscolhido: { borderColor: cores.acao, backgroundColor: cores.nevoa },
+  cartaoEscolhidaAssociar: { borderColor: cores.acao, backgroundColor: cores.nevoa },
+  cartaoCerto: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoFundo },
+  cartaoErrado: { borderColor: '#E3A24A', backgroundColor: cores.alertaFundo },
   cartaoQuase: { borderColor: '#E0A92E', backgroundColor: '#FFF6D9' },
   posicaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17 },
   numeroPar: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
@@ -1402,7 +1404,7 @@ const formatos = StyleSheet.create({
   valor: { minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
     borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
-  aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
+  aberta: { minHeight: 140, padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
   contadorLugar: { height: 18 },
   contador: { alignSelf: 'flex-end', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },

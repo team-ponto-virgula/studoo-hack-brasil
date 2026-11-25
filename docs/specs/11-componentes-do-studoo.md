@@ -1,32 +1,36 @@
 # Componentes do Studoo no lugar dos do sistema
 
-**Estado:** regra de design de 19/11, pedido 4 do Lead. Vale para web, Android e iPhone, com a mesma anatomia, medidas, textos, foco e movimento. Parte da regra do dono “nada de janela nativa” (spec 07, “Sem janelas do sistema”), que lista o pouco que continua do sistema. Esboço: `componentes-390.png`, na pasta de trabalho do Designer (`ux/04-componentes`).
+**Estado:** anatomia comum de 19/11, atualizada pela escolha Jornada Azul em 25/11/2026. Vale para web, Android e iPhone, com a mesma anatomia, medidas, textos, foco e movimento. Parte da regra do dono “nada de janela nativa” (spec 07, “Sem janelas do sistema”), que lista o pouco que continua do sistema. Esboço: `componentes-390.png`, na pasta de trabalho do Designer (`ux/04-componentes`).
 
-Hoje a web tem dois menus (o balão do Explorar, que abre em cima, e o `details` de Minhas trilhas) e duas confirmações (a folha com título, `DialogoConfirmar`, e o `.modal-cartao`, com a mensagem toda em negrito e sem título). Cada componente abaixo passa a ser um só, nas três plataformas.
+O objetivo é uma só família para cada função, nas três plataformas. As implementações legadas de menu e confirmação devem convergir para a anatomia e os comportamentos abaixo; o status de cada consumidor é rastreado no inventário da Jornada Azul.
 
-## Controles do piloto A (24/11/2026)
+## Jornada Azul: componentes padrão (25/11/2026)
 
-Por pedido de repaginação do dono, os controles do percurso Pedido/Geração/Proposta/Aula/Conclusão e da ação de retomada passam a usar a direção **Clareza que ensina**. É uma apresentação opt-in: na web, escopo `estudo[data-direcao="clareza"]`; no app, `Botao.plano` e `Caminho.claro` nos locais do piloto. O padrão dos demais botões, menus, confirmações e folhas permanece como especificado abaixo. A direção não muda callbacks, papéis, nomes acessíveis, testIDs ou regras de bloqueio/envio.
+O dono escolheu **A · Jornada Azul** e pediu a reorganização de todos os componentes com maior identificação do Studoo. O [sistema](../ux/jornada-azul/SISTEMA.md) fixa os fundamentos, o [inventário](../ux/jornada-azul/INVENTARIO.md) lista os consumidores web/app e o [plano](../ux/jornada-azul/PLANO.md) define a ordem e a revisão. O Stu está aprovado e permanece com os assets, proporções, expressões e animações atuais; logo e intro corrigida também são preservados.
 
-| Papel no piloto | Anatomia |
+O piloto **Clareza que ensina**, de 24/11, era limitado ao percurso de estudo e ao CTA de retomada. A escolha vigente o substitui pelo sistema Jornada Azul, sem criar outra opção visual. Escopo `data-direcao="clareza"`, `Botao.plano` ou `Caminho.claro` eventualmente mantidos durante a migração são compatibilidade de implementação, não um contrato visual concorrente. Seu [registro histórico](https://github.com/team-ponto-virgula/studoo-hack-brasil/blob/8c057241f6fc4820f36c284218a4f04affa59543/docs/specs/11-componentes-do-studoo.md) não é alterado.
+
+| Papel | Anatomia vigente |
 | --- | --- |
-| Ação principal | Largura toda no celular, mínimo 52, raio 16, azul `#2563FF` e texto branco 17/24 em peso 900; sem degrau. Feedback de pressão, carregamento e foco continuam. |
-| Alternativa | Mínimo 44, texto 16/22, depois da ação principal. Pode ficar sem uma caixa extra; nunca desaparecer para caber. Cores semânticas de sucesso/erro continuam nos retornos apropriados. |
-| Campo de objetivo | Borda legível de 1,5 em `#7B8AAF`, raio 18, respiro lateral 16, texto 17/26 e placeholder `#566382`; foco no controle existente. Validação, limite e descrição acessível preservados. |
-| Informação de apoio | Auxiliares a partir de 14/21. Separador ou superfície sutil agrupa informação; evitar borda, sombra e outro cartão empilhados para o mesmo conteúdo. |
-| Resumo da conclusão | Progresso e sincronia primeiro; objetivo praticado e aviso de rever continuam legíveis. Métricas reais em duas colunas neutras, rótulo 14/21 e valor 17/26, sem relevo/colorização competindo com a próxima ação. |
+| Ação principal | Largura toda no celular, mínimo 52, raio 16, azul `#2457DD`, texto branco Nunito 800 de 16/24 ou maior e degrau de 4 em `#173B9C`. A face desce 3 ao pressionar sem alterar a caixa. Estado pendente preserva altura e nome da ação; enviar duplicado fica bloqueado. |
+| Alternativa/ícone | Alvo mínimo 44, texto 16/22, depois da principal. Borda/superfície neutra ou texto. Ícone isolado tem nome acessível. Cores semânticas de sucesso/erro continuam nos retornos apropriados. |
+| Campo | Rótulo externo, borda legível `#7B8AAF`, raio 16, respiro lateral 16, corpo a partir de 16/24 e placeholder `#50607A`; foco, descrição/erro associados e valor válido preservados. |
+| Informação de apoio | Corpo 16/24, ajuda 14/21, metadados a partir de 13/20; navy `#15275B` e secundário `#50607A`. Superfície suave `#EDF3FF`, borda `#DFE7F2`, cartões de raio 24. Não empilhar cartão, borda e sombra para o mesmo agrupamento. |
+| Escolha e seleção | Mesmo contorno/caixa entre os estados; azul e superfície suave na seleção; rótulo/ícone/estado acessível além da cor. Preservar os pares corretos e feedback parcial. |
+| Resumo da conclusão | Progresso confirmado/sincronia primeiro; próxima lição, objetivo praticado e aviso de rever legíveis. Métricas reais, histórias condicionais e compartilhar são secundários. Uma ação principal; nenhum salvo produzido pela decoração. |
+| Foco e movimento | Foco 3 com afastamento 3; pressão curta e transições funcionais. Reduzido/desconhecido dispensa deslocamento/escala/loop conservando conteúdo e ações. |
 
-O contraste, foco, teclado, leitor de tela, texto ampliado e as áreas seguras precisam ser conferidos no produto integrado. Remover relevo não remove o indicador de foco nem a distinção de estado. A [spec 04](04-experiencia-ilustrada.md) fixa a ordem das telas; a [spec 07](07-paridade-web-mobile.md) continua exigindo pares nas mesmas larguras. Nenhum destes controles é uma autorização para substituir a lógica real por mocks ou alterar a API.
+Os tokens se aplicam também aos menus, confirmações, avisos e folhas abaixo. Alterações de estilo preservam callbacks, papéis, nomes acessíveis, testIDs, bloqueios e validações reais. A [spec 04](04-experiencia-ilustrada.md) organiza as telas; a [spec 07](07-paridade-web-mobile.md) exige os pares nas mesmas larguras e identifica diferenças técnicas. Estas regras não atribuem nota ao produto nem autorizam substituir lógica real por mocks.
 
 ## Menu de ações
 
 **Onde.** No “•••” dos cartões (Minhas trilhas, Explorar e perfil) e em qualquer lista curta de ações, até cinco. Com mais de cinco, ou com conteúdo além de ações, usa-se a folha.
 
-**Botão.** 44 × 44 px, raio de 12, três pontos de 4 px `#5E6A85` com 4 px entre eles. Aberto, ganha o fundo `#F1F4FD`. O nome acessível é “Mais opções de “<título>””, com `aria-haspopup="menu"` e `aria-expanded`.
+**Botão.** 44 × 44 px, raio de 12, três pontos de 4 px `#50607A` com 4 px entre eles. Aberto, ganha o fundo `#EDF3FF`. O nome acessível é “Mais opções de “<título>””, com `aria-haspopup="menu"` e `aria-expanded`.
 
-**Balão.** Largura mínima de 200 px e máxima de 280; respiro de 6; borda de 1 px `#E1E7FA`; raio de 16; fundo branco; sombra `0 12px 28px rgba(15, 23, 42, .18)`. Abre embaixo do botão, alinhado pela direita, a 6 px. Se faltar espaço embaixo (menos de 8 px até a borda da tela ou até a barra de abas), abre em cima. Fica sempre a 8 px das bordas da tela.
+**Balão.** Largura mínima de 200 px e máxima de 280; respiro de 6; borda de 1 px `#DFE7F2`; raio de 16; fundo branco; sombra `0 12px 28px rgba(15, 23, 42, .18)`. Abre embaixo do botão, alinhado pela direita, a 6 px. Se faltar espaço embaixo (menos de 8 px até a borda da tela ou até a barra de abas), abre em cima. Fica sempre a 8 px das bordas da tela.
 
-**Item.** Altura de 48 px, 12 px de respiro dos lados e raio de 10. Ícone de 20 px à esquerda, a 12 px do texto. Texto em Nunito 800 de 16 px, `#1B2A5E`. Com o dedo ou o mouse em cima, fundo `#F1F4FD`; com o foco pelo teclado, anel de 3 px `#3858D6` por dentro. A ação de perigo (Apagar, Denunciar) vem sempre por último, em `#C23B4E` (texto e ícone), depois de uma linha de 1 px `#E1E7FA` com 6 px acima e abaixo; num menu só com ela, não há linha.
+**Item.** Altura de 48 px, 12 px de respiro dos lados e raio de 10. Ícone de 20 px à esquerda, a 12 px do texto. Texto em Nunito 800 de 16 px, `#15275B`. Com o dedo ou o mouse em cima, fundo `#EDF3FF`; com o foco pelo teclado, anel de 3 px `#2457DD` por dentro. A ação de perigo (Apagar, Denunciar) vem sempre por último, em `#C23B4E` (texto e ícone), depois de uma linha de 1 px `#DFE7F2` com 6 px acima e abaixo; num menu só com ela, não há linha.
 
 **Ordem e textos.** Minhas trilhas: “Compartilhar”, “Configurações”, “Apagar”. Explorar e perfil de outra pessoa: “Denunciar”.
 
@@ -42,11 +46,11 @@ O contraste, foco, teclado, leitor de tela, texto ampliado e as áreas seguras p
 
 **Onde.** Antes de toda ação que não se desfaz ou que perde algo: apagar a trilha, sair da conta, parar de compartilhar, remover a foto, sair sem salvar e recomeçar a lição do zero.
 
-**Fundo e cartão.** Véu `rgba(15, 23, 42, .45)` na tela toda; tocar no véu é o mesmo que “Cancelar”, menos enquanto a ação é enviada. O cartão fica no centro, com largura `min(100% − 32 px, 400 px)`, respiro de 24, raio de 24, borda de 2 px `#E1E7FA`, sombra `0 20px 48px rgba(15, 23, 42, .24)` e 12 px entre os blocos.
+**Fundo e cartão.** Véu `rgba(15, 23, 42, .45)` na tela toda; tocar no véu é o mesmo que “Cancelar”, menos enquanto a ação é enviada. O cartão fica no centro, com largura `min(100% − 32 px, 400 px)`, respiro de 24, raio de 24, borda de 2 px `#DFE7F2`, sombra `0 20px 48px rgba(15, 23, 42, .24)` e 12 px entre os blocos.
 
 **Conteúdo, nesta ordem.**
-1. Título: a pergunta, curta, em Quicksand 700 de 20/26, `#1B2A5E`, em até três linhas. Por exemplo, “Apagar “Receitas de família, medidas certas”?”.
-2. Texto: uma ou duas frases sobre o que acontece, em Nunito 400 de 16/24, `#5E6A85`.
+1. Título: a pergunta, curta, em Quicksand 700 de 20/26, `#15275B`, em até três linhas. Por exemplo, “Apagar “Receitas de família, medidas certas”?”.
+2. Texto: uma ou duas frases sobre o que acontece, em Nunito 400 de 16/24, `#50607A`.
 3. Aviso a mais, se houver, num parágrafo à parte (como o do link de compartilhamento).
 4. Ações.
 
@@ -64,7 +68,7 @@ O contraste, foco, teclado, leitor de tela, texto ampliado e as áreas seguras p
 
 **Onde.** No retorno de uma ação que não pede decisão: “Capa salva.”, “Perfil salvo.”, “Link copiado.”, o aviso da primeira curtida e os erros de rede de uma ação de toque, como “Não deu para curtir agora.”. Não serve para confirmar algo destrutivo nem para erro de campo: o erro de campo fica embaixo do campo.
 
-**Faixa.** Largura `min(100% − 32 px, 480 px)`, centralizada, 16 px acima da barra de abas; onde não há barra, 16 px acima da borda de baixo, com a área segura. Fundo `#1B2A5E`, texto branco em Nunito 800 de 15/22, respiro de 12 × 16, raio de 16 e sombra `0 12px 30px rgba(15, 23, 42, .28)`. Ícone de 20 px à esquerda: visto no acerto, alerta no erro e coração na curtida.
+**Faixa.** Largura `min(100% − 32 px, 480 px)`, centralizada, 16 px acima da barra de abas; onde não há barra, 16 px acima da borda de baixo, com a área segura. Fundo `#15275B`, texto branco em Nunito 800 de 15/22, respiro de 12 × 16, raio de 16 e sombra `0 12px 30px rgba(15, 23, 42, .28)`. Ícone de 20 px à esquerda: visto no acerto, alerta no erro e coração na curtida.
 
 **Ação.** No máximo uma, em texto à direita, `#AFC2FF` em 15 px 800, com área de toque de 44 px: “Tentar de novo”, “Desfazer” ou “Ver”. Nunca uma ação que destrói algo.
 

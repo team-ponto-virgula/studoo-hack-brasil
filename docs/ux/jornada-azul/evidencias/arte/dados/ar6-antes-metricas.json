@@ -1,0 +1,46 @@
+{
+  "source": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "origin": "web3020/sistema-ui; primeiro gesto em contexto fresco, texto200%, sem ocultar aviso",
+  "before": {
+    "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7",
+    "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+    "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+    "src/app/ambiente-som.tsx": "f9117a4dc485c051b00c1155dd8dcec3d7feed53aceedad820aebe11ab475e29"
+  },
+  "after": {
+    "src/ui/aviso.css": "72b0c8488477702bcfbafe0112e4a97c74a2e370f5692b8ca4abf4dff6ca51f7",
+    "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+    "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+    "src/app/ambiente-som.tsx": "f9117a4dc485c051b00c1155dd8dcec3d7feed53aceedad820aebe11ab475e29"
+  },
+  "stable": true,
+  "metrics": {
+    "title": "Recomeçar esta tentativa?",
+    "titleRect": {
+      "x": 41,
+      "y": 106,
+      "width": 278,
+      "height": 168,
+      "top": 106,
+      "right": 319,
+      "bottom": 274,
+      "left": 41
+    },
+    "notice": "Música de fundo ligada.\nDesligar",
+    "noticeRect": {
+      "x": 16,
+      "y": 8,
+      "width": 328,
+      "height": 138,
+      "top": 8,
+      "right": 344,
+      "bottom": 146,
+      "left": 16
+    },
+    "titleZ": "40",
+    "noticeZ": "70",
+    "overlapWidth": 278,
+    "overlapHeight": 40,
+    "dialogScrollTop": 0
+  }
+}

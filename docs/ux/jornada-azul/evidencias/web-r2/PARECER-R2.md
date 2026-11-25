@@ -1,0 +1,14 @@
+# QA focal WEB · R2
+
+Candidata congelada `b3e97e7cbe7d6b8b711216070453a13ebcad36e3`,25/11/2026. **4/4 casos passaram; nota9/10 somente nestes dois comportamentos observados.** Produto completo, média ponderada global e nativo continuam `null`; as notas de `fa4be429` não foram aumentadas.
+
+- **Aviso real→confirmação200%,390/360:** contexto fresco sem preferência/flag de aviso gravada. Um pointer real iniciou a música; o aviso estava visível antes da confirmação real do produto, na bancada de desenvolvimento. Durante o diálogo ele permaneceu anexado, mas `visibility:hidden` do CSS do produto retirou sua pintura; os três trechos do título foram hit-tested sem obstrução. Esc fechou a confirmação e o aviso voltou em516/479ms desde sua ativação, ainda dentro dos7s. O harness só aplicou fonte raiz32px após a hidratação: não ocultou aviso, não alterou seu storage nem criou modal substituto. Console e pageerrors vazios.
+- **Explique aberto e retorno correto compacto,390/360:** UI real de revisão da primeira lição SQL, resposta`>=`→avaliar200→convite Explique. Continuar mede350×52 e320×52, igual à largura das ações/conteúdo; centro desobstruído e dentro da viewport. Progresso real permaneceu1/5 antes/depois; nenhum concluir ou novo plano foi enviado. O botão não foi ativado novamente. Um GET`/`/ERR_ABORTED na entrada390 ficou preservado; as APIs do percurso retornaram200 e não houve pageerror.
+
+Os retângulos do aviso e título **ainda podem se cruzar geometricamente** (5.544/11.120px²). A correção zera a interseção pintada ao esconder o aviso enquanto há decisão aberta. Não se apresenta `visibility:hidden` como mudança da geometria.
+
+Guarda de fonte: HEAD antes/depois idêntico, hashes sem alterações durante as duas rodadas. O diff de runtime sobre`fa4be429` contém exatamente`apps/mobile/src/licao.tsx`,`src/app/aula.css` e`src/ui/aviso.css`; os demais arquivos rastreados em`src`,`apps/mobile` e`packages` são idênticos entre as candidatas. O restante da evidência fa4 é histórico identificado, com equivalência de fonte fora dessas alterações; não foi reexecutado sem causa.
+
+**Publicação segura:** [PUBLICAVEL.json](PUBLICAVEL.json) contém somente dados selecionados por whitelist: candidato/hashes, flags/asserts, medidas, falhas por method/path/error e caminhos/SHA dos seis PNGs. Não contém autenticação, cookies, tokens, corpos de requests/responses, emails, labels/IDs de contas/planos, storageState, provisionamento ou setup de foto. Publicar apenas esse JSON, este parecer e os seis PNGs listados no seu manifesto; manter scripts/brutos/provisionamento locais.
+
+PNGs autorizados: `aviso-modal-hidratado/modal200-{390,360}.png`, `aviso-modal-hidratado/apos-fechar-{390,360}.png`, `compacto/{390,360}-compacto-certa-explique.png`. A primeira tomada de aviso foi preservada localmente; a seleção publicável usa a repetição após hidratação, sem warnings/errors no console.

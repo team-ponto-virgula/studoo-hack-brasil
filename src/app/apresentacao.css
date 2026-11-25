@@ -64,7 +64,7 @@
   gap: 6px;
   padding: 14px 8px;
   border: 2px solid var(--gelo);
-  border-radius: 18px;
+  border-radius: 16px;
   color: var(--texto);
   background: var(--fundo);
   box-shadow: 0 4px 0 var(--gelo);
@@ -76,7 +76,7 @@
 
 .apresentacao-area .mundo-desenho { --tam: 36px; }
 .apresentacao-area:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
-.apresentacao-area[aria-pressed='true'] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
+.apresentacao-area[aria-pressed='true'] { border-color: var(--acao); color: var(--acao-escura); background: var(--nevoa); box-shadow: 0 4px 0 #9fb1f0; }
 .apresentacao-area[aria-pressed='true'] .mundo-desenho { animation: apresentacao-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
 
 @media (hover: hover) {

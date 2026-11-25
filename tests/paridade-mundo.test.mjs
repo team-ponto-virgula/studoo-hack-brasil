@@ -38,9 +38,10 @@ test('todos os erros da API têm a mesma mensagem nas duas interfaces', () => {
 });
 
 test('cores de ação, texto, campos e feedback seguem a mesma paleta', async () => {
-  const css = await ler('src/app/globals.css');
-  const { cores } = await carregar('apps/mobile/src/tema.ts');
-  const nomes = { fundo: 'fundo', nevoa: 'nevoa', gelo: 'gelo', texto: 'texto', textoSecundario: 'texto2', acao: 'acao', acaoEscura: 'acao-escura', sucesso: 'sucesso', sucessoClaro: 'sucesso-claro', alerta: 'alerta', erro: 'erro', ouro: 'ouro', ouroEscuro: 'ouro-escuro', ceu: 'ceu', bordaCampo: 'borda-campo' };
+  const css = await ler('src/ui/jornada-tokens.css') + await ler('src/app/globals.css');
+  const tokens = await carregar('packages/contratos/src/jornada-azul.ts');
+  const { cores } = await carregar('apps/mobile/src/tema.ts', { '../../../packages/contratos/src/jornada-azul': tokens });
+  const nomes = { fundo: 'fundo', nevoa: 'nevoa', gelo: 'gelo', texto: 'texto', textoSecundario: 'texto2', acao: 'acao', acaoEscura: 'acao-escura', sucesso: 'sucesso', sucessoClaro: 'sucesso-claro', alerta: 'alerta', erro: 'erro', ouro: 'ouro', ouroEscuro: 'ouro-escuro', ceu: 'ceu', bordaCampo: 'borda-campo', ouroTexto: 'ouro-texto', superficieSutil: 'superficie-sutil', sucessoFundo: 'sucesso-fundo', alertaFundo: 'alerta-fundo', alertaBorda: 'alerta-borda', erroFundo: 'erro-fundo', destaqueBorda: 'destaque-borda', labioNeutro: 'labio-neutro', faceNeutra: 'face-neutra', tintaNeutra: 'tinta-neutra' };
   const normalizar = valor => valor.length === 4 ? '#' + [...valor.slice(1)].map(c => c + c).join('') : valor;
   for (const [app, web] of Object.entries(nomes)) {
     const valor = css.match(new RegExp(`--${web}:\\s*(#[a-f0-9]+);`, 'i'))?.[1];

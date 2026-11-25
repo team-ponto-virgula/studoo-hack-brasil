@@ -7,19 +7,19 @@
 /* Cartão de trilha. */
 .cartao-trilha {
   position: relative; display: grid; grid-template-rows: auto 1fr; height: 100%; overflow: hidden;
-  border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); box-shadow: 0 4px 0 var(--gelo);
+  border: 1.5px solid var(--gelo); border-bottom-width: 3px; border-radius: 24px; background: var(--fundo);
 }
 .cartao-trilha__capa { position: relative; aspect-ratio: 2 / 1; overflow: hidden; }
 /* A capa leva só o selo do tema, sempre inteiro no alto, à esquerda (spec 16, item 17); no Em alta, a pílula da posição fica no alto, à direita (item 16), e o tema deixa a vez dela. */
 .cartao-trilha__tema {
-  position: absolute; top: 10px; left: 10px; max-width: calc(100% - 20px); display: inline-block; line-height: 20px; padding: 3px 10px; border-radius: 999px; background: #fff;
+  position: absolute; top: 10px; left: 10px; max-width: calc(100% - 20px); display: inline-block; line-height: 1.25rem; padding: 3px 10px; border-radius: 999px; background: #fff;
   color: var(--texto); font-size: 0.8125rem; font-weight: 900; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
 }
 .cartao-trilha__capa:has(.cartao-trilha__posicao) .cartao-trilha__tema { max-width: 72%; }
 /* "Exemplo" (spec 16, itens 9 e 17) vai para a linha de informações: "6 lições · 3 partes · Exemplo", no selo neutro da spec 10 (spec 14, linha 63): #F1F4FD, texto #5E6A85, 13 px 800, como no app. */
-.cartao-trilha__demo { display: inline-block; padding: 0 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; line-height: 20px; vertical-align: 1px; white-space: nowrap; }
-.cartao-trilha__corpo { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; min-width: 0; }
-.cartao-trilha__titulo { margin: 0; font-size: 1.125rem; line-height: 1.3; overflow-wrap: anywhere; }
+.cartao-trilha__demo { display: inline-block; padding: 0 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; line-height: 1.25rem; vertical-align: 1px; white-space: nowrap; }
+.cartao-trilha__corpo { display: flex; flex-direction: column; gap: 8px; padding: 20px; min-width: 0; }
+.cartao-trilha__titulo { margin: 0; font-size: 1.25rem; line-height: 1.3; overflow-wrap: anywhere; }
 /* Em fileira ou grade de várias colunas, o título reserva exatamente duas linhas: o resto do cartão bate com o vizinho. */
 .em-alta__item .cartao-trilha__titulo a, .grade-cartoes .cartao-trilha__titulo a { min-height: calc(2.6em + 2px); }
 @media (max-width: 599px) { .grade-cartoes .cartao-trilha__titulo a { min-height: 44px; } }
@@ -37,14 +37,14 @@
 .selo-demo { justify-self: start; align-self: flex-start; margin: 0; padding: 2px 10px; border: 1.5px dashed #c9a227; border-radius: 999px; background: #fffaea; color: #6b4a00; font-size: 0.8125rem; font-weight: 900; }
 .cartao-trilha__rodape { display: grid; gap: 4px; margin-top: auto; }
 .cartao-trilha__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; }
-.cartao-trilha__acoes > .botao { flex: 1 1 100%; min-height: 44px; }
+.cartao-trilha__acoes > .botao { flex: 1 1 100%; min-height: 52px; }
 /* Contornos dos controles com 3:1 sobre o branco; o do cartão continua claro. */
-.cartao-trilha .botao--secundario, .cartao-trilha__icone, .cartao-trilha__valeu { border-color: #8792bd; }
+.cartao-trilha .botao--secundario, .cartao-trilha__icone, .cartao-trilha__valeu { border-color: var(--borda-campo); }
 /* "Continuar" (trilha que a pessoa já tem): azul claro da marca, mais forte que o Valeu e diferente do "Quero estudar". */
 .cartao-trilha[data-situacao='adicionada'] .cartao-trilha__acoes > .botao { background: var(--ceu); }
 .cartao-trilha__valeu { flex: 1 1 auto; justify-content: center; }
 .cartao-trilha__icone, .cartao-trilha__valeu {
-  display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid var(--gelo); border-radius: 14px;
+  display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid var(--gelo); border-radius: 16px;
   color: var(--texto); background: var(--fundo); font: inherit; font-weight: 800; cursor: pointer;
 }
 .cartao-trilha__valeu { display: inline-flex; align-items: center; gap: 6px; }
@@ -75,8 +75,8 @@
 .painel--explorar > * { min-width: 0; }
 .explorar__topo { display: grid; gap: 4px; }
 .explorar__topo h1:focus { outline: none; }
-.explorar__subtitulo { margin: 0; color: var(--texto2); font-size: 1.0625rem; text-wrap: balance; }
-.explorar__secao { margin: 0; font-size: 1.25rem; }
+.explorar__subtitulo { margin: 0; color: var(--texto2); font-size: 1rem; line-height: 1.5; text-wrap: balance; }
+.explorar__secao { margin: 0; font-size: 1.5rem; line-height: 1.25; }
 /* Fichas: uma linha só, rolável (também no computador, com as setas do Em alta). */
 .explorar__fichas { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .explorar__temas { position: relative; display: flex; flex: 1 1 auto; gap: 8px; min-width: 0; padding: 2px 4px 6px; overflow-x: auto; scrollbar-width: none; }
@@ -96,21 +96,21 @@
 .fileira__setas .cartao-trilha__icone .icone { width: 20px; height: 20px; }
 .fileira__setas .cartao-trilha__icone:disabled { opacity: 0.35; }
 .ficha-tema {
-  flex: none; min-height: 44px; padding: 0 16px; border: 2px solid #8792bd; border-radius: 999px; background: var(--fundo);
+  flex: none; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--borda-campo); border-radius: 999px; background: var(--fundo);
   color: var(--texto); font: inherit; font-weight: 800; white-space: nowrap; cursor: pointer;
 }
-.ficha-tema[aria-pressed='true'] { border-color: var(--texto); background: var(--texto); color: #fff; }
+.ficha-tema[aria-pressed='true'] { border-color: var(--acao); background: var(--acao); color: #fff; }
 .ficha-tema:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
 @media (hover: hover) { .ficha-tema:hover:not([aria-pressed='true']) { background: var(--nevoa); } }
 .explorar__esqueleto { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 16px; }
 .explorar__esqueleto span { height: 280px; border-radius: var(--raio-bloco); background: var(--nevoa); }
-.explorar__vazio { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 22px; border: 2px dashed var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.explorar__vazio { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 22px; border: 1.5px solid var(--gelo); border-radius: 24px; background: var(--nevoa); }
 .explorar__vazio .stu { width: 96px; height: auto; flex: none; }
 .explorar__vazio > div { display: grid; flex: 1 1 16rem; gap: 8px; justify-items: start; }
 .explorar__vazio-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
 .explorar__busca { position: relative; display: flex; align-items: center; width: min(100%, 30rem); }
 .explorar__busca input {
-  width: 100%; min-height: 44px; padding: 8px 44px 8px 14px; border: 2px solid #8792bd; border-radius: 14px;
+  width: 100%; min-height: 44px; padding: 8px 44px 8px 14px; border: 1.5px solid var(--borda-campo); border-radius: 16px;
   background: var(--fundo); color: var(--texto); font: inherit; font-weight: 700;
 }
 .explorar__busca input::placeholder { color: var(--texto2); font-weight: 600; }
@@ -122,10 +122,10 @@
 .explorar__busca-limpar:focus-visible { outline: 3px solid var(--acao); outline-offset: -2px; }
 @media (hover: hover) { .explorar__busca-limpar:hover { color: var(--texto); } }
 .explorar__novas { display: grid; gap: 12px; }
-.explorar__mais { justify-self: center; min-width: 14rem; min-height: 48px; }
+.explorar__mais { justify-self: center; min-width: 14rem; min-height: 52px; }
 .explorar__convite {
   display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 10px 12px 10px 16px;
-  border-radius: 16px; background: var(--ceu); border: 2px solid var(--gelo); font-weight: 800;
+  border-radius: 24px; background: var(--nevoa); border: 1.5px solid var(--gelo); font-weight: 800;
 }
 .explorar__convite p { flex: 1 1 auto; margin: 0; }
 .explorar__convite .botao { flex: none; min-height: 44px; }
@@ -179,7 +179,7 @@
 /* Denúncia. */
 .folha--denuncia { width: min(100%, 26rem); }
 .denuncia__motivos { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; }
-.denuncia__motivo { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; border: 2px solid var(--gelo); border-radius: 14px; font-weight: 800; cursor: pointer; }
+.denuncia__motivo { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; border: 2px solid var(--gelo); border-radius: 16px; font-weight: 800; cursor: pointer; }
 .denuncia__motivo input { width: 20px; height: 20px; accent-color: var(--acao); }
 .denuncia__motivo:has(input:checked) { border-color: var(--acao); background: #f3f6ff; }
 .denuncia__motivo:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 2px; }
@@ -248,7 +248,7 @@
 .voltar-pagina { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 0 4px -8px; padding-inline: 8px; }
 .voltar-pagina .icone { width: 20px; height: 20px; }
 /* Folha de compartilhar: "Agora" dentro do cartão do nível que vale; aviso de que ainda não está no Explorar. */
-.nivel__agora { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #e3f6ea; color: #14513b; font-size: 0.75rem; font-weight: 900; vertical-align: 2px; }
+.nivel__agora { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #e3f6ea; color: #14513b; font-size: 0.8125rem; line-height: 1.25rem; font-weight: 900; vertical-align: 2px; }
 .publicacao__ainda { margin: 0; padding: 10px 12px; border-radius: 12px; background: #fff; color: var(--texto); font-weight: 800; }
 .publicacao__acoes { position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -14px -14px; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); border-radius: 0 0 16px 16px; background: var(--nevoa); box-shadow: 0 -8px 16px rgb(238 243 255 / 0.95); }
 .publicacao .campo textarea { resize: none; }
@@ -285,7 +285,7 @@ body:has(.navegacao-mobile) .seguranca-faixa { bottom: var(--espaco-rodape, calc
 .aviso-app.seguranca-faixa p {
   display: flex; align-items: center; gap: 10px; padding: 6px 16px;
   min-height: 48px; background: var(--fundo-aviso-comunidade); color: var(--fundo);
-  font-size: 15px; line-height: 22px; pointer-events: auto; overflow-wrap: anywhere;
+  font-size: 0.9375rem; line-height: 1.375rem; pointer-events: auto; overflow-wrap: anywhere;
 }
 .seguranca-faixa .icone { flex: none; width: 20px; height: 20px; }
 .seguranca-faixa span { flex: 1; }
@@ -303,3 +303,9 @@ body:has(.navegacao-mobile) .seguranca-faixa { bottom: var(--espaco-rodape, calc
 .seguranca-lista > :not(:last-child) { border-bottom: 1px solid var(--gelo); }
 .seguranca-ajuda .icone { width: 18px; height: 18px; color: var(--texto2); }
 .seguranca-linha .botao { min-height: 44px; padding: 6px 12px; }
+
+/* Um vazio orienta a próxima ação: a principal vem antes das alternativas e preenche a coluna no celular. */
+@media (max-width: 600px) {
+  .explorar__vazio-acoes { flex-direction: column; align-items: flex-start; width: 100%; }
+  .explorar__vazio-acoes > .botao--primario, .explorar__vazio > div > .botao--primario { width: 100%; }
+}
