@@ -34,7 +34,7 @@ import {
   type ProvedorIa,
 } from '@studoo/contratos';
 import { TextoComFormulas } from './texto-com-formulas';
-import { Botao, Campo, estilos, SeloDemonstracao, LinhaAbrir, useMovimentoReduzido } from './interface';
+import { Botao, Campo, estilos, EstadoErro, SeloDemonstracao, LinhaAbrir, useMovimentoReduzido } from './interface';
 import { Opcao, letras } from './opcao';
 import { CadernoDoStu, EtapasDoEnsino, FaixaDaPonte, OndasDoVolume, PaginaDoMaterial, SeloDaPonte, StuAluno } from './estudio-cenas';
 import { estiloDeEntrada, useAparecer } from './animacoes';
@@ -95,6 +95,11 @@ export async function arquivo(uri: string, nome: string, tipo: string) {
 export function MaterialParaTrilha({
   cliente,
   objetivo,
+  material,
+  aoMudarMaterial,
+  ativo,
+  editarTema,
+  pedidoRecusado,
   onProposta,
   ia,
   mostrarCabeca = true,
@@ -104,6 +109,11 @@ export function MaterialParaTrilha({
 }: {
   cliente: ClienteEstudio;
   objetivo: string;
+  material: MaterialEstudo | null;
+  aoMudarMaterial: (material: MaterialEstudo | null) => void;
+  ativo: boolean;
+  editarTema: () => void;
+  pedidoRecusado: boolean;
   onProposta: (p: PropostaPlano) => void;
   /** Espera de mais de 1 s começou (true) ou acabou (false): quem mostra o Stu da tela o deixa concentrado (spec 13). */
   aoEsperar?: (longa: boolean) => void;
@@ -119,10 +129,13 @@ export function MaterialParaTrilha({
   /** Spec 16, item 35: a última opção de antes de escolher ("Experimentar com frações"), para a tela saber se ela está à vista. */
   ultimaOpcao?: Ref<ComponentRef<typeof View>>;
 }) {
-  const [material, setMaterial] = useState<MaterialEstudo | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
-  const [erro, setErro] = useState('');
+  const [erro, setErro] = useState<{ texto: string; codigo?: string; aoPropor?: boolean } | null>(null);
+  const objetivoDoMaterial = objetivo.trim() || m.objetivo;
+  const pedidoAtual = useRef({ objetivoDoMaterial, ativo });
+  pedidoAtual.current = { objetivoDoMaterial, ativo };
+  const recusado = pedidoRecusado || (erro?.codigo === 'conteudo_nocivo' && Boolean(material));
   const [detalhes, setDetalhes] = useState(false);
   const vivo = useRef(true);
   useEffect(() => {
@@ -131,6 +144,7 @@ export function MaterialParaTrilha({
       vivo.current = false;
     };
   }, []);
+  useEffect(() => { setErro(null); }, [objetivoDoMaterial, material?.id]);
   // Spec 13 (§B4, §E1): a espera de mais de 1 s (ler o material, montar a proposta) é avisada a quem mostra o Stu da tela;
   // menos que isso, só o texto. Um Stu por tela: no pedido, é o do alto que fica concentrado.
   const avisarEspera = useRef(aoEsperar);
@@ -143,15 +157,17 @@ export function MaterialParaTrilha({
     const espera = setTimeout(() => avisarEspera.current?.(true), 1000);
     return () => clearTimeout(espera);
   }, [ocupado]);
-  async function executar(f: () => Promise<void>) {
+  async function executar(f: () => Promise<void>, aoPropor = false) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
-    setErro('');
+    setErro(null);
     try {
       await f();
     } catch (e) {
-      if (vivo.current) setErro(erroTexto(e));
+      if (vivo.current && (!aoPropor || pedidoAtual.current.objetivoDoMaterial === objetivoDoMaterial)) {
+        setErro({ texto: erroTexto(e), codigo: e instanceof ErroStudoo ? e.codigo : undefined, aoPropor });
+      }
     } finally {
       emExecucao.current = false;
       if (vivo.current) setOcupado(false);
@@ -166,7 +182,7 @@ export function MaterialParaTrilha({
         const p = await ImagePicker.requestCameraPermissionsAsync();
         if (!p.granted) {
           // Diz como liberar, em vez do erro genérico; com "não perguntar de novo", só os ajustes do aparelho liberam.
-          if (vivo.current) setErro(p.canAskAgain === false ? m.cameraBloqueada : m.cameraNegada);
+          if (vivo.current) setErro({ texto: p.canAskAgain === false ? m.cameraBloqueada : m.cameraNegada });
           return;
         }
         const r = await ImagePicker.launchCameraAsync({
@@ -205,24 +221,26 @@ export function MaterialParaTrilha({
         tipo = a.mimeType ?? '';
       }
       const novo = await cliente.enviarMaterial(await arquivo(uri, nome, tipo));
-      if (vivo.current) setMaterial(novo);
+      if (vivo.current) aoMudarMaterial(novo);
     });
   }
   const gerar = () =>
     void executar(async () => {
-      if (!material) return;
-      const p = await cliente.proporMaterial(material.id, objetivo.trim() || m.objetivo);
-      if (vivo.current) onProposta(p);
-    });
-  const botaoCriar = material ? <Botao rotulo={m.gerar} testID="criar-trilha-material" peso="900" desativado={ocupado} acao={gerar} /> : null;
+      if (!material || recusado) return;
+      const p = await cliente.proporMaterial(material.id, objetivoDoMaterial);
+      if (vivo.current && pedidoAtual.current.ativo && pedidoAtual.current.objetivoDoMaterial === objetivoDoMaterial) onProposta(p);
+    }, true);
+  const rotuloCriar = erro?.aoPropor && erro.codigo === 'ia_indisponivel' ? mensagens.tentarNovamente
+    : erro?.aoPropor && erro.codigo === 'consentimento_ia' ? mensagens.privacidade.permitirAgora : m.gerar;
+  const botaoCriar = material ? <Botao rotulo={rotuloCriar} testID="criar-trilha-material" peso="900" desativado={ocupado || recusado} acao={gerar} /> : null;
   // A ação presa acompanha o material e o estado de ocupado; sai da tela junto com o cartão (desmontado ou sem material).
   const acaoPresa = useRef(definirAcaoPresa);
   acaoPresa.current = definirAcaoPresa;
   const gerarAgora = useRef(gerar);
   gerarAgora.current = gerar;
   useEffect(() => {
-    acaoPresa.current?.(material ? <Botao rotulo={m.gerar} testID="criar-trilha-material" peso="900" desativado={ocupado} acao={() => gerarAgora.current()} /> : null);
-  }, [material, ocupado]);
+    acaoPresa.current?.(material ? <Botao rotulo={rotuloCriar} testID="criar-trilha-material" peso="900" desativado={ocupado || recusado} acao={() => gerarAgora.current()} /> : null);
+  }, [material, ocupado, recusado, rotuloCriar]);
   useEffect(() => () => acaoPresa.current?.(null), []);
   return (
     <Card>
@@ -245,8 +263,7 @@ export function MaterialParaTrilha({
           </Text>
         </Text>
       )}
-      {/* O aviso diz quem lê o material (OpenAI, DeepSeek ou ninguém, na demonstração). Antes de a configuração chegar, ou
-          se ela falhar, vale o texto geral, verdadeiro em qualquer configuração. */}
+      {/* Antes de ler a configuração do provedor, vale o texto geral de privacidade. */}
       {detalhes && <View><Text style={[estilos.legenda, s.legendaCartao]}>{m.limites}</Text><Text style={[estilos.legenda, s.legendaCartao]}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
       {!material ? (
         <View style={s.acoesMaterial}>
@@ -264,7 +281,7 @@ export function MaterialParaTrilha({
             acao={() =>
               void executar(async () => {
                 const x = await cliente.materialDemo();
-                if (vivo.current) setMaterial(x);
+                if (vivo.current) aoMudarMaterial(x);
               })
             }
           />
@@ -289,7 +306,7 @@ export function MaterialParaTrilha({
             acao={() =>
               void executar(async () => {
                 await cliente.excluirMaterial(material.id);
-                if (vivo.current) setMaterial(null);
+                if (vivo.current) aoMudarMaterial(null);
               })
             }
           />
@@ -301,7 +318,9 @@ export function MaterialParaTrilha({
         </Text>
       )}
       {/* Como na web (<p role="alert">): o erro (rede, material) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
-      {!!erro && <AvisoAlerta texto={erro} />}
+      {erro?.codigo === 'conteudo_nocivo' ? <EstadoErro mensagem={erro.texto} testID="recusa-material" foco={ativo}
+        acao={{ rotulo: mensagens.pedido.editarTema, testID: 'editar-tema-material', acao: editarTema }} />
+        : erro && <AvisoAlerta texto={erro.texto} />}
     </Card>
   );
 }
@@ -404,7 +423,7 @@ export function ApoioDaLicao({
   // Voz ao vivo (spec 08, parte B), como a web: a opção liberada, a etapa (entrada, aviso da primeira vez, conversa), o
   // estado que o controlador manda, o próprio controlador e o nível do microfone (-1 enquanto não há medida).
   const [vozDisponivel, setVozDisponivel] = useState(false);
-  /** Quem avalia o texto (o aviso de privacidade da voz muda com a DeepSeek) e quem recebe a gravação, como na web. */
+  /** O provedor informado ao explicar o uso do áudio. */
   const [provedorTextoVoz, setProvedorTextoVoz] = useState<ProvedorTexto>('openai');
   const [provedorGravacao, setProvedorGravacao] = useState<ProvedorTexto | null>(null);
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');

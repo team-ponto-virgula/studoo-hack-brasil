@@ -39,7 +39,7 @@ test('nenhuma tela entre a prévia e a etapa 1: "Escrevendo suas lições" saiu'
 });
 
 test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro), "Ajustar pedido" sai e o leitor de tela ouve', () => {
-  assert.match(comecar, /setPendente\('aceitar'\);\n\s*setErro\(null\);\n\s*setCriacao\(abrirPrimeira \? 'criando' : 'guardando'\);\n\s*\/\/[^\n]*\n\s*anunciar\(abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
+  assert.match(comecar, /setPendente\('aceitar'\);\n\s*setErro\(null\);\n\s*setMensagemDoAceite\(null\);\n\s*setCriacao\(abrirPrimeira \? 'criando' : 'guardando'\);\n\s*\/\/[^\n]*\n\s*anunciar\(abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
   assert.doesNotMatch(comecar, /toque_opcao/, 'o toque em "Começar a lição 1" não tem som: o de conclusão fica sozinho');
   assert.match(geracao, /testID=\{expirada \? 'montar-de-novo' : 'comecar-trilha'\}/);
   assert.match(geracao, /rotulo=\{iniciando \? mensagens\.geracao\.criandoTrilha : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
@@ -71,16 +71,30 @@ test('até 600 px, a ação principal ocupa a largura e vem antes do ajuste; o e
 });
 
 test('erro e proposta expirada: o botão volta, a linha diz o motivo e o novo toque usa o mesmo token', () => {
-  assert.match(comecar, /const expirada = codigoDaFalha\(falha\) === 'proposta_invalida';\n\s*setCriacao\(expirada \? 'expirada' : abrirPrimeira \? 'erro' : 'erro-salvar'\);/);
+  assert.match(comecar, /const expirada = codigo === 'proposta_invalida';/);
+  assert.match(comecar, /setCriacao\(expirada \? 'expirada' : abrirPrimeira \? 'erro' : 'erro-salvar'\);/);
   assert.match(geracao, /testID="criacao-erro"/);
-  assert.match(geracao, /\{expirada \? mensagens\.geracao\.propostaExpirada : mensagens\.geracao\.erroCriacao\}/);
+  assert.match(geracao, /\{expirada \? mensagens\.geracao\.propostaExpirada : \(mensagemDoAceite \?\? mensagens\.geracao\.erroCriacao\)\}/);
   assert.match(geracao, /guardando \? mensagens\.geracao\.salvandoTrilha : mensagens\.geracao\.salvarParaDepois/);
   assert.match(geracao, /testID="salvar-trilha-depois"[^\n]+acao=\{\(\) => salvar\(proposta\)\}/);
   assert.match(geracao, /testID="salvar-trilha-erro" role="alert"[\s\S]+?mensagens\.geracao\.erroSalvar/);
   assert.match(geracao, /acao=\{\(\) => \(expirada \? remontar\(\) : comecar\(proposta\)\)\}/);
   assert.match(estudo, /remontar=\{\(\) => void gerar\(geracao\.objetivo, [^\n]+\)\}/, '"Montar de novo" refaz a geração com o mesmo pedido');
+  assert.match(geracao, /const principal = pronta && proposta && !\(expirada && geracao\.deMaterial\)/,
+    'proposta expirada de material volta pelo ajuste, sem trocar por uma geração só pelo tema');
   assert.match(comecar, /aceitarUmaVez\(proposta\.token\)/, 'o token da proposta mostrada: o servidor devolve a trilha já criada');
   assert.match(caminho, /\{ nome: 'stu-encorajador' \}/, 'no erro, o Stu fica ao lado do nó 1, encorajador');
+});
+
+test('diagnóstico e geração recusados voltam ao tema editável e não oferecem reenvio automático', () => {
+  const diagnostico = trecho(estudo, 'async function pedirPassoDiagnostico(', 'function iniciarPedido(');
+  assert.match(diagnostico, /codigo === 'conteudo_nocivo'[\s\S]+?salvarDiagnostico\(codigo === 'conteudo_nocivo' \? null[\s\S]+?setFalhaGeracao\(codigo\)/);
+  assert.match(diagnostico, /if \(codigo === 'nao_encontrado' && !pedido\.passo && diagnosticoVisivel\.current\)/);
+  const pedido = trecho(estudo, 'function Pedido(', 'function useExemploDigitado(');
+  assert.match(pedido, /const recusado = falha === 'conteudo_nocivo';/);
+  assert.match(pedido, /testID: 'editar-tema', acao: editarTema/);
+  assert.match(pedido, /desativado=\{ocupado \|\| recusado \|\| !texto\} acao=\{tentar\}/);
+  assert.match(comecar, /if \(codigo === 'conteudo_nocivo'\) \{[\s\S]+?navegar\(\{ tipo: 'objetivo' \}\);\n\s*setFalhaGeracao\(codigo\);/);
 });
 
 test('sair durante "Criando sua trilha…": sem cancelar no servidor, a resposta não abre a aula e a trilha entra na lista', () => {
