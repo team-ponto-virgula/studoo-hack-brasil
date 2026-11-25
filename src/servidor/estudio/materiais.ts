@@ -7,6 +7,8 @@ import type {
 import { banco } from '../banco/cliente';
 import { FalhaApi } from '../acesso/http';
 import { consumirLimite } from '../acesso/seguranca';
+import { provedorIaAtivo } from '../ia/provedor';
+import { exigirLicoesSeguras, exigirTrilhaSegura } from '../ia/seguranca-trilhas';
 import { emitirComprovante } from '../aprendizado/comprovantes';
 import { planoValido, type PlanoInterno } from '@/dominio/aprendizado/plano';
 import { lerMaterial, paginasValidas } from './arquivos';
@@ -57,6 +59,9 @@ export async function criarMaterial(
   const nome = demo
     ? 'Frações — material de demonstração'
     : (entrada as { nome: string }).nome.trim();
+  if (!demo) {
+    await exigirTrilhaSegura({ material: { nome, paginas: textoDasPaginas(dados.paginas) } });
+  }
   const material = await banco.materialEstudo.create({
     data: {
       usuarioId,
@@ -165,14 +170,19 @@ function licoesFalsas(paginas: PaginaMaterial[], demo: boolean): LicaoGerada[] {
       };
     });
 }
+function textoDasPaginas(paginas: PaginaMaterial[]) {
+  return paginas.map(({ numero, texto, rotulo, tabela }) => ({ numero, texto, rotulo, tabela }));
+}
+
 const emCurso = new Map<string, Promise<PropostaPlano>>();
 export async function proporMaterial(
   usuarioId: string,
   id: string,
   objetivo: string,
 ) {
-  if (!objetivo.trim() || objetivo.length > 500) throw new FalhaApi('invalido');
-  const chave = `${usuarioId}:${id}`;
+  objetivo = objetivo.trim();
+  if (!objetivo || objetivo.length > 500) throw new FalhaApi('invalido');
+  const chave = JSON.stringify([usuarioId, id, objetivo]);
   const anterior = emCurso.get(chave);
   if (anterior) return anterior;
   const tarefa = criarProposta(usuarioId, id, objetivo).finally(() =>
@@ -188,7 +198,12 @@ async function criarProposta(
 ): Promise<PropostaPlano> {
   const material = await lerMaterialSalvo(usuarioId, id);
   await quota(usuarioId, 'proposta-material', 10);
-  const simulado = process.env.IA === 'falsa';
+  const simulado = provedorIaAtivo() === 'falsa';
+  const paginas = textoDasPaginas(material.paginas);
+  const dadosDaTriagem = { objetivo, material: { nome: material.nome, paginas } };
+  const anexos = material.paginas.flatMap(p => p.imagem ? [{ type: 'input_image', image_url: p.imagem }] : []);
+  if (material.leitura !== 'demonstracao') await exigirTrilhaSegura(dadosDaTriagem, { anexos });
+  else await exigirTrilhaSegura({ objetivo });
   let licoes: LicaoGerada[];
   let titulo: string;
   // Material de matemática: as figuras e a resolução de cada lição (um segundo pedido por lição, em `licoes-do-material.ts`).
@@ -203,7 +218,7 @@ async function criarProposta(
         ? 'Frações: do primeiro passo à soma'
         : `Estudar ${material.nome}`.slice(0, 120);
   } else {
-    const gerado = await gerarLicoesDoMaterial({ objetivo, nome: material.nome, paginas: material.paginas });
+    const gerado = await gerarLicoesDoMaterial({ objetivo, nome: material.nome, paginas });
     licoes = gerado.licoes;
     titulo = gerado.titulo;
     figuras = gerado.figuras;
@@ -234,6 +249,7 @@ async function criarProposta(
     ],
   };
   if (!planoValido(plano)) throw new FalhaApi('ia_indisponivel');
+  await exigirLicoesSeguras({ objetivo, titulo, origem }, conteudos);
   // Um rascunho imutável por proposta evita trocar conteúdo sob um token já emitido.
   const rascunho = await banco.materialEstudo.create({
     data: {

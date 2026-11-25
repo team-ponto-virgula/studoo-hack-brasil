@@ -15,7 +15,7 @@ export const ORIGEM_GERADA = "Conteúdo gerado pelo Studoo";
 
 /** Formato usado nas trilhas antigas. A referência ao material continua íntegra. */
 export function origemDoConteudo(origem: string): string {
-  return /^(?:IA (?:da|do) )?(?:DeepSeek|OpenAI|gpt-[\w.-]+)\b/i.test(origem.trim()) ? ORIGEM_GERADA : origem;
+  return /^(?:IA (?:da|do) [\w.-]+|OpenAI|gpt-[\w.-]+)\b/i.test(origem.trim()) ? ORIGEM_GERADA : origem;
 }
 
 export type ExercicioInterno = ExercicioPublico & {

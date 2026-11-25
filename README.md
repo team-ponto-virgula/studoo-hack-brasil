@@ -70,11 +70,10 @@ Abra `http://localhost:3000` e entre com a conta sintética gravada pelo `db:loc
 - **`packages/contratos/`**: tipos, cliente HTTP, regras de domínio (`trilhaRepetida`) e fonte única de textos (`experiencia.ts`) compartilhados entre web e app.
 - **`video/`**: composição do filme de lançamento ([como funciona](video/LEIA-ME.md)).
 
-## Provedores de IA (`IA=falsa|openai|deepseek`)
+## IA do Studoo
 
-- `IA=falsa` (padrão local): não exige chaves externas e permite testar todo o fluxo sem custo.
-- `IA=openai`: geração ao vivo via Responses API, leitura de imagens/OCR, ponte adaptativa, avaliação da explicação e transcrição de áudio ([como configurar](docs/RODAR-LOCALMENTE.md#ia-da-openai)).
-- `IA=deepseek`: geração, imagem e texto via DeepSeek. Com `OPENAI_API_KEY` também configurada (modo misto, o do site), a conversa de voz ao vivo e a transcrição da gravação usam a OpenAI, e o texto que sai delas é avaliado pela DeepSeek; nenhum texto vai para a OpenAI. Sem a chave da OpenAI, a voz e a gravação ficam indisponíveis e a explicação por texto funciona normalmente. A integração está coberta por testes com servidor simulado (`npm run test:ia`) e ainda não foi exercitada com chave real.
+- `IA=openai` usa GPT-6 Luna com esforço `max` para triagem, geração, imagem/OCR, diagnóstico e feedback. Voz ao vivo e transcrição usam modelos especializados da OpenAI. [Como configurar](docs/RODAR-LOCALMENTE.md#ia-da-openai)
+- `IA=falsa` ativa a demonstração determinística local, sem chave e sem chamadas externas.
 
 ## Conteúdo simulado vs. geração real
 

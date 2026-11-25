@@ -12,7 +12,7 @@ import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/serv
 import { banco } from '../src/servidor/banco/cliente.ts';
 import { DELETE as revogarIaHttp } from '../src/app/api/privacidade/consentimento-ia/route.ts';
 import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
-// Estes testes simulam a OpenAI e a DeepSeek: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
+// Estes testes simulam a OpenAI: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
 const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
 import { buscarApoio, ensinarStu } from '../src/servidor/estudio/apoio.ts';
 import { consumirGeracaoPersistente } from '../src/servidor/ia/limite.ts';
@@ -243,14 +243,15 @@ test('rota /api/estudio/licoes/[id]/voz-ao-vivo retorna 404 desligada e /api/aut
   }
 });
 
-test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simulada, avaliador pela DeepSeek simulada e nenhum texto na OpenAI', async () => {
+test('voz usa Realtime e o avaliador usa a Responses API com Luna Max', async () => {
   const pedidosOpenAi = [];
-  const pedidosDeepSeek = [];
+  let pedidoDeTexto;
   const srvOpenAi = http.createServer(async (req, res) => {
-    for await (const _ of req);
+    const pedacos = [];
+    for await (const p of req) pedacos.push(p);
     pedidosOpenAi.push(req.url);
     if (req.method === 'POST' && req.url === '/v1/realtime/calls') {
-      res.writeHead(201, { 'content-type': 'application/sdp', location: '/v1/realtime/calls/rtc_misto_1' });
+      res.writeHead(201, { 'content-type': 'application/sdp', location: '/v1/realtime/calls/rtc_teste_luna_1' });
       res.end(SDP_RESPOSTA);
       return;
     }
@@ -259,24 +260,20 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
       res.end('{"ok":true}');
       return;
     }
-    res.writeHead(500);
-    res.end('texto não deve ir para a OpenAI no modo misto');
+    if (req.url === '/v1/responses') {
+      pedidoDeTexto = JSON.parse(Buffer.concat(pedacos).toString('utf8'));
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({
+        output_text: JSON.stringify({ acertos: ['Explicou as partes iguais.'], lacuna: 'Falta um exemplo seu.', pergunta: 'E numa barra de chocolate?', proximoPasso: 'Crie um exemplo.' }),
+      }));
+      return;
+    }
+    res.writeHead(404);
+    res.end();
   });
-  const srvDeepSeek = http.createServer(async (req, res) => {
-    const pedacos = [];
-    for await (const p of req) pedacos.push(p);
-    pedidosDeepSeek.push({ url: req.url, corpo: JSON.parse(Buffer.concat(pedacos).toString('utf8')) });
-    res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({
-      choices: [{ message: { content: JSON.stringify({ acertos: ['Explicou as partes iguais.'], lacuna: 'Falta um exemplo seu.', pergunta: 'E numa barra de chocolate?', proximoPasso: 'Crie um exemplo.' }) } }],
-    }));
-  });
-  await Promise.all([
-    new Promise((r) => srvOpenAi.listen(0, '127.0.0.1', r)),
-    new Promise((r) => srvDeepSeek.listen(0, '127.0.0.1', r)),
-  ]);
+  await new Promise(r => srvOpenAi.listen(0, '127.0.0.1', r));
   const envAntes = Object.fromEntries(
-    ['STUDOO_VOZ_AO_VIVO', 'IA', 'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'STUDOO_LIMITE_VOZ_HORA']
+    ['STUDOO_VOZ_AO_VIVO', 'IA', 'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'STUDOO_LIMITE_VOZ_HORA']
       .map((k) => [k, process.env[k]]),
   );
   const { u, token } = await criarUsuario();
@@ -287,35 +284,35 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
   const iniciar = () => iniciarHttp(reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }), params);
   try {
     process.env.STUDOO_VOZ_AO_VIVO = '1';
-    process.env.IA = 'deepseek';
-    process.env.DEEPSEEK_API_KEY = 'sk-deepseek-misto';
-    process.env.DEEPSEEK_BASE_URL = `http://127.0.0.1:${srvDeepSeek.address().port}`;
-    process.env.OPENAI_API_KEY = 'sk-openai-misto';
+    process.env.IA = 'openai';
+    process.env.OPENAI_API_KEY = 'sk-openai-teste';
     process.env.OPENAI_BASE_URL = `http://127.0.0.1:${srvOpenAi.address().port}/v1`;
     process.env.STUDOO_LIMITE_VOZ_HORA = '20';
 
     const cfg = await configAtual();
-    assert.equal(cfg.ia, 'deepseek');
+    assert.equal(cfg.ia, 'openai');
     assert.equal(cfg.vozAoVivo, true);
 
     const res = await iniciar();
-    assert.ok(res.ok, `voz no modo misto: ${res.status}`);
+    assert.ok(res.ok, `voz com a OpenAI: ${res.status}`);
     const sessao = await res.json();
-    assert.equal(sessao.chamadaId, 'rtc_misto_1');
+    assert.equal(sessao.chamadaId, 'rtc_teste_luna_1');
     const fim = await encerrarHttp(
       reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, token, { chamadaId: sessao.chamadaId }),
       params,
     );
     assert.ok(fim.ok);
 
-    // O texto que sai da conversa é avaliado pela DeepSeek.
+    // O texto da explicação usa Luna Max.
     const retorno = await ensinarStu(u.id, licao.id, 'O denominador mostra em quantas partes iguais o inteiro foi dividido.');
     assert.equal(retorno.simulado, false);
     assert.equal(retorno.lacuna, 'Falta um exemplo seu.');
-    assert.deepEqual(pedidosDeepSeek.map((p) => p.url), ['/chat/completions']);
-    assert.match(JSON.stringify(pedidosDeepSeek[0].corpo), /partes iguais o inteiro foi dividido/);
+    assert.match(JSON.stringify(pedidoDeTexto), /partes iguais o inteiro foi dividido/);
+    assert.equal(pedidoDeTexto.model, 'gpt-6-luna');
+    assert.deepEqual(pedidoDeTexto.reasoning, { effort: 'max' });
+    assert.equal(pedidoDeTexto.store, false);
 
-    assert.deepEqual(pedidosOpenAi, ['/v1/realtime/calls', '/v1/realtime/calls/rtc_misto_1/hangup'], 'só a voz vai para a OpenAI');
+    assert.deepEqual(pedidosOpenAi, ['/v1/realtime/calls', '/v1/realtime/calls/rtc_teste_luna_1/hangup', '/v1/responses']);
 
     // A pessoa retira o aceite por outra sessão enquanto a conversa está aberta.
     assert.equal((await iniciar()).status, 200);
@@ -324,7 +321,7 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
       method: 'DELETE', headers: { origin: origemPadrao(), cookie: cookieSessao(outra.token) },
     }));
     assert.equal(revogada.status, 200);
-    assert.equal(pedidosOpenAi.at(-1), '/v1/realtime/calls/rtc_misto_1/hangup');
+    assert.equal(pedidosOpenAi.at(-1), '/v1/realtime/calls/rtc_teste_luna_1/hangup');
     assert.equal((await iniciar()).status, 428);
 
     // Sem a chave da OpenAI: voz 404 e vozAoVivo falso.
@@ -332,19 +329,14 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
     assert.equal((await configAtual()).vozAoVivo, false);
     assert.equal((await iniciar()).status, 404);
 
-    // Sem a chave da DeepSeek (texto não configurado): desligada também.
-    process.env.OPENAI_API_KEY = 'sk-openai-misto';
-    delete process.env.DEEPSEEK_API_KEY;
-    assert.equal(vozAoVivoAtiva(), false);
-
     // IA simulada com chave e flag: desligada.
+    process.env.OPENAI_API_KEY = 'sk-openai-teste';
     process.env.IA = 'falsa';
     assert.equal((await configAtual()).vozAoVivo, false);
     assert.equal((await iniciar()).status, 404);
-    assert.equal(pedidosOpenAi.length, 4, 'nenhuma chamada nova à OpenAI nos casos desligados');
+    assert.equal(pedidosOpenAi.length, 5, 'nenhuma chamada nova à OpenAI nos casos desligados');
   } finally {
     srvOpenAi.close();
-    srvDeepSeek.close();
     for (const [k, v] of Object.entries(envAntes)) {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;

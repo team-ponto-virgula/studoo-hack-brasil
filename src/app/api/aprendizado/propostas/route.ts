@@ -4,6 +4,8 @@ import { lerObjeto } from "@/servidor/aprendizado/http";
 import { gerarProposta } from "@/servidor/aprendizado/servico";
 import { exigirConsentimentoIa } from "@/servidor/privacidade/consentimento";
 
+export const maxDuration = 120;
+
 export function POST(request: Request) {
   return rotaPrivada(request, async (usuarioId) => {
     await exigirConsentimentoIa(usuarioId);

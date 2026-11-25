@@ -2,7 +2,7 @@ import { responder, rotaPrivada } from '@/servidor/acesso/http';
 import { proporMaterial } from '@/servidor/estudio/materiais';
 import { campo } from '@/servidor/estudio/http';
 import { exigirConsentimentoIa } from '@/servidor/privacidade/consentimento';
-export const maxDuration = 90;
+export const maxDuration = 150;
 export function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },

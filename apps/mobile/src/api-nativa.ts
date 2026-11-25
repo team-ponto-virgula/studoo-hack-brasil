@@ -14,8 +14,24 @@ import { criarClienteOnboarding } from '@studoo/contratos/onboarding';
 export const CAPACIDADES_DO_APP = 'visuais@2,resolucao@1';
 
 const tempoLimiteMs = 15_000;
-/** O aceite cria o conteúdo de todas as lições; com a IA real, isso leva mais que um pedido comum. */
-const tempoLimiteDoAceiteMs = 90_000;
+const tempoLimiteDoEstudioMs = 90_000;
+// As etapas de geração e revisão da IA têm prazos próprios no servidor; aguardar também a resposta HTTP de erro.
+const temposDaCriacaoMs: Readonly<Record<string, number>> = {
+  '/api/aprendizado/diagnostico': 85_000,
+  '/api/aprendizado/propostas': 120_000,
+  '/api/aprendizado/planos': 300_000,
+  '/api/estudio/materiais': 120_000,
+};
+
+function tempoDoPedido(caminho: string, metodo: string) {
+  if (metodo === 'POST') {
+    if (Object.hasOwn(temposDaCriacaoMs, caminho)) return temposDaCriacaoMs[caminho];
+    if (/^\/api\/estudio\/materiais\/[^/]+\/proposta$/.test(caminho)) return 150_000;
+    if (caminho.startsWith('/api/estudio/')) return tempoLimiteDoEstudioMs;
+  }
+  if (metodo === 'PUT' && caminho === '/api/perfil/foto') return tempoLimiteDoEstudioMs;
+  return tempoLimiteMs;
+}
 
 export class FalhaMobile extends Error {
   constructor(public readonly codigo: 'conexao' | 'configuracao' | 'armazenamento') {
@@ -91,10 +107,7 @@ function transporteNativo(token?: string): TransporteStudoo {
   return async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
-    // O aceite e o estúdio geram conteúdo; a foto do perfil sobe até 2 MB em base64: os três ganham o tempo longo.
-    const aceite = (opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/')))
-      || (opcoes.method === 'PUT' && caminho === '/api/perfil/foto');
-    const limite = setTimeout(() => controle.abort(), aceite ? tempoLimiteDoAceiteMs : tempoLimiteMs);
+    const limite = setTimeout(() => controle.abort(), tempoDoPedido(caminho, opcoes.method));
 
     try {
       const resposta = await fetch(`${origem}${caminho}`, {
@@ -113,6 +126,10 @@ function transporteNativo(token?: string): TransporteStudoo {
 
       const corpo = resposta.status === 204 ? null : await resposta.json().catch(() => null);
       if (controle.signal.aborted) throw new FalhaMobile('conexao');
+      // Uma API sem essa rota pode devolver 404 em HTML. Um erro JSON continua a cargo do contrato.
+      if (caminho === '/api/aprendizado/diagnostico' && resposta.status === 404 && corpo === null) {
+        throw new ErroStudoo('nao_encontrado');
+      }
       return { status: resposta.status, ok: resposta.ok, json: async () => corpo };
     } catch (erro) {
       if (erro instanceof ErroStudoo || erro instanceof FalhaMobile) throw erro;
@@ -186,7 +203,7 @@ async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: 
     if (!resposta.ok || !resposta.body || !resposta.headers.get('content-type')?.includes('application/x-ndjson')) {
       const corpo: unknown = await resposta.json().catch(() => null);
       if (controle.signal.aborted) throw new FalhaMobile('conexao');
-      throw new ErroStudoo(codigoDaResposta(corpo));
+      throw new ErroStudoo(codigoDaResposta(corpo), corpo);
     }
     clearTimeout(limite);
     yield* lerEventos(resposta.body);

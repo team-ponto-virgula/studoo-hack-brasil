@@ -13,6 +13,7 @@ export type TrilhaEmGeracao = {
   /** `resumos[i]`: o que a lição i ensina, quando o gerador diz (aparece na prévia). */
   fluxos: { titulo: string; licoes: string[]; resumos?: (string | undefined)[] }[];
   proposta: PropostaPlano | null;
+  deMaterial?: boolean;
 };
 
 /** Código de erro de uma resposta JSON, validado pelo contrato; fora dele, `falha`. */

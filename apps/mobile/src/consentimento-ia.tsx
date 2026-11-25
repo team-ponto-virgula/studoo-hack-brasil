@@ -10,7 +10,7 @@ import { cores, fontes } from './tema';
 
 /*
  * Consentimento do envio a IA de terceiros (Apple 5.1.2(i)). O servidor é quem garante (`@studoo/contratos/privacidade`):
- * sem o aceite vigente, as rotas que mandariam dados à DeepSeek ou à OpenAI respondem `consentimento_ia` (428) antes de
+ * sem o aceite vigente, as rotas que mandariam dados à OpenAI respondem `consentimento_ia` (428) antes de
  * qualquer envio. O app pergunta antes, num lugar só, no cliente que usa: cada ação dessas espera a permissão e, na
  * primeira vez, abre o cartão do Studoo com quem recebe o quê ("Permitir e continuar" ou "Agora não"); com a permissão,
  * segue direto. Desligar em Perfil, Privacidade volta a trava. Se o servidor recusar mesmo assim (desligada em outro
@@ -203,7 +203,7 @@ export function ListaProvedores({ estado, politica }: { estado: EstadoPrivacidad
 
 /**
  * O miolo do cartão de aceite, como a folha da web: "Quem recebe e o quê", a lista e o que segue sem permitir. Rola junto com o
- * texto no miolo do cartão (com DeepSeek e OpenAI, a lista passa da tela de 360 × 800), com o título e as ações sempre à vista.
+ * texto no miolo do cartão, com o título e as ações sempre à vista.
  */
 function ItensDoPedido({ estado, politica }: { estado: EstadoPrivacidade | null; politica: string | null }) {
   return (

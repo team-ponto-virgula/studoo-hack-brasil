@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ErroStudoo, type PassoDiagnostico, type PerfilDiagnostico } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { mensagens } from '../mensagens/pt-BR';
 import { Botao } from '../ui';
 
 type Pergunta = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
@@ -18,11 +19,12 @@ export function ResumoDiagnostico({ perfil }: { perfil: PerfilDiagnostico }) {
   </div>;
 }
 
-export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoDesconectar }: {
+export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRecusar, aoDesconectar }: {
   objetivo: string;
   ativo: boolean;
   continuar: (id?: string) => void;
   cancelar: () => void;
+  aoRecusar: () => void;
   aoDesconectar?: () => void;
 }) {
   const [passo, setPasso] = useState<PassoDiagnostico | null>(null);
@@ -30,7 +32,8 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoDe
   const [posicaoRevisao, setPosicaoRevisao] = useState<number | null>(null);
   const exibido = posicaoRevisao === null ? passo : anteriores[posicaoRevisao]?.passo;
   const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState<'ia_indisponivel' | 'outro' | null>(null);
+  const [ultimaOpcao, setUltimaOpcao] = useState<string>();
   const vivo = useRef(true);
   const emCurso = useRef(false);
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -42,7 +45,8 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoDe
     if (emCurso.current) return;
     emCurso.current = true;
     setOcupado(true);
-    setErro(false);
+    setErro(null);
+    setUltimaOpcao(opcaoId);
     try {
       const pergunta = exibido?.tipo === 'pergunta' ? exibido : null;
       const resposta = opcaoId && pergunta
@@ -59,8 +63,10 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoDe
       setPosicaoRevisao(null);
     } catch (falha) {
       if (!vivo.current) return;
-      if (aoDesconectar && falha instanceof ErroStudoo && falha.codigo === 'nao_autenticado') aoDesconectar();
-      else setErro(true);
+      const codigo = falha instanceof ErroStudoo ? falha.codigo : null;
+      if (aoDesconectar && codigo === 'nao_autenticado') aoDesconectar();
+      else if (codigo === 'conteudo_nocivo') aoRecusar();
+      else setErro(codigo === 'ia_indisponivel' ? codigo : 'outro');
     } finally {
       emCurso.current = false;
       if (vivo.current) setOcupado(false);
@@ -74,9 +80,10 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoDe
     <p>{objetivo}</p>
     {!passo && <p>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</p>}
     {ocupado && <p role="status">Preparando o próximo passo…</p>}
-    {erro && <p role="alert">Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.</p>}
+    {erro && <p role="alert">{erro === 'ia_indisponivel' ? mensagens.erros.ia_indisponivel : 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.'}</p>}
     <div className="estudio-acoes">
-      {!passo && <Botao disabled={ocupado} onClick={() => void consultar()}>{erro ? 'Tentar novamente' : 'Responder perguntas'}</Botao>}
+      {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{mensagens.tentarNovamente}</Botao>
+        : !passo && <Botao disabled={ocupado} onClick={() => void consultar()}>Responder perguntas</Botao>}
       {exibido?.tipo === 'pergunta' && exibido.pergunta.opcoes.map(opcao =>
         <Botao key={opcao.id} variante="secundario" disabled={ocupado} onClick={() => void consultar(opcao.id)}>{opcao.texto}</Botao>)}
       {exibido?.tipo === 'resultado' && <>

@@ -4,6 +4,8 @@ import { LIMITES_GERACAO, type EventoGeracao, type PerfilDiagnostico } from "@st
 import { esqueletoValido, type AmostraDemonstrada, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { obterGerador, type GeradorTrilha, type MetaPlano } from "@/servidor/ia/gerador";
+import { exigirTrilhaSegura } from "@/servidor/ia/seguranca-trilhas";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { registrarGeracao } from "@/servidor/ia/limite";
 import { emitirComprovante, TAMANHO_MAXIMO_COMPROVANTE } from "./comprovantes";
 
@@ -70,6 +72,9 @@ async function* emitirEventos(
     let plano: { titulo: string; objetivo: string } | undefined;
     const acumulado = { fluxos: [] as EsqueletoPlano["fluxos"], tem: false };
     let meta: MetaPlano | undefined;
+    const eventosParaRevisao: EventoGeracao[] = [];
+    const simulado = provedorIaAtivo() === "falsa";
+    await exigirTrilhaSegura({ objetivo, diagnostico, amostrasDemonstradas }, { sinal });
 
     while (true) {
       const passo = await estrutura.next();
@@ -81,7 +86,9 @@ async function* emitirEventos(
       if (passo.value.tipo === "plano") {
         plano = { titulo: passo.value.titulo, objetivo: diagnostico ? objetivo : passo.value.objetivo };
       }
-      yield passo.value.tipo === "plano" && diagnostico ? { ...passo.value, objetivo } : passo.value;
+      const evento = passo.value.tipo === "plano" && diagnostico ? { ...passo.value, objetivo } : passo.value;
+      if (simulado) yield evento;
+      else eventosParaRevisao.push(evento);
     }
     if (sinal.aborted) return;
 
@@ -101,6 +108,14 @@ async function* emitirEventos(
       plano: esqueleto,
     });
     if (token.length > TAMANHO_MAXIMO_COMPROVANTE) throw new FalhaApi("ia_indisponivel");
+    if (!simulado) {
+      await exigirTrilhaSegura({ objetivo, estrutura: eventosParaRevisao }, { sinal });
+      for (const evento of eventosParaRevisao) {
+        if (sinal.aborted) return;
+        yield evento;
+      }
+      if (sinal.aborted) return;
+    }
     yield {
       tipo: "pronto",
       proposta: {

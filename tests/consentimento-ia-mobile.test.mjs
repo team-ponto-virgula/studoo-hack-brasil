@@ -47,7 +47,7 @@ function carregar() {
 const { comConsentimento, recusaDeConsentimento, permissaoVigente } = carregar();
 
 /** As que o servidor recusa com 428 sem aceite (0b05acf): as que mandam dado a IA de terceiro sem alternativa local. */
-const ACOES_IA = ['gerarProposta', 'aceitarProposta', 'enviarMaterial', 'proporMaterial', 'transcrever', 'iniciarVozAoVivo'];
+const ACOES_IA = ['iniciarDiagnostico', 'responderDiagnostico', 'gerarProposta', 'aceitarProposta', 'enviarMaterial', 'proporMaterial', 'transcrever', 'iniciarVozAoVivo'];
 /** Com retorno local no servidor sem aceite: a jornada segue, sem cartão. */
 const ACOES_COM_RETORNO_LOCAL = ['avaliarLicao', 'criarPonte', 'avaliarPonte', 'ensinarStu'];
 
@@ -143,6 +143,18 @@ test('outras falhas passam como estão, sem pedir permissão de novo', async () 
   assert.equal(t.invalidacoes(), 0);
 });
 
+test('recusa de conteúdo ou erro temporário nunca reabre o consentimento nem reenvia o pedido', async () => {
+  for (const codigo of ['conteudo_nocivo', 'ia_indisponivel']) {
+    const { cliente, chamadas, falhas } = clienteDuble();
+    const travaIa = trava({ aceita: true });
+    const seguro = comConsentimento(cliente, travaIa.garantir, travaIa.invalidar);
+    falhas.responderDiagnostico = codigo;
+    await assert.rejects(seguro.responderDiagnostico('d', 'p', 'o'), { codigo });
+    assert.deepEqual(chamadas, ['responderDiagnostico']);
+    assert.equal(travaIa.invalidacoes(), 0);
+  }
+});
+
 test('geração ao vivo: pergunta antes de abrir o pedido e repete uma vez se o servidor recusar', async () => {
   const recusada = clienteDuble();
   const semPermissao = comConsentimento(recusada.cliente, trava({ aceita: false }).garantir, () => {});
@@ -161,7 +173,7 @@ test('geração ao vivo: pergunta antes de abrir o pedido e repete uma vez se o 
   assert.equal(t.invalidacoes(), 1);
 });
 
-const estadoServidor = (aceitoEm = null, ia = 'deepseek') => ({
+const estadoServidor = (aceitoEm = null, ia = 'openai') => ({
   consentimentoIa: { necessario: ia !== 'falsa', versao: VERSAO_CONSENTIMENTO_IA, aceitoEm, provedores: provedoresDaIa(ia, true) },
   politica: '/privacidade',
 });
@@ -197,7 +209,7 @@ test('a recusa do servidor traz o estado: a trava guarda o que veio, sem outra i
   const travado = comConsentimento(cliente, async () => {}, (falha) => { recebidos.push(privacidade.privacidadeDoErro(falha)); });
   assert.equal(await travado.transcrever({ base64: 'x' }), 'ok');
   assert.equal(recebidos.length, 1);
-  assert.equal(recebidos[0].consentimentoIa.provedores.map((p) => p.id).join(','), 'deepseek,openai');
+  assert.deepEqual(recebidos[0].consentimentoIa.provedores.map((p) => p.id), ['openai']);
 });
 
 test('a permissão vale com o aceite da versão vigente, ou sempre com a IA simulada', () => {
@@ -217,7 +229,7 @@ test('exclusão: só com a palavra digitada, e os textos dizem o que some e quem
   assert.match(tela, /visitante \? t\.excluirVisitante : t\.excluirTexto/, 'visitante lê o texto dele, como na web');
   const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
   assert.equal(mensagens.privacidade.excluirDigite, 'Para confirmar, digite EXCLUIR');
-  assert.equal(mensagens.privacidade.politicaDe('DeepSeek'), 'Política de privacidade da DeepSeek');
+  assert.equal(mensagens.privacidade.politicaDe('OpenAI'), 'Política de privacidade da OpenAI');
   // Os mesmos textos da web (src/app/privacidade-perfil.tsx e aceite-ia.tsx).
   assert.match(await ler('apps/mobile/src/perfil.tsx'), /mensagens\.privacidade\.secaoTitulo/);
   // Spec 16, item 19: a política de privacidade do Studoo fica só em "Ajuda" (a seção não usa mais privacidade.politica).

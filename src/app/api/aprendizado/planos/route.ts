@@ -3,6 +3,8 @@ import { lerCampoTexto } from "@/servidor/aprendizado/http";
 import { aceitarProposta, listarPlanos } from "@/servidor/aprendizado/servico";
 import { exigirConsentimentoIa } from "@/servidor/privacidade/consentimento";
 
+export const maxDuration = 300;
+
 export function GET(request: Request) {
   return rotaPrivada(request, async (usuarioId) => responder(await listarPlanos(usuarioId)));
 }

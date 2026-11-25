@@ -80,7 +80,7 @@ export async function verificarTemas(modo) {
       (r,j)=>r.ok && Boolean(j.consentimentoIa.aceitoEm) && j.consentimentoIa.versao === anterior.versao);
     for (const [i,tema] of temas.entries()) {
       const p = await pedir("propor " + tema,proposta,"POST",{objetivo:tema},(r,j)=>r.ok && Boolean(j.token)
-        && (simulada || /^IA da (DeepSeek|OpenAI)\b/.test(j.origem)));
+        && (simulada || j.origem === "Conteúdo gerado pelo Studoo"));
       aceiteEmCurso = true;
       const plano = await pedir("aceitar " + tema,planos,"POST",{token:p.token},(r,j)=>r.ok && Boolean(j.id) && Boolean(j.fluxos?.[0]?.licoes?.[0]?.id));
       criados.add(plano.id);

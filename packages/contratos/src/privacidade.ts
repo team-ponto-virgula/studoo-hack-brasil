@@ -2,13 +2,13 @@
  * Privacidade (revisão Apple para o TestFlight externo): consentimento antes de dados irem a uma IA de terceiro
  * (App Review 5.1.2(i)), exclusão da conta dentro do app (5.1.1(v)) e a política pública em `/privacidade`.
  *
- * O servidor é quem garante: toda rota que mandaria dado da pessoa à DeepSeek ou à OpenAI sem um aceite vigente
+ * O servidor é quem garante: toda rota que mandaria dado da pessoa à OpenAI sem um aceite vigente
  * responde `consentimento_ia` (HTTP 428) antes de qualquer envio. As que têm alternativa local (correção da resposta,
  * reforço do erro, retorno do "Explique para o Stu") seguem sem a IA, sem erro.
  */
 
 /** Sobe quando o texto do aceite muda de forma relevante (novo provedor, novo uso): o aceite antigo deixa de valer. */
-export const VERSAO_CONSENTIMENTO_IA = "2026-11-20";
+export const VERSAO_CONSENTIMENTO_IA = "2026-11-25";
 
 /** Endereço público da política (web, sem login). O app abre `${origem}${CAMINHO_POLITICA}` no navegador do sistema. */
 export const CAMINHO_POLITICA = "/privacidade";
@@ -16,7 +16,7 @@ export const CAMINHO_POLITICA = "/privacidade";
 /** O texto que a pessoa digita para confirmar a exclusão da conta. */
 export const CONFIRMACAO_EXCLUSAO = "EXCLUIR";
 
-export type IdProvedorTerceiro = "deepseek" | "openai";
+export type IdProvedorTerceiro = "openai";
 
 export interface ProvedorTerceiro {
   id: IdProvedorTerceiro;
@@ -61,12 +61,11 @@ export function confirmacaoExclusaoValida(texto: string): boolean {
   return texto.trim().toUpperCase() === CONFIRMACAO_EXCLUSAO;
 }
 
-const POLITICA_DEEPSEEK = "https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html";
 const POLITICA_OPENAI = "https://openai.com/policies/privacy-policy/";
 
 const USOS_TEXTO = [
-  "O que você escreve para aprender (o pedido da trilha)",
-  "O texto e as imagens dos materiais que você envia",
+  "Seu pedido de estudo, para verificar a segurança e montar a trilha",
+  "O texto e as imagens dos materiais que você envia, para leitura, verificação de segurança e criação da trilha",
   "Suas respostas abertas e explicações, para a correção e o retorno do Stu",
 ];
 const USOS_VOZ = [
@@ -74,17 +73,10 @@ const USOS_VOZ = [
   "O áudio da conversa de voz ao vivo com o Stu",
 ];
 
-/**
- * Quem recebe o quê, conforme o provedor de texto do servidor (`IA`) e o que está ligado para voz.
- * Com `IA=deepseek`, texto e arquivos vão à DeepSeek e só a voz vai à OpenAI (modo misto); com `IA=openai`, tudo vai
- * à OpenAI; com a IA simulada, ninguém recebe nada.
- */
-export function provedoresDaIa(ia: "falsa" | "openai" | "deepseek", voz: boolean): ProvedorTerceiro[] {
+/** A OpenAI recebe os dados autorizados para os recursos ativos. */
+export function provedoresDaIa(ia: "falsa" | "openai", voz: boolean): ProvedorTerceiro[] {
   if (ia === "falsa") return [];
-  const openai = (usos: string[]): ProvedorTerceiro => ({ id: "openai", nome: "OpenAI", usos, politica: POLITICA_OPENAI });
-  if (ia === "openai") return [openai(voz ? [...USOS_TEXTO, ...USOS_VOZ] : USOS_TEXTO)];
-  const deepseek: ProvedorTerceiro = { id: "deepseek", nome: "DeepSeek", usos: USOS_TEXTO, politica: POLITICA_DEEPSEEK };
-  return voz ? [deepseek, openai(USOS_VOZ)] : [deepseek];
+  return [{ id: "openai", nome: "OpenAI", usos: voz ? [...USOS_TEXTO, ...USOS_VOZ] : [...USOS_TEXTO], politica: POLITICA_OPENAI }];
 }
 
 /** Valida a resposta de GET /api/privacidade (e do POST/DELETE do aceite). Devolve null fora do contrato. */
@@ -96,7 +88,7 @@ export function interpretarEstadoPrivacidade(dado: unknown): EstadoPrivacidade |
   if (typeof necessario !== "boolean" || typeof versao !== "string" || !Array.isArray(provedores)) return null;
   if (aceitoEm !== null && typeof aceitoEm !== "string") return null;
   const lista = provedores.filter((p): p is ProvedorTerceiro =>
-    typeof p === "object" && p !== null && (p.id === "deepseek" || p.id === "openai") && typeof p.nome === "string" &&
+    typeof p === "object" && p !== null && p.id === "openai" && typeof p.nome === "string" &&
     Array.isArray(p.usos) && p.usos.every((u: unknown) => typeof u === "string") && typeof p.politica === "string");
   return { consentimentoIa: { necessario, versao, aceitoEm, provedores: lista }, politica };
 }

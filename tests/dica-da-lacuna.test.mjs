@@ -90,7 +90,7 @@ test('a dica: o caso da prova com a IA real perde a frase com a lista e fica com
   assert.equal(dicaDaLacunaSemAResposta(boa, ['la']), boa);
 });
 
-// Prova com a IA real (Lead, 24/11, DeepSeek, "Inglês para conversar em viagens", lição 6): aceitas ["me"] e a dica abaixo ENTREGAVA a resposta dentro de um EXEMPLO entre aspas ("help me") e passava: a
+// Prova com a IA real (Lead, 24/11, "Inglês para conversar em viagens", lição 6): aceitas ["me"] e a dica abaixo ENTREGAVA a resposta dentro de um EXEMPLO entre aspas ("help me") e passava: a
 // regra das respostas de uma ou duas letras só via a resposta SOZINHA entre aspas, numa lista ou com inicial maiúscula no meio da frase, e aqui ela é a última palavra de um trecho entre aspas.
 const DICA_COM_O_EXEMPLO = 'Pense no pedido educado que abre a conversa: depois de “excuse” vem o pronome objeto, aquele que também aparece em “help me”.';
 
@@ -308,7 +308,7 @@ test('o pedido à IA: a dica da lacuna aponta o caminho e nunca escreve a respos
   }
 });
 
-test('o pedido à IA: o exemplo de lacuna de matemática que o prompt mostra (o DeepSeek imita o exemplo) não diz a resposta', () => {
+test('o pedido à IA: o exemplo de lacuna de matemática não diz a resposta', () => {
   const lacuna = exemploDeMatematica.exercicios.find((exercicio) => exercicio.tipo === 'lacuna');
   assert.ok(lacuna, 'o exemplo de matemática tem uma lacuna');
   assert.deepEqual(lacuna.gabarito, ['2']);

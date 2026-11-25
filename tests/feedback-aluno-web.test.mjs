@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
+import sharp from 'sharp';
+import { POST as enviarMaterial } from '../src/app/api/estudio/materiais/route.ts';
+import { POST as proporMaterial } from '../src/app/api/estudio/materiais/[id]/proposta/route.ts';
+import { emitirComprovante } from '../src/servidor/aprendizado/comprovantes.ts';
 import { POST as visitante } from '../src/app/api/visitante/route.ts';
 import { POST as diagnostico } from '../src/app/api/aprendizado/diagnostico/route.ts';
 import { POST as proposta } from '../src/app/api/aprendizado/propostas/route.ts';
@@ -26,6 +30,7 @@ process.env.STUDOO_IA_FALSA_PAUSA_MS = '0';
 process.env.STUDOO_IA_FALSA_PAUSA_PROPOSTA_MS = '0';
 const origem = process.env.STUDOO_ORIGEM;
 const usuarios = new Set();
+const respostaDaOpenAi = dados => Response.json({ status: 'completed', output_text: JSON.stringify(dados) });
 const ctx = id => ({ params: Promise.resolve({ id }) });
 
 function req(rota, cookie, body, method = body === undefined ? 'GET' : 'POST') {
@@ -235,13 +240,14 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
     const payload = JSON.parse(init.body);
     assert.doesNotMatch(init.body, /example.test/);
     pedidos.push(payload);
+    assert.equal(payload.model, 'gpt-6-luna');
+    assert.equal(payload.reasoning.effort, 'max');
+    if (payload.text?.format?.name === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
     if (payload.text?.format?.name === 'diagnostico') {
       assert.equal(payload.store, false);
       const { objetivo } = JSON.parse(payload.input[0].content[0].text);
       assert.ok([geral, estreito].includes(objetivo));
-      if (atrasar) return new Promise((_, reject) => {
-        init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true });
-      });
+      if (atrasar) throw new DOMException('tempo simulado', 'TimeoutError');
       const amplo = objetivo === geral;
       return Response.json({ status: 'completed', output_text: JSON.stringify({
         escopo: amplo ? 'Fotografia' : 'Compensar exposição com o obturador',
@@ -288,7 +294,7 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
         { tipo: 'licao', titulo },
       ].map(x => JSON.stringify(x)).join(quebra);
       const mensagem = JSON.stringify({ type: 'response.output_text.delta', delta: linhas + quebra });
-      return new Response('data: ' + mensagem + quebra + quebra, { headers: { 'Content-Type': 'text/event-stream' } });
+      return new Response('data: ' + mensagem + quebra + quebra + 'data: {"type":"response.completed"}' + quebra + quebra, { headers: { 'Content-Type': 'text/event-stream' } });
     }
     const enunciado = adaptada ? meioPasso : 'Qual alteração corrige a subexposição sem mudar a abertura?';
     const opcoes = adaptada ? ['1/160 s', '1/200 s', '1/125 s'] : ['Ajustar o tempo de exposição', 'Mudar apenas o foco', 'Manter todos os ajustes'];
@@ -375,15 +381,15 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   atrasar = true;
   const chamadasAntesDoAtraso = fetch.mock.callCount();
   assert.equal((await pedido(geral)).status, 503);
-  assert.equal(fetch.mock.callCount(), chamadasAntesDoAtraso + 1);
+  assert.equal(fetch.mock.callCount(), chamadasAntesDoAtraso + 3);
   const legado = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral })));
   assert.ok(legado.fluxos.length);
   assert.equal(legado.diagnostico, undefined);
 });
 
-test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rótulos longos', async t => {
+test('OpenAI simulada: recupera História do Brasil quando a resposta tem rótulos longos', async t => {
   const { id, cookie } = await novoVisitante();
-  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1' };
+  const ambiente = { IA: 'openai', OPENAI_API_KEY: 'chave-sintetica', OPENAI_BASE_URL: 'http://127.0.0.1:1' };
   const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
   Object.assign(process.env, ambiente);
   await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
@@ -418,20 +424,21 @@ test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rót
   }
   let respostas;
   const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
-    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    assert.equal(url, 'http://127.0.0.1:1/responses');
     const pedido = JSON.parse(init.body);
-    assert.deepEqual(JSON.parse(pedido.messages[1].content), { objetivo });
-    assert.deepEqual(pedido.response_format, { type: 'json_object' });
-    assert.match(pedido.messages[0].content, /até 100 caracteres/);
-    assert.match(pedido.messages[0].content, /Exatamente três alternativas distintas/);
-    assert.match(pedido.messages[0].content, /"enum":\[0,1,2\]/);
-    if (respostas.length === 1) assert.match(pedido.messages[0].content, /A resposta anterior não pôde ser usada/);
-    return Response.json({ choices: [{ message: { content: JSON.stringify(respostas.shift()) } }] });
+    if (pedido.text.format.name === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
+    assert.deepEqual(JSON.parse(pedido.input[0].content[0].text), { objetivo });
+    assert.equal(pedido.text.format.type, 'json_schema');
+    assert.match(pedido.instructions, /até 100 caracteres/);
+    assert.match(pedido.text.format.schema.properties.questao.properties.opcoes.description, /Exatamente três alternativas distintas/);
+    assert.deepEqual(pedido.text.format.schema.properties.questao.properties.correta.enum, [0, 1, 2]);
+    if (respostas.length === 1) assert.match(pedido.instructions, /A resposta anterior não pôde ser usada/);
+    return respostaDaOpenAi(respostas.shift());
   });
   const pedir = () => diagnostico(req('aprendizado/diagnostico', cookie, { objetivo }));
   respostas = [longo, correta];
   const recorte = await ok(pedir());
-  assert.equal(fetch.mock.callCount(), 2);
+  assert.equal(fetch.mock.callCount(), 4);
   assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Visão geral', 'Império', 'Era Vargas', 'Ainda não sei']);
   const profundidade = await responder(cookie, recorte, 'Era Vargas');
   const amostra = await responder(cookie, profundidade, 'Intermediário');
@@ -444,12 +451,12 @@ test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rót
     { ...correta, questao: { ...correta.questao, opcoes: ['CLT', ' clt ', 'Outro'] } },
   ];
   assert.equal((await pedir()).status, 503);
-  assert.equal(fetch.mock.callCount(), 4);
+  assert.equal(fetch.mock.callCount(), 7);
 });
 
-test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no primeiro exercício salvo', async t => {
+test('OpenAI simulada: a mesma resposta corrigida muda a ação exigida no primeiro exercício salvo', async t => {
   const { id, cookie } = await novoVisitante();
-  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1', STUDOO_IA_RESERVA: 'nenhuma', STUDOO_LIMITE_GERACOES_VISITANTE: '4' };
+  const ambiente = { IA: 'openai', OPENAI_API_KEY: 'chave-sintetica', OPENAI_BASE_URL: 'http://127.0.0.1:1', STUDOO_LIMITE_GERACOES_VISITANTE: '4' };
   const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
   Object.assign(process.env, ambiente);
   t.after(() => {
@@ -477,12 +484,14 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   let reparos = 0;
   let deixarRepetir = false;
 
-  const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
   t.mock.method(globalThis, 'fetch', async (url, init) => {
-    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    assert.equal(url, 'http://127.0.0.1:1/responses');
     assert.doesNotMatch(init.body, /example.test/);
     const requisicao = JSON.parse(init.body);
-    const [sistema, entrada] = requisicao.messages.map(m => m.content);
+    if (requisicao.text?.format?.name === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
+    const [sistema, entrada] = requisicao.instructions
+      ? [requisicao.instructions, requisicao.input[0].content[0].text]
+      : requisicao.input.map(m => m.content);
     if (requisicao.stream) {
       const demonstrou = entrada.includes(`"demonstrados":["${habilidade}"]`);
       const linhas = [
@@ -493,10 +502,10 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
           { tipo: 'licao', titulo: 'Usar operações inversas' }, { tipo: 'licao', titulo: 'Equilibrar os dois lados' },
         ] : []),
       ].map(x => JSON.stringify(x)).join('\n') + '\n';
-      return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: linhas } }] })}\n\ndata: [DONE]\n\n`);
+      return new Response(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta: linhas })}\n\ndata: {"type":"response.completed"}\n\n`);
     }
     if (sistema.includes('Classifique a abrangência')) {
-      return respostaJson({ escopo: 'Equações do primeiro grau', nivelDeclarado: 'nao_declarado', recortes: [], questao: {
+      return respostaDaOpenAi({ escopo: 'Equações do primeiro grau', nivelDeclarado: 'nao_declarado', recortes: [], questao: {
         habilidade, enunciado: 'Na equação 3x + 5 = 20, qual é o valor de x?', opcoes: ['5', '8', '15'], correta: 0,
       } });
     }
@@ -507,7 +516,7 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       assert.equal(dados.diagnostico.nivel, 'basico');
       assert.deepEqual(dados.amostrasDemonstradas, [{ habilidade, enunciado: 'Na equação 3x + 5 = 20, qual é o valor de x?' }]);
       assert.deepEqual(dados.candidato[0].licoes.map(l => l.titulo), [tituloRepetido, 'Usar operações inversas', 'Equilibrar os dois lados']);
-      return respostaJson({ fluxos: [{ titulo: 'Aplicações', licoes: [
+      return respostaDaOpenAi({ fluxos: [{ titulo: 'Aplicações', licoes: [
         { titulo: tituloNovo, resumo: desafio }, { titulo: tituloDeConferencia, resumo: decisaoDeConferencia },
       ] }] });
     }
@@ -518,7 +527,7 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       assert.deepEqual(dados.curriculo.map(l => l.decisao), [desafio, decisaoDeConferencia]);
       assert.equal(dados.amostrasDemonstradas.length, 1);
       revisoes.push(dados.licoes.map(l => l.exercicios[0].enunciado));
-      return respostaJson({ avaliacoes: dados.licoes.map(({ numero, exercicios: [exercicio] }) => {
+      return respostaDaOpenAi({ avaliacoes: dados.licoes.map(({ numero, exercicios: [exercicio] }) => {
         const certa = exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto;
         if (exercicio.enunciado === aplicacao && certa === '3k + 5 = 20'
           || exercicio.enunciado === conferencia && certa === operacoes[0]) {
@@ -541,7 +550,7 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       assert.match(licoes[0].motivo, /taxa fixa/);
       assert.match(licoes[1].motivo, /três operações são válidas/);
       assert.match(sistema, /explicite no enunciado um critério verificável/);
-      return respostaJson({ licoes: licoes.map(({ numero }) => ({
+      return respostaDaOpenAi({ licoes: licoes.map(({ numero }) => ({
         numero, conceito: numero === 1 ? 'Some a taxa fixa ao produto do preço pela quantidade.' : 'Subtraia o termo em x de um lado dos dois membros para reunir os termos.',
         exemplo: numero === 1 ? 'Numa conta de R$ 8 fixos mais R$ 2/kg, R$ 18 corresponde a 2k + 8 = 18.' : 'Em 5x + 2 = 3x + 10, subtrair 3x dos dois lados dá 2x + 2 = 10.',
         enunciado: numero === 1 ? deixarRepetir ? repeticao : aplicacao : deixarRepetir ? ambigua : conferencia,
@@ -558,7 +567,7 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       assert.match(entrada, /explicite no enunciado um critério verificável/);
     }
     const opcoes = segundaLicao ? operacoes : adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
-    return respostaJson({
+    return respostaDaOpenAi({
       objetivo: habilidade,
       conceito: 'Aplique a mesma operação nos dois lados para isolar a incógnita.',
       exemplo: 'Em x + 3 = 8, subtraia 3 para encontrar x = 5.',
@@ -612,9 +621,9 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });
 
-test('DeepSeek simulado: corrige gabaritos de exposição em duas rodadas e conserva todas as lições ao salvar', async t => {
+test('OpenAI simulada: corrige gabaritos de exposição em duas rodadas e conserva todas as lições ao salvar', async t => {
   const { id, cookie } = await novoVisitante();
-  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1', STUDOO_IA_RESERVA: 'nenhuma' };
+  const ambiente = { IA: 'openai', OPENAI_API_KEY: 'chave-sintetica', OPENAI_BASE_URL: 'http://127.0.0.1:1' };
   const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
   Object.assign(process.env, ambiente);
   t.after(() => {
@@ -665,30 +674,32 @@ test('DeepSeek simulado: corrige gabaritos de exposição em duas rodadas e cons
   let recusarNaUltima = false;
   const corrigirPares = { exercicio: 1, gabarito: ['e1=d2', 'e2=d1'], feedbackCorreto: 'Fechar pede mais tempo. Abrir pede menos tempo.', feedbackIncorreto: 'Veja se a abertura deixou entrar mais ou menos luz.' };
   const corrigirTempo = { exercicio: 2, gabarito: ['o0'], feedbackCorreto: 'Fechar dois passos pede cerca de quatro vezes o tempo.', feedbackIncorreto: 'Conte os passos de f/4 até f/8.' };
-  const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
   t.mock.method(globalThis, 'fetch', async (url, init) => {
-    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    assert.equal(url, 'http://127.0.0.1:1/responses');
     const pedido = JSON.parse(init.body);
-    const [sistema, entrada] = pedido.messages.map(m => m.content);
+    if (pedido.text?.format?.name === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
+    const [sistema, entrada] = pedido.instructions
+      ? [pedido.instructions, pedido.input[0].content[0].text]
+      : pedido.input.map(m => m.content);
     if (pedido.stream) {
       const linhas = [
         { tipo: 'plano', titulo: 'Fotografia em prática' }, { tipo: 'fluxo', titulo: 'Exposição' },
         ...curriculo.map(licao => ({ tipo: 'licao', ...licao })),
       ].map(linha => JSON.stringify(linha)).join('\n') + '\n';
-      return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: linhas } }] })}\n\ndata: [DONE]\n\n`);
+      return new Response(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta: linhas })}\n\ndata: {"type":"response.completed"}\n\n`);
     }
     if (sistema.includes('Classifique a abrangência')) {
-      return respostaJson({ escopo: 'Compensar a exposição', nivelDeclarado: 'intermediario', recortes: [], questao });
+      return respostaDaOpenAi({ escopo: 'Compensar a exposição', nivelDeclarado: 'intermediario', recortes: [], questao });
     }
     if (sistema.includes('Revise o conjunto das lições obrigatórias')) {
-      return respostaJson({ fluxos: [{ titulo: 'Exposição', licoes: curriculo }] });
+      return respostaDaOpenAi({ fluxos: [{ titulo: 'Exposição', licoes: curriculo }] });
     }
     if (sistema.includes('Avalie todas as lições recebidas')) {
       const { licoes } = JSON.parse(entrada);
       revisoes.push(licoes.map(l => l.numero));
       const rodada = (revisoes.length - 1) % 3 + 1;
       assert.match(sistema, /Resolva separadamente cada exercício numerado/);
-      return respostaJson({ avaliacoes: licoes.map(({ numero, exercicios }) => {
+      return respostaDaOpenAi({ avaliacoes: licoes.map(({ numero, exercicios }) => {
         const aprovado = { numero, resultado: 'avanca', motivo: '', correcoes: [] };
         if (numero !== 3) return aprovado;
         const [pares, escolha] = exercicios;
@@ -720,7 +731,7 @@ test('DeepSeek simulado: corrige gabaritos de exposição em duas rodadas e cons
     const numero = Number(entrada.match(/Escreva a lição (\d+):/)?.[1]);
     assert.ok(numero >= 1 && numero <= 4);
     geradas.push(numero);
-    return respostaJson({ objetivo: curriculo[numero - 1].resumo, ...fotografias[numero - 1] });
+    return respostaDaOpenAi({ objetivo: curriculo[numero - 1].resumo, ...fotografias[numero - 1] });
   });
 
   const amostra = await ok(diagnostico(req('aprendizado/diagnostico', cookie, { objetivo })));
@@ -756,4 +767,404 @@ test('DeepSeek simulado: corrige gabaritos de exposição em duas rodadas e cons
   assert.equal((await salvar(req('aprendizado/planos', cookie, { token: outra.token }))).status, 503);
   assert.deepEqual(revisoes, [[1, 2, 3, 4], [3], [3], [1, 2, 3, 4], [3], [3]]);
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 1);
+});
+
+function simularLuna(t, responder) {
+  const anterior = { IA: process.env.IA, OPENAI_API_KEY: process.env.OPENAI_API_KEY, OPENAI_BASE_URL: process.env.OPENAI_BASE_URL };
+  Object.assign(process.env, { IA: 'openai', OPENAI_API_KEY: 'chave-sintetica', OPENAI_BASE_URL: 'http://127.0.0.1:1/v1' });
+  t.after(() => {
+    for (const [chave, valor] of Object.entries(anterior)) {
+      if (valor === undefined) delete process.env[chave];
+      else process.env[chave] = valor;
+    }
+  });
+  return t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, 'http://127.0.0.1:1/v1/responses');
+    const pedido = JSON.parse(init.body);
+    assert.equal(pedido.model, 'gpt-6-luna');
+    assert.deepEqual(pedido.reasoning, { effort: 'max' });
+    assert.equal(pedido.store, false);
+    assert.doesNotMatch(init.body, /@example.test|consentimentoIaEm/);
+    return responder(pedido, init.signal);
+  });
+}
+
+test('diagnóstico, pular perguntas, proposta direta e token antigo recusam sem gerar nem salvar', async t => {
+  const conta = await banco.usuario.create({ data: { email: `seguranca-${crypto.randomUUID()}@example.test`, fuso: 'UTC' } });
+  const id = conta.id;
+  usuarios.add(id);
+  const cookie = cookieSessao((await criarSessao(id, 'WEB')).token).split(';')[0];
+  const objetivo = 'Quero aprender a assaltar um banco';
+  const contextoLegitimo = 'Estudar a história dos assaltos a banco';
+  const triagens = [];
+  let modo = 'recusar';
+  const fetch = simularLuna(t, pedido => {
+    assert.equal(pedido.text.format.name, 'triagem_trilha');
+    const dados = JSON.parse(pedido.input[0].content[0].text);
+    triagens.push(dados);
+    if (modo === 'falha') return new Response('', { status: 503 });
+    if (modo === 'incierto') return respostaDaOpenAi({ decisao: 'indeterminado' });
+    return respostaDaOpenAi({ decisao: 'recusar' });
+  });
+  const rotas = [
+    ['aprendizado/diagnostico', diagnostico],
+    ['aprendizado/propostas', proposta],
+  ];
+  for (const [caminho, rota] of rotas) {
+    assert.equal((await rota(req(caminho, cookie, { objetivo }))).status, 428);
+  }
+  assert.equal(fetch.mock.callCount(), 0);
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  for (const [caminho, rota] of rotas) {
+    const resposta = await rota(req(caminho, cookie, { objetivo }));
+    assert.equal(resposta.status, 422);
+    assert.equal((await resposta.json()).codigo, 'conteudo_nocivo');
+  }
+  const aoVivo = corpo => eventosProposta(req('aprendizado/propostas/ao-vivo', cookie, corpo));
+  const recusada = await aoVivo({ objetivo });
+  assert.equal(recusada.status, 200);
+  const eventos = (await recusada.text()).trim().split('\n').map(JSON.parse);
+  assert.deepEqual(eventos, [{ tipo: 'erro', codigo: 'conteudo_nocivo' }]);
+
+  const antigo = emitirComprovante('proposta', id, { id: crypto.randomUUID(), expiraEm: Date.now() + 60_000,
+    plano: { gerador: 'adaptador-legado', titulo: contextoLegitimo, objetivo: contextoLegitimo, origem: 'Legado',
+      fluxos: [{ titulo: 'Análise', licoes: [{ titulo: 'Simulação operacional para cometer homicídio' }] }] },
+  });
+  const aceitada = await salvar(req('aprendizado/planos', cookie, { token: antigo }));
+  assert.equal(aceitada.status, 422);
+  assert.match(triagens.at(-1).plano.fluxos[0].licoes[0].titulo, /Simulação operacional/);
+
+  const registro = await banco.diagnosticoAprendizado.create({ data: {
+    usuarioId: id, objetivo: contextoLegitimo, expiraEm: new Date(Date.now() + 60_000), passo: 2,
+    estado: { perfil: { nivel: 'basico', escopo: 'Finalidade operacional disfarçada', lacunas: [], demonstrados: ['Habilidade derivada do material editado'] } },
+  } });
+  const adaptada = await aoVivo({ objetivo: contextoLegitimo, diagnosticoId: registro.id });
+  assert.deepEqual((await adaptada.text()).trim().split('\n').map(JSON.parse), [{ tipo: 'erro', codigo: 'conteudo_nocivo' }]);
+  assert.equal(triagens.at(-1).diagnostico.escopo, 'Finalidade operacional disfarçada');
+  for (const falha of ['falha', 'incierto']) {
+    modo = falha;
+    const resposta = await proposta(req('aprendizado/propostas', cookie, { objetivo: contextoLegitimo }));
+    assert.equal(resposta.status, 503);
+    assert.equal((await resposta.json()).codigo, 'ia_indisponivel');
+  }
+  assert.deepEqual(await ok(planos(req('aprendizado/planos', cookie))), []);
+  assert.equal(await banco.diagnosticoAprendizado.count({ where: { usuarioId: id } }), 1, 'só o diagnóstico legado criado na prova');
+});
+
+test('arquivos, OCR e objetivo da proposta de material são triados antes de gravar ou gerar', async t => {
+  const { id, cookie } = await novoVisitante();
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  const vistas = [];
+  simularLuna(t, pedido => {
+    const nome = pedido.text.format.name;
+    const [texto, anexo] = pedido.input[0].content;
+    const dados = JSON.parse(texto.text);
+    vistas.push({ nome, dados, anexo });
+    if (nome === 'leitura_material') return respostaDaOpenAi({
+      paginas: [{ numero: 1, texto: 'Texto extraído com instruções operacionais nocivas, exemplo sintético.' }],
+    });
+    assert.equal(nome, 'triagem_trilha');
+    const recusar = /operacionais nocivas|objetivo operacional/i.test(JSON.stringify(dados));
+    return respostaDaOpenAi({ decisao: recusar ? 'recusar' : 'permitir' });
+  });
+  const enviar = (nome, tipo, conteudo) => enviarMaterial(req('estudio/materiais', cookie, {
+    nome, tipo, base64: Buffer.from(conteudo).toString('base64'),
+  }));
+  const csv = await enviar('notas.csv', 'text/csv', 'conteudo\nInstruções operacionais nocivas em um documento sintético.');
+  assert.equal(csv.status, 422);
+  assert.equal(vistas.length, 1);
+  assert.match(vistas[0].dados.material.paginas[0].texto, /operacionais nocivas/);
+  const foto = await sharp({ create: { width: 32, height: 32, channels: 3, background: '#fff' } }).png().toBuffer();
+  const resultado = await enviar('pagina.png', 'image/png', foto);
+  assert.equal(resultado.status, 422);
+  assert.deepEqual(vistas.map(p => p.nome), ['triagem_trilha', 'triagem_trilha', 'leitura_material', 'triagem_trilha']);
+  assert.equal(vistas[1].anexo.type, 'input_image');
+  assert.match(vistas[1].anexo.image_url, /^data:image\/jpeg;base64,/);
+  assert.equal(await banco.materialEstudo.count({ where: { usuarioId: id } }), 0);
+
+  const material = await ok(enviar('historia.csv', 'text/csv', 'conteudo\nHistória dos assaltos a banco e das políticas de prevenção.'));
+  const resposta = await proporMaterial(req(`estudio/materiais/${material.id}/proposta`, cookie, { objetivo: 'Objetivo operacional disfarçado' }), ctx(material.id));
+  assert.equal(resposta.status, 422);
+  assert.equal(vistas.at(-1).dados.objetivo, 'Objetivo operacional disfarçado');
+  assert.equal(await banco.materialEstudo.count({ where: { usuarioId: id } }), 1, 'nenhum rascunho criado');
+});
+
+test('uma lição nociva da OpenAI é recusada no aceite e nunca fica disponível no banco', async t => {
+  const { id, cookie } = await novoVisitante();
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  const vistos = [];
+  const objetivo = 'Estudar direito penal e prevenção da violência';
+  simularLuna(t, pedido => {
+    const nome = pedido.text?.format?.name ?? 'estrutura';
+    vistos.push(nome);
+    if (nome === 'triagem_trilha') {
+      const dados = JSON.parse(pedido.input[0].content[0].text);
+      const recusada = dados.conteudo?.some(l => l.exercicio.feedbackCorreto === 'Instrução operacional simulada.');
+      return respostaDaOpenAi({ decisao: recusada ? 'recusar' : 'permitir' });
+    }
+    if (pedido.stream) {
+      const delta = [
+        { tipo: 'plano', titulo: 'Direito penal e prevenção' }, { tipo: 'fluxo', titulo: 'Análise jurídica' },
+        { tipo: 'licao', titulo: 'Reconhecer medidas preventivas' },
+      ].map(JSON.stringify).join('\n') + '\n';
+      return new Response(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta })}\n\ndata: {"type":"response.completed"}\n\n`);
+    }
+    return respostaDaOpenAi({
+      objetivo: 'Reconhecer medidas preventivas', conceito: 'Prevenir é reduzir o risco de violência.',
+      exemplo: 'Uma instituição pode capacitar sua equipe para pedir ajuda.',
+      exercicios: [{
+        tipo: 'multipla_escolha', enunciado: 'Qual medida atua antes de um incidente?',
+        opcoes: [{ id: 'a', texto: 'Treinamento' }, { id: 'b', texto: 'Sentença' }, { id: 'c', texto: 'Investigação' }],
+        gabarito: ['a'], feedbackCorreto: 'Instrução operacional simulada.', feedbackIncorreto: 'Pense no que acontece antes do incidente.',
+      }],
+    });
+  });
+  const p = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo })));
+  const resposta = await salvar(req('aprendizado/planos', cookie, { token: p.token }));
+  assert.equal(resposta.status, 422);
+  assert.equal((await resposta.json()).codigo, 'conteudo_nocivo');
+  assert.deepEqual(vistos, ['triagem_trilha', 'estrutura', 'triagem_trilha', 'triagem_trilha', 'licao_studoo', 'triagem_trilha']);
+  assert.equal(await banco.planoAprendizado.count({ where: { usuarioId: id } }), 0);
+  assert.equal(await banco.licao.count({ where: { usuarioId: id } }), 0);
+});
+
+test('aceite de proposta antiga usa Luna e triagem; trilha já salva continua abrindo com a origem original', async t => {
+  const { id, cookie } = await novoVisitante();
+  const objetivo = 'Aprender a identificar frações equivalentes';
+  const demonstracao = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo })));
+  const jaSalva = await ok(salvar(req('aprendizado/planos', cookie, { token: demonstracao.token })));
+  assert.match(jaSalva.origem, /Modo demonstração/);
+  const demoPendente = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: 'Aprender frações em receitas' })));
+
+  const chamadas = [];
+  simularLuna(t, pedido => {
+    const nome = pedido.text.format.name;
+    chamadas.push(nome);
+    if (nome === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
+    assert.match(nome, /^licao_studoo(?:_matematica)?$/);
+    return respostaDaOpenAi({
+      objetivo: 'Reconhecer frações equivalentes',
+      conceito: 'Duas frações são equivalentes quando representam a mesma parte do inteiro.',
+      exemplo: 'Uma metade corresponde a dois quartos.',
+      exercicios: [{
+        tipo: 'multipla_escolha',
+        enunciado: 'Qual fração representa a mesma parte que uma metade?',
+        opcoes: [{ id: 'a', texto: 'Dois quartos' }, { id: 'b', texto: 'Dois terços' }, { id: 'c', texto: 'Três quartos' }],
+        gabarito: ['a'], feedbackCorreto: 'Uma metade contém dois quartos.', feedbackIncorreto: 'Pense em quatro partes iguais.',
+      }],
+    });
+  });
+
+  const reaberta = await ok(plano(req('aprendizado/planos/' + jaSalva.id, cookie), ctx(jaSalva.id)));
+  assert.equal(reaberta.origem, jaSalva.origem, 'a leitura não pede novo aceite nem chama a IA');
+  assert.deepEqual(chamadas, []);
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  const reenviada = await ok(salvar(req('aprendizado/planos', cookie, { token: demonstracao.token })));
+  assert.equal(reenviada.id, jaSalva.id);
+  assert.equal(reenviada.origem, jaSalva.origem);
+  assert.deepEqual(chamadas, []);
+
+  const legadoId = crypto.randomUUID();
+  const legado = {
+    titulo: 'Frações equivalentes', objetivo, origem: 'IA do Provedor Legado',
+    fluxos: [{ titulo: 'Frações no cotidiano', licoes: [{ titulo: 'Reconhecer frações equivalentes' }] }],
+  };
+  const token = emitirComprovante('proposta', id, {
+    id: legadoId, expiraEm: Date.now() + 60_000, plano: { ...legado, gerador: 'provedor-legado-v1' },
+  });
+  const { reaberto: aceito, primeira } = await salvarEReabrir(cookie, { ...legado, token });
+  assert.equal(aceito.id, legadoId);
+  assert.equal(aceito.origem, 'Conteúdo gerado pelo Studoo');
+  assert.equal(primeira.origem, aceito.origem);
+  assert.equal(primeira.exercicio.opcoes.find(o => o.texto === 'Dois quartos')?.texto, 'Dois quartos');
+  assert.deepEqual(chamadas, ['triagem_trilha', 'licao_studoo_matematica', 'triagem_trilha']);
+
+  const atualizada = await ok(salvar(req('aprendizado/planos', cookie, { token: demoPendente.token })));
+  assert.equal(atualizada.origem, 'Conteúdo gerado pelo Studoo', 'o aceite real não herda o rótulo simulado');
+  assert.equal(chamadas[3], 'triagem_trilha');
+  assert.equal(chamadas.at(-1), 'triagem_trilha');
+  assert.equal(chamadas.slice(4, -1).length, demoPendente.fluxos.flatMap(f => f.licoes).length);
+});
+
+test('rota NDJSON guarda toda a estrutura até a triagem final, inclusive quando falha ou expira', { timeout: 15_000 }, async t => {
+  const conta = await banco.usuario.create({ data: { email: `stream-${crypto.randomUUID()}@example.test`, fuso: 'UTC' } });
+  usuarios.add(conta.id);
+  const cookie = cookieSessao((await criarSessao(conta.id, 'WEB')).token).split(';')[0];
+  await aceitarConsentimentoIa(conta.id, VERSAO_CONSENTIMENTO_IA);
+  const estrutura = [
+    { tipo: 'plano', titulo: 'História e direito' },
+    { tipo: 'fluxo', titulo: 'Análise de fontes' },
+    { tipo: 'licao', titulo: 'Comparar documentos', resumo: 'Distinguir contexto e evidência.' },
+  ];
+  let modo = 'permitir';
+  const iniciouRevisao = Promise.withResolvers();
+  const liberarRevisao = Promise.withResolvers();
+  const revisoes = [];
+  simularLuna(t, async pedido => {
+    if (pedido.stream) {
+      const delta = estrutura.map(JSON.stringify).join('\n') + '\n';
+      const primeiraParte = `data: ${JSON.stringify({ type: 'response.output_text.delta', delta })}\n\n`;
+      if (modo === 'stream-erro') return new Response(primeiraParte + 'data: {"type":"response.failed"}\n\n');
+      if (modo === 'stream-prazo') {
+        return new Response(new ReadableStream({
+          start(canal) { canal.enqueue(new TextEncoder().encode(primeiraParte)); },
+          pull(canal) { canal.error(new DOMException('Prazo simulado no stream', 'TimeoutError')); },
+        }));
+      }
+      return new Response(primeiraParte + 'data: {"type":"response.completed"}\n\n');
+    }
+    const dados = JSON.parse(pedido.input[0].content[0].text);
+    if (!dados.estrutura) return respostaDaOpenAi({ decisao: 'permitir' });
+    revisoes.push(dados.estrutura);
+    if (modo === 'http') return new Response(null, { status: 503 });
+    if (modo === 'prazo') throw new DOMException('Prazo simulado', 'TimeoutError');
+    if (modo === 'recusar') return respostaDaOpenAi({ decisao: 'recusar' });
+    iniciouRevisao.resolve();
+    await liberarRevisao.promise;
+    return respostaDaOpenAi({ decisao: 'permitir' });
+  });
+  const abrir = () => eventosProposta(req('aprendizado/propostas/ao-vivo', cookie, { objetivo: 'Estudar história e direito' }));
+  const resposta = await abrir();
+  const leitor = resposta.body.getReader();
+  const decoder = new TextDecoder();
+  try {
+    const primeira = await leitor.read();
+    assert.equal(decoder.decode(primeira.value), '\n', 'apenas o pulso neutro da resposta precede a revisão');
+    await iniciouRevisao.promise;
+    let recebeu = false;
+    const proxima = leitor.read().then(item => { recebeu = true; return item; });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(recebeu, false, 'título, fluxo e lição continuam retidos enquanto a triagem está pendente');
+    liberarRevisao.resolve();
+    const eventos = [decoder.decode((await proxima).value)];
+    while (true) {
+      const item = await leitor.read();
+      if (item.done) break;
+      eventos.push(decoder.decode(item.value));
+    }
+    assert.deepEqual(eventos.join('').trim().split('\n').map(linha => JSON.parse(linha).tipo),
+      ['plano', 'fluxo', 'licao', 'pronto']);
+  } finally {
+    liberarRevisao.resolve();
+    await leitor.cancel();
+  }
+
+  for (const [cenario, codigo] of [
+    ['http', 'ia_indisponivel'], ['prazo', 'ia_indisponivel'], ['recusar', 'conteudo_nocivo'],
+    ['stream-erro', 'ia_indisponivel'], ['stream-prazo', 'ia_indisponivel'],
+  ]) {
+    modo = cenario;
+    const bruto = await (await abrir()).text();
+    assert.deepEqual(bruto.trim().split('\n').map(JSON.parse), [{ tipo: 'erro', codigo }]);
+    assert.doesNotMatch(bruto, /História e direito|Análise de fontes|Comparar documentos|Distinguir contexto/);
+  }
+  assert.equal(revisoes.length, 4);
+  for (const vista of revisoes) assert.deepEqual(vista.map(({ titulo }) => titulo), estrutura.map(({ titulo }) => titulo));
+});
+
+test('uma lição lenta usa a janela restante do aceite sem repetir as seis que terminaram', async t => {
+  for (const [duracao, status] of [[175_000, 200], [220_000, 503]]) {
+    await t.test(`provedor leva ${duracao / 1000} s na última lição`, { timeout: 10_000 }, async caso => {
+      const { id, cookie } = await novoVisitante();
+      await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+      const paralelasAnteriores = process.env.STUDOO_GERACAO_PARALELA;
+      process.env.STUDOO_GERACAO_PARALELA = '10';
+      caso.after(() => {
+        if (paralelasAnteriores === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+        else process.env.STUDOO_GERACAO_PARALELA = paralelasAnteriores;
+      });
+
+      let agora = 0;
+      const relogios = [];
+      const timeoutReal = AbortSignal.timeout.bind(AbortSignal);
+      caso.mock.method(AbortSignal, 'timeout', ms => {
+        if (![150_000, 180_000, 220_000, 240_000].includes(ms)) return timeoutReal(ms);
+        const controle = new AbortController();
+        relogios.push({ controle, vence: agora + ms });
+        return controle.signal;
+      });
+      function avancar(tempo) {
+        agora = tempo;
+        for (const { controle, vence } of relogios) {
+          if (vence <= agora) controle.abort(new DOMException('Prazo do aceite', 'TimeoutError'));
+        }
+      }
+
+      const iniciaram = Promise.withResolvers();
+      const pendentes = new Map();
+      const chamadas = [];
+      const licoes = Array.from({ length: 7 }, (_, i) => ({ titulo: `Princípio ${i + 1} da mediação escolar` }));
+      simularLuna(caso, (pedido, sinal) => {
+        const nome = pedido.text.format.name;
+        if (nome === 'triagem_trilha') {
+          chamadas.push(nome);
+          return respostaDaOpenAi({ decisao: 'permitir' });
+        }
+        assert.equal(nome, 'licao_studoo');
+        const indice = Number(pedido.input[1].content.match(/Escreva a lição (\d+):/)?.[1]);
+        assert.ok(indice >= 1 && indice <= 7);
+        assert.equal(pendentes.has(indice), false, 'cada lição começa uma vez');
+        chamadas.push(indice);
+        return new Promise((resolve, reject) => {
+          sinal.addEventListener('abort', () => reject(sinal.reason), { once: true });
+          pendentes.set(indice, {
+            sinal,
+            terminar: () => resolve(respostaDaOpenAi({
+              objetivo: licoes[indice - 1].titulo,
+              conceito: 'Uma escuta atenta ajuda a compreender a situação.',
+              exemplo: `Na conversa ${indice}, a turma ouve as partes antes de propor um acordo.`,
+              exercicios: [{
+                tipo: 'multipla_escolha', enunciado: 'Como começar a conversa de mediação?',
+                opcoes: [{ id: 'a', texto: 'Ouvir as partes' }, { id: 'b', texto: 'Encerrar o encontro' }, { id: 'c', texto: 'Sortear a decisão' }],
+                gabarito: ['a'], feedbackCorreto: 'Assim cada parte conta sua perspectiva.',
+                feedbackIncorreto: 'Considere o que se pode fazer para conhecer as perspectivas.',
+              }],
+            })),
+          });
+          if (pendentes.size === licoes.length) iniciaram.resolve();
+        });
+      });
+
+      const planoId = crypto.randomUUID();
+      const token = emitirComprovante('proposta', id, {
+        id: planoId, expiraEm: Date.now() + 60_000,
+        plano: {
+          gerador: 'openai-v1', origem: 'Conteúdo gerado pelo Studoo',
+          titulo: 'Mediação escolar', objetivo: 'Estudar a resolução pacífica de conflitos na escola',
+          fluxos: [{ titulo: 'Escutar e mediar', licoes }],
+        },
+      });
+      const resposta = salvar(req('aprendizado/planos', cookie, { token }));
+      try {
+        await iniciaram.promise;
+        for (const [i, tempo] of [37_000, 54_000, 79_000, 98_000, 118_000, 120_000].entries()) {
+          avancar(tempo);
+          pendentes.get(i + 1).terminar();
+          await new Promise(resolve => setImmediate(resolve));
+        }
+        avancar(150_000);
+        assert.equal(pendentes.get(7).sinal.aborted, false, 'a lição mantém a própria requisição após 150 s');
+        avancar(duracao);
+        if (status === 200) {
+          pendentes.get(7).terminar();
+          const salvo = await ok(resposta);
+          assert.equal(salvo.id, planoId);
+          const reaberto = await ok(plano(req('aprendizado/planos/' + planoId, cookie), ctx(planoId)));
+          assert.deepEqual(reaberto.fluxos.flatMap(f => f.licoes.map(l => l.titulo)), licoes.map(l => l.titulo));
+          assert.equal(chamadas.at(-1), 'triagem_trilha');
+        } else {
+          assert.equal(pendentes.get(7).sinal.aborted, true, 'o teto compartilhado cancela a última lição');
+          const erro = await resposta;
+          assert.equal(erro.status, status);
+          assert.equal((await erro.json()).codigo, 'ia_indisponivel');
+          assert.deepEqual(await ok(planos(req('aprendizado/planos', cookie))), []);
+          assert.equal(chamadas.filter(nome => nome === 'triagem_trilha').length, 1);
+        }
+        assert.deepEqual(chamadas.filter(nome => typeof nome === 'number'), [1, 2, 3, 4, 5, 6, 7]);
+      } finally {
+        avancar(300_000);
+        await resposta;
+      }
+    });
+  }
 });

@@ -51,7 +51,7 @@ export default async function PaginaPrivacidade() {
           <tr><td>Fuso horário</td><td>Contar seus dias de estudo</td><td>Até você excluir a conta</td></tr>
           <tr><td>O que você pede para aprender, trilhas, lições, respostas, progresso e tempo de estudo</td><td>Montar e acompanhar seus estudos</td><td>Até você apagar a trilha ou excluir a conta</td></tr>
           <tr><td>Diagnóstico opcional da trilha</td><td>Adaptar o começo e o escopo do estudo</td><td>A sessão de perguntas vale por 30 minutos. O resumo permanece com a trilha salva.</td></tr>
-          <tr><td>Materiais enviados (texto lido de fotos, PDFs, DOCX ou CSV)</td><td>Montar uma trilha a partir do material</td><td>24 horas, ou até você excluir</td></tr>
+          <tr><td>Materiais enviados (texto lido de fotos, PDFs, DOCX ou CSV)</td><td>Verificar a segurança e montar uma trilha a partir do material</td><td>24 horas, ou até você excluir</td></tr>
           <tr><td>Gravação da sua explicação por voz</td><td>Transformar a fala em texto</td><td>Não é guardada: só o texto resultante, quando você o envia</td></tr>
           <tr><td>Perfil público opcional: nome, cor, foto, resumo e interesses</td><td>Mostrar quem compartilhou uma trilha</td><td>Até você mudar ou excluir a conta</td></tr>
           <tr><td>Links compartilhados, publicações no Explorar, quem você segue, "valeus" e bloqueios</td><td>Compartilhar trilhas e moderar a comunidade</td><td>Até você parar de compartilhar ou excluir a conta</td></tr>
@@ -66,8 +66,8 @@ export default async function PaginaPrivacidade() {
 
       <h2>Quem recebe seus dados</h2>
       <p>
-        Só depois que você permite o uso de IA, e só o necessário para cada função. Qual serviço é usado depende da
-        configuração do servidor; a tela de permissão mostra quais estão ligados agora.
+        Enviamos à OpenAI o necessário para cada função depois que você permite o uso de IA. A permissão inclui a
+        verificação de segurança antes de gerar uma trilha ou mostrar conteúdo de um material.
       </p>
       {provedores.length === 0 ? <p>A IA está em modo de demonstração. Nenhum provedor de IA recebe seus dados nesta configuração.</p> : <ul>
         {provedores.map((provedor) => (

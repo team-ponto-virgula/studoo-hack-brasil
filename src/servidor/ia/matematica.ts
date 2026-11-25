@@ -546,7 +546,7 @@ const REGRAS_DE_MARCAS = [
   "Em todo texto que a pessoa lê (objetivo, conceito, exemplo, passos, enunciado, opções, feedbacks, problema, texto dos passos, pergunta e opções do \"Sua vez\"), marque com cifrões cada variável, cada expressão e cada conta curta: $x = 3$, $a + b$, $x^2 = 9$, $x_A$, $\\frac{1}{2}$, $(x_A + x_B) / 2$. O resto fica em texto comum, sem barras. Sem cifrão, nada de LaTeX. Dinheiro se escreve \"R$ 5,00\", sem marcar. Marque só a fórmula COMPLETA, que fecha antes da lacuna: \"$h = 12$\" está certo e \"$h = $ ___\" está errado; na lacuna (___), a conta que fica pela metade vai em texto comum, sem cifrões (\"h = ___\"). Nunca ponha $, \\, ^ ou _ fora de uma marca, nem dentro de alt, de nome de passo, de trecho ou de gabarito.",
 ];
 
-/** O bloco de matemática da lição do plano (Structured Outputs da OpenAI e o json da DeepSeek). Só vai quando a lição é de matemática. */
+/** O bloco de matemática da lição do plano (Structured Outputs da OpenAI). Só vai quando a lição é de matemática. */
 export const instrucoesDeMatematica = [
   "",
   "Esta lição é de MATEMÁTICA. Além do que está acima, ela leva fórmulas e figuras em dados (você não desenha nada), e os campos novos do formato são:",
@@ -595,7 +595,7 @@ export const instrucoesDeFigurasDoMaterial = [
   "- Se os dados trouxerem `correcao`, a sua resposta anterior para esta lição teve o \"Resolva comigo\" RECUSADO pelo motivo dito (com as letras e os valores usados, quando é conta): refaça visuais, visual e resolucao corrigindo exatamente isso e conferindo cada conta.",
 ].join("\n");
 
-/* ----- O exemplo do json (DeepSeek): o mesmo formato do esquema, com um exemplo de verdade ----- */
+/* ----- O exemplo de lição: o mesmo formato do esquema, com um exemplo de verdade ----- */
 
 const visualVazio = { alt: null, latex: null, de: null, ate: null, curvas: null, pontos: null, segmentos: null, poligonos: null, guias: null, intervalos: null };
 const pontoVazio = { x: null, y: null, valor: null, tipo: null, curva: null, rotulo: null, derivado: null };

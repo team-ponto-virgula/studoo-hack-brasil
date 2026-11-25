@@ -21,7 +21,6 @@ const { conteudosDasLicoes, INSTRUCOES_DAS_LICOES_DO_MATERIAL } = await import('
 const { conteudoDaGerada, licaoGeradaValida } = await import('../src/servidor/estudio/ia.ts');
 const { obterGerador } = await import('../src/servidor/ia/gerador.ts');
 const { GERADOR_OPENAI } = await import('../src/servidor/ia/openai.ts');
-const { GERADOR_DEEPSEEK } = await import('../src/servidor/ia/deepseek.ts');
 
 test('os limites do balão: 3 frases, 2 na lição 1, cerca de 50 palavras (passa até 60)', () => {
   assert.deepEqual({ ...LIMITE_DO_CONCEITO }, { frases: 3, frasesNaLicao1: 2, palavras: 50, folgaDePalavras: 10 });
@@ -80,7 +79,7 @@ test('encurtar: corta na última frase que cabe, guarda o resto, nunca corta no 
 });
 
 test('invariante: conceito + resto é sempre o texto original (nada some), e o conceito termina numa frase inteira', () => {
-  const amostras = JSON.parse(ler('tests/fixtures/deepseek-licoes-reais.json'));
+  const amostras = JSON.parse(ler('tests/fixtures/licoes-reais-historicas.json'));
   const textos = [
     ...amostras.map((amostra) => amostra.bruto.conceito),
     ...DEMOS.flatMap((demo) => demo.plano.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.conceito))),
@@ -174,8 +173,8 @@ test('a normalização corta o conceito que passou do balão, sem derrubar a li�
   assert.equal(normalizarLicao(comOpcionalRuim, 'IA', { primeiraLicao: true }).conteudo.conceito, 'O violão tem corpo, braço e cabeça. As cordas vão da cabeça até o cavalete.');
 });
 
-test('as amostras reais da DeepSeek (46 lições, escritas quando o pedido dizia "2 ou 3 frases") seguem todas aceitas e saem dentro do balão', () => {
-  const amostras = JSON.parse(ler('tests/fixtures/deepseek-licoes-reais.json'));
+test('as amostras reais históricas (46 lições, escritas quando o pedido dizia "2 ou 3 frases") seguem todas aceitas e saem dentro do balão', () => {
+  const amostras = JSON.parse(ler('tests/fixtures/licoes-reais-historicas.json'));
   assert.equal(amostras.length, 46);
   let cortadas = 0;
   for (const amostra of amostras) {
@@ -199,9 +198,7 @@ test('o pedido à IA diz a regra do balão, e a primeira lição da trilha leva 
   assert.doesNotMatch(promptDaLicao(esqueleto, 0, 1), /primeira lição da trilha/);
   assert.doesNotMatch(promptDaLicao(esqueleto, 1, 0), /primeira lição da trilha/, 'a lição 1 do 2º trecho não é a lição 1 da trilha');
   assert.match(INSTRUCOES_DAS_LICOES_DO_MATERIAL, /O conceito é o balão “O Stu explica”: no máximo 3 frases e cerca de 50 palavras \(na primeira lição, no máximo 2 frases\)\./);
-  const deepseek = ler('src/servidor/ia/deepseek.ts');
-  assert.match(deepseek, /conceito: "Explicação clara e direta do conceito em até 3 frases \(2 na primeira lição da trilha\), sem começar com “O Stu explica:”\."/);
-  for (const adaptador of ['src/servidor/ia/openai.ts', 'src/servidor/ia/deepseek.ts']) {
+  for (const adaptador of ['src/servidor/ia/openai.ts']) {
     assert.match(ler(adaptador), /normalizarLicaoSegura\(bruto, origemDoConteudo\(esqueleto\.origem\), \{ primeiraLicao: fluxo === 0 && licao === 0 \}\)/, `${adaptador} diz qual é a primeira lição (pela leitura protegida, que não deixa uma exceção virar 500)`);
   }
 });
@@ -262,8 +259,8 @@ test('o rótulo repetido: "O Stu explica:" no começo do conceito sai, com ou se
   for (const texto of ['O Stu explica: a regra.', '**O Stu explica:** A regra.', 'O Stu explica: O Stu explica: a regra.']) assert.equal(tirar(tirar(texto)), tirar(texto));
 });
 
-test('o rótulo repetido: nenhum conceito das amostras reais da DeepSeek nem das trilhas de demonstração começa com ele (a conta não mexe no que já está certo)', () => {
-  const amostras = JSON.parse(ler('tests/fixtures/deepseek-licoes-reais.json'));
+test('o rótulo repetido: nenhum conceito das amostras reais históricas nem das trilhas de demonstração começa com ele (a conta não mexe no que já está certo)', () => {
+  const amostras = JSON.parse(ler('tests/fixtures/licoes-reais-historicas.json'));
   const textos = [
     ...amostras.map((amostra) => amostra.bruto.conceito),
     ...DEMOS.flatMap((demo) => demo.plano.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.conceito))),
@@ -322,31 +319,26 @@ before(async () => {
     pedido.on('end', () => {
       const saida = licaoBruta(conceitoDoServidor);
       resposta.writeHead(200, { 'Content-Type': 'application/json' });
-      resposta.end(JSON.stringify(pedido.url.endsWith('/responses')
-        ? { status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(saida) }] }] }
-        : { choices: [{ message: { content: JSON.stringify(saida) } }] }));
+      resposta.end(JSON.stringify({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(saida) }] }] }));
     });
   });
   await new Promise((resolver) => servidor.listen(0, '127.0.0.1', resolver));
   const porta = servidor.address().port;
   process.env.OPENAI_BASE_URL = `http://127.0.0.1:${porta}/v1`;
-  process.env.DEEPSEEK_BASE_URL = `http://127.0.0.1:${porta}`;
 });
 after(async () => {
   servidor.closeAllConnections();
   await new Promise((resolver) => servidor.close(resolver));
 });
 
-test('de ponta a ponta com a OpenAI e a DeepSeek (servidores falsos): o conceito longo sai com 2 frases na lição 1 e 3 nas outras, e a lição é aceita', async () => {
+test('de ponta a ponta com a OpenAI simulada: o conceito longo sai com 2 frases na lição 1 e 3 nas outras, e a lição é aceita', async () => {
   const esqueleto = (gerador) => ({
     gerador, titulo: 'Violão do zero', objetivo: 'Tocar as primeiras músicas no violão.', origem: 'IA (teste)',
     fluxos: [{ titulo: 'Primeiros passos', licoes: [{ titulo: 'Conhecer as partes do violão' }, { titulo: 'Afinar as cordas' }] }, { titulo: 'Praticando', licoes: [{ titulo: 'Acordes' }] }],
   });
-  for (const [ia, gerador] of [['openai', GERADOR_OPENAI], ['deepseek', GERADOR_DEEPSEEK]]) {
+  for (const [ia, gerador] of [['openai', GERADOR_OPENAI]]) {
     process.env.IA = ia;
     process.env.OPENAI_API_KEY = 'chave-de-teste';
-    process.env.DEEPSEEK_API_KEY = 'chave-de-teste';
-    delete process.env.STUDOO_IA_RESERVA;
     const adaptador = obterGerador();
     const sinal = new AbortController().signal;
     const trilha = esqueleto(gerador);
@@ -379,7 +371,7 @@ test('as lições de material: o conceito também sai dentro do balão (2 frases
   }
 });
 
-test('de ponta a ponta com a OpenAI e a DeepSeek (servidores falsos): a IA que repete "O Stu explica:" no começo do conceito sai sem o rótulo, a lição é aceita e o registro diz o ajuste sem conteúdo', async () => {
+test('de ponta a ponta com a OpenAI simulada: a IA que repete "O Stu explica:" no começo do conceito sai sem o rótulo, a lição é aceita e o registro diz o ajuste sem conteúdo', async () => {
   const esqueleto = (gerador) => ({
     gerador, titulo: 'Violão do zero', objetivo: 'Tocar as primeiras músicas no violão.', origem: 'IA (teste)',
     fluxos: [{ titulo: 'Primeiros passos', licoes: [{ titulo: 'Conhecer as partes do violão' }, { titulo: 'Afinar as cordas' }] }],
@@ -389,11 +381,9 @@ test('de ponta a ponta com a OpenAI e a DeepSeek (servidores falsos): a IA que r
   console.error = (...partes) => { registros.push(partes.join(' ')); };
   conceitoDoServidor = `O Stu explica: ${CONCEITO_LONGO[0].toLowerCase()}${CONCEITO_LONGO.slice(1)}`;
   try {
-    for (const [ia, gerador, rota] of [['openai', GERADOR_OPENAI, 'ia-openai'], ['deepseek', GERADOR_DEEPSEEK, 'ia-deepseek']]) {
+    for (const [ia, gerador, rota] of [['openai', GERADOR_OPENAI, 'ia-openai']]) {
       process.env.IA = ia;
       process.env.OPENAI_API_KEY = 'chave-de-teste';
-      process.env.DEEPSEEK_API_KEY = 'chave-de-teste';
-      delete process.env.STUDOO_IA_RESERVA;
       registros.length = 0;
       const adaptador = obterGerador();
       const sinal = new AbortController().signal;

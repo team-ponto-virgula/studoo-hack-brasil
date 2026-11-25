@@ -1,6 +1,6 @@
 import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
-import type { ProvedorIa } from '@studoo/contratos';
+import type { MaterialEstudo, ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, mesmoDiagnostico, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PassoDiagnostico, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
@@ -46,7 +46,7 @@ import { BotaoAcesso, LinkAcesso } from './acesso-mobile';
 type Etapa =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
-  | { tipo: 'objetivo'; modoInicial?: 'ideia' | 'material'; abertura?: number }
+  | { tipo: 'objetivo' }
   | { tipo: 'diagnostico' }
   | { tipo: 'geracao' }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
@@ -65,13 +65,14 @@ type Etapa =
   | { tipo: 'previaTrilha'; codigo: string; voltar: Etapa };
 
 type PerguntaDiagnostico = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
+type ModoPedido = 'ideia' | 'material';
 type SessaoDiagnostico = {
   objetivo: string;
   passo: PassoDiagnostico | null;
   anteriores: { pergunta: PerguntaDiagnostico; opcaoId: string }[];
   revisando: number | null;
   pendente: boolean;
-  erro: boolean;
+  erro: { codigo: string; opcaoId?: string } | null;
   encerrado: boolean;
   resultadoId?: string;
 };
@@ -237,8 +238,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       if (!montado.current || clienteJornada.current !== clienteDaAcao) return;
       guardarJornada(dados);
       setObjetivo(texto);
+      setModoPedido(modo === 'material' ? 'material' : 'ideia');
       setPreparandoPrimeiroEstudo(false);
-      if (modo === 'material') navegar({ tipo: 'objetivo', modoInicial: 'material', abertura: Date.now() });
+      if (modo === 'material') navegar({ tipo: 'objetivo' });
       else iniciarPedido(texto);
     } catch (falha) {
       if (montado.current && clienteJornada.current === clienteDaAcao) {
@@ -284,7 +286,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         else await abrirPlano(atual.planoId);
       } else {
         setObjetivo(atual.objetivo);
-        if (atual.modo === 'material') navegar({ tipo: 'objetivo', modoInicial: 'material', abertura: Date.now() });
+        setModoPedido(atual.modo === 'material' ? 'material' : 'ideia');
+        if (atual.modo === 'material') navegar({ tipo: 'objetivo' });
         else iniciarPedido(atual.objetivo);
       }
     } catch (falha) {
@@ -354,6 +357,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const [objetivo, setObjetivo] = useState(() => tomarRascunho());
   const objetivoAtual = useRef(objetivo);
   objetivoAtual.current = objetivo;
+  const [modoPedido, setModoPedido] = useState<ModoPedido>('ideia');
+  const [materialDoPedido, setMaterialDoPedido] = useState<MaterialEstudo | null>(null);
   /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
   const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
   const [pendente, setPendente] = useState<Acao | null>(null);
@@ -380,6 +385,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const geracaoAtiva = useRef<AbortController | null>(null);
   /** Criar a trilha: a fase do toque, a passagem para a aula e o aceite em andamento (de quem é a resposta que chegar). */
   const [criacao, setCriacao] = useState<FaseDaCriacao | null>(null);
+  const [mensagemDoAceite, setMensagemDoAceite] = useState<string | null>(null);
   const criacaoAtual = useRef(criacao);
   criacaoAtual.current = criacao;
   const [passagem, setPassagem] = useState<Passagem | null>(null);
@@ -667,6 +673,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     // Sem trilhas, a lista mostra o pedido. Ao editar, torna a tela explícita para ela continuar aberta se uma trilha chegar.
     if (etapaAtual.current.tipo === 'planos') setEtapa({ tipo: 'objetivo' });
     setErro(null);
+    if (texto.trim() !== objetivo.trim()) {
+      setFalhaGeracao(null);
+      salvarDiagnostico(null);
+    }
     setObjetivo(texto);
   }
 
@@ -714,6 +724,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         return;
       }
       const codigo = codigoDaFalha(falha);
+      if (codigo === 'conteudo_nocivo') salvarDiagnostico(null);
       if (diagnosticoId && codigo === 'proposta_invalida' && !trilha.titulo && trilha.fluxos.length === 0) {
         const atual = diagnosticoAtual.current;
         if (atual?.resultadoId === diagnosticoId) salvarDiagnostico({ ...atual, resultadoId: undefined });
@@ -727,14 +738,14 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     }
   }
 
-  function salvarDiagnostico(sessao: SessaoDiagnostico) {
+  function salvarDiagnostico(sessao: SessaoDiagnostico | null) {
     diagnosticoAtual.current = sessao;
     setDiagnostico(sessao);
   }
 
   async function pedirPassoDiagnostico(sessao: SessaoDiagnostico, opcaoId?: string) {
     if (sessao.pendente || sessao.encerrado) return;
-    const pedido = { ...sessao, pendente: true, erro: false };
+    const pedido = { ...sessao, pendente: true, erro: null };
     salvarDiagnostico(pedido);
     try {
       const exibido = passoVisivel(pedido);
@@ -752,8 +763,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     } catch (falha) {
       if (diagnosticoAtual.current !== pedido) return;
       const codigo = codigoDaFalha(falha);
-      if (codigo === 'consentimento_ia' || sessaoInvalida(falha)) {
-        salvarDiagnostico({ ...pedido, pendente: false });
+      if (codigo === 'conteudo_nocivo' || codigo === 'consentimento_ia' || sessaoInvalida(falha)) {
+        salvarDiagnostico(codigo === 'conteudo_nocivo' ? null : { ...pedido, pendente: false });
         if (!diagnosticoVisivel.current) return;
         navegar({ tipo: 'objetivo' });
         if (sessaoInvalida(falha)) await expirarGuardando();
@@ -766,7 +777,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         void gerar(pedido.objetivo);
         return;
       }
-      salvarDiagnostico({ ...pedido, pendente: false, erro: true });
+      salvarDiagnostico({ ...pedido, pendente: false, erro: { codigo, opcaoId } });
     }
   }
 
@@ -777,7 +788,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       return;
     }
     if (anterior?.objetivo !== texto) salvarDiagnostico({
-      objetivo: texto, passo: null, anteriores: [], revisando: null, pendente: false, erro: false, encerrado: false,
+      objetivo: texto, passo: null, anteriores: [], revisando: null, pendente: false, erro: null, encerrado: false,
     });
     navegar({ tipo: 'diagnostico' });
   }
@@ -794,7 +805,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     const atual = diagnosticoAtual.current;
     if (!atual || atual.pendente) return;
     const posicao = (atual.revisando ?? atual.anteriores.length) - 1;
-    if (posicao >= 0) salvarDiagnostico({ ...atual, revisando: posicao, erro: false });
+    if (posicao >= 0) salvarDiagnostico({ ...atual, revisando: posicao, erro: null });
   }
 
   function cancelarGeracao() {
@@ -827,6 +838,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     Keyboard.dismiss();
     setPendente('aceitar');
     setErro(null);
+    setMensagemDoAceite(null);
     setCriacao(abrirPrimeira ? 'criando' : 'guardando');
     // Sem som no toque: o único som da criação é o geracao_pronta, quando a trilha passa a existir (spec 12).
     anunciar(abrirPrimeira ? mensagens.geracao.anuncioCriando : mensagens.geracao.anuncioSalvando);
@@ -844,9 +856,18 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         await expirarGuardando();
         return;
       }
-      const expirada = codigoDaFalha(falha) === 'proposta_invalida';
+      const codigo = codigoDaFalha(falha);
+      if (codigo === 'conteudo_nocivo') {
+        salvarDiagnostico(null);
+        navegar({ tipo: 'objetivo' });
+        setFalhaGeracao(codigo);
+        return;
+      }
+      const expirada = codigo === 'proposta_invalida';
+      const aviso = codigo === 'ia_indisponivel' || codigo === 'consentimento_ia' ? mensagemDoCodigo(codigo) : null;
+      setMensagemDoAceite(aviso);
       setCriacao(expirada ? 'expirada' : abrirPrimeira ? 'erro' : 'erro-salvar');
-      const texto = abrirPrimeira ? mensagens.geracao.erroCriacao : mensagens.geracao.erroSalvar;
+      const texto = aviso ?? (abrirPrimeira ? mensagens.geracao.erroCriacao : mensagens.geracao.erroSalvar);
       anunciar(expirada ? mensagens.geracao.propostaExpirada : texto);
       return;
     }
@@ -861,6 +882,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     }
     if (aceiteAtual.current !== vez || etapaAtual.current.tipo !== 'geracao') return;
     setObjetivo('');
+    setMaterialDoPedido(null);
+    setModoPedido('ideia');
     diagnosticoAtual.current = null;
     setDiagnostico(null);
     if (!abrirPrimeira) {
@@ -1231,7 +1254,11 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
     if (etapa.tipo === 'diagnostico' && diagnostico) {
       return <Diagnostico objetivo={diagnostico.objetivo} passo={passoVisivel(diagnostico)} ocupado={diagnostico.pendente}
-        erro={diagnostico.erro} acoes={acoes} pular={terminarDiagnostico} gerar={terminarDiagnostico}
+        erro={diagnostico.erro?.codigo ?? null} acoes={acoes} pular={terminarDiagnostico} gerar={terminarDiagnostico}
+        repetir={() => {
+          const atual = diagnosticoAtual.current;
+          if (atual?.erro && diagnosticoVisivel.current) void pedirPassoDiagnostico(atual, atual.erro.opcaoId);
+        }}
         voltar={() => navegar({ tipo: 'objetivo' })}
         perguntaAnterior={(diagnostico.revisando ?? diagnostico.anteriores.length) > 0 ? voltarPergunta : undefined}
         consultar={(opcaoId) => {
@@ -1243,7 +1270,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} salvar={(proposta) => void comecar(proposta, false)} ajustar={() => abrir({ tipo: 'objetivo' })}
-        criacao={criacao} remontar={() => void gerar(geracao.objetivo, diagnosticoAtual.current?.objetivo === geracao.objetivo ? diagnosticoAtual.current.resultadoId : undefined)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
+        criacao={criacao} mensagemDoAceite={mensagemDoAceite}
+        remontar={() => void gerar(geracao.objetivo, diagnosticoAtual.current?.objetivo === geracao.objetivo ? diagnosticoAtual.current.resultadoId : undefined)}
+        guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
         rolagemDoNo1={rolagemDoNo1}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
         existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '') &&
@@ -1286,9 +1315,13 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao') {
-      return <Pedido key={etapa.tipo === 'objetivo' ? `objetivo-${etapa.abertura ?? 0}-${etapa.modoInicial ?? 'ideia'}` : 'geracao'}
-        cliente={cliente} modoInicial={etapa.tipo === 'objetivo' ? etapa.modoInicial : undefined} jornadaTopo={pendenciaDaJornada()}
-        onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
+      return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p, deMaterial: true }); }} objetivo={objetivo} ocupado={ocupado}
+        jornadaTopo={pendenciaDaJornada()}
+        modo={modoPedido} setModo={setModoPedido} material={materialDoPedido}
+        aoMudarMaterial={novo => {
+          setMaterialDoPedido(novo);
+          if (modoPedido === 'material') setFalhaGeracao(null);
+        }}
         aviso={aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={iniciarPedido}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
@@ -1389,14 +1422,17 @@ function VigiaDaOpcao({ alvo, medida, aoMedir }: { alvo: { current: ComponentRef
   return null;
 }
 
-function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink, modoInicial = 'ideia', jornadaTopo }: {
-  modoInicial?: 'ideia' | 'material';
+function Pedido({ cliente, onProposta, objetivo, modo, setModo, material, aoMudarMaterial, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink, jornadaTopo }: {
   jornadaTopo?: ReactNode;
   /** "Adicionar por link" (com o compartilhar), antes de "Ver como funciona", como na web. */
   porLink?: ReactNode;
   cliente: ClienteNativo;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
+  modo: ModoPedido;
+  setModo: (modo: ModoPedido) => void;
+  material: MaterialEstudo | null;
+  aoMudarMaterial: (material: MaterialEstudo | null) => void;
   ocupado: boolean;
   aviso: string | null;
   falha: string | null;
@@ -1412,8 +1448,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
-  const [modo, setModo] = useState<'ideia' | 'material'>(modoInicial);
-  /** Provedor de IA do servidor: o aviso de privacidade do material diz quem lê (OpenAI, DeepSeek ou ninguém). */
+  /** O aviso de privacidade do material segue o provedor informado pelo servidor. */
   const [ia, setIa] = useState<ProvedorIa | undefined>();
   useEffect(() => {
     let ativo = true;
@@ -1442,6 +1477,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   // Decidido uma vez: o erro que some enquanto a pessoa digita não devolve o foco ao título.
   const [focarTitulo] = useState(() => !erro && !falha);
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
+  const focarAoVoltar = useRef(false);
   const texto = objetivo.trim();
   // As ideias vêm da área escolhida na apresentação; sem ela, das mais populares (como na web).
   const tema = mensagens.pedido.temas.find((item) => item.id === (areaInicial ?? 'populares')) ?? mensagens.pedido.temas[0];
@@ -1453,6 +1489,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   const dica = [mostrarCurto && mensagens.pedido.curto(minimo), mensagens.pedido.dica, mensagens.pedido.privacidade, mostrarContador && contador]
     .filter(Boolean).join(' ');
   const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'conexao';
+  const recusado = falha === 'conteudo_nocivo';
   // Spec 17, defeito B4: depois de "Agora não" no aceite de IA, o aviso não fica sem saída. "Permitir o uso de IA" pede a
   // trilha de novo, e a trava reabre o mesmo cartão de aceite (nenhum texto novo: privacidade.permitirAgora).
   const semAceite = falha === 'consentimento_ia';
@@ -1473,8 +1510,22 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   const animacaoDoPedido = expressaoDoPedido === 'stu-concentrado' ? 'laco' : expressaoDoPedido === 'stu-curioso' ? 'uma-vez'
     : expressaoDoPedido === 'stu-animado' ? 'acontecimento' : undefined;
 
+  useEffect(() => {
+    if (modo !== 'ideia' || !focarAoVoltar.current) return;
+    focarAoVoltar.current = false;
+    campo.current?.focus();
+  }, [modo]);
+
+  function editarTema() {
+    if (modo === 'ideia') campo.current?.focus();
+    else {
+      focarAoVoltar.current = true;
+      setModo('ideia');
+    }
+  }
+
   function tentar() {
-    if (ocupado || !texto) return;
+    if (ocupado || recusado || !texto) return;
     if (texto.length < minimo) {
       setCurto(true);
       campo.current?.focus();
@@ -1532,16 +1583,18 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
             <Stu nome={expressaoDoPedido} tamanho={tamanhoDoStu} halo animado={animacaoDoPedido} acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
           </View>
         </View>
-        {!baixa && <Text accessibilityLiveRegion="polite" style={[estudoEstilos.pedidoFala, modo === 'material' && estudoEstilos.pedidoFalaMaterial]}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>}
+        {!baixa && !recusado && <Text accessibilityLiveRegion="polite" style={[estudoEstilos.pedidoFala, modo === 'material' && estudoEstilos.pedidoFalaMaterial]}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>}
       </View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       {/* Como na web (3A.1): um cartão só, com o Stu e a ação que cabe; o que a pessoa escreveu continua no campo. */}
       {falha && <EstadoErro mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco
-        acao={mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
+        acao={recusado ? { rotulo: mensagens.pedido.editarTema, testID: 'editar-tema', acao: editarTema }
+          : mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
           : semAceite ? { rotulo: mensagens.privacidade.permitirAgora, testID: 'permitir-ia-geracao', desativado: ocupado, acao: tentar }
           : repetivel ? { rotulo: mensagens.tentar, testID: 'tentar-geracao', desativado: ocupado, acao: tentar } : undefined} />}
       <View style={modo !== 'material' ? { display: 'none' } : estudoEstilos.materialNoPedido}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false}
+        material={material} aoMudarMaterial={aoMudarMaterial} ativo={modo === 'material'} editarTema={editarTema} pedidoRecusado={recusado}
         aoEsperar={setEsperaMaterial} definirAcaoPresa={setAcaoMaterial} ultimaOpcao={ultimaOpcao} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
@@ -1556,7 +1609,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
         </View>
         {/* Como na web: o botão vem logo abaixo do campo, no fluxo da página, com a seta e face de 56 px. */}
         <Botao plano rotulo={mensagens.inicio.criar} testID="gerar-trilha" icone="seta" fonte={17} estilo={estudoEstilos.criar}
-          desativado={ocupado || !texto} acao={tentar} />
+          desativado={ocupado || recusado || !texto} acao={tentar} />
       </View>
       {/* Material continua acessível depois da ação principal, numa linha de 64 sem uma segunda camada de relevo. */}
       <Pressable testID="alternar-modo" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado}
@@ -1802,11 +1855,12 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
  * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
  * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, salvar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, rolagemDoNo1 }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, salvar, ajustar, existente, abrirExistente, criacao, mensagemDoAceite, remontar, guardarNo1, rolagemDoNo1 }: {
   /** Para a passagem fazer a rolagem do toque até o nó 1 terminar até o círculo começar. */
   rolagemDoNo1: { current: { terminar: (prazoMs: number) => void } | null };
   /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
   criacao: FaseDaCriacao | null;
+  mensagemDoAceite: string | null;
   /** "Montar de novo", com a proposta expirada: a geração de novo, com o mesmo pedido. */
   remontar: () => void;
   /** A lente do nó 1, de onde o círculo da passagem cresce. */
@@ -2212,10 +2266,10 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const espera = criacao === 'criando' && esperaReal && <LinhaDaEspera reduzir={reduzir} />;
   const erroDaCriacao = falhou && criacao !== 'erro-salvar' && (
     <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
-      {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
+      {expirada ? mensagens.geracao.propostaExpirada : (mensagemDoAceite ?? mensagens.geracao.erroCriacao)}
     </Text>
   );
-  const principal = pronta && proposta && (
+  const principal = pronta && proposta && !(expirada && geracao.deMaterial) && (
     <View style={!empilhar && (dividir || salvando) ? estudoEstilos.metade : null}>
       <Botao plano referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
         rotulo={iniciando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
@@ -2277,7 +2331,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           <Botao plano rotulo={guardando ? mensagens.geracao.salvandoTrilha : mensagens.geracao.salvarParaDepois}
             testID="salvar-trilha-depois" variante="secundario" ocupado={guardando} giro={guardando} acao={() => salvar(proposta)} />
           {criacao === 'erro-salvar' && <Text testID="salvar-trilha-erro" role="alert" accessibilityLiveRegion="assertive"
-            style={estudoEstilos.criacaoErro}>{mensagens.geracao.erroSalvar}</Text>}
+            style={estudoEstilos.criacaoErro}>{mensagemDoAceite ?? mensagens.geracao.erroSalvar}</Text>}
         </>}
       {!empilhar && espera}
       {!empilhar && erroDaCriacao}

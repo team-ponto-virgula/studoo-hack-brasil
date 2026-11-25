@@ -2,7 +2,7 @@
 
 /*
  * Aceite do envio a IA de terceiros na web (App Review 5.1.2(i)). O servidor barra com `consentimento_ia` (428) toda
- * rota que mandaria dado da pessoa à DeepSeek ou à OpenAI sem aceite vigente; aqui o 428 abre a folha que diz quem
+ * rota que mandaria dado da pessoa à OpenAI sem aceite vigente; aqui o 428 abre a folha que diz quem
  * recebe o quê, e "Permitir" grava o aceite e refaz o pedido uma vez. "Agora não" devolve o 428 a quem pediu, que
  * mostra o erro de sempre. Nada de janela nativa: a folha é do Studoo.
  */

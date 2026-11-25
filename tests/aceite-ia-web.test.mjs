@@ -25,7 +25,6 @@ const estado = {
   consentimentoIa: {
     necessario: true, versao: '2026-11', aceitoEm: null,
     provedores: [
-      { id: 'deepseek', nome: 'DeepSeek', usos: ['Escrever as lições da sua trilha'], politica: 'https://exemplo.test/deepseek' },
       { id: 'openai', nome: 'OpenAI', usos: ['Corrigir as respostas abertas'], politica: 'https://exemplo.test/openai' },
     ],
   },
@@ -41,7 +40,7 @@ test('B3: o cartão do aceite tem o título no alto, o texto numa área própria
   assert.ok(cartao.includes(t.aceiteTitulo));
   // O texto, a lista de quem recebe o quê e o aviso do "sem IA" estão no corpo que rola; os botões, na faixa fixa.
   const doCorpo = cartao.slice(corpo, rodape);
-  for (const texto of [t.aceiteTexto, t.aceiteQuem, t.aceiteSemIa, 'DeepSeek', 'OpenAI']) assert.ok(doCorpo.includes(texto.replace(/&/g, '&amp;')) || doCorpo.includes(texto), `no corpo: ${texto}`);
+  for (const texto of [t.aceiteTexto, t.aceiteQuem, t.aceiteSemIa, 'OpenAI']) assert.ok(doCorpo.includes(texto.replace(/&/g, '&amp;')) || doCorpo.includes(texto), `no corpo: ${texto}`);
   const daFaixa = cartao.slice(rodape);
   assert.ok(daFaixa.includes(t.agoraNao) && daFaixa.includes(t.permitir), 'os dois botões na faixa fixa');
   assert.ok(!doCorpo.includes('<button'), 'nenhum botão dentro do texto que rola');

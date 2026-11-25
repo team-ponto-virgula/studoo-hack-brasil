@@ -94,7 +94,7 @@ Coleta de dados: **sim**. Rastreamento: **não**, para todos os tipos. Não há 
 | Localização, Contatos, Saúde e condicionamento, Financeiro, Histórico de navegação, Histórico de pesquisa, Informações sensíveis, Compras, Diagnóstico, Outros dados | Não | Não coletados. O endereço IP só entra como chave assinada dos limites de uso, sem ficar guardado em claro nem vinculado à conta. |
 
 Terceiros que recebem dados para a funcionalidade, para conferir com a política em `/privacidade`:
-- o provedor de IA (OpenAI e/ou DeepSeek, conforme o servidor), que lê pedidos, materiais, respostas e áudio;
+- a OpenAI, que lê pedidos, materiais, respostas e áudio;
 - o envio de e-mail (Resend), que recebe os códigos;
 - Google e Apple, no login.
 

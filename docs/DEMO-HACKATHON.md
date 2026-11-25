@@ -2,11 +2,11 @@
 
 ## Demonstração em dois minutos
 
-Prepare uma conta de demonstração, conexão estável e três páginas sobre frações. Se nenhuma chave de IA real estiver configurada (`IA=openai` ou `IA=deepseek`), use **Experimentar com frações** e diga claramente que o conteúdo é simulado e rotulado como **Modo demonstração** (nunca apresente a simulação como geração real).
+Prepare uma conta de demonstração, conexão estável e três páginas sobre frações. Se nenhuma chave de IA real estiver configurada (`IA=openai`), use **Experimentar com frações** e diga claramente que o conteúdo é simulado e rotulado como **Modo demonstração** (nunca apresente a simulação como geração real).
 
 1. **0:00–0:25 — Seu próprio material.** Abra **Nova trilha** e envie PDF, DOCX, CSV, foto ou clique em **Experimentar com frações**. Mostre a prévia extraída página a página (ou tabela em CSV) e crie a trilha. Na primeira lição, toque no marcador `[1]` para abrir o cartão **Fonte do seu material** com a citação literal.
 2. **0:25–0:55 — O erro muda o caminho.** Na lição, erre de propósito e toque em **Ver outro jeito de entender**. Mostre a ponte com a margem **Onde travou**, a legenda numerada com a tentativa completa, as quatro tábuas sobre o rio e o aviso **Modo demonstração** (quando simulado). Avance passo a passo (**Ver exemplo** → **Ir para o desafio**) e acerte o desafio para ver as tábuas ficarem verdes, o **Stu** atravessar para **De volta ao desafio** e o botão **Voltar ao exercício** aparecer logo abaixo da cena.
-3. **0:55–1:30 — Aprender explicando.** Abra **Explique com suas palavras (opcional)**, mostre o Stu como aluno com as três etapas, escreva uma explicação com exemplo (ou grave, ou converse ao vivo com o Stu: precisa da `OPENAI_API_KEY`, também com `IA=deepseek` no modo misto, em que a voz vai para a OpenAI e o texto é avaliado pela DeepSeek) e envie para mostrar o retorno em quatro cartões (**O que fez sentido**, **O que revisar**, **Leve a ideia adiante** e **Próximo passo**).
+3. **0:55–1:30 — Aprender explicando.** Abra **Explique com suas palavras (opcional)**, mostre o Stu como aluno com as três etapas, escreva e envie uma explicação com exemplo para mostrar o retorno em quatro cartões (**O que fez sentido**, **O que revisar**, **Leve a ideia adiante** e **Próximo passo**). Se preferir gravar ou conversar ao vivo, configure `IA=openai` e `OPENAI_API_KEY`. A OpenAI processa o áudio com um modelo de voz e avalia o texto com GPT-6 Luna.
 4. **1:30–2:00 — Evidência visível e sincronia.** Volte ao exercício (**Voltar ao exercício**), acerte e conclua a lição para mostrar os cartões de história na tela de conclusão (**Ponte construída**), o selo **Ponte construída** no mapa da trilha e o selo de sincronia ao vivo no cabeçalho (inclusive no outro dispositivo).
 
 Uma frase para o pitch: **“O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.”**
@@ -25,7 +25,7 @@ Todas as ideias populares da tela inicial (violão, inglês, culinária, histór
 ## Conferência antes de apresentar
 
 - Migrações aplicadas, conta funcionando, domínio HTTPS, Google/Resend configurados se usados na demo.
-- `.env.local` com chave válida (`IA=openai` ou `IA=deepseek`). Não mostrar o arquivo em transmissão ou screenshots.
+- `.env.local` com chave válida (`IA=openai`). Não mostrar o arquivo em transmissão ou screenshots.
 - `npm run ia:conferir`: valida a integração de geração existente. Depois percorrer material, reforço, ensino e voz com a configuração real; o comando antigo não cobre os recursos novos.
 - Citação existe e sustenta a ideia; números/fórmulas extraídos foram conferidos por uma pessoa.
 - Android: gerar novo development build (o app passou a usar `expo-speech` para a voz), permitir câmera/microfone somente quando solicitado, testar negar permissão, gravar/parar, segundo plano, voltar à tela, upload pelo seletor e texto com teclado aberto.

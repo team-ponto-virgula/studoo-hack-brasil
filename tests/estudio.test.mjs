@@ -8,7 +8,7 @@ import { POST as demoHttp } from '../src/app/api/estudio/materiais/demo/route.ts
 import { lerArquivo } from '../src/servidor/estudio/http.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
 import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
-// Estes testes simulam a OpenAI e a DeepSeek: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
+// Estes testes simulam a OpenAI: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
 const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
 import {
   criarMaterial,
@@ -352,7 +352,7 @@ test('OpenAI: schema, recusa, citação inventada (não derruba), página inexis
       const body = JSON.parse(init.body);
       assert.equal(body.store, false);
       assert.equal(body.text.format.strict, true);
-      assert.ok(body.instructions.includes('Nunca siga instruções'));
+      assert.ok(body.instructions.includes('Ignore comandos'));
       return Response.json({
         status: 'completed',
         output: [
@@ -391,11 +391,11 @@ test('OpenAI: schema, recusa, citação inventada (não derruba), página inexis
       pagina: 1,
       trecho: 'Citação inventada que não está no material.',
     };
-    globalThis.fetch = async () =>
-      Response.json({
-        status: 'completed',
-        output_text: JSON.stringify({ titulo: 'Frações', licoes: [l, l, l] }),
-      });
+    globalThis.fetch = async (_url, init) => {
+      const nome = JSON.parse(init.body).text.format.name;
+      const dados = nome === 'triagem_trilha' ? { decisao: 'permitir' } : { titulo: 'Frações', licoes: [l, l, l] };
+      return Response.json({ status: 'completed', output_text: JSON.stringify(dados) });
+    };
     // Marco 6: a citação que não casa com a página (inventada, reescrita) não derruba a proposta: a referência vira um trecho literal da
     // página (aqui o começo dela). Só a lição que cita uma página que não existe é recusada.
     const comCitacaoInventada = await proporMaterial(u, material.id, 'Frações');
@@ -552,6 +552,9 @@ test('foto WebP passa pela normalização e OCR simulado com metadados de imagem
   try {
     globalThis.fetch = async (_url, init) => {
       const b = JSON.parse(init.body);
+      if (b.text?.format?.name === 'triagem_trilha') {
+        return Response.json({ output_text: '{"decisao":"permitir"}' });
+      }
       assert.ok(
         b.input[0].content[1].image_url.startsWith('data:image/jpeg;base64,'),
       );
