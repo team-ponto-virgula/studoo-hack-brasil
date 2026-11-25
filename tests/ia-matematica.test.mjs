@@ -42,8 +42,9 @@ let atraso = () => 0;
 let registros = [];
 let consoleErro;
 
-const saidaDaOpenAi = (corpo) => ({
-  status: "completed",
+const saidaDaOpenAi = (corpo, interrupcao) => ({
+  status: interrupcao ? "incomplete" : "completed",
+  ...(interrupcao ? { incomplete_details: { reason: interrupcao } } : {}),
   output: [{ type: "message", content: [{ type: "output_text", text: typeof corpo === "string" ? corpo : JSON.stringify(corpo) }] }],
 });
 
@@ -59,11 +60,11 @@ before(async () => {
     pedido.on("end", () => {
       const dados = corpo ? JSON.parse(corpo) : {};
       pedidos.push({ caminho: pedido.url, dados });
-      const { status = 200, corpo: saida } = responder(dados, pedido.url, pedidos.length);
+      const { status = 200, corpo: saida, interrupcao } = responder(dados, pedido.url, pedidos.length);
       const enviar = () => {
         resposta.writeHead(status, { "Content-Type": "application/json" });
         if (status !== 200) return resposta.end(JSON.stringify(saida));
-        return resposta.end(JSON.stringify(saidaDaOpenAi(saida)));
+        return resposta.end(JSON.stringify(saidaDaOpenAi(saida, interrupcao)));
       };
       const espera = atraso(dados);
       if (espera > 0) setTimeout(enviar, espera);
@@ -203,7 +204,7 @@ test("o pedido da OpenAI: matemática leva o bloco, o esquema e mais espaço; qu
   assert.equal(comum.input[0].content, instrucoesDaLicao);
   assert.equal(comum.text.format.name, "licao_studoo");
   assert.equal(comum.text.format.schema, esquemaDaLicao);
-  assert.equal(comum.max_output_tokens, 10_000);
+  assert.equal(comum.max_output_tokens, 25_000);
   const matematica = corpoDaLicao(esqueletoDeMatematica(GERADOR_OPENAI), 0, 0, "", true);
   assert.ok(matematica.input[0].content.startsWith(instrucoesDaLicao), "as instruções de sempre continuam");
   assert.match(matematica.input[0].content, /Esta lição é de MATEMÁTICA/);
@@ -212,7 +213,7 @@ test("o pedido da OpenAI: matemática leva o bloco, o esquema e mais espaço; qu
   assert.equal(matematica.text.format.name, "licao_studoo_matematica");
   assert.equal(matematica.text.format.schema, esquemaDaLicaoDeMatematica);
   assert.equal(matematica.text.format.strict, true);
-  assert.equal(matematica.max_output_tokens, 16_000);
+  assert.equal(matematica.max_output_tokens, 32_000);
   assert.equal(comum.input[0].content.includes("LaTeX"), false);
 });
 
@@ -375,7 +376,7 @@ test("OpenAI, lição de matemática: um pedido com o esquema e o bloco de matem
   const { dados } = pedidos[0];
   assert.equal(dados.text.format.name, "licao_studoo_matematica");
   assert.deepEqual(dados.text.format.schema, esquemaDaLicaoDeMatematica);
-  assert.equal(dados.max_output_tokens, 16_000);
+  assert.equal(dados.max_output_tokens, 32_000);
   assert.match(instrucaoDe(pedidos[0]), /Esta lição é de MATEMÁTICA/);
   assert.ok(conteudoValido(conteudo));
   assert.equal(conteudo.origem, ORIGEM);
@@ -396,7 +397,7 @@ test("OpenAI, qualquer outra lição: o pedido é o de sempre, com o esquema e a
   const { dados } = pedidos[0];
   assert.equal(dados.text.format.name, "licao_studoo");
   assert.deepEqual(dados.text.format.schema, esquemaDaLicao);
-  assert.equal(dados.max_output_tokens, 10_000);
+  assert.equal(dados.max_output_tokens, 25_000);
   assert.equal(instrucaoDe(pedidos[0]), instrucoesDaLicao);
   assert.ok(conteudoValido(conteudo));
   assert.equal(registrosDe("licao_matematica").length, 0);
@@ -1707,3 +1708,42 @@ test("13b: o pedido à IA manda todo comando de LaTeX para DENTRO de $…$, nas 
   }
 });
 
+
+test("limite de saída pede uma lição mais curta preservando Luna Max e o esquema", async () => {
+  for (const [nome, esqueleto, lição, tokens] of [
+    ["licao_studoo", esqueletoDeViolao(GERADOR_OPENAI), licaoComum, 25_000],
+    ["licao_studoo_matematica", esqueletoDeMatematica(GERADOR_OPENAI), exemploDeMatematica, 32_000],
+  ]) {
+    pedidos = [];
+    const textoParcial = "Trecho parcial não autorizado.";
+    const parcial = { ...lição, conceito: textoParcial };
+    responder = (_dados, _caminho, chamada) => chamada === 1
+      ? { ...ok(parcial), interrupcao: "max_output_tokens" } : ok(lição);
+    const conteudo = await conteudoDaOpenAi(esqueleto);
+    assert.notEqual(conteudo.conceito, textoParcial);
+    assert.ok(conteudoValido(conteudo));
+    assert.equal(pedidos.length, 2);
+    for (const { dados } of pedidos) {
+      assert.equal(dados.model, "gpt-6-luna");
+      assert.deepEqual(dados.reasoning, { effort: "max" });
+      assert.equal(dados.max_output_tokens, tokens);
+      assert.equal(dados.text.format.name, nome);
+      assert.equal(dados.store, false);
+    }
+    assert.match(pedidos[1].dados.input.at(-1).content, /versão compacta desta mesma lição/);
+    assert.ok(!registros.join("\n").includes(textoParcial));
+  }
+});
+
+test("limite de saída persistente e filtro recusam fragmentos sem repetir além do permitido", async () => {
+  const esqueleto = esqueletoDeViolao(GERADOR_OPENAI);
+  for (const [interrupcao, motivo, chamadas] of [
+    ["max_output_tokens", "limite_tokens", 2],
+    ["content_filter", "resposta_incompleta", 1],
+  ]) {
+    pedidos = [];
+    responder = () => ({ ...ok(licaoComum), interrupcao });
+    await assert.rejects(conteudoDaOpenAi(esqueleto), { codigo: "ia_indisponivel", motivo });
+    assert.equal(pedidos.length, chamadas);
+  }
+});

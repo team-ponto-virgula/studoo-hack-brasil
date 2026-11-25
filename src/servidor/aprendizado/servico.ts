@@ -1,6 +1,6 @@
 import { dataLocalDoEstudo } from './progresso-perfil';
 import { perfilDiagnosticoValido, type PerfilDiagnostico } from '@studoo/contratos';
-import { origemDoConteudo } from "@/dominio/aprendizado/plano";
+import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
   AutoAvaliacao,
@@ -46,10 +46,10 @@ export function geracaoParalela(): number {
   return Number.isInteger(valor) && valor >= 1 && valor <= 10 ? valor : 10;
 }
 
-/** Prazo compartilhado pelas lições e reparos. Uma onda tem até 165 s, com teto total de 240 s. */
+/** Prazo compartilhado pelas lições e reparos. Uma onda tem até 220 s, com teto total de 240 s. */
 export function tempoDoAceite(licoes: number, paralelas = geracaoParalela()): number {
   const ondas = Math.max(1, Math.ceil(licoes / paralelas));
-  return Math.min(240_000, 165_000 * ondas);
+  return Math.min(240_000, 220_000 * ondas);
 }
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
@@ -195,7 +195,7 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 }
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
-export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
   const pedido = {
     titulo: plano.titulo, objetivo: plano.objetivo, diagnostico: plano.diagnostico,
     amostrasDemonstradas: plano.amostrasDemonstradas, fluxos: plano.fluxos,
@@ -207,8 +207,6 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
   }
   await exigirTrilhaSegura({ plano: pedido });
   const gerador = obterGerador();
-  // Propostas assinadas anteriores continuam válidas. As novas lições usam o gerador ativo da OpenAI.
-  const esqueleto = provedorIaAtivo() === "openai" ? { ...plano, gerador: GERADOR_OPENAI } : plano;
   // Uma chamada por lição, no máximo `geracaoParalela()` em andamento. Contas com limite baixo por minuto (a OpenAI do
   // dono: 10 mil tokens/min) usam 1 ou 2; com todas juntas, as chamadas estouram o limite ao mesmo tempo (429 em todas).
   // Cada chamada mantém as novas tentativas do 429 (`comNovasTentativas`). Na primeira falha, nenhuma nova começa.
@@ -222,7 +220,7 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
     while (!falhou && proxima < tarefas.length) {
       const { indiceFluxo, indiceLicao } = tarefas[proxima++];
       try {
-        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(esqueleto, indiceFluxo, indiceLicao, sinal);
+        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal);
       } catch (erro) {
         falhou = true;
         throw erro;
@@ -230,7 +228,7 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
     }
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
-  const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(esqueleto, conteudos, sinal) : conteudos;
+  const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(plano, conteudos, sinal) : conteudos;
   if (!revisados.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
   }
@@ -271,6 +269,8 @@ async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoP
   if (provedorIaAtivo() === "openai") {
     const permitido = await banco.$transaction(tx => consumirLimite(tx, `ia:aceite:${usuarioId}`, 20, 60 * 60_000));
     if (!permitido) throw new FalhaApi("limite_geracoes");
+    // O token preserva a proposta; a origem e o adaptador refletem quem realmente escreve as lições no aceite.
+    if (plano.gerador !== "material-v1") plano = { ...plano, gerador: GERADOR_OPENAI, origem: ORIGEM_GERADA };
   }
   const conteudos = await gerarConteudos(usuarioId, plano);
   const fluxos = plano.fluxos.map(({ titulo }, indice) => ({

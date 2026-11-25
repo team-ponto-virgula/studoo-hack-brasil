@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { mensagens } from '../packages/contratos/src/experiencia.ts';
+import { origemDemonstracao } from '../packages/contratos/src/licao.ts';
 
-// Spec 08 (c20ed0f; pedido do dono de 20/11, "Nao quero que mostre nunca a fonte, ia deepseek"): o provedor e o modelo
-// de IA nunca aparecem como fonte, em tela nenhuma do app; só as telas de privacidade dizem a quem o dado vai.
+// Spec 08: a interface usa uma indicação genérica de IA. O provedor aparece no aviso de privacidade.
 
 const raiz = new URL('../', import.meta.url);
 const pasta = new URL('apps/mobile/src/', raiz);
-const PROVEDOR = /deepseek|openai|gpt-|flash/i;
+const PROVEDOR = /openai|gpt-|provedor-legado|modelo-legado/i;
 // As telas de privacidade (Apple 5.1.2(i)): o aviso do material, a voz e a conversa por voz.
 const PRIVACIDADE = /rivacidade|vozProvedor/;
 
@@ -17,7 +17,7 @@ test('nenhum texto do contrato cita provedor ou modelo fora das telas de privaci
   const andar = (valor, caminho) => {
     if (typeof valor === 'string') { if (PROVEDOR.test(valor) && !PRIVACIDADE.test(caminho)) fora.push(caminho); return; }
     if (typeof valor === 'function') {
-      for (const argumento of ['x', 'openai', 'deepseek', 'falsa']) {
+      for (const argumento of ['x', 'openai', 'gpt-6-luna', 'provedor-legado', 'falsa']) {
         let texto; try { texto = valor(argumento, 1, 1); } catch { continue; }
         // Um texto que só repete o argumento (o nome passado) não é uma tela citando o provedor.
         if (typeof texto === 'string' && PROVEDOR.test(texto.replaceAll(argumento, '')) && !PRIVACIDADE.test(caminho)) { fora.push(`${caminho}()`); break; }
@@ -28,6 +28,14 @@ test('nenhum texto do contrato cita provedor ou modelo fora das telas de privaci
   };
   andar(mensagens, 'mensagens');
   assert.deepEqual(fora, []);
+});
+
+test('origens históricas e atuais recebem a mesma indicação genérica na proposta', () => {
+  for (const origem of ['IA de provedor-legado (modelo-legado)', 'IA da OpenAI (gpt-6-luna)']) {
+    assert.equal(origemDemonstracao(origem), false);
+  }
+  assert.doesNotMatch(mensagens.geracao.ia, PROVEDOR);
+  assert.equal(origemDemonstracao('Modo demonstração: conteúdo de exemplo'), true);
 });
 
 test('o app não desenha a origem gerada (lição, proposta, prévia de compartilhar e Explorar)', async () => {
