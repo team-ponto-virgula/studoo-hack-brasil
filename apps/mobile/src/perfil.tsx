@@ -66,16 +66,17 @@ function PainelDeEstudo({ estudo, continuarEstudo }: {
     [p.estudo.diasSeguidos, estudo.diasSeguidos],
     [p.estudo.diasDeEstudo, estudo.diasDeEstudo],
   ] as const;
-  return <View style={perfilEstilos.secao} testID="perfil-estudo">
+  return <View style={perfilEstilos.cartao} testID="perfil-estudo">
     <TituloSecao>{p.estudo.titulo}</TituloSecao>
-    <View style={perfilEstilos.cartao}>
+    <View style={perfilEstilos.indicadoresDeEstudo}>
       {indicadores.map(([rotulo, quantidade]) => Number.isInteger(quantidade) && quantidade >= 0 &&
         <View key={rotulo} accessible accessibilityLabel={`${rotulo}, ${quantidade}`} style={perfilEstilos.linhaDeEstudo}>
           <Text style={[estilos.texto, perfilEstilos.rotuloDeEstudo]}>{rotulo}</Text>
-          <Text style={estilos.texto}>{quantidade}</Text>
+          <Text style={[estilos.texto, perfilEstilos.valorDeEstudo]}>{quantidade}</Text>
         </View>)}
     </View>
-    {continuarEstudo && <Botao testID="perfil-continuar-estudo" rotulo={p.estudo.continuar} variante="secundario" acao={continuarEstudo} />}
+    {continuarEstudo && <Botao testID="perfil-continuar-estudo" rotulo={p.estudo.continuar} variante="secundario"
+      acao={continuarEstudo} estilo={perfilEstilos.continuarEstudo} />}
   </View>;
 }
 
@@ -829,8 +830,11 @@ const perfilEstilos = StyleSheet.create({
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
   secao: { gap: 10 },
-  linhaDeEstudo: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 },
+  indicadoresDeEstudo: { gap: 8 },
+  linhaDeEstudo: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', columnGap: 12, rowGap: 4 },
   rotuloDeEstudo: { flexShrink: 1 },
+  valorDeEstudo: { fontWeight: '800', fontVariant: ['tabular-nums'] },
+  continuarEstudo: { alignSelf: 'flex-start' },
   secaoCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 8 },
   postarVazio: { gap: 12, alignItems: 'flex-start' },
   secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },

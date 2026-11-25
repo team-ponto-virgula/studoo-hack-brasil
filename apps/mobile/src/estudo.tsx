@@ -1089,7 +1089,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
           <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
         )}
         {guardada &&
-          <Text role="status" accessibilityLiveRegion="polite" testID="trilha-salva-aviso" style={estudoEstilos.aviso}>
+          <Text role="status" accessibilityLiveRegion="polite" testID="trilha-salva-aviso" style={[estudoEstilos.aviso, estudoEstilos.avisoTrilhaSalva]}>
             {visitante
               ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste aparelho.'
               : 'Trilha salva em Minhas trilhas. Comece quando quiser.'}
@@ -3191,6 +3191,8 @@ const estudoEstilos = StyleSheet.create({
   comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   aviso: { marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: cores.nevoa,
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
+  // A confirmação na lista segue .trilha-aviso da web. O aviso de cancelamento continua usando o estilo neutro.
+  avisoTrilhaSalva: { marginTop: 0, borderRadius: 14, backgroundColor: '#E3F6EA', color: '#14513B', fontWeight: '800' },
   campoPedido: { marginTop: 20, marginBottom: 16, gap: 8 },
   campoSemRelevo: { borderRadius: 18 },
   entradaPedido: { minHeight: 112, paddingVertical: 18, paddingHorizontal: 16, borderWidth: 1.5, borderRadius: 18,
