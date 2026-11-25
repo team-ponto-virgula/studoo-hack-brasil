@@ -436,9 +436,11 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   const fundamentos = 'Qual valor de x torna x + 5 = 12 verdadeira?';
   const repeticao = 'Em x + 4 = 9, qual operação ajuda a isolar x?';
   const aplicacao = 'Uma corrida cobra R$ 5 fixos e R$ 3 por km. Qual equação representa um total de R$ 20?';
-  const decisaoDeConferencia = 'Verificar se a solução cabe na unidade e nas condições do problema.';
-  const conferencia = 'A conta deu 2,5 ingressos e só se vendem ingressos inteiros. O que essa solução mostra?';
-  const tituloDeConferencia = 'Conferir a solução no contexto';
+  const decisaoDeConferencia = 'Escolher uma operação que reúne os termos em x mantendo positivo o coeficiente restante.';
+  const ambigua = 'Qual é o primeiro passo mais eficiente para resolver 2x + 9 = 8x − 3?';
+  const conferencia = 'Em 2x + 9 = 8x − 3, que operação elimina o termo em x à esquerda e deixa um coeficiente positivo à direita?';
+  const operacoes = ['Subtrair 2x dos dois lados, porque o coeficiente 2 é menor.', 'Subtrair 8x dos dois lados, porque 8 é maior.', 'Somar 3 aos dois lados antes de mexer nos termos com x.'];
+  const tituloDeConferencia = 'Reunir os termos em x';
   const revisoes = [];
   let reparos = 0;
   let deixarRepetir = false;
@@ -478,6 +480,8 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       ] }] });
     }
     if (sistema.includes('Avalie todas as lições recebidas')) {
+      assert.match(sistema, /compare todas as alternativas/);
+      assert.match(sistema, /Não conte um critério implícito/);
       const dados = JSON.parse(entrada);
       assert.deepEqual(dados.curriculo.map(l => l.decisao), [desafio, decisaoDeConferencia]);
       assert.equal(dados.amostrasDemonstradas.length, 1);
@@ -485,13 +489,17 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       return respostaJson({ avaliacoes: dados.licoes.map(({ numero, exercicios: [exercicio] }) => {
         const certa = exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto;
         if (exercicio.enunciado === aplicacao && certa === '3k + 5 = 20'
-          || exercicio.enunciado === conferencia && certa === 'O resultado não é válido nesse contexto') {
+          || exercicio.enunciado === conferencia && certa === operacoes[0]) {
           return { numero, resultado: 'avanca', motivo: '' };
+        }
+        if (numero === 2) {
+          assert.equal(exercicio.enunciado, ambigua);
+          assert.deepEqual(exercicio.opcoes.map(o => o.texto), operacoes);
+          return { numero, resultado: 'ajustar', motivo: 'As três operações são válidas. Explicite o objetivo de eliminar x à esquerda e manter positivo o coeficiente à direita.', correcoes: [] };
         }
         assert.equal(exercicio.enunciado, repeticao);
         assert.equal(certa, 'Subtrair 4');
-        return { numero, resultado: 'ajustar', motivo: numero === 1
-          ? 'Falta escolher a equação que modela a taxa fixa.' : 'Falta decidir se o valor da solução cabe na unidade.' };
+        return { numero, resultado: 'ajustar', motivo: 'Falta escolher a equação que modela a taxa fixa.' };
       }) });
     }
     if (sistema.includes('Reescreva apenas as lições indicadas')) {
@@ -499,26 +507,31 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
       const { licoes } = JSON.parse(entrada);
       assert.deepEqual(licoes.map(l => l.numero), [1, 2]);
       assert.match(licoes[0].motivo, /taxa fixa/);
-      assert.match(licoes[1].motivo, /na unidade/);
+      assert.match(licoes[1].motivo, /três operações são válidas/);
+      assert.match(sistema, /explicite no enunciado um critério verificável/);
       return respostaJson({ licoes: licoes.map(({ numero }) => ({
-        numero, conceito: numero === 1 ? 'Some a taxa fixa ao produto do preço pela quantidade.' : 'Confira se o resultado faz sentido na unidade pedida.',
-        exemplo: numero === 1 ? 'Numa conta de R$ 8 fixos mais R$ 2/kg, R$ 18 corresponde a 2k + 8 = 18.' : 'Não se podem comprar 2,5 ingressos inteiros.',
-        enunciado: deixarRepetir ? repeticao : numero === 1 ? aplicacao : conferencia,
-        opcoes: deixarRepetir ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : numero === 1 ? ['3k + 5 = 20', '5k + 3 = 20', '3k = 20 + 5']
-          : ['O resultado não é válido nesse contexto', 'Compre 2,5 ingressos', 'O arredondamento sempre resolve'],
-        correta: 0, feedbackCorreto: 'Confira a condição pedida.', feedbackIncorreto: 'Considere tanto a conta quanto a situação.',
+        numero, conceito: numero === 1 ? 'Some a taxa fixa ao produto do preço pela quantidade.' : 'Subtraia o termo em x de um lado dos dois membros para reunir os termos.',
+        exemplo: numero === 1 ? 'Numa conta de R$ 8 fixos mais R$ 2/kg, R$ 18 corresponde a 2k + 8 = 18.' : 'Em 5x + 2 = 3x + 10, subtrair 3x dos dois lados dá 2x + 2 = 10.',
+        enunciado: numero === 1 ? deixarRepetir ? repeticao : aplicacao : deixarRepetir ? ambigua : conferencia,
+        opcoes: numero === 1 ? deixarRepetir ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['3k + 5 = 20', '5k + 3 = 20', '3k = 20 + 5'] : operacoes,
+        correta: 0, feedbackCorreto: numero === 2 ? 'Subtrair 2x dá 9 = 6x − 3. Portanto, 12 = 6x e x = 2.' : 'Confira a condição pedida.',
+        feedbackIncorreto: 'Considere tanto a conta quanto a condição da pergunta.',
       })) });
     }
 
     const adaptada = entrada.includes('Decisão a praticar nesta lição');
-    if (adaptada) assert.ok(entrada.includes(entrada.includes('Escreva a lição 1:') ? desafio : decisaoDeConferencia));
-    const opcoes = adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
+    const segundaLicao = adaptada && entrada.includes('Escreva a lição 2:');
+    if (adaptada) {
+      assert.ok(entrada.includes(segundaLicao ? decisaoDeConferencia : desafio));
+      assert.match(entrada, /explicite no enunciado um critério verificável/);
+    }
+    const opcoes = segundaLicao ? operacoes : adaptada ? ['Subtrair 4', 'Somar 4', 'Dividir por 4'] : ['7', '5', '12'];
     return respostaJson({
       objetivo: habilidade,
       conceito: 'Aplique a mesma operação nos dois lados para isolar a incógnita.',
       exemplo: 'Em x + 3 = 8, subtraia 3 para encontrar x = 5.',
       exercicio: {
-        tipo: 'multipla_escolha', enunciado: adaptada ? repeticao : fundamentos,
+        tipo: 'multipla_escolha', enunciado: segundaLicao ? ambigua : adaptada ? repeticao : fundamentos,
         opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })), gabarito: ['0'],
         feedbackCorreto: 'Está certo.', feedbackIncorreto: 'Observe cada parte do problema.',
       },
@@ -552,13 +565,18 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   const segunda = await ok(licao(req('aprendizado/licoes/' + segundaId, cookie), ctx(segundaId)));
   assert.equal(segunda.titulo, tituloDeConferencia);
   assert.equal(segunda.exercicio.enunciado, conferencia);
-  assert.deepEqual(revisoes, [[repeticao, repeticao], [aplicacao, conferencia]]);
+  for (const opcao of segunda.exercicio.opcoes) {
+    const avaliada = await ok(avaliar(req('aprendizado/licoes/' + segundaId + '/avaliar', cookie, { resposta: opcao.id }), ctx(segundaId)));
+    assert.equal(avaliada.correta, opcao.texto === operacoes[0]);
+    if (avaliada.correta) assert.match(avaliada.feedback, /9 = 6x − 3.*x = 2/);
+  }
+  assert.deepEqual(revisoes, [[repeticao, ambigua], [aplicacao, conferencia]]);
   assert.equal(reparos, 1, 'os dois exercícios foram reparados em uma chamada');
 
   deixarRepetir = true;
   const invalida = await pedir(corrigida.id);
   assert.equal((await salvar(req('aprendizado/planos', cookie, { token: invalida.token }))).status, 503);
-  assert.deepEqual(revisoes, [[repeticao, repeticao], [aplicacao, conferencia], [repeticao, repeticao], [repeticao, repeticao]]);
+  assert.deepEqual(revisoes, [[repeticao, ambigua], [aplicacao, conferencia], [repeticao, ambigua], [repeticao, ambigua]]);
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });
 

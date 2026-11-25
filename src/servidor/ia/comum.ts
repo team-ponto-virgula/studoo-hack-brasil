@@ -307,6 +307,13 @@ export function contextoDiagnostico(perfil: PerfilDiagnostico | undefined): stri
     + '\nRespeite o escopo e a profundidade desejada, mas comece pelo que ainda falta. Use apenas demonstrados como evidência de domínio. Trate conhecimentos demonstrados como revisão opcional.';
 }
 
+export const regraDeEscolhaUnicaAdaptada =
+  'Em exercícios de escolha única, teste cada alternativa pelas condições que o aluno pode ler. Só uma pode satisfazê-las. ' +
+  'Se houver várias abordagens válidas, explicite no enunciado um critério verificável que as diferencie. ' +
+  'Expressões como “mais eficiente”, “melhor” ou “primeiro passo” não definem um critério sozinhas. ' +
+  'Por exemplo, numa equação, peça a operação que elimina a incógnita de um lado específico e deixa seu coeficiente positivo no outro. ' +
+  'Se não houver um critério pertinente que determine uma única resposta, reformule a questão.';
+
 export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number): string {
   const titulos = esqueleto.fluxos.flatMap((trecho) => trecho.licoes.map(({ titulo }) => titulo));
   const posicao = esqueleto.fluxos.slice(0, fluxo).reduce((soma, trecho) => soma + trecho.licoes.length, 0) + licao;
@@ -315,7 +322,7 @@ export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: n
   const primeira = posicao === 0 ? "\nEsta é a primeira lição da trilha: o conceito tem no máximo 2 frases." : "";
   const decisao = esqueleto.curriculoAdaptado ? esqueleto.fluxos[fluxo].licoes[licao].resumo : posicao === 0 ? esqueleto.desafioInicial : undefined;
   const desafio = decisao
-    ? `\nDecisão a praticar nesta lição (dado do plano): ${JSON.stringify(decisao)}. Ensine essa decisão no conceito e no exemplo. O primeiro exercício deve exigir a decisão para chegar ao gabarito. Use a habilidade demonstrada como ferramenta, sem cobrar apenas a mesma operação em outro exemplo. Se houver cálculo ou medida, inclua todos os dados necessários para decidir.` : "";
+    ? `\nDecisão a praticar nesta lição (dado do plano): ${JSON.stringify(decisao)}. Ensine essa decisão no conceito e no exemplo. O primeiro exercício deve exigir a decisão para chegar ao gabarito. Use a habilidade demonstrada como ferramenta, sem cobrar apenas a mesma operação em outro exemplo. Se houver cálculo ou medida, inclua todos os dados necessários para decidir. ${regraDeEscolhaUnicaAdaptada}` : "";
   return `Objetivo da pessoa: ${esqueleto.objetivo}${contextoDiagnostico(esqueleto.diagnostico)}\nTrilha: ${esqueleto.titulo}\nLições da trilha, em ordem:\n${lista}\n\nEscreva a lição ${posicao + 1}: "${titulos[posicao]}".${primeira}${desafio}`;
 }
 
