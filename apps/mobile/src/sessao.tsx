@@ -1,3 +1,4 @@
+import { limparAndamentosDaSessao } from './licao';
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
@@ -18,7 +19,7 @@ import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos
 import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
 import { SkeletonTrilha } from './caminho';
 import { NavegacaoContexto } from './navegacao';
-import { apagarPreferenciasDaConta, apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
+import { apagarPreferenciasDaConta, apagarTinhaTrilhas, guardarRetornoDaTrilha, lerTinhaTrilhas } from './preferencias';
 import { ConsentimentoIa } from './consentimento-ia';
 import { tomarRascunho } from './rascunho';
 import { mensagemDeErro, mensagens } from './mensagens';
@@ -204,8 +205,9 @@ export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
 }
 
 async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
+  limparAndamentosDaSessao();
   // Como a web ao sair ou com a sessão vencida: some a marca de "tinha trilhas" (o próximo esqueleto fica sem abas).
-  await apagarTinhaTrilhas();
+  await Promise.all([apagarTinhaTrilhas(), guardarRetornoDaTrilha(null)]);
   try {
     await apagarToken();
     return { tipo: 'entrada', erro };

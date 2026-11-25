@@ -1,12 +1,13 @@
 import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, mesmoDiagnostico, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PassoDiagnostico, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Apresentacao } from './apresentacao';
+import { Diagnostico, PontoDePartida, passoValido } from './diagnostico';
 import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
@@ -19,7 +20,7 @@ import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './li
 import { mensagemDeErro, mensagemDoCodigo, mensagens, textoParaRever } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
-import { guardarTinhaTrilhas, lerTinhaTrilhas, marcarApresentacaoVista } from './preferencias';
+import { guardarRetornoDaTrilha, guardarTinhaTrilhas, lerTinhaTrilhas, lerTrilhaGuardada, marcarApresentacaoVista } from './preferencias';
 import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
@@ -43,6 +44,7 @@ type Etapa =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
+  | { tipo: 'diagnostico' }
   | { tipo: 'geracao' }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
@@ -58,6 +60,22 @@ type Etapa =
   | { tipo: 'explorar'; restaurar?: boolean }
   | { tipo: 'perfilPublico'; perfilId: string; voltar: Etapa }
   | { tipo: 'previaTrilha'; codigo: string; voltar: Etapa };
+
+type PerguntaDiagnostico = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
+type SessaoDiagnostico = {
+  objetivo: string;
+  passo: PassoDiagnostico | null;
+  anteriores: { pergunta: PerguntaDiagnostico; opcaoId: string }[];
+  revisando: number | null;
+  pendente: boolean;
+  erro: boolean;
+  encerrado: boolean;
+  resultadoId?: string;
+};
+
+function passoVisivel(sessao: SessaoDiagnostico) {
+  return sessao.revisando === null ? sessao.passo : sessao.anteriores[sessao.revisando]?.pergunta ?? sessao.passo;
+}
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
 export type DestinoPublico = Omit<Extract<Etapa, { tipo: 'perfilPublico' }>, 'voltar'> | Omit<Extract<Etapa, { tipo: 'previaTrilha' }>, 'voltar'>;
@@ -86,7 +104,7 @@ type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
  * quando ele falha (o botão volta, com a linha do motivo) e 'criada' na passagem para a aula. Sem pausa mínima: a tela
  * espera só a resposta.
  */
-type FaseDaCriacao = 'criando' | 'erro' | 'expirada' | 'criada';
+type FaseDaCriacao = 'criando' | 'guardando' | 'erro' | 'erro-salvar' | 'expirada' | 'criada';
 /**
  * A passagem para a aula: quando o aceite voltou, de onde o círculo cresce (o centro do nó 1, na janela), se é a reduzida e
  * se a aula (ou o esqueleto dela) já está na tela, embaixo da camada.
@@ -118,6 +136,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   // recarregar e reabrir a trilha em andamento quando alguém só avisou algo em Minhas trilhas.
   const expirarAtual = useRef(expirar);
   expirarAtual.current = expirar;
+  // Uma consulta iniciada antes do aceite/apagamento não pode substituir a lista confirmada.
+  const versaoPlanos = useRef(0);
+  const montado = useRef(true);
+  const [trilhaGuardada, setTrilhaGuardada] = useState<string | null>(null);
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
   useEffect(() => {
@@ -142,6 +164,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const [tentativa, setTentativa] = useState(0);
   /** Código do último erro (o texto fica em `erro`): escolhe a ação do cartão de erro, como na web (3A.1). */
   const [codigoErro, setCodigoErro] = useState<string | null>(null);
+  const diagnosticoAtual = useRef<SessaoDiagnostico | null>(null);
+  const diagnosticoVisivel = useRef(false);
+  const [diagnostico, setDiagnostico] = useState<SessaoDiagnostico | null>(null);
   const [geracao, setGeracao] = useState<TrilhaEmGeracao | null>(null);
   /** Código do erro da geração; o pedido mostra a mensagem e a ação que cabe (tentar de novo, ver os planos). */
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
@@ -161,6 +186,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   criacaoAtual.current = criacao;
   const [passagem, setPassagem] = useState<Passagem | null>(null);
   const aceiteAtual = useRef<object | null>(null);
+  const ultimaIntencaoDeAceite = useRef<object | null>(null);
+  const aceitesEmCurso = useRef(new Map<string, Promise<PlanoDetalhe>>());
   const lenteDoNo1 = useRef<ComponentRef<typeof View> | null>(null);
   /** A rolagem do toque até o nó 1 (na prévia): a passagem a faz terminar até o círculo começar (t = 120 ms). */
   const rolagemDoNo1 = useRef<{ terminar: (prazoMs: number) => void } | null>(null);
@@ -190,18 +217,27 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     let ativo = true;
 
     async function carregarPlanos() {
+      const vez = ++versaoPlanos.current;
       setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
       try {
         // Como na web: a lista e a configuração chegam juntas (o compartilhar decide a barra de baixo e o cabeçalho).
-        const [lista, config] = await Promise.all([cliente.listarPlanos(), cliente.configuracaoAcesso().catch(() => null)]);
+        const [lista, config, guardada] = await Promise.all([
+          cliente.listarPlanos(), cliente.configuracaoAcesso().catch(() => null), lerTrilhaGuardada(),
+        ]);
         // A apresentação é opcional, como na web.
         if (!ativo) return;
         const comCompartilhar = Boolean(config?.compartilhar);
         setCompartilhar(comCompartilhar);
         setComunidade(comCompartilhar && Boolean(config?.comunidade));
         if (comCompartilhar) void cliente.obterPerfil().then((dados) => { if (ativo) setPerfil(dados); }).catch(() => undefined);
+        if (vez !== versaoPlanos.current) return;
         setPlanos(lista);
         marcarSincronia();
+        if (guardada && lista.some(item => item.id === guardada && item.progresso.concluidas === 0)) {
+          setTrilhaGuardada(guardada);
+          return;
+        }
+        if (guardada) void guardarRetornoDaTrilha(null);
         // Sem trilhas, a abertura é a "Nova trilha", com o foco no campo (regra de 19/11); o vazio de Minhas trilhas só
         // aparece quando a pessoa toca em "Minhas trilhas" (spec 05, d8df51c).
         if (lista.length === 0) setEtapa((atual) => (atual.tipo === 'planos' ? { tipo: 'objetivo' } : atual));
@@ -210,18 +246,18 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         if (inicial) {
           try {
             const plano = await cliente.obterPlano(inicial.id);
-            if (!ativo) return;
+            if (!ativo || vez !== versaoPlanos.current) return;
             setEtapa((atual) => atual.tipo === 'planos' ? { tipo: 'plano', plano } : atual);
           } catch (falha) {
             // Sem o detalhe (rede lenta, servidor fora), a pessoa fica em Minhas trilhas, que funciona, mas com o erro e
             // "Tentar novamente" (busca a lista e abre a trilha de novo); antes, a lista ficava parada sem dizer nada.
-            if (!ativo) return;
+            if (!ativo || vez !== versaoPlanos.current) return;
             if (sessaoInvalida(falha)) await expirarGuardando();
             else mostrarErro(falha);
           }
         }
       } catch (falha) {
-        if (!ativo) return;
+        if (!ativo || vez !== versaoPlanos.current) return;
         if (sessaoInvalida(falha)) await expirarGuardando();
         else {
           mostrarErro(falha);
@@ -235,7 +271,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   }, [cliente, tentativa]);
 
   // Sair do estudo no meio da geração interrompe o pedido; o servidor não guarda nada.
-  useEffect(() => () => geracaoAtiva.current?.abort(), []);
+  useEffect(() => {
+    montado.current = true;
+    return () => { montado.current = false; geracaoAtiva.current?.abort(); };
+  }, []);
 
   /** O progresso acabou de vir do servidor: o selo diz "Atualizado agora". */
   function marcarSincronia() {
@@ -251,16 +290,20 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     const atual = etapaAtual.current;
     if (emCurso.current || (atual.tipo !== 'planos' && atual.tipo !== 'plano')) return;
     if (Date.now() - ultimaBusca.current < 5_000) return;
+    const vez = ++versaoPlanos.current;
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
       const lista = await cliente.listarPlanos();
+      if (vez !== versaoPlanos.current) return;
       setPlanos(lista);
       if (atual.tipo === 'plano') {
         const plano = await cliente.obterPlano(atual.plano.id);
+        if (vez !== versaoPlanos.current) return;
         setEtapa((agora) => (agora.tipo === 'plano' && agora.plano.id === plano.id ? { ...agora, plano } : agora));
       }
       marcarSincronia();
     } catch (falha) {
+      if (vez !== versaoPlanos.current) return;
       if (sessaoInvalida(falha)) await expirarGuardando();
       else setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
     }
@@ -279,7 +322,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     // O mesmo voltar serve ao botão do Android e ao gesto de borda do iPhone (voltar.ts); em Minhas trilhas, o gesto não começa.
     const assinatura = ouvirVoltar(() => {
       // Voltar durante "Criando sua trilha…": sai sem cancelar no servidor; a trilha aparece em Minhas trilhas.
-      if (criacaoAtual.current === 'criando') {
+      if (criacaoAtual.current === 'criando' || criacaoAtual.current === 'guardando') {
         sairDaCriacao();
         return true;
       }
@@ -290,7 +333,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         void concluirApresentacao();
         return true;
       }
-      if (etapa.tipo === 'geracao') {
+      if (etapa.tipo === 'diagnostico') {
+        navegar({ tipo: 'objetivo' });
+      } else if (etapa.tipo === 'geracao') {
         if (geracao?.proposta) navegar({ tipo: 'objetivo' });
         else cancelarGeracao();
       } else if (etapa.tipo === 'licao') {
@@ -352,6 +397,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   function navegar(destino: Etapa) {
     // Saindo do perfil com os dados abertos e alteração não salva: o editor pergunta antes ("Sair sem salvar?"), como na web.
     if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    diagnosticoVisivel.current = destino.tipo === 'diagnostico';
     if (destino.tipo !== 'geracao') {
       pararGeracao();
       setCriacao(null);
@@ -425,9 +471,11 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   function atualizarPlano(plano: PlanoDetalhe) {
     // Toda trilha que chega aqui veio agora do servidor (abrir, aceitar, concluir).
     marcarSincronia();
-    const resumo = { id: plano.id, titulo: plano.titulo, progresso: plano.progresso };
+    ++versaoPlanos.current;
+    const { id, titulo, progresso, tema, capa, link, recebida, diagnostico } = plano;
+    const resumo = { id, titulo, progresso, tema, capa, link, recebida, diagnostico };
     setPlanos((anteriores) => anteriores?.some((item) => item.id === resumo.id)
-      ? anteriores.map((item) => item.id === resumo.id ? resumo : item)
+      ? anteriores.map((item) => item.id === resumo.id ? { ...item, ...resumo } : item)
       : [resumo, ...(anteriores ?? [])]);
   }
 
@@ -435,7 +483,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
    * Geração ao vivo: a tela troca para a trilha vazia e cada evento do fluxo entra no caminho assim que chega.
    * Um erro, antes ou durante a geração, volta ao pedido com o texto mantido e a mensagem do código.
    */
-  async function gerar(texto: string) {
+  async function gerar(texto: string, diagnosticoId?: string) {
     if (emCurso.current) return;
     geracaoAtiva.current?.abort();
     const controle = new AbortController();
@@ -447,7 +495,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     setGeracao(trilha);
 
     try {
-      for await (const evento of cliente.gerarTrilhaAoVivo(texto, controle.signal)) {
+      for await (const evento of cliente.gerarTrilhaAoVivo(texto, controle.signal, diagnosticoId)) {
         if (controle.signal.aborted) return;
         if (evento.tipo === 'erro') throw new ErroStudoo(evento.codigo);
         trilha = aplicarEvento(trilha, evento);
@@ -463,11 +511,88 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         await expirarGuardando();
         return;
       }
+      const codigo = codigoDaFalha(falha);
+      if (diagnosticoId && codigo === 'proposta_invalida' && !trilha.titulo && trilha.fluxos.length === 0) {
+        const atual = diagnosticoAtual.current;
+        if (atual?.resultadoId === diagnosticoId) salvarDiagnostico({ ...atual, resultadoId: undefined });
+        await gerar(texto);
+        return;
+      }
       navegar({ tipo: 'objetivo' });
-      setFalhaGeracao(codigoDaFalha(falha));
+      setFalhaGeracao(codigo);
     } finally {
       if (geracaoAtiva.current === controle) geracaoAtiva.current = null;
     }
+  }
+
+  function salvarDiagnostico(sessao: SessaoDiagnostico) {
+    diagnosticoAtual.current = sessao;
+    setDiagnostico(sessao);
+  }
+
+  async function pedirPassoDiagnostico(sessao: SessaoDiagnostico, opcaoId?: string) {
+    if (sessao.pendente || sessao.encerrado) return;
+    const pedido = { ...sessao, pendente: true, erro: false };
+    salvarDiagnostico(pedido);
+    try {
+      const exibido = passoVisivel(pedido);
+      const anterior = exibido?.tipo === 'pergunta' ? exibido : null;
+      const passo = anterior && opcaoId
+        ? await cliente.responderDiagnostico(anterior.id, anterior.pergunta.id, opcaoId)
+        : await cliente.iniciarDiagnostico(pedido.objetivo);
+      if (diagnosticoAtual.current !== pedido) return;
+      if (!passoValido(passo, anterior)) throw new ErroStudoo('falha');
+      let anteriores = pedido.anteriores;
+      if (anterior && opcaoId && anteriores[anterior.numero - 1]?.opcaoId !== opcaoId) {
+        anteriores = [...anteriores.slice(0, anterior.numero - 1), { pergunta: anterior, opcaoId }];
+      }
+      salvarDiagnostico({ ...pedido, anteriores, revisando: null, pendente: false, passo });
+    } catch (falha) {
+      if (diagnosticoAtual.current !== pedido) return;
+      const codigo = codigoDaFalha(falha);
+      if (codigo === 'consentimento_ia' || sessaoInvalida(falha)) {
+        salvarDiagnostico({ ...pedido, pendente: false });
+        if (!diagnosticoVisivel.current) return;
+        navegar({ tipo: 'objetivo' });
+        if (sessaoInvalida(falha)) await expirarGuardando();
+        else setFalhaGeracao(codigo);
+        return;
+      }
+      // Servidor anterior à rota de diagnóstico: mantém a criação já suportada.
+      if (codigo === 'nao_encontrado' && !pedido.passo && diagnosticoVisivel.current) {
+        salvarDiagnostico({ ...pedido, pendente: false, encerrado: true });
+        void gerar(pedido.objetivo);
+        return;
+      }
+      salvarDiagnostico({ ...pedido, pendente: false, erro: true });
+    }
+  }
+
+  function iniciarPedido(texto: string) {
+    const anterior = diagnosticoAtual.current;
+    if (anterior?.objetivo === texto && anterior.encerrado) {
+      void gerar(texto, anterior.resultadoId);
+      return;
+    }
+    if (anterior?.objetivo !== texto) salvarDiagnostico({
+      objetivo: texto, passo: null, anteriores: [], revisando: null, pendente: false, erro: false, encerrado: false,
+    });
+    navegar({ tipo: 'diagnostico' });
+  }
+
+  function terminarDiagnostico() {
+    const sessao = diagnosticoAtual.current;
+    if (!sessao || !diagnosticoVisivel.current) return;
+    const resultadoId = sessao.anteriores.length > 0 || sessao.passo?.tipo === 'resultado' ? sessao.passo?.id : undefined;
+    salvarDiagnostico({ ...sessao, pendente: false, encerrado: true, resultadoId });
+    void gerar(sessao.objetivo, resultadoId);
+  }
+
+  function voltarPergunta() {
+    const atual = diagnosticoAtual.current;
+    if (!atual || atual.pendente) return;
+    const posicao = (atual.revisando ?? atual.anteriores.length) - 1;
+    if (posicao >= 0) salvarDiagnostico({ ...atual, revisando: posicao, erro: false });
   }
 
   function cancelarGeracao() {
@@ -483,20 +608,29 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
    * passagem e, aos 320 ms, a aula (ou o esqueleto dela, se a lição ainda não chegou) entra por cima do círculo. O mesmo
    * token numa nova tentativa devolve a trilha já criada, sem duplicar. Sair durante a criação não cancela no servidor.
    */
-  async function comecar(proposta: PropostaPlano) {
+  function aceitarUmaVez(token: string) {
+    const emAndamento = aceitesEmCurso.current.get(token);
+    if (emAndamento) return emAndamento;
+    const pedido = cliente.aceitarProposta(token).finally(() => aceitesEmCurso.current.delete(token));
+    aceitesEmCurso.current.set(token, pedido);
+    return pedido;
+  }
+
+  async function comecar(proposta: PropostaPlano, abrirPrimeira = true) {
     if (emCurso.current || aceiteAtual.current) return;
     const vez = {};
     aceiteAtual.current = vez;
+    ultimaIntencaoDeAceite.current = vez;
     emCurso.current = true;
     Keyboard.dismiss();
     setPendente('aceitar');
     setErro(null);
-    setCriacao('criando');
+    setCriacao(abrirPrimeira ? 'criando' : 'guardando');
     // Sem som no toque: o único som da criação é o geracao_pronta, quando a trilha passa a existir (spec 12).
-    anunciar(mensagens.geracao.anuncioCriando);
+    anunciar(abrirPrimeira ? mensagens.geracao.anuncioCriando : mensagens.geracao.anuncioSalvando);
     let plano: PlanoDetalhe;
     try {
-      plano = await cliente.aceitarProposta(proposta.token);
+      plano = await aceitarUmaVez(proposta.token);
     } catch (falha) {
       // Saiu durante a criação: a resposta não é mais desta tela.
       if (aceiteAtual.current !== vez) return;
@@ -509,14 +643,27 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         return;
       }
       const expirada = codigoDaFalha(falha) === 'proposta_invalida';
-      setCriacao(expirada ? 'expirada' : 'erro');
-      anunciar(expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao);
+      setCriacao(expirada ? 'expirada' : abrirPrimeira ? 'erro' : 'erro-salvar');
+      const texto = abrirPrimeira ? mensagens.geracao.erroCriacao : mensagens.geracao.erroSalvar;
+      anunciar(expirada ? mensagens.geracao.propostaExpirada : texto);
       return;
     }
     // A trilha existe no servidor: entra em Minhas trilhas mesmo se a pessoa já saiu daqui.
+    if (!montado.current) return;
     atualizarPlano(plano);
+    if (!abrirPrimeira && ultimaIntencaoDeAceite.current === vez) {
+      void guardarRetornoDaTrilha(plano.id);
+      setTrilhaGuardada(plano.id);
+    }
     if (aceiteAtual.current !== vez || etapaAtual.current.tipo !== 'geracao') return;
     setObjetivo('');
+    diagnosticoAtual.current = null;
+    setDiagnostico(null);
+    if (!abrirPrimeira) {
+      terminarCriacao();
+      navegar({ tipo: 'planos' });
+      return;
+    }
     const primeira = proximaDoCaminho(plano);
     if (!primeira) {
       terminarCriacao();
@@ -627,7 +774,12 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   async function apagarPlano(plano: PlanoResumo) {
     const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
     if (!resultado.ok) return;
+    if (plano.id === trilhaGuardada) {
+      setTrilhaGuardada(null);
+      void guardarRetornoDaTrilha(null);
+    }
     void tocaSons.tocarEfeito('apagar');
+    ++versaoPlanos.current;
     setPlanos((anteriores) => anteriores?.filter((item) => item.id !== plano.id) ?? null);
     // Apagada pelas configurações dela: a tela não existe mais, e a pessoa volta a Minhas trilhas.
     setEtapa((atual) => (atual.tipo === 'configuracoes' && atual.planoId === plano.id ? { tipo: 'planos' } : atual));
@@ -644,6 +796,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   /** O link de uma trilha mudou (criado, alterado ou encerrado): a lista e o mapa mostram o selo certo. Como na web. */
   function mudarLink(planoId: string, link: LinkCompartilhado | null) {
     const marca = link ? { codigo: link.codigo, noPerfil: link.noPerfil } : undefined;
+    ++versaoPlanos.current;
     setPlanos((anteriores) => anteriores?.map((item) => (item.id === planoId ? { ...item, link: marca } : item)) ?? null);
     setEtapa((atual) => ('plano' in atual && atual.plano.id === planoId ? { ...atual, plano: { ...atual.plano, link: marca } } : atual));
   }
@@ -679,7 +832,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   /** Trilha adicionada pelo link (ou já tinha): abre o mapa dela, com o aviso de quem compartilhou. Como na web. */
   async function aoAdicionarPorLink(planoId: string, nomeDono: string, jaTinha: boolean) {
     try {
-      setPlanos(await cliente.listarPlanos());
+      const vez = ++versaoPlanos.current;
+      const lista = await cliente.listarPlanos();
+      if (vez === versaoPlanos.current) setPlanos(lista);
     } catch { /* A lista se atualiza na próxima sincronia. */ }
     void abrirPlano(planoId, undefined, jaTinha ? undefined : mensagens.compartilhar.adicionada(nomeDono));
   }
@@ -700,7 +855,12 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     setAbrindo(id);
     const resultado = await executar('abrir', () => cliente.obterLicao(id));
     setAbrindo(null);
-    if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
+    if (!resultado.ok) return;
+    if (plano.id === trilhaGuardada) {
+      setTrilhaGuardada(null);
+      void guardarRetornoDaTrilha(null);
+    }
+    navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
@@ -722,6 +882,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
   // Como a web: a barra de baixo nas telas de seção com trilhas salvas e, com a comunidade, sempre no Explorar (e no perfil ou
   // na prévia abertos dele).
+  const aceitandoAgora = criacao === 'criando' || criacao === 'guardando';
   const aba = abaDe(etapa);
   // Spec 04 (item 5) e spec 05 (d8df51c): a barra aparece também sem trilhas, senão não há "Minhas trilhas" para tocar.
   // Com um pedido em andamento, ela continua à vista e só desliga (spec 05: "com uma ação em andamento, as abas ficam
@@ -732,7 +893,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     <>
       {/* Durante "Criando sua trilha…", Minhas trilhas é a saída: o aceite segue no servidor e a trilha aparece na lista. */}
       {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
-        desativado={ocupado && criacao !== 'criando'} acao={criacao === 'criando' ? sairDaCriacao : tocarMinhasTrilhas} />}
+        desativado={ocupado && !aceitandoAgora} acao={aceitandoAgora ? sairDaCriacao : tocarMinhasTrilhas} />}
       {/* Como a web: "Sair" fica no Perfil, que existe com ou sem o compartilhar (Som, Privacidade e dados e Conta valem
           para toda conta e visitante); no alto, "Perfil" só onde não há a barra de baixo. */}
       {!comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
@@ -776,6 +937,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   </NavegacaoContexto.Provider></ProvedorBloqueio></AvisoDoApp.Provider>;
 
   function renderizarTela() {
+    const retomar = etapa.tipo === 'perfil' ? planos?.find(plano => plano.progresso.concluidas < plano.progresso.total &&
+      (temAndamentoNoPlano(plano.id) || plano.progresso.concluidas > 0)) : undefined;
+    const continuarEstudo = retomar ? () => void abrirPlano(retomar.id) : undefined;
     // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. "Começar a lição 1" fica na
     // própria prévia ("Criando sua trilha…") e, na passagem, a aula entra por cima; se ela ainda carrega, o esqueleto dela.
     if (pendente === 'plano') return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
@@ -799,16 +963,21 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (etapa.tipo === 'concluida') {
       const proxima = proximaDoCaminho(etapa.plano);
       const { concluidas, total } = etapa.plano.progresso;
+      const completa = total > 0 && concluidas === total;
+      const paraRever = etapa.resumo?.rever ? etapa.licao.id :
+        etapa.plano.fluxos.flatMap(fluxo => fluxo.licoes).find(licao => licao.rever)?.id;
       return (
         <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado} visitante={visitante}
           compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} rodape={<>
-          {/* A próxima ação vem antes das saídas secundárias, sem alterar o destino ou o progresso. */}
-          {proxima && <Botao plano rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado} estilo={estudoEstilos.acaoPiloto}
-            acao={() => void abrirLicao(etapa.plano, proxima)} />}
-          <Botao plano rotulo={mensagens.licao.voltar} testID="voltar-plano" variante={proxima ? 'secundario' : 'primario'} desativado={ocupado}
-            estilo={proxima ? undefined : estudoEstilos.acaoPiloto} acao={() => abrir(voltarATrilha(etapa))} />
-          {total > 0 && concluidas === total && <Botao plano rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
-            desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />}
+          {completa ? (
+            <Botao plano rotulo={paraRever ? 'Rever uma lição' : 'Começar outra trilha'} testID={paraRever ? 'trilha-rever' : 'novo-assunto'}
+              desativado={ocupado} estilo={estudoEstilos.acaoPiloto}
+              acao={() => paraRever ? void abrirLicao(etapa.plano, paraRever) : abrir({ tipo: 'objetivo' })} />
+          ) : proxima && <Botao plano rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado}
+            estilo={estudoEstilos.acaoPiloto} acao={() => void abrirLicao(etapa.plano, proxima)} />}
+          <Botao plano rotulo={completa ? 'Ver mapa da trilha' : mensagens.licao.voltar} testID="voltar-plano"
+            variante={proxima || completa ? 'secundario' : 'primario'} desativado={ocupado}
+            estilo={proxima || completa ? undefined : estudoEstilos.acaoPiloto} acao={() => abrir(voltarATrilha(etapa))} />
         </>} />
       );
     }
@@ -824,28 +993,43 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       return <TelaConfiguracoes key={etapa.planoId} cliente={cliente} planoId={etapa.planoId} acoes={acoes} desativado={ocupado}
         compartilhar={Boolean(abrirFolha)} versao={versaoFolha} recebidaDe={resumo?.recebida ? resumo.recebida.nome ?? '' : null}
         voltar={() => (etapa.volta === 'plano' ? void abrirPlano(etapa.planoId) : abrir({ tipo: 'planos' }))}
-        aoMudar={(conf) => setPlanos((anteriores) => anteriores?.map((item) => (item.id === conf.planoId
-          ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema } : item)) ?? null)}
+        aoMudar={(conf) => {
+          ++versaoPlanos.current;
+          setPlanos((anteriores) => anteriores?.map((item) => (item.id === conf.planoId
+            ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema } : item)) ?? null);
+        }}
         mudarCompartilhamento={() => abrirFolha?.(etapa.planoId)}
         apagar={() => { if (resumo) pedirParaApagar(resumo); }} />;
     }
 
+    if (etapa.tipo === 'diagnostico' && diagnostico) {
+      return <Diagnostico objetivo={diagnostico.objetivo} passo={passoVisivel(diagnostico)} ocupado={diagnostico.pendente}
+        erro={diagnostico.erro} acoes={acoes} pular={terminarDiagnostico} gerar={terminarDiagnostico}
+        voltar={() => navegar({ tipo: 'objetivo' })}
+        perguntaAnterior={(diagnostico.revisando ?? diagnostico.anteriores.length) > 0 ? voltarPergunta : undefined}
+        consultar={(opcaoId) => {
+          const atual = diagnosticoAtual.current;
+          if (atual && diagnosticoVisivel.current) void pedirPassoDiagnostico(atual, opcaoId);
+        }} />;
+    }
+
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
-        comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
-        criacao={criacao} remontar={() => void gerar(geracao.objetivo)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
+        comecar={(proposta) => void comecar(proposta)} salvar={(proposta) => void comecar(proposta, false)} ajustar={() => abrir({ tipo: 'objetivo' })}
+        criacao={criacao} remontar={() => void gerar(geracao.objetivo, diagnosticoAtual.current?.objetivo === geracao.objetivo ? diagnosticoAtual.current.resultadoId : undefined)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
         rolagemDoNo1={rolagemDoNo1}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
-        existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '')) : undefined}
+        existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '') &&
+          mesmoDiagnostico(plano.diagnostico, geracao.proposta?.diagnostico)) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
     }
 
     if (etapa.tipo === 'perfil' && !compartilhar) {
-      return <PerfilSemSocial cliente={cliente} visitante={visitante} acoes={acoes} desativado={ocupado}
+      return <PerfilSemSocial cliente={cliente} visitante={visitante} acoes={acoes} desativado={ocupado} continuarEstudo={continuarEstudo}
         sair={() => pedirParaSair(false)} entrar={() => pedirParaSair(true)} aoSessaoTerminada={() => void expirarGuardando()} />;
     }
     if (etapa.tipo === 'perfil') {
-      return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
+      return <TelaPerfil continuarEstudo={continuarEstudo} cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
         sair={() => pedirParaSair(false)} entradaDaConta={() => pedirParaSair(true)} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
@@ -877,7 +1061,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao') {
       return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
         aviso={aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
-        temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
+        temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={iniciarPedido}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
         porLink={compartilhar ? <>
           <AdicionarPorLink cliente={cliente} ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)}
@@ -891,11 +1075,17 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (!planos && !erro) return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
 
     return (
-      <Tela pagina="planos" acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}
+      <Tela pagina="planos" avisoNoFluxo acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}
         estiloConteudo={estudoEstilos.fimQuarenta}>
         {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título, sem margem em cima e a 16 dele. */}
         {erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} estilo={estudoEstilos.erroNaLista} />}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
+        {trilhaGuardada && planos?.some(item => item.id === trilhaGuardada && item.progresso.concluidas === 0) &&
+          <Text role="status" accessibilityLiveRegion="polite" testID="trilha-salva-aviso" style={estudoEstilos.aviso}>
+            {visitante
+              ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste aparelho.'
+              : 'Trilha salva em Minhas trilhas. Comece quando quiser.'}
+          </Text>}
         {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
         {planos && planos.length === 0 ? (
           <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
@@ -905,7 +1095,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         )}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
-          const destaque = planoInicial(planos);
+          const destaque = planos.find(item => item.id === trilhaGuardada && item.progresso.concluidas === 0) ?? planoInicial(planos);
           const restantes = planos.filter((plano) => plano.id !== destaque?.id);
           return (
             <>
@@ -1376,7 +1566,7 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
  * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
  * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, rolagemDoNo1 }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, salvar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, rolagemDoNo1 }: {
   /** Para a passagem fazer a rolagem do toque até o nó 1 terminar até o círculo começar. */
   rolagemDoNo1: { current: { terminar: (prazoMs: number) => void } | null };
   /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
@@ -1392,6 +1582,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   acoes: ReactNode;
   cancelar: () => void;
   comecar: (proposta: PropostaPlano) => void;
+  salvar: (proposta: PropostaPlano) => void;
   ajustar: () => void;
   /** Como na web: uma trilha com o mesmo nome; a tela avisa e oferece abrir a que já existe. */
   existente?: PlanoResumo;
@@ -1435,8 +1626,10 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const empilhar = pronta && width <= 600;
   const dividir = pronta && !empilhar && !largo;
   // Criar a trilha: enquanto o aceite anda (e na passagem), só o botão fica, na largura toda; no erro, "Ajustar pedido" volta.
-  const salvando = criacao === 'criando' || criacao === 'criada';
-  const falhou = criacao === 'erro' || criacao === 'expirada';
+  const iniciando = criacao === 'criando' || criacao === 'criada';
+  const guardando = criacao === 'guardando';
+  const salvando = iniciando || guardando;
+  const falhou = criacao === 'erro' || criacao === 'erro-salvar' || criacao === 'expirada';
   const [esperaReal, setEsperaReal] = useState(false);
   const [saidaDoAjustar] = useState(() => new Animated.Value(0));
   const [ajustarFora, setAjustarFora] = useState(false);
@@ -1511,7 +1704,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     AccessibilityInfo.announceForAccessibility(`${mensagens.geracao.propostaPronta(total, partes)} ${mensagens.geracao.comecarLicao1}.`);
     // Com o aviso de trilha repetida (spec 16, item 1, revisão 25c75c2), a tela NÃO rola até o nó 1: abre no topo, com o
     // cartão do título e o aviso inteiros à vista (antes só o botão "Abrir a que já existe" aparecia, cortado no alto).
-    const comAviso = deveAbrirNoTopo(Boolean(existente));
+    const comAviso = deveAbrirNoTopo(Boolean(existente)) || proposta?.diagnostico != null;
     const noAlto = comAviso || rolado.current <= 4;
     if (noAlto) setCartaoDeVolta(true);
     // A tela deixa de seguir o fim: em vez de parar no troféu, ela rola até o nó 1, no meio da área livre (spec 16, item 1).
@@ -1780,7 +1973,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 
   const expirada = criacao === 'expirada';
   const espera = criacao === 'criando' && esperaReal && <LinhaDaEspera reduzir={reduzir} />;
-  const erroDaCriacao = falhou && (
+  const erroDaCriacao = falhou && criacao !== 'erro-salvar' && (
     <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
       {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
     </Text>
@@ -1788,8 +1981,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const principal = pronta && proposta && (
     <View style={!empilhar && (dividir || salvando) ? estudoEstilos.metade : null}>
       <Botao plano referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
-        rotulo={salvando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
-        ocupado={salvando} afundado={salvando} giro={salvando} desativado={ocupado && !salvando}
+        rotulo={iniciando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
+        ocupado={iniciando} afundado={iniciando} giro={iniciando} desativado={ocupado && !iniciando}
         acao={() => (expirada ? remontar() : comecar(proposta))} estilo={[estudoEstilos.acaoPiloto, dividir && estudoEstilos.botaoDividido]} />
     </View>
   );
@@ -1828,6 +2021,13 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         )}
         {!empilhar && principal}
       </View>
+      {pronta && proposta && !expirada && !iniciando && (!ocupado || guardando) &&
+        <>
+          <Botao plano rotulo={guardando ? mensagens.geracao.salvandoTrilha : mensagens.geracao.salvarParaDepois}
+            testID="salvar-trilha-depois" variante="secundario" ocupado={guardando} giro={guardando} acao={() => salvar(proposta)} />
+          {criacao === 'erro-salvar' && <Text testID="salvar-trilha-erro" role="alert" accessibilityLiveRegion="assertive"
+            style={estudoEstilos.criacaoErro}>{mensagens.geracao.erroSalvar}</Text>}
+        </>}
       {!empilhar && espera}
       {!empilhar && erroDaCriacao}
     </Animated.View>
@@ -1844,7 +2044,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 
   return (
     // Com o cartão do título de volta (no fim, no alto), a faixa volta a ser o cartão: ela sai, e a placa fica no alto do mapa.
-    <Tela pagina="geracao" acoes={acoes} rodape={rodape} rolagem={rolagem} estiloConteudo={estudoEstilos.geracaoConteudo} faixaFixa={cartaoDeVolta ? undefined : faixa} faixaColada
+    <Tela pagina="geracao" avisoNoFluxo acoes={acoes} rodape={rodape} rolagem={rolagem} estiloConteudo={estudoEstilos.geracaoConteudo} faixaFixa={cartaoDeVolta ? undefined : faixa} faixaColada
       estiloRodapeConteudo={empilhar ? estudoEstilos.geracaoRodapeEstreito : undefined}
       flutuante={pilula || undefined} aoMedir={(altura) => { visivel.current = altura; }} aoRolar={aoRolar}>
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
@@ -1868,9 +2068,12 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
                 acao={() => abrirExistente(existente.id)} />
             </View>
           )}
+          {proposta.diagnostico && <PontoDePartida perfil={proposta.diagnostico} primeiroPasso={proposta.fluxos[0]?.licoes[0]?.titulo} />}
           {/* Spec 08 (c20ed0f): sem a linha "Fonte: <provedor>"; "Gerada por IA a partir do seu pedido…" continua acima. */}
         </View>
       )}
+      {pronta && proposta && !salvando &&
+        <Text style={estilos.legenda} testID="proposta-nao-salva">Sua proposta ainda não está salva.</Text>}
       {cartaoDeVolta && (
         // A placa no respiro que o céu reserva para ela (alturaPlaca + 20), 10 abaixo do começo do mapa: uma camada de altura
         // zero antes do mapa, por cima dele, sem mudar o lugar do que o mapa mede.
@@ -1884,7 +2087,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
       <Caminho claro nos={nos} stu={pronta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} extraChegada={44}
         chegada={pronta} montando={!pronta} acompanhar={aoChegarAoFim} semFala respiroNoAlto={alturaPlaca + 20} aoMedirNo={aoMedirNo}
         stuNoNo1={pronta} festaPermitida={false} trofeuDoZero rascunho guardarNo1={guardarNo1}
-        criacao={criacao === null ? null : criacao === 'criando' || criacao === 'criada' ? criacao : 'erro'} />
+        criacao={criacao === null || criacao === 'guardando' ? null : criacao === 'criando' || criacao === 'criada' ? criacao : 'erro'} />
     </Tela>
   );
 }
@@ -2606,7 +2809,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
         <Titulo testID="titulo-conclusao" foco estilo={[estudoEstilos.textoCentro, estudoEstilos.conclusaoTitulo]}>
           {trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}
         </Titulo>
-        <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{licao.titulo}</Text>
+        <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{trilhaFeita ? plano.titulo : licao.titulo}</Text>
       </View>
       <View style={estudoEstilos.conclusaoNucleo}>
         <View style={[estudoEstilos.bloco, estudoEstilos.blocoProgresso]}>

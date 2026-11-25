@@ -62,6 +62,22 @@ export async function apagarTinhaTrilhas() {
   }
 }
 
+// Guarda só o ID de uma trilha aceita. A lista do servidor confirma se ela ainda existe e é desta sessão.
+const chaveTrilhaGuardada = 'studoo.trilhaGuardada';
+let filaTrilhaGuardada = Promise.resolve();
+
+export async function lerTrilhaGuardada() {
+  await filaTrilhaGuardada;
+  return SecureStore.getItemAsync(chaveTrilhaGuardada).catch(() => null);
+}
+
+export function guardarRetornoDaTrilha(id: string | null) {
+  filaTrilhaGuardada = filaTrilhaGuardada.then(() => id
+    ? SecureStore.setItemAsync(chaveTrilhaGuardada, id)
+    : SecureStore.deleteItemAsync(chaveTrilhaGuardada)).catch(() => undefined);
+  return filaTrilhaGuardada;
+}
+
 /*
  * O aviso de privacidade da voz ao vivo já visto (como `studoo.vozAoVivo.avisoVisto` da web: "1"). O toque em "Conversar
  * com o Stu" decide na hora, sem esperar o armazenamento, para a conversa nascer dentro do toque (áudio e microfone do

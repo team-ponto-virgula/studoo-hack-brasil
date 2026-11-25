@@ -61,7 +61,7 @@ test('aceite b75134a: laço no selo, faixa da web, sem selo de demonstração, s
   const apoio = await ler('apps/mobile/src/estudio-adaptativo.tsx');
   assert.match(apoio, /<SeloDaPonte \/>/, 'sem "Modo demonstração" no alto da ponte');
   assert.match(apoio, /comemorar=\{venceu\}/);
-  assert.match(apoio, /\{ultimo && !\(ponteAberta && !gravando && etapaVoz !== 'ativa'\) && <View/, 'o Explique só volta com o exercício original (fica durante uma gravação)');
+  assert.match(apoio, /\{ensinoEmEtapa && <View/, 'a ponte não monta o ensino em uma etapa de exercício');
   assert.match(apoio, /testID="ponte-vencida" accessible accessibilityRole="header"[^>]*>\{m\.ponteVencida\}/, 'título do cartão vencido: "Agora tente o exercício de novo."');
   assert.doesNotMatch(apoio, /style=\{s\.pontePassoTitulo\}>\{m\.ponteConstruida\}/, '"Ponte construída!" só no indicador');
   const licao = await ler('apps/mobile/src/licao.tsx');

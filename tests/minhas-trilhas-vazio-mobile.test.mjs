@@ -29,7 +29,7 @@ test('a barra de abas aparece também sem trilhas, com "Minhas trilhas" marcada 
   assert.match(fonte, /const comNavegacaoAgora = planos !== null && \(ABAS\.includes\(aba\) \|\| \(comunidade && aba === 'explorar'\)\);/);
   assert.match(fonte, /const ABAS: readonly string\[\] = \['planos',/);
   assert.match(fonte, /planos: tocarMinhasTrilhas,/);
-  assert.match(fonte, /acao=\{criacao === 'criando' \? sairDaCriacao : tocarMinhasTrilhas\} \/>/, 'o meus-planos do alto leva ao mesmo estado');
+  assert.match(fonte, /acao=\{aceitandoAgora \? sairDaCriacao : tocarMinhasTrilhas\} \/>/, 'o meus-planos do alto leva ao mesmo estado');
 });
 
 test('o bloco: Stu curioso com halo, título anunciado, texto, "Criar minha primeira trilha"; o toque de novo faz o Stu pular', async () => {

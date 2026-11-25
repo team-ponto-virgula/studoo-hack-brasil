@@ -16,8 +16,8 @@ test('as expressões: acerto feliz, de primeira comemorando, depois da ponte ani
   assert.match(licao, /<PainelRetorno avaliacao=\{avaliacao\} reacao=\{reacaoDoStu\}/);
 });
 
-test('no painel: 42 px na ponta direita da linha do título, subindo 8 no respiro do rodapé, sem Stu no compacto', () => {
-  assert.match(licao, /const comStu = reacao !== undefined && !compacto;/);
+test('no painel: 42 px na ponta direita da linha do título, subindo 8 no respiro do rodapé', () => {
+  assert.match(licao, /const comStu = reacao !== undefined;/);
   assert.match(licao, /retornoStu: \{ position: 'absolute', right: 0, top: -8, width: 42, height: 42 \}/);
   assert.match(licao, /retornoTituloComStu: \{ marginRight: 52 \}/, 'o título ganha 52 de respiro à direita');
   // Pop aos 160 ms e um ciclo no acontecimento; o toque passa e o leitor de tela não lê.

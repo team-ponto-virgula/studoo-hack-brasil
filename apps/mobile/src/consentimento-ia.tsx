@@ -23,7 +23,7 @@ const k = mensagens.privacidade;
 
 /** As ações do cliente que o servidor recusa sem aceite (as que mandam dados a uma IA de terceiro sem alternativa local). */
 const ACOES_COM_IA = [
-  'gerarProposta', 'aceitarProposta', 'enviarMaterial', 'proporMaterial', 'transcrever', 'iniciarVozAoVivo',
+  'iniciarDiagnostico', 'responderDiagnostico', 'gerarProposta', 'aceitarProposta', 'enviarMaterial', 'proporMaterial', 'transcrever', 'iniciarVozAoVivo',
 ] as const satisfies readonly (keyof ClienteNativo)[];
 
 export const recusaDeConsentimento = (erro: unknown) => erro instanceof ErroStudoo && erro.codigo === 'consentimento_ia';
@@ -239,11 +239,11 @@ export function comConsentimento(cliente: ClienteNativo, garantir: () => Promise
   }
   return {
     ...(travado as ClienteNativo),
-    gerarTrilhaAoVivo: async function* (objetivo: string, sinal: AbortSignal) {
+    gerarTrilhaAoVivo: async function* (objetivo: string, sinal: AbortSignal, diagnosticoId?: string) {
       await garantir();
       let entregou = false;
       try {
-        for await (const evento of cliente.gerarTrilhaAoVivo(objetivo, sinal)) {
+        for await (const evento of cliente.gerarTrilhaAoVivo(objetivo, sinal, diagnosticoId)) {
           entregou = true;
           yield evento;
         }
@@ -251,7 +251,7 @@ export function comConsentimento(cliente: ClienteNativo, garantir: () => Promise
         if (!recusaDeConsentimento(falha) || entregou) throw falha;
         await invalidar(falha);
         await garantir();
-        yield* cliente.gerarTrilhaAoVivo(objetivo, sinal);
+        yield* cliente.gerarTrilhaAoVivo(objetivo, sinal, diagnosticoId);
       }
     },
   };

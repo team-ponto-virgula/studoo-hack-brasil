@@ -84,8 +84,8 @@ test('mudança 1 (revisão 04fe621): a placa da geração sem frases; as frases 
   assert.match(linha, /const metade = ESPERA_DA_GERACAO\.efeitoMs \/ 2;/);
   // Sem anúncio a cada troca; o leitor ouve "Criando sua trilha." uma vez e o botão fica ocupado.
   assert.match(linha, /accessibilityLiveRegion="none"/);
-  assert.match(estudo, /anunciar\(mensagens\.geracao\.anuncioCriando\);/);
-  assert.match(estudo, /ocupado=\{salvando\} afundado=\{salvando\} giro=\{salvando\}/);
+  assert.match(estudo, /anunciar\(abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
+  assert.match(estudo, /ocupado=\{iniciando\} afundado=\{iniciando\} giro=\{iniciando\}/);
   assert.match(estudo, /const espera = criacao === 'criando' && esperaReal && <LinhaDaEspera reduzir=\{reduzir\} \/>;/);
   // A placa da geração não usa mais as frases nem o relógio.
   const placa = estudo.slice(estudo.indexOf('function PlacaDaGeracao('), estudo.indexOf('/**\n * A espera depois de "Começar a lição 1"'));
@@ -104,5 +104,7 @@ test('mudança 1 (revisão 04fe621): a placa da geração sem frases; as frases 
 
 test('a pílula "Ver o fim da trilha" sai durante a criação (cobria o nome do nó 1; a web não a mostra nessa fase)', () => {
   assert.match(estudo, /const pilula = !acompanhando && total > 0 && !\(pronta && trofeuAVista\) && !salvando && \(/);
-  assert.match(estudo, /const salvando = criacao === 'criando' \|\| criacao === 'criada';/);
+  assert.match(estudo, /const iniciando = criacao === 'criando' \|\| criacao === 'criada';/);
+  assert.match(estudo, /const guardando = criacao === 'guardando';/);
+  assert.match(estudo, /const salvando = iniciando \|\| guardando;/);
 });
