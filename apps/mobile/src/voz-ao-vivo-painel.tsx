@@ -19,7 +19,7 @@ const m = mensagens.estudio.vozAoVivo;
 const borda = '#D8E1D9';
 const superficie = '#F6F8F6';
 
-export type ProvedorTexto = 'openai' | 'deepseek';
+export type ProvedorTexto = 'openai';
 
 /** O que a elegibilidade usa do cliente: o mesmo que a web consulta (configuração do servidor e sessão). */
 export type ClienteElegibilidadeVoz = {
@@ -29,7 +29,7 @@ export type ClienteElegibilidadeVoz = {
 };
 
 const consultas = new WeakMap<object, Promise<ProvedorTexto | null>>();
-const ehProvedorReal = (ia?: string): ia is ProvedorTexto => ia === 'openai' || ia === 'deepseek';
+const ehProvedorReal = (ia?: string): ia is ProvedorTexto => ia === 'openai';
 
 /**
  * Como `consultarElegibilidadeVozAoVivo` da web: a opção aparece com o WebRTC do navegador, a flag `vozAoVivo` do
@@ -77,7 +77,6 @@ export function EntradaVozAoVivo({ desativado, aoAbrir, provedor = 'openai' }: {
 
 /** O aviso da primeira vez (.voz-ao-vivo-privacidade): a voz vai para a OpenAI; "Começar conversa" ou "Agora não". */
 export function PrivacidadeVozAoVivo({ aoAceitar, aoCancelar, aoMedir, provedor = 'openai' }: {
-  /** Provedor de texto: com a DeepSeek, o aviso diz que a voz vai para a OpenAI e o texto é avaliado pela DeepSeek. */
   provedor?: ProvedorTexto;
   aoAceitar: () => void;
   aoCancelar: () => void;

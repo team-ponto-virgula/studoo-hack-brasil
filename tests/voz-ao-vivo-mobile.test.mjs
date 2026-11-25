@@ -110,7 +110,7 @@ test('elegibilidade: visitante só com a flag de visitante; conta comum com a fl
   assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true, visitante: true })), null, 'visitante sem a flag');
   assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true, vozAoVivoVisitante: true }, { autenticado: true, visitante: true })), 'openai', 'visitante com a flag');
   assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true })), 'openai', 'conta comum');
-  assert.equal(await provedorDaVozAoVivo(cliente({ ia: 'deepseek', vozAoVivo: true }, { autenticado: true })), 'deepseek', 'modo misto: texto pela DeepSeek');
+  assert.equal(await provedorDaVozAoVivo(cliente({ ia: 'deepseek', vozAoVivo: true }, { autenticado: true })), null, 'provedor desativado');
   assert.equal(await provedorDaVozAoVivo(cliente({ ia: 'falsa', vozAoVivo: true }, { autenticado: true })), null, 'IA falsa');
   assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: false, vozAoVivoVisitante: true }, { autenticado: true })), null, 'servidor desligado');
   assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true }, { iniciarVozAoVivo: undefined })), null, 'cliente sem a rota');
@@ -123,7 +123,7 @@ test('elegibilidade: visitante só com a flag de visitante; conta comum com a fl
   assert.equal(consultas, 1);
   // A gravação diz quem recebe o áudio só com `transcricao` e um provedor real (e57d54d), também no aparelho.
   assert.equal(await provedorDaGravacao(cliente({ transcricao: true }, {})), 'openai');
-  assert.equal(await provedorDaGravacao(cliente({ ia: 'deepseek', transcricao: true }, {})), 'deepseek');
+  assert.equal(await provedorDaGravacao(cliente({ ia: 'deepseek', transcricao: true }, {})), null);
   assert.equal(await provedorDaGravacao(cliente({ transcricao: false }, {})), null);
   assert.equal(await provedorDaGravacao(cliente({ ia: 'falsa', transcricao: true }, {})), null);
 });
@@ -137,9 +137,7 @@ test('painel: estados da conversa iguais aos da web (textos, ondas, aviso, erro 
   const entrada = EntradaVozAoVivo({ desativado: false, aoAbrir() {} });
   assert.match(textoDe(entrada), new RegExp(m.abrirBeneficio));
   assert.match(textoDe(entrada), new RegExp(m.notaPrivacidade));
-  // Modo misto: com a DeepSeek, a nota e o aviso dizem que o texto é avaliado por ela.
-  assert.match(textoDe(EntradaVozAoVivo({ desativado: false, aoAbrir() {}, provedor: 'deepseek' })), /avaliado pela DeepSeek/);
-  assert.match(textoDe(PrivacidadeVozAoVivo({ aoAceitar() {}, aoCancelar() {}, provedor: 'deepseek' })), /avaliado pela DeepSeek/);
+  assert.match(textoDe(PrivacidadeVozAoVivo({ aoAceitar() {}, aoCancelar() {} })), /voz vai para a OpenAI/);
   assert.deepEqual(botoes(entrada), [{ rotulo: m.abrir, desativado: false }]);
   const aviso = PrivacidadeVozAoVivo({ aoAceitar() {}, aoCancelar() {} });
   assert.match(textoDe(aviso), new RegExp(m.privacidadeTitulo));
