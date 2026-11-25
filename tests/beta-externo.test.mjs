@@ -10,7 +10,7 @@ const app = () => ({ expo: {
 const eas = () => ({ build: { testflight: {
   distribution: 'store', env: { EXPO_PUBLIC_STUDOO_API_URL: 'https://beta.example.test' },
 } } });
-const config = (extra = {}) => ({ google: true, apple: true, cadastro: true, recuperacao: true, ia: 'deepseek', ...extra });
+const config = (extra = {}) => ({ google: true, apple: true, cadastro: true, recuperacao: true, ia: 'openai', ...extra });
 
 function servidor({ auth = config(), respostas = {}, falhas = {} } = {}) {
   const chamadas = [];
@@ -109,7 +109,7 @@ test('relatório permite apenas flags públicas, sem chaves e sem valores arbitr
   easConfig.build.testflight.env.APPLE_PRIVATE_KEY = segredo;
   const resultado = await conferirBetaExterno({ appConfig, easConfig, ...servidor({ auth: config({ chave: segredo, token: segredo, visitante: segredo }) }) });
   assert.equal(resultado.apto, true);
-  assert.deepEqual(resultado.flags, { google: true, apple: true, cadastro: true, recuperacao: true, ia: 'deepseek' });
+  assert.deepEqual(resultado.flags, { google: true, apple: true, cadastro: true, recuperacao: true, ia: 'openai' });
   assert.ok(!JSON.stringify(resultado).includes(segredo));
 });
 

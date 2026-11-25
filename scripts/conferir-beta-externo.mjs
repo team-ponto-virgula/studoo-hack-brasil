@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const FLAGS_PUBLICAS = ['google', 'apple', 'cadastro', 'recuperacao', 'visitante', 'compartilhar', 'comunidade'];
-const IAS_REAIS = new Set(['openai', 'deepseek']);
+const IAS_REAIS = new Set(['openai']);
 const LIMITES_DA_CONFERENCIA = 'Este preflight confere configuração e respostas públicas; não comprova login real, credenciais Apple, assinatura do IPA ou aprovação da revisão beta.';
 
 function perfilTestflight(easConfig) {

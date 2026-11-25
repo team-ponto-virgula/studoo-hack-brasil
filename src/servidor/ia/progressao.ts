@@ -1,7 +1,7 @@
 import { exercicioValido, type ConteudoLicao, type EsqueletoPlano } from '@/dominio/aprendizado/plano';
 import { FalhaApi } from '@/servidor/acesso/http';
 import { lista, objeto, pedirJson, texto } from '@/servidor/estudio/ia';
-import { maximoDeLicoesDiagnostico, normalizarLicaoSegura, regraDeEscolhaUnicaAdaptada } from './comum';
+import { maximoDeLicoesDiagnostico, normalizarLicaoSegura, regraDeEscolhaUnicaAdaptada, regraDeSegurancaDaTrilha } from './comum';
 import type { GeradorTrilha } from './gerador';
 
 const inteiro = { type: 'integer' };
@@ -29,7 +29,7 @@ const esquemaReparo = objeto({
     feedbackCorreto: texto, feedbackIncorreto: texto,
   })),
 });
-const regras = [
+const regras = regraDeSegurancaDaTrilha + ' ' + [
   'A amostra mostra somente a decisão que foi necessária para respondê-la. Não deduza domínio de todo o assunto pelo rótulo da habilidade.',
   'Toda lição obrigatória deve praticar uma ação nova no escopo e no nível pedidos. A habilidade já demonstrada pode ser um passo para resolver o novo problema.',
   'Uma ação já demonstrada, a mesma ação com números diferentes ou o simples reconhecimento de um conceito que era pré-requisito são revisão, não avanço.',
@@ -95,7 +95,7 @@ async function conferirLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[],
       visuais: conteudo.visuais, resolucao: conteudo.resolucao,
       exercicios: [conteudo.exercicio, ...(conteudo.extras ?? [])].map((e, i) => ({ numero: i + 1, ...e })),
     })),
-  }, [], { prazoMs: 12000, tentativas: 1, sinal }) as { avaliacoes?: (Pendencia & { resultado: unknown })[] } | null;
+  }, [], { prazoMs: 24_000, tentativas: 1, sinal }) as { avaliacoes?: (Pendencia & { resultado: unknown })[] } | null;
   const avaliacoes = resposta?.avaliacoes;
   const numeros = new Set(licoes.map(l => l.numero));
   if (!Array.isArray(avaliacoes) || avaliacoes.length !== licoes.length || !avaliacoes.every(a =>
@@ -156,7 +156,7 @@ async function repararLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[], 
       numero: l.numero, titulo: l.titulo, decisao: l.decisao, motivo: motivos.get(l.numero),
       exercicioRecusado: l.conteudo.exercicio,
     })),
-  }, [], { prazoMs: 16000, tentativas: 1, sinal }) as { licoes?: Reparo[] } | null;
+  }, [], { prazoMs: 36_000, tentativas: 1, sinal }) as { licoes?: Reparo[] } | null;
   if (!Array.isArray(resposta?.licoes) || resposta.licoes.length !== licoes.length) {
     throw new FalhaApi('ia_indisponivel', undefined, 'progressao_reparo');
   }

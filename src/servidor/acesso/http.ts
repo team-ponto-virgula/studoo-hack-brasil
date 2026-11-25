@@ -26,6 +26,7 @@ const statusErros: Record<CodigoErro, number> = {
   limite_login: 429,
   limite_visitante: 429,
   ia_indisponivel: 503,
+  conteudo_nocivo: 422,
   limite_geracoes: 429,
   link_inativo: 404,
   limite_compartilhar: 429,

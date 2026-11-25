@@ -131,11 +131,9 @@ O feedback traz pontos corretos, uma lacuna, pergunta de transferência e próxi
 
 ## Configuração e limites
 
-- `IA=openai`, `OPENAI_API_KEY` (ou `IA=deepseek`, `DEEPSEEK_API_KEY`): somente no servidor. O texto vai só para o provedor de `IA`; a única mistura é o modo misto (`IA=deepseek` com `OPENAI_API_KEY`), em que só o áudio (transcrição e voz ao vivo) vai para a OpenAI (spec 08).
-- `OPENAI_MODELO_ESTUDIO=gpt-4.1`: material, reforço e explicação na OpenAI, via Responses com JSON Schema estrito.
-- `OPENAI_MODELO_TRANSCRICAO=gpt-transcribe`: transcrição multipart, sempre na OpenAI. Com `IA=deepseek`, usa a OpenAI quando há `OPENAI_API_KEY` (modo misto) e retorna `voz_indisponivel` sem ela (o `POST /v1/tools/asr` da DeepSeek aceita apenas WAV PCM 16 bits ou Ogg Opus até 8 MiB e 120 s, sem parâmetro de idioma). Com `IA=falsa`, `voz_indisponivel`.
-- `DEEPSEEK_MODELO=deepseek-flash`: modelo padrão da DeepSeek (texto e imagem; `deepseek-v4-pro` é só texto).
-- `OPENAI_BASE_URL` / `DEEPSEEK_BASE_URL`: mantêm a regra HTTPS, ou localhost para testes.
+- `IA=openai` e `OPENAI_API_KEY`, somente no servidor. Texto, triagem, leitura de material, reforço e explicação usam `gpt-6-luna` (`reasoning.effort=max`).
+- `OPENAI_MODELO_TRANSCRICAO=gpt-transcribe` seleciona o modelo de transcrição multipart.
+- `OPENAI_BASE_URL` aceita HTTPS ou HTTP no próprio computador, para testes.
 - Cotas persistentes por conta e hora: dez uploads, dez propostas, dez transcrições; vinte reforços e vinte avaliações de explicação.
 - Todos os endpoints `/api/estudio` exigem sessão, verificam propriedade e preservam a proteção de origem web ou autenticação bearer nativa. O gabarito nunca faz parte do retorno público.
 

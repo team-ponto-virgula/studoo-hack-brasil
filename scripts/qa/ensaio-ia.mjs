@@ -86,9 +86,9 @@ async function subir() {
     rodar(process.execPath, ["node_modules/prisma/build/index.js", "migrate", "deploy"], localEnv);
     rodar(process.execPath, ["--import", "tsx", "prisma/seed.ts"], localEnv);
     const extras = Object.fromEntries(Object.entries(process.env).filter(([k]) =>
-      k === "IA" || /^(?:OPENAI_|DEEPSEEK_|STUDOO_(?:IA_|VOZ_|GERACAO_))/.test(k)));
+      k === "IA" || /^(?:OPENAI_|STUDOO_(?:IA_|VOZ_|GERACAO_))/.test(k)));
     // Só o servidor herda a configuração dos provedores. Banco, origem, login e e-mail são do ensaio.
-    const env = { ...localEnv, NODE_ENV:"production", OPENAI_API_KEY:"", DEEPSEEK_API_KEY:"", ...extras, EMAIL:"falso" };
+    const env = { ...localEnv, NODE_ENV:"production", OPENAI_API_KEY:"", ...extras, EMAIL:"falso" };
     const log = openSync(join(base,"next.log"), "a", 0o600);
     let filho;
     try { filho = spawn(process.execPath, ["node_modules/next/dist/bin/next","start","--hostname",local,"--port",String(porta)],

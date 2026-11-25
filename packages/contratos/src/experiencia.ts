@@ -66,16 +66,11 @@ export const mensagens = {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
       arquivo: 'Escolher material', camera: 'Fotografar página', demo: 'Experimentar com frações',
       limites: 'Imagem JPG/PNG/WebP, PDF de até 6 páginas, DOCX ou CSV. Até 5 MB e 24 mil caracteres. CSV: até 200 linhas e 20 colunas, em UTF-8.',
-      privacidade: 'Com IA real ativa, você autoriza a leitura do material pelo provedor de IA configurado neste Studoo; no modo demonstração, o material não sai do Studoo. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
-      privacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') => {
-        if (ia === 'openai') {
-          return 'Ao enviar, você autoriza a leitura pela OpenAI. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
-        }
-        if (ia === 'deepseek') {
-          return 'Ao enviar, você autoriza a leitura pela DeepSeek. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
-        }
-        return 'No modo demonstração, o material não é enviado para nenhum provedor externo de IA. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
-      },
+      privacidade: 'Com IA real ativa, você autoriza a leitura e a verificação de segurança do material pela OpenAI; no modo demonstração, o material não sai do Studoo. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
+      privacidadePorProvedor: (ia?: 'falsa' | 'openai') =>
+        ia === 'falsa'
+          ? 'No modo demonstração, o material não é enviado para nenhum provedor externo de IA. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.'
+          : 'Com a IA ativa, o texto e as imagens são enviados à OpenAI para leitura, verificação de segurança e criação da trilha. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
       revisar: 'Confira o conteúdo antes de gerar', ocr: 'A leitura de imagens pode errar números e fórmulas. Se houver erro, remova e envie uma imagem mais nítida.',
       remover: 'Remover material', gerar: 'Criar trilha deste material', objetivo: 'Estudar este material',
       tabela: 'Prévia da tabela', linha: 'Linha',
@@ -90,10 +85,7 @@ export const mensagens = {
       vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
       /** Quem recebe a gravação, mostrado junto da dica quando a gravação está disponível (`transcricao` no config). */
-      vozProvedorPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
-        ia === 'deepseek'
-          ? 'A gravação é transcrita pela OpenAI, e o texto da sua explicação é avaliado pela DeepSeek.'
-          : 'A gravação é transcrita pela OpenAI.',
+      vozProvedorPorProvedor: (_ia?: string) => 'A gravação é transcrita pela OpenAI.',
       cameraNegada: 'Permita o acesso à câmera para fotografar o seu material.',
       cameraBloqueada: 'Câmera bloqueada nas permissões do aparelho. Libere o acesso nas configurações para fotografar.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',
@@ -124,18 +116,10 @@ export const mensagens = {
         notaPrivacidade: 'Sua voz vai para a OpenAI durante a conversa.',
         privacidadeTitulo: 'Antes de conversar ao vivo',
         privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
-        /**
-         * Nota e aviso conforme o provedor de texto: a conversa é sempre da OpenAI; no modo misto (`deepseek`), o texto
-         * da explicação que sai da conversa é avaliado pela DeepSeek. Nenhum texto cita um provedor que não recebe o dado.
-         */
-        notaPrivacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
-          ia === 'deepseek'
-            ? 'Sua voz vai para a OpenAI durante a conversa; o texto da sua explicação é avaliado pela DeepSeek.'
-            : 'Sua voz vai para a OpenAI durante a conversa.',
-        privacidadeTextoPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
-          ia === 'deepseek'
-            ? 'Sua voz vai para a OpenAI durante a conversa ao vivo, e o texto da sua explicação é avaliado pela DeepSeek para gerar o retorno desta lição. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada no retorno.'
-            : 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        notaPrivacidadePorProvedor: (_ia?: string) =>
+          'Sua voz vai para a OpenAI durante a conversa.',
+        privacidadeTextoPorProvedor: (_ia?: string) =>
+          'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
         privacidadeAceitar: 'Começar conversa',
         privacidadeCancelar: 'Agora não',
         estados: {
@@ -1021,6 +1005,7 @@ export const mensagens = {
         saberMais: 'Ver como funciona',
     },
     pedido: {
+      editarTema: 'Editar tema',
         titulo: 'O que você quer aprender?',
         instrucoes: 'Pode ser qualquer assunto. Conte o tema e o que você já sabe: a IA do Studoo monta uma trilha de lições curtas, e você confere antes de começar.',
         objetivo: 'Seu objetivo de estudo',
@@ -1451,6 +1436,7 @@ export const mensagens = {
         origem_invalida: 'Abra o Studoo pelo endereço do piloto para continuar.',
         proposta_invalida: 'Esta prévia expirou. Ajuste o pedido e gere a trilha de novo.',
         avaliacao_invalida: 'A confirmação expirou. Envie a resposta novamente.',
+        conteudo_nocivo: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
         ia_indisponivel: 'A geração está indisponível agora. Tente novamente.',
         limite_geracoes: 'Por agora, o limite de novas trilhas foi atingido. Tente de novo mais tarde. Suas trilhas salvas continuam disponíveis.',
         link_inativo: 'Este link não está mais ativo.',

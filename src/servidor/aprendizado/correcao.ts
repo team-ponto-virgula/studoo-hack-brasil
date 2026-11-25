@@ -1,5 +1,5 @@
 import { normalizarResposta, type ExercicioInterno, type ResultadoAvaliacao } from "@/dominio/aprendizado/plano";
-import { configuracaoDeepSeek, pedirCorrecaoDeepSeek } from "@/servidor/ia/deepseek";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { configuracaoOpenAi, pedirCorrecao } from "@/servidor/ia/openai";
 
 /*
@@ -128,20 +128,13 @@ export async function refinarAvaliacao(
   resposta: string,
   local: ResultadoAvaliacao,
 ): Promise<ResultadoAvaliacao> {
-  const ia = process.env.IA;
-  if ((ia !== "openai" && ia !== "deepseek") || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
+  if (provedorIaAtivo() !== "openai" || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
   // Uma armadilha conhecida (“chave” por tarraxa) é um erro previsto pela lição: a IA não a transforma em acerto. Vale pela resposta (o termo da armadilha), e não pelo aviso: o aviso
   // que dizia a resposta certa sai do retorno (spec 17, B5), e a armadilha continua sendo um erro previsto.
   if (exercicio.tipo === "lacuna" && exercicio.armadilhas?.some(({ termos }) => termos.split("|").some((termo) => normalizarResposta(termo) === normalizarResposta(resposta)))) return local;
-  let pedir: PedirCorrecaoFn | null = null;
-  if (ia === "openai") {
-    const config = configuracaoOpenAi();
-    if (config) pedir = (nome, esquema, instrucoes, dados, ms) => pedirCorrecao(config, nome, esquema, instrucoes, dados, ms);
-  } else {
-    const config = configuracaoDeepSeek();
-    if (config) pedir = (nome, esquema, instrucoes, dados, ms) => pedirCorrecaoDeepSeek(config, nome, esquema, instrucoes, dados, ms);
-  }
-  if (!pedir) return local;
+  const config = configuracaoOpenAi();
+  if (!config) return local;
+  const pedir: PedirCorrecaoFn = (nome, esquema, instrucoes, dados, ms) => pedirCorrecao(config, nome, esquema, instrucoes, dados, ms);
   try {
     if (exercicio.tipo === "aberta") return await corrigirAberta(pedir, contexto, exercicio, resposta, local);
     if (exercicio.tipo === "lacuna") return await desempatarLacuna(pedir, exercicio, resposta, local);

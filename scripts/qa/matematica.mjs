@@ -5,12 +5,11 @@
  * das contas (contas conferidas e puladas na resolução).
  *
  * Uso:
- *   IA=deepseek DEEPSEEK_API_KEY=... node --import tsx scripts/qa/matematica.mjs --material <arquivo.json> [opções]
  *   IA=openai   OPENAI_API_KEY=...   node --import tsx scripts/qa/matematica.mjs --trilha "Geometria analítica" [opções]
  *
  * Modos (um ou os dois):
  *   --material <arquivo.json>  Foto, PDF ou caderno: o arquivo tem `paginas: [{ numero, texto }]` (a leitura que o app guarda, como
- *                              `leitura-deepseek-flash.json`). Roda `gerarLicoesDoMaterial` (o pedido das lições e, em material de
+ *                              `leitura-material.json`). Roda `gerarLicoesDoMaterial` (o pedido das lições e, em material de
  *                              matemática, um pedido de figuras por lição) e `conteudosDasLicoes`, a mesma proposta do servidor.
  *   --trilha "<assunto>"       Trilha de texto: gera o conteúdo de cada lição como no aceite (`gerarConteudo`), com o assunto como
  *                              objetivo e título da trilha. As lições são as de `--licoes` ("Título 1;Título 2") ou três padrão.
@@ -24,7 +23,7 @@
  *                              sem dado de conta.
  *   --orcamento <segundos>     Orçamento da proposta do material (padrão: 85).
  *
- * A chave vem SÓ do ambiente do servidor (`OPENAI_API_KEY` ou `DEEPSEEK_API_KEY`) e nunca é impressa; nenhum pedido leva dado de conta.
+ * A chave vem SÓ do ambiente do servidor (`OPENAI_API_KEY`) e nunca é impressa; nenhum pedido leva dado de conta.
  * O que sai na tela são títulos, contagens, tempos, tokens e os motivos de recusa do validador (que podem citar uma fórmula da IA).
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -48,13 +47,13 @@ function lerArgumentos(argv) {
 
 const opcoes = lerArgumentos(process.argv.slice(2));
 const ia = (process.env.IA ?? "").trim();
-const chave = ia === "openai" ? process.env.OPENAI_API_KEY : ia === "deepseek" ? process.env.DEEPSEEK_API_KEY : undefined;
+const chave = process.env.OPENAI_API_KEY;
 if (!opcoes.material && !opcoes.trilha) {
-  console.error("Uso: IA=deepseek|openai (e a chave no ambiente) node --import tsx scripts/qa/matematica.mjs --material <arquivo.json> | --trilha \"assunto\" [--png pasta]");
+  console.error("Uso: IA=openai (e a chave no ambiente) node --import tsx scripts/qa/matematica.mjs --material <arquivo.json> | --trilha \"assunto\" [--png pasta]");
   process.exit(2);
 }
-if (!["openai", "deepseek"].includes(ia) || !chave?.trim()) {
-  console.error(`Faltam IA=openai|deepseek e a chave do provedor no ambiente (${ia === "deepseek" ? "DEEPSEEK_API_KEY" : "OPENAI_API_KEY"}). Nada foi chamado.`);
+if (ia !== "openai" || !chave?.trim()) {
+  console.error(`Faltam IA=openai e OPENAI_API_KEY no ambiente. Nada foi chamado.`);
   process.exit(2);
 }
 
@@ -256,20 +255,21 @@ async function rodarTrilha() {
   const assunto = String(opcoes.trilha);
   const titulos = String(opcoes.licoes ?? "Ponto médio de um segmento;Baricentro de um triângulo;Pontos colineares e o determinante").split(";").map((titulo) => titulo.trim()).filter(Boolean);
   const esqueleto = {
-    gerador: ia === "openai" ? "openai-v1" : "deepseek-v1",
+    gerador: "openai-v1",
     titulo: assunto,
     objetivo: assunto,
-    origem: ia === "openai" ? "IA da OpenAI (teste)" : "IA da DeepSeek (teste)",
+    origem: "IA da OpenAI (teste)",
     fluxos: [{ titulo: "Primeiros passos", licoes: titulos.map((titulo) => ({ titulo })) }],
   };
-  const { configuracaoOpenAi, criarGeradorOpenAi } = await import("../../src/servidor/ia/openai.ts");
-  const { configuracaoDeepSeek, criarGeradorDeepSeek } = await import("../../src/servidor/ia/deepseek.ts");
+  const { configuracaoOpenAi, criarGeradorOpenAi, MODELO_PADRAO } = await import("../../src/servidor/ia/openai.ts");
+  const { exigirTrilhaSegura } = await import("../../src/servidor/ia/seguranca-trilhas.ts");
+  await exigirTrilhaSegura({ objetivo: assunto, estrutura: esqueleto.fluxos });
   const { analisarJson, normalizarLicao } = await import("../../src/servidor/ia/comum.ts");
   const { licaoEhDeMatematica } = await import("../../src/servidor/ia/matematica.ts");
-  const config = ia === "openai" ? configuracaoOpenAi() : configuracaoDeepSeek();
+  const config = configuracaoOpenAi();
   if (!config) { console.error("A configuração do provedor não fechou (base e chave)."); process.exit(2); }
-  const gerador = ia === "openai" ? criarGeradorOpenAi(config) : criarGeradorDeepSeek(config);
-  console.log(`\n== Trilha: "${assunto}" · ${titulos.length} lições · IA ${ia} (${config.modelo})`);
+  const gerador = criarGeradorOpenAi(config);
+  console.log(`\n== Trilha: "${assunto}" · ${titulos.length} lições · IA ${ia} (${MODELO_PADRAO})`);
   for (const [i, titulo] of titulos.entries()) {
     console.log(`\nLição ${i + 1} · "${titulo}" · de matemática pela regra de palavras? ${licaoEhDeMatematica(esqueleto, 0, i) ? "sim" : "NÃO"}`);
     const antes = chamadas.length;

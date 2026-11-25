@@ -38,12 +38,9 @@ process.env.IA = 'falsa';
 process.env.STUDOO_IA_FALSA_PAUSA_MS = '0';
 process.env.STUDOO_COMPARTILHAR = '1';
 process.env.STUDOO_COMUNIDADE = '1';
-// Sem chave de provedor no teste: com IA=deepseek a barreira vale igual, e a geração cai na reserva simulada.
-delete process.env.DEEPSEEK_API_KEY;
 delete process.env.OPENAI_API_KEY;
-process.env.STUDOO_IA_RESERVA = 'falsa';
 
-const prefixos = ['ia:geracao', 'perfil', 'foto', 'compartilhar:criar', 'compartilhar:adicionar', 'comunidade:publicar', 'comunidade:valeu', 'comunidade:seguir', 'comunidade:denunciar', 'estudio:material', 'estudio:voz'];
+const prefixos = ['ia:geracao', 'ia:aceite', 'perfil', 'foto', 'compartilhar:criar', 'compartilhar:adicionar', 'comunidade:publicar', 'comunidade:valeu', 'comunidade:seguir', 'comunidade:denunciar', 'estudio:material', 'estudio:voz'];
 after(async () => {
   process.env.IA = 'falsa';
   for (const id of usuarios) {
@@ -101,14 +98,37 @@ test('IA simulada: nada sai do servidor, o aceite não é pedido e a geração s
   assert.equal(await podeUsarIa(ana.id), true);
 });
 
-test('IA de terceiro: sem aceite, as rotas respondem 428 com o estado; aceitar libera; revogar volta a barrar', async () => {
-  process.env.IA = 'deepseek';
+test('IA de terceiro: sem aceite, as rotas respondem 428 com o estado; aceitar libera; revogar volta a barrar', async t => {
+  process.env.IA = 'openai';
+  process.env.OPENAI_API_KEY = 'chave-sintetica';
+  const fetch = t.mock.method(globalThis, 'fetch', async (_url, init) => {
+    const corpo = JSON.parse(init.body);
+    assert.equal(corpo.model, 'gpt-6-luna');
+    if (corpo.text?.format?.name === 'triagem_trilha') return Response.json({ output_text: '{"decisao":"permitir"}' });
+    if (corpo.stream) {
+      const delta = [
+        { tipo: 'plano', titulo: 'Frações' },
+        { tipo: 'fluxo', titulo: 'Primeiros passos' },
+        { tipo: 'licao', titulo: 'Reconhecer frações' },
+      ].map(JSON.stringify).join('\n') + '\n';
+      return new Response(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta })}\n\ndata: {"type":"response.completed"}\n\n`);
+    }
+    return Response.json({ output_text: JSON.stringify({
+      objetivo: 'Reconhecer frações', conceito: 'Uma fração representa partes iguais.',
+      exemplo: 'Em 1/4, escolhemos uma parte de quatro.',
+      exercicios: [{
+        tipo: 'multipla_escolha', enunciado: 'Quantas partes há em 1/4?',
+        opcoes: [{ id: 'a', texto: 'Uma' }, { id: 'b', texto: 'Quatro' }, { id: 'c', texto: 'Cinco' }],
+        gabarito: ['b'], feedbackCorreto: 'Quatro é o denominador.', feedbackIncorreto: 'Veja o número abaixo da barra.',
+      }],
+    }) });
+  });
   try {
     const bia = await pessoa(null);
     let r = await estado(bia.token);
     assert.equal(r.corpo.consentimentoIa.necessario, true);
     assert.equal(r.corpo.consentimentoIa.aceitoEm, null);
-    assert.deepEqual(r.corpo.consentimentoIa.provedores.map((p) => p.id), ['deepseek'], 'sem voz ligada, só a DeepSeek');
+    assert.deepEqual(r.corpo.consentimentoIa.provedores.map((p) => p.id), ['openai']);
     assert.ok(r.corpo.consentimentoIa.provedores[0].usos.length >= 3);
 
     // Sem aceite: 428, com o estado no corpo para a tela abrir o aceite sem outra ida ao servidor.
@@ -127,6 +147,8 @@ test('IA de terceiro: sem aceite, as rotas respondem 428 com o estado; aceitar l
       assert.equal((await chamar()).status, 428, `${rota} barra antes de ler o corpo ou chamar o provedor`);
     }
     assert.equal(await podeUsarIa(bia.id), false);
+
+    assert.equal(fetch.mock.callCount(), 0);
 
     // Versão antiga do texto não vale.
     r = await aceitar(bia.token, '2020-01-01');
@@ -161,18 +183,16 @@ test('IA de terceiro: sem aceite, as rotas respondem 428 com o estado; aceitar l
     assert.equal((await aceitar(vis.token)).status, 200);
     assert.equal((await propor(vis.token)).status, 200);
 
-    // Com a voz ligada no modo misto, a OpenAI aparece só com os usos de voz.
+    // A voz é divulgada junto com os usos de texto na OpenAI.
     process.env.STUDOO_VOZ_AO_VIVO = '1';
     process.env.OPENAI_API_KEY = 'sk-teste-sem-uso';
-    process.env.DEEPSEEK_API_KEY = 'sk-teste-sem-uso';
     try {
       r = await estado(bia.token);
-      assert.deepEqual(r.corpo.consentimentoIa.provedores.map((p) => p.id), ['deepseek', 'openai']);
-      assert.ok(r.corpo.consentimentoIa.provedores[1].usos.every((u) => /voz|grava/i.test(u)), 'nenhum texto vai à OpenAI no modo misto');
+      assert.deepEqual(r.corpo.consentimentoIa.provedores.map((p) => p.id), ['openai']);
+      assert.ok(r.corpo.consentimentoIa.provedores[0].usos.some(u => /voz|grava/i.test(u)));
     } finally {
       delete process.env.STUDOO_VOZ_AO_VIVO;
       delete process.env.OPENAI_API_KEY;
-      delete process.env.DEEPSEEK_API_KEY;
     }
   } finally {
     process.env.IA = 'falsa';

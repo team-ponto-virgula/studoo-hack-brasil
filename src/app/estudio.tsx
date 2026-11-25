@@ -44,17 +44,17 @@ function consultarConfig(): Promise<ConfigAcesso> {
   return promessaConfig;
 }
 /** Provedor de texto quando a voz ao vivo está liberada para esta conta (para o aviso de privacidade), ou null. */
-let promessaElegibilidadeVoz: Promise<'openai' | 'deepseek' | null> | null = null;
+let promessaElegibilidadeVoz: Promise<'openai' | null> | null = null;
 export function invalidarElegibilidadeVozAoVivo(): void {
   promessaElegibilidadeVoz = null;
   promessaGravacao = null;
   promessaConfig = null;
 }
-function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null> {
+function consultarElegibilidadeVozAoVivo(): Promise<'openai' | null> {
   if (!promessaElegibilidadeVoz) {
     promessaElegibilidadeVoz = consultarConfig()
       .then(async (cfg) => {
-        if (!cfg.vozAoVivo || (cfg.ia !== 'openai' && cfg.ia !== 'deepseek')) return null;
+        if (!cfg.vozAoVivo || cfg.ia !== 'openai') return null;
         const sessao = await cliente.sessao();
         return !sessao.visitante || Boolean(cfg.vozAoVivoVisitante) ? cfg.ia : null;
       })
@@ -63,11 +63,11 @@ function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null
   return promessaElegibilidadeVoz;
 }
 /** Provedor de texto quando a gravação está disponível (para dizer quem recebe o áudio), ou null. */
-let promessaGravacao: Promise<'openai' | 'deepseek' | null> | null = null;
-function consultarGravacao(): Promise<'openai' | 'deepseek' | null> {
+let promessaGravacao: Promise<'openai' | null> | null = null;
+function consultarGravacao(): Promise<'openai' | null> {
   if (!promessaGravacao) {
     promessaGravacao = consultarConfig()
-      .then((cfg) => (cfg.transcricao && (cfg.ia === 'openai' || cfg.ia === 'deepseek') ? cfg.ia : null))
+      .then((cfg) => (cfg.transcricao && cfg.ia === 'openai' ? cfg.ia : null))
       .catch(() => null);
   }
   return promessaGravacao;
@@ -410,8 +410,8 @@ export function ApoioDaLicao({
   const textoRef = useRef('');
   textoRef.current = texto;
   const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
-  const [provedorTextoVoz, setProvedorTextoVoz] = useState<'openai' | 'deepseek'>('openai');
-  const [provedorGravacao, setProvedorGravacao] = useState<'openai' | 'deepseek' | null>(null);
+  const [provedorTextoVoz, setProvedorTextoVoz] = useState<'openai'>('openai');
+  const [provedorGravacao, setProvedorGravacao] = useState<'openai' | null>(null);
   useEffect(() => {
     let ativo = true;
     if (!cliente.configuracaoAcesso) return;

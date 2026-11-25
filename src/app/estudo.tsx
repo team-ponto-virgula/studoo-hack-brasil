@@ -179,6 +179,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   const vezes = useRef(criarVezes<Acao>()).current;
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
+  const ultimoPedido = useRef<{ texto: string; diagnosticoId?: string } | null>(null);
   const cacheLicoes = useRef<Map<string, Promise<LicaoDetalhe>>>(new Map());
   const principal = useRef<HTMLElement>(null);
   const objetivoRef = useRef(objetivo);
@@ -650,6 +651,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     if (emExecucao.current || geracaoAtiva.current) return;
     const controle = new AbortController();
     geracaoAtiva.current = controle;
+    ultimoPedido.current = { texto, diagnosticoId };
     let trilha: TrilhaEmGeracao = { objetivo: texto, diagnosticoId, titulo: null, fluxos: [], proposta: null };
     navegar({ tipo: 'geracao' });
     setGeracao(trilha);
@@ -678,6 +680,11 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     }
   }
 
+  function repetirGeracao() {
+    const pedido = ultimoPedido.current;
+    if (pedido?.texto === objetivo.trim()) void gerar(pedido.texto, pedido.diagnosticoId);
+  }
+
   function cancelarGeracao() {
     navegar({ tipo: 'objetivo' });
     setAviso({ texto: mensagens.pedido.cancelada });
@@ -701,6 +708,11 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       aceiteAtual.current = null;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
+      if (codigo === 'conteudo_nocivo') {
+        navegar({ tipo: 'objetivo' });
+        setFalhaGeracao(codigo);
+        return;
+      }
       setAnuncio('');
       setAceite(codigo === 'proposta_invalida' ? 'expirada' : iniciar ? 'erro' : 'erro-salvar');
       return;
@@ -932,7 +944,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           )}
           {visivel && tela.tipo === 'objetivo' && (
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso?.texto ?? null} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
-              focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto, id) => void gerar(texto, id)}
+              focarCampo={tela.focarCampo} aoMudar={texto => { setObjetivo(texto); setFalhaGeracao(null); }} anunciar={anunciar} gerar={(texto, id) => void gerar(texto, id)}
+              repetirGeracao={repetirGeracao}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
               aoDesconectar={() => irParaLogin(true)}

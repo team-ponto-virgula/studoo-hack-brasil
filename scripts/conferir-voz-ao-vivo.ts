@@ -50,8 +50,7 @@ async function main() {
   const config = configuracaoRealtime();
   if (!config) {
     console.error(
-      "Voz ao vivo desativada. Defina STUDOO_VOZ_AO_VIVO=1 e OPENAI_API_KEY (a conversa é da OpenAI), com IA=openai " +
-        "ou, no modo misto (texto pela DeepSeek), IA=deepseek e DEEPSEEK_API_KEY. Com IA=falsa a voz fica desligada.",
+      "Voz ao vivo desativada. Defina STUDOO_VOZ_AO_VIVO=1, IA=openai e OPENAI_API_KEY.",
     );
     process.exit(1);
   }

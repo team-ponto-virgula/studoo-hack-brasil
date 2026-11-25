@@ -41,7 +41,7 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * As ideias vêm por área de interesse (idiomas, música, matemática…), para mostrar que vale qualquer assunto;
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
-export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
+export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, repetirGeracao, verPlanos, comoFunciona,
   focarCampo = false, porLink, aoDesconectar }: {
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
@@ -59,12 +59,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   aoMudar: (texto: string) => void;
   anunciar: (texto: string) => void;
   gerar: (texto: string, diagnosticoId?: string) => void;
+  repetirGeracao: () => void;
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
   const [pedidoDiagnostico, setPedidoDiagnostico] = useState<string | null>(null);
   const [diagnosticoAberto, setDiagnosticoAberto] = useState(false);
   const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  const [temaRecusado, setTemaRecusado] = useState<string | null>(null);
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
@@ -80,6 +82,11 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const focarBotaoCriar = useRef(false);
   const focouComTexto = useRef(false);
   const texto = objetivo.trim();
+  const recusado = falha === 'conteudo_nocivo' || temaRecusado === texto;
+
+  useEffect(() => {
+    if (falha === 'conteudo_nocivo') setDiagnosticoAberto(false);
+  }, [falha]);
 
   useEffect(() => {
     if (focarBotaoCriar.current && texto && !ocupado) {
@@ -113,6 +120,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const mostrarContador = objetivo.length >= LIMITES_GERACAO.objetivoMax - 100;
   const descricao = [mostrarCurto && 'objetivo-erro', 'objetivo-dica', 'objetivo-privacidade', mostrarContador && 'objetivo-contador']
     .filter(Boolean).join(' ');
+  const codigoErro = recusado ? 'conteudo_nocivo' : falha;
   const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'rede';
   // "Agora não" no aceite de IA deixava um aviso sem saída (spec 17, defeito B4): o botão reabre o mesmo cartão e, com "Permitir e continuar", o pedido segue.
   const semAceite = falha === 'consentimento_ia';
@@ -132,6 +140,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       campo.current?.focus();
       return;
     }
+    if (recusado) return;
     setPedidoDiagnostico(texto);
     setDiagnosticoAberto(true);
   }
@@ -141,9 +150,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
     tentar();
   }
 
+  function mudarTema(novo: string) {
+    setTemaRecusado(null);
+    aoMudar(novo);
+  }
+
   function sugerir(ideia: string) {
     focarBotaoCriar.current = true;
-    aoMudar(ideia);
+    mudarTema(ideia);
     setCurto(false);
     setEscolhida(ideia);
     setBrilho((anterior) => anterior + 1);
@@ -162,6 +176,10 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         continuar={id => gerar(pedidoDiagnostico, id)} cancelar={() => {
           setDiagnosticoAberto(false);
           window.requestAnimationFrame(() => campo.current?.focus());
+        }} aoRecusar={() => {
+          setDiagnosticoAberto(false);
+          setTemaRecusado(pedidoDiagnostico);
+          setPedidoDiagnostico(null);
         }} aoDesconectar={aoDesconectar} />
     </div>}
     <div hidden={diagnosticoAberto}><section className="painel painel--pedido pedido-novo" data-modo={modo}>
@@ -178,17 +196,19 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           <span className="pedido-heroi__estrela">✦</span>
         </div>
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
-        <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
+        {!recusado && <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>}
       </header>
       {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && (
-        <EstadoErro codigo={falha}>
-          {falha === 'limite_geracoes' && temPlanos ? (
+      {codigoErro && (
+        <EstadoErro codigo={codigoErro}>
+          {recusado ? (
+            <Botao variante="secundario" onClick={() => campo.current?.focus()}>{mensagens.pedido.editarTema}</Botao>
+          ) : falha === 'limite_geracoes' && temPlanos ? (
             <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>
           ) : semAceite ? (
             <Botao variante="secundario" disabled={ocupado} onClick={() => void permitirDeNovo()}>{mensagens.privacidade.permitirAgora}</Botao>
           ) : repetivel ? (
-            <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>
+            <Botao variante="secundario" disabled={ocupado} onClick={repetirGeracao}>{mensagens.tentarNovamente}</Botao>
           ) : null}
         </EstadoErro>
       )}
@@ -204,14 +224,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
             <textarea ref={campo} id="objetivo" name="objetivo" rows={2} maxLength={LIMITES_GERACAO.objetivoMax} required
               value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
               placeholder={mensagens.inicio.exemplo} data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
-              onChange={evento => aoMudar(evento.target.value)} />
+              onChange={evento => mudarTema(evento.target.value)} />
           </div>
           {mostrarCurto && <p className="campo-erro" id="objetivo-erro">{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}</p>}
           <small id="objetivo-dica" className="somente-leitor">{mensagens.inicio.ajuda}</small>
           <small id="objetivo-privacidade" className="somente-leitor">{mensagens.pedido.privacidade}</small>
           {mostrarContador && <small id="objetivo-contador">{mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}</small>}
         </div>
-        <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
+        <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto || recusado}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
       </form>
       <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
         <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>

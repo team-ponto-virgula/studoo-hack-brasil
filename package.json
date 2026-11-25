@@ -29,7 +29,7 @@
     "test:google-mobile": "node --import tsx --test tests/google-mobile.test.mjs tests/visitante-mobile.test.mjs",
     "test:visitante-mobile": "node --import tsx --test tests/visitante-mobile.test.mjs",
     "test:acesso": "node --env-file=.env --import tsx --test tests/acesso-google-recuperacao.test.mjs tests/canal-mobile-proxy.test.mjs tests/limite-persistente.test.mjs tests/visitante.test.mjs tests/origem-app-dominio.test.mjs",
-    "test:ia": "node --import tsx --test tests/ia-openai.test.mjs tests/ia-deepseek.test.mjs tests/ia-matematica.test.mjs tests/apoio-texto-simples.test.mjs tests/erro-500-registro.test.mjs tests/ensine-stu-falso.test.mjs tests/conceito-curto.test.mjs tests/dica-da-lacuna.test.mjs",
+    "test:ia": "node --import tsx --test tests/ia-openai.test.mjs tests/ia-matematica.test.mjs tests/apoio-texto-simples.test.mjs tests/erro-500-registro.test.mjs tests/ensine-stu-falso.test.mjs tests/conceito-curto.test.mjs tests/dica-da-lacuna.test.mjs",
     "ia:conferir": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/conferir-openai.ts",
     "voz:conferir": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/conferir-voz-ao-vivo.ts",
     "db:generate": "prisma generate",

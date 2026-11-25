@@ -1,5 +1,7 @@
 import type { CodigoErro } from "@studoo/contratos";
 
+import { mensagens } from "@studoo/contratos/experiencia";
+
 export const mensagensApi: Record<CodigoErro, string> = {
   material_invalido: "Use imagem JPG/PNG/WebP, PDF, DOCX ou CSV de até 5 MB, respeitando os limites de páginas, texto e tabela.",
   material_ilegivel: "Não consegui ler este material. Use uma foto mais nítida ou um PDF com texto.",
@@ -26,7 +28,8 @@ export const mensagensApi: Record<CodigoErro, string> = {
   credenciais_invalidas: "E-mail ou senha inválidos.",
   limite_login: "E-mail ou senha inválidos.",
   limite_visitante: "Muita gente experimentando agora; tente de novo em alguns minutos ou entre com uma conta.",
-  ia_indisponivel: "A geração está indisponível. Tente de novo.",
+  conteudo_nocivo: mensagens.erros.conteudo_nocivo,
+  ia_indisponivel: mensagens.erros.ia_indisponivel,
   limite_geracoes: "Você gerou trilhas demais por agora. Tente de novo mais tarde.",
   link_inativo: "Este link não está mais ativo.",
   limite_compartilhar: "Muitos pedidos de compartilhamento por agora. Tente de novo mais tarde.",

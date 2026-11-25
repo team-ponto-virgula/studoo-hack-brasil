@@ -14,7 +14,7 @@ const regra = (seletor) => new RegExp(`(?:^|\\n)${seletor.replace(/[.()[\]*+?^$|
 test('o campo fica dentro de uma caixa que leva o texto (ou o exemplo, se vazio) para a cópia invisível', () => {
   assert.match(pedido, /<div className="pedido-campo__caixa" data-replica=\{objetivo \|\| mensagens\.inicio\.exemplo\} data-vazio=\{!objetivo \|\| undefined\}>\s*<textarea ref=\{campo\} id="objetivo"/);
   assert.match(pedido, /placeholder=\{mensagens\.inicio\.exemplo\}/, 'o exemplo continua sendo o placeholder do campo');
-  assert.match(pedido, /onChange=\{evento => aoMudar\(evento\.target\.value\)\} \/>\s*<\/div>/, 'a caixa fecha logo depois do campo');
+  assert.match(pedido, /<textarea\b[\s\S]*?\/>\s*<\/div>/, 'a caixa fecha logo depois do campo');
 });
 
 test('a caixa é uma grade de uma célula só: o campo e a cópia invisível dividem a célula, e a mais alta manda', () => {

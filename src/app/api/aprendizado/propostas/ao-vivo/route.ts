@@ -1,10 +1,13 @@
 import { diagnosticoDaGeracao } from '@/servidor/aprendizado/diagnostico';
 import { FalhaApi, rotaPrivada } from "@/servidor/acesso/http";
 import { lerObjeto } from "@/servidor/aprendizado/http";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { iniciarGeracao } from "@/servidor/aprendizado/geracao";
 import { respostaNdjson } from "@/servidor/aprendizado/ndjson";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { exigirConsentimentoIa } from "@/servidor/privacidade/consentimento";
+
+export const maxDuration = 120;
 
 export function POST(request: Request) {
   return rotaPrivada(request, async (usuarioId) => {
@@ -16,6 +19,6 @@ export function POST(request: Request) {
     if (!(await consumirGeracaoPersistente(usuarioId))) {
       throw new FalhaApi("limite_geracoes");
     }
-    return respostaNdjson((sinal) => geracao.eventos(sinal), request.signal);
+    return respostaNdjson((sinal) => geracao.eventos(sinal), request.signal, provedorIaAtivo() === "openai");
   });
 }

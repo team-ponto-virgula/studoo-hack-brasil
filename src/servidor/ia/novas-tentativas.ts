@@ -1,5 +1,5 @@
 /*
- * Limite do provedor de IA (OpenAI e DeepSeek): em 429, espera o que o provedor pede (`retry-after-ms` ou
+ * Limite do provedor de IA (OpenAI): em 429, espera o que o provedor pede (`retry-after-ms` ou
  * `retry-after`, em segundos ou data HTTP) e tenta de novo, no máximo 2 vezes e com espera total de até 8 s. Se o
  * provedor pedir mais do que cabe nesse orçamento, desiste na hora e devolve o 429 a quem chamou (que já trata o erro).
  * Sem objetivo, conteúdo ou chave no log (SEGURANCA.md §8).
@@ -36,7 +36,7 @@ function esperar(ms: number, sinal?: AbortSignal): Promise<void> {
 }
 
 /**
- * Faz o pedido e, em 429, repete conforme as regras acima. `rota` vai no log (`ia-openai`, `ia-deepseek`…).
+ * Faz o pedido e, em 429, repete conforme as regras acima. `rota` vai no log (por exemplo, `ia-openai`).
  * Devolve a última resposta (ok ou não); o aborto do sinal durante a espera sobe como exceção.
  */
 export async function comNovasTentativas(

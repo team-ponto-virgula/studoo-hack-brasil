@@ -25,7 +25,10 @@ import {
 import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import type { Prisma } from "@/servidor/banco/gerado/client";
-import { obterGerador } from "@/servidor/ia/gerador";
+import { exigirLicoesSeguras, exigirTrilhaSegura } from "@/servidor/ia/seguranca-trilhas";
+import { GERADOR_OPENAI } from "@/servidor/ia/openai";
+import { consumirLimite } from "@/servidor/acesso/seguranca";
+import { obterGerador, provedorIaAtivo } from "@/servidor/ia/gerador";
 import { podeUsarIa } from "@/servidor/privacidade/consentimento";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
@@ -43,16 +46,10 @@ export function geracaoParalela(): number {
   return Number.isInteger(valor) && valor >= 1 && valor <= 10 ? valor : 10;
 }
 
-/**
- * Tempo para criar o conteúdo de todas as lições no aceite. As lições (de 7 a 10) saem em ondas de até
- * `geracaoParalela()` chamadas; cada onda cabe nos 75 s de sempre (o que valia para todas em paralelo: uma chamada tem
- * prazo próprio de 40 s, a segunda tentativa de formato e as novas tentativas do 429, até 8 s, cabem quase sempre
- * aí). Teto = 75 s × ondas, limitado a 240 s: com o padrão (10) e até 10 lições, 1 onda = 75 s, como antes; com 3 e 8
- * lições, 3 ondas = 225 s; com 1 (em série), 240 s.
- */
+/** Prazo compartilhado pelas lições e reparos. Uma onda tem até 165 s, com teto total de 240 s. */
 export function tempoDoAceite(licoes: number, paralelas = geracaoParalela()): number {
   const ondas = Math.max(1, Math.ceil(licoes / paralelas));
-  return Math.min(240_000, 75_000 * ondas);
+  return Math.min(240_000, 165_000 * ondas);
 }
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
@@ -199,8 +196,19 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
 export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
-  if (plano.gerador === "material-v1" && plano.materialId) return conteudosDoMaterial(usuarioId, plano.materialId);
+  const pedido = {
+    titulo: plano.titulo, objetivo: plano.objetivo, diagnostico: plano.diagnostico,
+    amostrasDemonstradas: plano.amostrasDemonstradas, fluxos: plano.fluxos,
+  };
+  if (plano.gerador === "material-v1" && plano.materialId) {
+    const conteudos = await conteudosDoMaterial(usuarioId, plano.materialId);
+    await exigirLicoesSeguras(pedido, conteudos.flat());
+    return conteudos;
+  }
+  await exigirTrilhaSegura({ plano: pedido });
   const gerador = obterGerador();
+  // Propostas assinadas anteriores continuam válidas. As novas lições usam o gerador ativo da OpenAI.
+  const esqueleto = provedorIaAtivo() === "openai" ? { ...plano, gerador: GERADOR_OPENAI } : plano;
   // Uma chamada por lição, no máximo `geracaoParalela()` em andamento. Contas com limite baixo por minuto (a OpenAI do
   // dono: 10 mil tokens/min) usam 1 ou 2; com todas juntas, as chamadas estouram o limite ao mesmo tempo (429 em todas).
   // Cada chamada mantém as novas tentativas do 429 (`comNovasTentativas`). Na primeira falha, nenhuma nova começa.
@@ -214,7 +222,7 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
     while (!falhou && proxima < tarefas.length) {
       const { indiceFluxo, indiceLicao } = tarefas[proxima++];
       try {
-        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal);
+        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(esqueleto, indiceFluxo, indiceLicao, sinal);
       } catch (erro) {
         falhou = true;
         throw erro;
@@ -222,10 +230,11 @@ export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): 
     }
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
-  const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(plano, conteudos, sinal) : conteudos;
+  const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(esqueleto, conteudos, sinal) : conteudos;
   if (!revisados.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
   }
+  await exigirLicoesSeguras(pedido, revisados.flat());
   return revisados;
 }
 
@@ -259,6 +268,10 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
 }
 
 async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoPlano): Promise<PlanoDetalhe> {
+  if (provedorIaAtivo() === "openai") {
+    const permitido = await banco.$transaction(tx => consumirLimite(tx, `ia:aceite:${usuarioId}`, 20, 60 * 60_000));
+    if (!permitido) throw new FalhaApi("limite_geracoes");
+  }
   const conteudos = await gerarConteudos(usuarioId, plano);
   const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
     usuarioId,

@@ -4,8 +4,7 @@ import { FalhaApi } from "../acesso/http";
 import { assinatura, consumirLimite } from "../acesso/seguranca";
 import { ehEmailVisitante } from "../acesso/visitante";
 import { banco } from "../banco/cliente";
-import { provedorIaAtivo } from "./gerador";
-import { configuracaoDeepSeek } from "./deepseek";
+import { provedorIaAtivo } from "./provedor";
 import { configuracaoOpenAi } from "./openai";
 
 const MODELO_REALTIME_PADRAO = "gpt-realtime-2.1";
@@ -81,16 +80,9 @@ function limitarTexto(valor: string | undefined, maximo: number): string {
   return semMarcadores.length > maximo ? `${semMarcadores.slice(0, maximo - 1)}…` : semMarcadores;
 }
 
-/**
- * Voz ao vivo ligada: flag `STUDOO_VOZ_AO_VIVO=1`, chave da OpenAI válida (a conversa é sempre da OpenAI) e provedor de
- * texto real e configurado (`openai`, ou `deepseek` com a chave dela: o modo misto, em que a explicação que sai da
- * conversa é avaliada pela DeepSeek). Com `IA=falsa` fica desligada: voz real com retorno simulado não faz sentido.
- */
+/** A voz ao vivo requer a flag, OpenAI ativa e sua chave configurada. */
 export function vozAoVivoAtiva(): boolean {
-  if (process.env.STUDOO_VOZ_AO_VIVO !== "1" || configuracaoOpenAi() === null) return false;
-  const provedor = provedorIaAtivo();
-  if (provedor === "openai") return true;
-  return provedor === "deepseek" && configuracaoDeepSeek() !== null;
+  return process.env.STUDOO_VOZ_AO_VIVO === "1" && provedorIaAtivo() === "openai" && configuracaoOpenAi() !== null;
 }
 
 export function vozAoVivoVisitanteAtiva(): boolean {

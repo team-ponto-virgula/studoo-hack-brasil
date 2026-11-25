@@ -11,7 +11,6 @@ process.env.STUDOO_CHAVE_ASSINATURA ??= "0123456789abcdef".repeat(4);
 
 const { analisarJson, esquemaDaLicao, esquemaDaLicaoDeMatematica, instrucoesDaLicao, normalizarLicao } = await import("../src/servidor/ia/comum.ts");
 const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } = await import("../src/servidor/ia/openai.ts");
-const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
   contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, figuraQueEntregaARespostaDoExercicio, instrucoesDeFigurasDoMaterial,
   motivoDaFiguraQueEntrega, paresDeCoordenadasDoTexto, esquemaDoVisual, instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
@@ -28,7 +27,7 @@ const { apresentarExercicio } = await import("../src/dominio/aprendizado/plano.t
  * Matemática nos geradores (spec 15, marco 4): o prompt, o esquema e o exemplo só entram nas lições de matemática; a IA devolve DADOS
  * (visuais, resolução, figura do exercício) e o servidor valida; o que não vale some e a lição fica; e se o pedido de matemática não
  * fecha, a segunda tentativa volta ao pedido de sempre. Nenhum teste chama um provedor de verdade: um servidor local imita a
- * OpenAI (Responses API) e a DeepSeek (Chat Completions).
+ * OpenAI (Responses API).
  */
 
 const copia = (valor) => JSON.parse(JSON.stringify(valor));
@@ -47,7 +46,6 @@ const saidaDaOpenAi = (corpo) => ({
   status: "completed",
   output: [{ type: "message", content: [{ type: "output_text", text: typeof corpo === "string" ? corpo : JSON.stringify(corpo) }] }],
 });
-const saidaDaDeepSeek = (corpo) => ({ choices: [{ message: { content: typeof corpo === "string" ? corpo : JSON.stringify(corpo) } }] });
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
@@ -65,7 +63,7 @@ before(async () => {
       const enviar = () => {
         resposta.writeHead(status, { "Content-Type": "application/json" });
         if (status !== 200) return resposta.end(JSON.stringify(saida));
-        return resposta.end(JSON.stringify(pedido.url.endsWith("/responses") ? saidaDaOpenAi(saida) : saidaDaDeepSeek(saida)));
+        return resposta.end(JSON.stringify(saidaDaOpenAi(saida)));
       };
       const espera = atraso(dados);
       if (espera > 0) setTimeout(enviar, espera);
@@ -75,7 +73,6 @@ before(async () => {
   await new Promise((resolver) => servidor.listen(0, "127.0.0.1", resolver));
   const porta = servidor.address().port;
   process.env.OPENAI_BASE_URL = `http://127.0.0.1:${porta}/v1`;
-  process.env.DEEPSEEK_BASE_URL = `http://127.0.0.1:${porta}`;
 });
 
 after(async () => {
@@ -86,12 +83,8 @@ after(async () => {
 beforeEach(() => {
   process.env.IA = "openai";
   process.env.OPENAI_API_KEY = "chave-de-teste";
-  process.env.DEEPSEEK_API_KEY = "sk-deepseek-teste";
   delete process.env.OPENAI_MODELO;
   delete process.env.OPENAI_ESFORCO;
-  delete process.env.DEEPSEEK_MODELO;
-  delete process.env.DEEPSEEK_RACIOCINIO;
-  process.env.STUDOO_IA_RESERVA = "nenhuma";
   pedidos = [];
   registros = [];
   responder = () => ({ status: 500, corpo: { error: { message: "sem resposta programada" } } });
@@ -210,7 +203,7 @@ test("o pedido da OpenAI: matemática leva o bloco, o esquema e mais espaço; qu
   assert.equal(comum.input[0].content, instrucoesDaLicao);
   assert.equal(comum.text.format.name, "licao_studoo");
   assert.equal(comum.text.format.schema, esquemaDaLicao);
-  assert.equal(comum.max_output_tokens, 6000);
+  assert.equal(comum.max_output_tokens, 10_000);
   const matematica = corpoDaLicao(esqueletoDeMatematica(GERADOR_OPENAI), 0, 0, "", true);
   assert.ok(matematica.input[0].content.startsWith(instrucoesDaLicao), "as instruções de sempre continuam");
   assert.match(matematica.input[0].content, /Esta lição é de MATEMÁTICA/);
@@ -219,7 +212,7 @@ test("o pedido da OpenAI: matemática leva o bloco, o esquema e mais espaço; qu
   assert.equal(matematica.text.format.name, "licao_studoo_matematica");
   assert.equal(matematica.text.format.schema, esquemaDaLicaoDeMatematica);
   assert.equal(matematica.text.format.strict, true);
-  assert.equal(matematica.max_output_tokens, 10_000);
+  assert.equal(matematica.max_output_tokens, 16_000);
   assert.equal(comum.input[0].content.includes("LaTeX"), false);
 });
 
@@ -235,7 +228,7 @@ test("o prompt de matemática dita o contrato: cada campo, o ponto procurado, o 
 
 /* ----- O exemplo: o mesmo formato do esquema, e uma lição que fecha ----- */
 
-test("o exemplo de matemática da DeepSeek é uma lição que fecha: visuais, figura do exercício e resolução com a conta conferida", () => {
+test("o exemplo de matemática é uma lição que fecha: visuais, figura do exercício e resolução com a conta conferida", () => {
   const lida = normalizarLicao(copia(exemploDeMatematica), ORIGEM);
   assert.ok(lida.conteudo && conteudoValido(lida.conteudo));
   assert.deepEqual(lida.descartados, []);
@@ -248,9 +241,6 @@ test("o exemplo de matemática da DeepSeek é uma lição que fecha: visuais, fi
   assert.equal(lida.matematica.resolucao.aceita, true);
   assert.ok(lida.matematica.resolucao.conferidas >= 4, `${lida.matematica.resolucao.conferidas} contas conferidas`);
   assert.deepEqual(lida.matematica.motivos, []);
-  // O exemplo mostrado ao modelo é este: o pedido da DeepSeek o leva inteiro, depois das instruções.
-  assert.ok(instrucoesLicaoJsonDeMatematica.endsWith(JSON.stringify(exemploDeMatematica)));
-  assert.match(instrucoesLicaoJsonDeMatematica, /Esta lição é de MATEMÁTICA/);
   // Os pontos que o servidor guarda completos: o procurado com a posição e o derivado calculado (o enunciado público os esconde).
   const figura = lida.conteudo.exercicio.visual;
   assert.deepEqual(figura.pontos.find((ponto) => ponto.id === "M"), { id: "M", papel: "procurado", x: 4, y: 7 });
@@ -385,7 +375,7 @@ test("OpenAI, lição de matemática: um pedido com o esquema e o bloco de matem
   const { dados } = pedidos[0];
   assert.equal(dados.text.format.name, "licao_studoo_matematica");
   assert.deepEqual(dados.text.format.schema, esquemaDaLicaoDeMatematica);
-  assert.equal(dados.max_output_tokens, 10_000);
+  assert.equal(dados.max_output_tokens, 16_000);
   assert.match(instrucaoDe(pedidos[0]), /Esta lição é de MATEMÁTICA/);
   assert.ok(conteudoValido(conteudo));
   assert.equal(conteudo.origem, ORIGEM);
@@ -406,7 +396,7 @@ test("OpenAI, qualquer outra lição: o pedido é o de sempre, com o esquema e a
   const { dados } = pedidos[0];
   assert.equal(dados.text.format.name, "licao_studoo");
   assert.deepEqual(dados.text.format.schema, esquemaDaLicao);
-  assert.equal(dados.max_output_tokens, 6000);
+  assert.equal(dados.max_output_tokens, 10_000);
   assert.equal(instrucaoDe(pedidos[0]), instrucoesDaLicao);
   assert.ok(conteudoValido(conteudo));
   assert.equal(registrosDe("licao_matematica").length, 0);
@@ -452,56 +442,6 @@ test("OpenAI: resolução com a conta errada e visual inválido não derrubam ne
   assert.equal(conteudo.visuais.length, 2);
   assert.deepEqual(registrosDe("licao_ajustada")[0].detalhe, "principal:visual;resolucao:recusada");
   assert.deepEqual(registrosDe("licao_matematica")[0], { rota: "ia-openai", codigo: "licao_matematica", visuais: "2/2", figuras: "0/1", resolucao: "recusada", tentativa: 0 });
-});
-
-function conteudoDaDeepSeek(esq, licao = 0) {
-  const gerador = criarGeradorDeepSeek(configuracaoDeepSeek());
-  assert.ok(esqueletoValido(esq));
-  return gerador.gerarConteudo(esq, 0, licao, new AbortController().signal);
-}
-
-test("DeepSeek, lição de matemática: o prompt leva o bloco e o exemplo de matemática, e a barra única do LaTeX é consertada", async () => {
-  process.env.IA = "deepseek";
-  responder = () => ok(JSON.stringify(exemploDeMatematica).replaceAll("\\\\", "\\"));
-  const conteudo = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 1);
-  assert.equal(pedidos[0].caminho, "/chat/completions");
-  assert.equal(pedidos[0].dados.max_tokens, 8192);
-  assert.equal(instrucaoDe(pedidos[0]), instrucoesLicaoJsonDeMatematica);
-  assert.deepEqual(pedidos[0].dados.response_format, { type: "json_object" });
-  assert.ok(conteudoValido(conteudo));
-  assert.equal(conteudo.visuais[0].latex, "x_M = \\frac{x_A + x_B}{2}", "a fórmula chegou inteira, sem quebra de página no lugar do \\f");
-  assert.equal(conteudo.resolucao.passos.length, 5);
-  assert.equal(conteudo.exercicio.visual.tipo, "plano");
-  assert.equal(registrosDe("licao_matematica")[0].resolucao, "aceita");
-});
-
-test("DeepSeek, qualquer outra lição: o prompt e o conserto de sempre, sem o bloco de matemática", async () => {
-  process.env.IA = "deepseek";
-  responder = () => ok(licaoComum);
-  const conteudo = await conteudoDaDeepSeek(esqueletoDeViolao(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 1);
-  assert.equal(instrucaoDe(pedidos[0]).includes("MATEMÁTICA"), false);
-  assert.ok(instrucaoDe(pedidos[0]).startsWith(instrucoesDaLicao));
-  assert.ok(conteudoValido(conteudo));
-});
-
-test("DeepSeek: JSON quebrado no pedido de matemática, a segunda tentativa é a de sempre; vazio e erro do provedor também", async () => {
-  process.env.IA = "deepseek";
-  for (const [primeira, motivo] of [["isto não é json", "formato"], ["", "vazio"], [null, "http"]]) {
-    pedidos = [];
-    registros = [];
-    let chamadas = 0;
-    responder = () => { chamadas += 1; return chamadas === 1 ? (primeira === null ? erro(500) : ok(primeira)) : ok(licaoComum); };
-    const conteudo = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-    assert.equal(pedidos.length >= 2, true, motivo);
-    assert.equal(instrucaoDe(pedidos[0]), instrucoesLicaoJsonDeMatematica, motivo);
-    assert.equal(instrucaoDe(pedidos.at(-1)).includes("MATEMÁTICA"), false, `${motivo}: a volta é a de sempre`);
-    assert.ok(conteudoValido(conteudo), motivo);
-    assert.equal("visuais" in conteudo, false, motivo);
-    assert.equal(registrosDe("matematica_desligada").length, 1, motivo);
-    assert.equal(registrosDe("matematica_desligada")[0].motivo, motivo);
-  }
 });
 
 /* ----- O material (foto, PDF, caderno) ----- */
@@ -645,12 +585,11 @@ test("material: só a página que não existe (ou sem texto) derruba a proposta;
   assert.ok(conteudoValido(inventada.conteudos[0]));
 });
 
-test("material com a DeepSeek: a barra única do LaTeX nas lições e nas figuras é consertada", async () => {
-  process.env.IA = "deepseek";
+test("material com a OpenAI: a barra única do LaTeX nas lições e nas figuras é consertada", async () => {
   const proposta = propostaDoMaterial();
   proposta.licoes[0].conceito = "O baricentro: $x_G = \\frac{x_A + x_B + x_C}{3}$.";
   responder = (dados) => {
-    const base = dados.messages[0].content.includes("trilha_material") || dados.messages[0].content.includes("Crie de 3 a 5 lições");
+    const base = dados.text.format.name === "trilha_material";
     return ok((base ? JSON.stringify(proposta) : JSON.stringify(figurasDoModelo())).replaceAll("\\\\", "\\"));
   };
   const gerado = await gerarLicoesDoMaterial({ objetivo: "Estudar baricentro", nome: "Folha", paginas: PAGINAS_DE_MATEMATICA });
@@ -1250,29 +1189,6 @@ test("trilha: a lição de resolução aceita é pedida uma vez só, e sem matem
   assert.equal(pedidos.length, 2);
 });
 
-test("trilha (DeepSeek): a mesma nova tentativa, com o motivo numa mensagem, e a primeira lição volta se a segunda falhar", async () => {
-  process.env.IA = "deepseek";
-  let chamadas = 0;
-  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? licaoSemSuaVez() : exemploDeMatematica)); };
-  const conteudo = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ));
-  assert.equal(instrucaoDe(pedidos[1]), instrucoesLicaoJsonDeMatematica);
-  assert.equal(conteudo.resolucao.passos.length, 5);
-  // A segunda falha: a primeira.
-  pedidos = [];
-  chamadas = 0;
-  responder = () => { chamadas += 1; return chamadas === 1 ? ok(JSON.stringify(licaoSemSuaVez())) : erro(500); };
-  const mantida = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-  assert.equal("resolucao" in mantida, false);
-  assert.ok(conteudoValido(mantida));
-  // Recusada de novo: duas chamadas, nunca três.
-  pedidos = [];
-  responder = () => ok(JSON.stringify(licaoSemSuaVez()));
-  await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-});
 
 /* ----- Marco 8: a frase do "Sua vez" que traz o resultado é recusada, e o motivo (a letra e o valor) vai à nova tentativa ----- */
 
@@ -1333,7 +1249,7 @@ test("material: a segunda que entrega de novo deixa a lição sem o \"Resolva co
   assert.ok(conteudos[2].visuais.length === 2 && conteudoValido(conteudos[2]), "os visuais e a figura do exercício seguem");
 });
 
-test("trilha (OpenAI e DeepSeek): a lição cuja frase do \"Sua vez\" entrega é pedida UMA vez de novo, com o motivo; a segunda, sem vazamento, substitui a primeira", async () => {
+test("trilha (OpenAI): a lição cuja frase do \"Sua vez\" entrega é pedida UMA vez de novo, com o motivo; a segunda, sem vazamento, substitui a primeira", async () => {
   const entrega = () => {
     const bruto = copiaDe(exemploDeMatematica);
     bruto.resolucao = comFraseQueEntrega(bruto.resolucao);
@@ -1346,22 +1262,7 @@ test("trilha (OpenAI e DeepSeek): a lição cuja frase do \"Sua vez\" entrega é
   assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
   assert.equal(conteudo.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
   assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "ia-openai", codigo: "resolucao_nova_tentativa", aceita: true, melhor: true }]);
-  // DeepSeek: a mesma coisa, o motivo vai numa mensagem.
-  process.env.IA = "deepseek";
-  pedidos = [];
-  chamadas = 0;
-  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? entrega() : exemploDeMatematica)); };
-  const deSeek = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
-  assert.equal(deSeek.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
-  // Entrega de novo: a lição fica sem o "Resolva comigo", com o resto, e são só duas chamadas.
-  pedidos = [];
-  responder = () => ok(JSON.stringify(entrega()));
-  const igual = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-  assert.equal("resolucao" in igual, false);
-  assert.ok(conteudoValido(igual));
+
 });
 
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */
@@ -1757,21 +1658,14 @@ test("13a: a frase da nova tentativa leva o aviso da figura descartada, e sem o 
   assert.equal(motivoDaFiguraQueEntrega(undefined), undefined);
 });
 
-test("13a, trilha (OpenAI e DeepSeek): a nova tentativa que já acontece (resolução recusada) leva o aviso da figura; a figura boa da segunda vale", async () => {
+test("13a, trilha (OpenAI): a nova tentativa que já acontece (resolução recusada) leva o aviso da figura; a figura boa da segunda vale", async () => {
   let chamadas = 0;
   responder = () => { chamadas += 1; return ok(chamadas === 1 ? licaoQueEntregaERecusada() : exemploDeMatematica); };
   const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
   assert.equal(pedidos.length, 2);
   assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ, AVISO_DO_PONTO_M));
   assert.equal(conteudo.exercicio.visual.pontos.find((ponto) => ponto.id === "M").papel, "procurado", "a figura da segunda (o M escondido) é a que fica");
-  // A DeepSeek faz o mesmo na mensagem.
-  process.env.IA = "deepseek";
-  pedidos = [];
-  chamadas = 0;
-  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? licaoQueEntregaERecusada() : exemploDeMatematica)); };
-  await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
-  assert.equal(pedidos.length, 2);
-  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ, AVISO_DO_PONTO_M));
+
 });
 
 test("13a, trilha: a figura que entrega sozinha NÃO gera uma segunda chamada (a lição vem sem a figura, de uma vez só)", async () => {

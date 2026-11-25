@@ -1,3 +1,4 @@
+import { provedorIaAtivo } from "../ia/provedor";
 import type {
   ApoioEstudo,
   FeedbackEnsino,
@@ -240,7 +241,7 @@ async function gerarPonte(
   let ponte: Reforco;
   const local = async () => reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta, apoio.ultimoIndice);
   // Sem o aceite do envio a IA de terceiros, o reforço é o local (nada da resposta sai do servidor).
-  if (process.env.IA === 'falsa' || !(await podeUsarIa(usuarioId))) ponte = await local();
+  if (provedorIaAtivo() === 'falsa' || !(await podeUsarIa(usuarioId))) ponte = await local();
   else {
     try {
       ponte = await reforcoDaIa(licao, apoio.ultimaResposta, apoio.ultimoIndice);
@@ -484,7 +485,7 @@ export async function ensinarStu(
   const conteudo = () => conteudoDaLicao(usuarioId, licaoId);
   let feedback: FeedbackEnsino;
   // Sem o aceite do envio a IA de terceiros, o retorno é o local (a explicação não sai do servidor).
-  if (process.env.IA === 'falsa' || !(await podeUsarIa(usuarioId))) feedback = ensinoFalso(licao, await conteudo(), explicacao);
+  if (provedorIaAtivo() === 'falsa' || !(await podeUsarIa(usuarioId))) feedback = ensinoFalso(licao, await conteudo(), explicacao);
   else {
     try {
       feedback = await ensinoDaIa(licao, explicacao);

@@ -7,12 +7,12 @@ import {
 import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import { transcricaoDisponivel } from "@/servidor/estudio/voz";
-import { provedorIaAtivo } from "@/servidor/ia/gerador";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { encerrarChamadasDoUsuario, vozAoVivoAtiva } from "@/servidor/ia/realtime";
 
 /**
  * Consentimento do envio a IA de terceiros (App Review 5.1.2(i)). Com a IA simulada nada sai do servidor e o aceite
- * não é pedido; com DeepSeek ou OpenAI, a conta (também a de visitante) precisa ter aceitado a versão vigente.
+ * não é pedido; com OpenAI, a conta (também a de visitante) precisa ter aceitado a versão vigente.
  */
 export function consentimentoNecessario(): boolean {
   return provedorIaAtivo() !== "falsa";

@@ -7,7 +7,8 @@ import { FalhaApi } from '@/servidor/acesso/http';
 import { consumirLimite } from '@/servidor/acesso/seguranca';
 import { banco } from '@/servidor/banco/cliente';
 import type { Prisma } from '@/servidor/banco/gerado/client';
-import { provedorIaAtivo } from '@/servidor/ia/gerador';
+import { provedorIaAtivo } from '@/servidor/ia/provedor';
+import { exigirTrilhaSegura } from '@/servidor/ia/seguranca-trilhas';
 import { lista, objeto, pedirJson, texto } from '@/servidor/estudio/ia';
 import { assuntoDoDiagnostico, EQUACAO, normalizarAssunto, SOLAR } from './diagnostico-catalogo';
 
@@ -16,6 +17,7 @@ type Questao = { habilidade: string; enunciado: string; opcoes: string[]; corret
 type Recorte = { titulo: string; questao: Questao };
 type Classificacao = { escopo: string; nivelDeclarado: NivelDiagnostico | 'nao_declarado'; recortes: Recorte[]; questao: Questao };
 type Estado = {
+  triagem?: true;
   assunto: ReturnType<typeof assuntoDoDiagnostico>;
   fase: 'escopo' | 'nivel' | 'aplicacao' | 'resultado';
   perfil: PerfilDiagnostico;
@@ -141,7 +143,7 @@ async function classificarPedido(objetivo: string): Promise<Classificacao | null
   ].join(' ');
 
   // A recuperação divide o mesmo prazo da primeira classificação.
-  const limite = performance.now() + 9000;
+  const limite = performance.now() + 25_000;
   for (let tentativa = 0; tentativa < 2; tentativa += 1) {
     const prazoMs = Math.floor(limite - performance.now());
     if (prazoMs < 500) break;
@@ -179,12 +181,14 @@ export async function iniciarDiagnostico(usuarioId: string, entrada: unknown): P
   if (objetivo.length < LIMITES_GERACAO.objetivoMin || objetivo.length > LIMITES_GERACAO.objetivoMax) throw new FalhaApi('invalido');
   const permitido = await banco.$transaction(tx => consumirLimite(tx, 'diagnostico:' + usuarioId, 12, 60 * 60 * 1000));
   if (!permitido) throw new FalhaApi('limite_geracoes');
+  await exigirTrilhaSegura({ objetivo });
   const agora = new Date();
   await banco.diagnosticoAprendizado.deleteMany({ where: { expiraEm: { lte: agora } } });
   const assunto = assuntoDoDiagnostico(objetivo);
-  let estado: Estado = { assunto, fase: 'aplicacao', perfil: { nivel: 'basico', escopo: objetivo.slice(0, 150), demonstrados: [], lacunas: [] }, pergunta: null };
+  let estado: Estado = { ...(provedorIaAtivo() === 'openai' ? { triagem: true } : {}), assunto, fase: 'aplicacao', perfil: { nivel: 'basico', escopo: objetivo.slice(0, 150), demonstrados: [], lacunas: [] }, pergunta: null };
   const classificacao = provedorIaAtivo() === 'falsa' ? null : await classificarPedido(objetivo);
   if (classificacao) {
+    await exigirTrilhaSegura({ objetivo, classificacao });
     estado.classificacao = classificacao;
     estado.assunto = null;
     estado.perfil.escopo = classificacao.escopo;
@@ -214,6 +218,11 @@ export async function responderDiagnostico(usuarioId: string, entrada: Record<st
   const registro = await banco.diagnosticoAprendizado.findFirst({ where: filtro });
   if (!registro) throw new FalhaApi('nao_encontrado');
   const atual = registro.estado as unknown as Estado;
+  if (!atual.triagem && provedorIaAtivo() === 'openai') {
+    const permitido = await banco.$transaction(tx => consumirLimite(tx, 'diagnostico-legado:' + usuarioId, 12, 60 * 60 * 1000));
+    if (!permitido) throw new FalhaApi('limite_geracoes');
+    await exigirTrilhaSegura({ objetivo: registro.objetivo, estado: atual });
+  }
   const anteriores = atual.anteriores ?? [];
   const posicaoAnterior = anteriores.findIndex(item => item.estado.pergunta?.id === perguntaId);
   const anterior = anteriores[posicaoAnterior];
@@ -249,6 +258,7 @@ export async function responderDiagnostico(usuarioId: string, entrada: Record<st
       novo = { ...estado, fase: 'resultado', pergunta: null };
     }
   }
+  if (provedorIaAtivo() === 'openai') novo.triagem = true;
   novo.anteriores = [...anteriores.slice(0, passo - 1), { estado: instantaneo, opcaoId }];
   const salvou = await banco.diagnosticoAprendizado.updateMany({
     where: { ...filtro, revisao: registro.revisao },

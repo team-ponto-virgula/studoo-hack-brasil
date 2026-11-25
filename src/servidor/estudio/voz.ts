@@ -1,14 +1,11 @@
 import { FalhaApi } from '../acesso/http';
 import { configuracaoOpenAi } from '../ia/openai';
-import { provedorIaAtivo } from '../ia/gerador';
+import { provedorIaAtivo } from '../ia/provedor';
 import { comNovasTentativas } from '../ia/novas-tentativas';
 import { validarArquivo } from './arquivos';
 import { quota } from './materiais';
 
-/**
- * A gravação vira texto pela OpenAI: disponível com provedor de texto real (`openai`, ou `deepseek` no modo misto) e a
- * chave da OpenAI. Com a IA simulada, ou sem a chave, fica indisponível.
- */
+/** A transcrição usa um modelo especializado da OpenAI. */
 export function transcricaoDisponivel(): boolean {
   return provedorIaAtivo() !== 'falsa' && configuracaoOpenAi() !== null;
 }
@@ -38,9 +35,6 @@ export async function transcrever(usuarioId: string, entrada: unknown, idioma?: 
   const ogg =
     tipo === 'audio/ogg' && bytes.subarray(0, 4).toString() === 'OggS';
   if (!webm && !mp4 && !wav && !ogg) throw new FalhaApi('invalido');
-  // A transcrição é sempre da OpenAI: o ASR da DeepSeek (/v1/tools/asr) só aceita WAV PCM 16-bit ou Ogg Opus, não o
-  // WebM/M4A da web e do app. Com texto pela DeepSeek (modo misto), a transcrição usa a OpenAI quando há a chave; sem a
-  // chave, ou com a IA simulada, a gravação fica indisponível.
   const config = configuracaoOpenAi();
   if (!transcricaoDisponivel() || !config)
     throw new FalhaApi('voz_indisponivel');

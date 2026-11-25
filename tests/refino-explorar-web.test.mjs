@@ -48,7 +48,6 @@ test('spec 17: o que ainda diz "demonstração" é de propósito (decisão do De
   assert.equal(mensagens.estudio.simulado, 'Modo demonstração');
   assert.match(mensagens.estudio.privacidadePorProvedor('falsa'), /^No modo demonstração, o material não é enviado para nenhum provedor externo de IA\./);
   assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor('openai'), /demonstra/i);
-  assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor('deepseek'), /demonstra/i);
   assert.equal(mensagens.licao.demonstracao, 'Demonstração');
 });
 

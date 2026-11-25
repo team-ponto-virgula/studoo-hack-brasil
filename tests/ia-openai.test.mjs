@@ -116,6 +116,14 @@ before(async () => {
         resposta.end(JSON.stringify({ error: { message: "Unsupported parameter: 'reasoning.effort' is not supported with this model." } }));
         return;
       }
+      if (dados.text?.format?.name === "triagem_trilha") {
+        const dadosDaTriagem = JSON.parse(dados.input[0].content[0].text);
+        const saida = modo === "triagem-invalida" ? { decisao: true }
+          : { decisao: modo === "recusar-objetivo" || (modo === "recusar-estrutura" && dadosDaTriagem.estrutura) ? "recusar" : "permitir" };
+        resposta.writeHead(200, { "Content-Type": "application/json" });
+        resposta.end(JSON.stringify({ status: "completed", output_text: JSON.stringify(saida) }));
+        return;
+      }
       if (dados.stream) {
         responderStreaming(resposta, linhasDaTrilha);
         return;
@@ -176,10 +184,8 @@ async function coletar(geracao, sinal = new AbortController().signal) {
   return eventos;
 }
 
-const MODELO_RACIOCINIO = "gpt-5.6-luna";
-
 test("a estrutura vem por streaming e vira eventos válidos, com índices calculados e sem trecho vazio", async () => {
-  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
+  process.env.OPENAI_MODELO = "modelo-antigo";
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
   for (const evento of eventos) assert.deepEqual(interpretarEventoGeracao(JSON.stringify(evento)), evento);
   assert.deepEqual(eventos.map(({ tipo }) => tipo), ["plano", "fluxo", "licao", "licao", "fluxo", "licao", "licao", "fluxo", "licao", "pronto"]);
@@ -194,12 +200,12 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.equal("resumo" in segunda, false);
   assert.equal(pronto.proposta.fluxos[0].licoes[0].resumo, primeira.resumo);
 
-  const [pedido] = pedidos;
+  const pedido = pedidos.find(p => p.dados.stream);
   assert.equal(pedido.caminho, "/v1/responses");
   assert.equal(pedido.autorizacao, "Bearer chave-de-teste");
-  assert.equal(pedido.dados.model, MODELO_RACIOCINIO);
+  assert.equal(pedido.dados.model, MODELO_PADRAO);
   assert.equal(pedido.dados.stream, true);
-  assert.deepEqual(pedido.dados.reasoning, { effort: "low" });
+  assert.deepEqual(pedido.dados.reasoning, { effort: "max" });
   // Só o objetivo vai para a IA, com as regras de ordem no prompt de sistema.
   assert.match(pedido.dados.input[0].content, /pré-requisitos/);
   assert.match(pedido.dados.input[0].content, /"resumo"/);
@@ -492,47 +498,56 @@ test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
   assert.equal(pedidos.length, antes, "com a IA falsa, nenhum pedido sai");
 });
 
-test("o modelo padrão não recebe o campo de raciocínio", async () => {
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
-  assert.equal(eventos.at(-1).proposta.origem, "Conteúdo gerado pelo Studoo");
-  assert.equal(pedidos[0].dados.model, MODELO_PADRAO);
-  assert.equal(pedidos[0].dados.reasoning, undefined);
-});
-
-test("sem o campo de raciocínio aceito pelo modelo, o pedido é repetido sem ele", async () => {
-  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
-  modo = "sem-raciocinio";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
+test("Luna Max e store false são enviados na triagem e na geração, mesmo com overrides antigos", async () => {
+  process.env.OPENAI_MODELO = "modelo-antigo";
+  process.env.OPENAI_ESFORCO = "low";
+  process.env.OPENAI_MODELO_ESTUDIO = "modelo-antigo";
+  const eventos = await coletar(iniciarGeracao("luna-max", "Estudar a história dos assaltos a banco"));
   assert.equal(eventos.at(-1).tipo, "pronto");
-  assert.ok(pedidos[0].dados.reasoning);
-  assert.equal(pedidos[1].dados.reasoning, undefined);
+  assert.deepEqual(pedidos.map(p => p.dados.text?.format?.name ?? "estrutura"),
+    ["triagem_trilha", "estrutura", "triagem_trilha"]);
+  for (const { dados } of pedidos) {
+    assert.equal(dados.model, "gpt-6-luna");
+    assert.deepEqual(dados.reasoning, { effort: "max" });
+    assert.equal(dados.store, false);
+  }
 });
 
-test("se a OpenAI falha antes do primeiro evento, a IA falsa monta a trilha (reserva padrão)", async () => {
-  modo = "falha";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
-  const pronto = eventos.at(-1);
-  assert.equal(pronto.tipo, "pronto");
-  assert.match(pronto.proposta.origem, /Modo demonstração/);
-});
-
-test("sem reserva, a falha da OpenAI vira o evento de erro ia_indisponivel", async () => {
-  modo = "falha";
-  process.env.STUDOO_IA_RESERVA = "nenhuma";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
+test("OpenAI rejeitando o esforço não faz outro pedido, nem usa a demonstração", async () => {
+  modo = "sem-raciocinio";
+  const eventos = await coletar(iniciarGeracao("sem-raciocinio", "Frações"));
   assert.deepEqual(eventos, [{ tipo: "erro", codigo: "ia_indisponivel" }]);
+  assert.equal(pedidos.length, 1);
+  assert.deepEqual(pedidos[0].dados.reasoning, { effort: "max" });
 });
 
-test("sem chave, a reserva assume; sem chave e sem reserva, a geração nem começa", () => {
+test("recusa do pedido, da estrutura ou resposta inválida emite só o erro", async () => {
+  for (const [cenario, codigo, esperados] of [
+    ["recusar-objetivo", "conteudo_nocivo", 1],
+    ["recusar-estrutura", "conteudo_nocivo", 3],
+    ["triagem-invalida", "ia_indisponivel", 1],
+    ["falha", "ia_indisponivel", 1],
+  ]) {
+    pedidos = [];
+    modo = cenario;
+    const eventos = await coletar(iniciarGeracao(cenario, "Aprender um assunto"));
+    assert.deepEqual(eventos, [{ tipo: "erro", codigo }]);
+    assert.equal(pedidos.length, esperados);
+  }
+});
+
+test("seleção legada e valor ausente usam OpenAI, e falta de chave impede a geração", async () => {
+  process.env.IA = "provedor-legado";
+  const eventos = await coletar(iniciarGeracao("legado", "Aprender frações"));
+  assert.equal(eventos.at(-1).tipo, "pronto");
+  delete process.env.IA;
+  assert.doesNotThrow(() => obterGerador());
   delete process.env.OPENAI_API_KEY;
-  assert.doesNotThrow(() => iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
-  process.env.STUDOO_IA_RESERVA = "nenhuma";
-  assert.throws(() => iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"), (erro) => erro.codigo === "ia_indisponivel");
-  // Endereço sem HTTPS fora do próprio computador também não serve.
+  assert.throws(() => obterGerador(), { codigo: "ia_indisponivel" });
   process.env.OPENAI_API_KEY = "chave-de-teste";
   const base = process.env.OPENAI_BASE_URL;
   process.env.OPENAI_BASE_URL = "http://exemplo.test/v1";
-  assert.throws(() => obterGerador(), (erro) => erro.codigo === "ia_indisponivel");
+  assert.throws(() => obterGerador(), { codigo: "ia_indisponivel" });
   process.env.OPENAI_BASE_URL = base;
 });
 
@@ -625,8 +640,9 @@ test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega
   assert.equal(p.objetivo, 'Equação do primeiro grau');
   assert.deepEqual(p.diagnostico, diagnostico);
   assert.equal(p.fluxos.flatMap(f => f.licoes).length, 2);
-  assert.match(pedidos[0].dados.input[0].content, /até 2 lições/);
-  assert.match(pedidos[0].dados.input[1].content, /Isolar a incógnita/);
+  const estrutura = pedidos.find(p => p.dados.stream).dados;
+  assert.match(estrutura.input[0].content, /até 2 lições/);
+  assert.match(estrutura.input[1].content, /Isolar a incógnita/);
 
   const plano = lerComprovante('proposta', 'teste-diagnostico', p.token).plano;
   assert.equal(plano.curriculoAdaptado, true);
@@ -649,7 +665,8 @@ test('uma falha do provedor não substitui uma adaptação com evidência por um
   const diagnostico = { nivel: 'intermediario', escopo: 'Exposição', demonstrados: ['Ajustar o obturador'], lacunas: [] };
   for (const chaveAusente of [false, true]) {
     if (chaveAusente) delete process.env.OPENAI_API_KEY;
-    const eventos = await coletar(iniciarGeracao(`falha-adaptacao-${chaveAusente}`, 'Compensar a exposição com o obturador', { diagnostico }));
-    assert.deepEqual(eventos, [{ tipo: 'erro', codigo: 'ia_indisponivel' }]);
+    const iniciar = () => iniciarGeracao(`falha-adaptacao-${chaveAusente}`, 'Compensar a exposição com o obturador', { diagnostico });
+    if (chaveAusente) assert.throws(iniciar, { codigo: 'ia_indisponivel' });
+    else assert.deepEqual(await coletar(iniciar()), [{ tipo: 'erro', codigo: 'ia_indisponivel' }]);
   }
 });

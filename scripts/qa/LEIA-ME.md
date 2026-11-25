@@ -16,7 +16,7 @@ O padrão é IA falsa e e-mail falso. Para o ensaio com provedores, o responsáv
 node --env-file=.studoo-local/ensaio-ia-3892/piloto.env scripts/qa/cinco-temas.mjs
 ```
 
-O modo padrão verifica a recusa HTTP 428, aceita a versão vigente, propõe e cria cinco trilhas, erra um exercício e constrói a ponte. A saída traz duração e status por operação. Ao terminar ele apaga as trilhas criadas, confere a lista, recompõe a escolha de privacidade e encerra a sessão. Com IA falsa, acrescente `--simulada`. Nesse modo a proposta pode seguir sem consentimento. Para testar apenas a barreira HTTP em uma bancada com `IA=deepseek` e sem chaves, use `--barreira`.
+O modo padrão verifica a recusa HTTP 428, aceita a versão vigente, propõe e cria cinco trilhas, erra um exercício e constrói a ponte. A saída traz duração e status por operação. Ao terminar ele apaga as trilhas criadas, confere a lista, recompõe a escolha de privacidade e encerra a sessão. Com IA falsa, acrescente `--simulada`. Nesse modo a proposta pode seguir sem consentimento. Para testar apenas a barreira HTTP em uma bancada com `IA=openai` e sem chaves, use `--barreira`.
 
 ## Conversa de voz
 

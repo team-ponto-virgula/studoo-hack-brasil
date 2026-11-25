@@ -3,6 +3,8 @@ import { iniciarDiagnostico, responderDiagnostico } from '@/servidor/aprendizado
 import { lerObjeto } from '@/servidor/aprendizado/http';
 import { exigirConsentimentoIa } from '@/servidor/privacidade/consentimento';
 
+export const maxDuration = 90;
+
 export function POST(request: Request) {
   return rotaPrivada(request, async usuarioId => {
     await exigirConsentimentoIa(usuarioId);

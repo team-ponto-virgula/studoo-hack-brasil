@@ -4,8 +4,8 @@ import { randomUUID } from 'node:crypto';
 const bancoLocal = URL.parse(process.env.DATABASE_URL ?? '');
 const ia = process.env.IA;
 if (!bancoLocal || !['localhost', '127.0.0.1', '[::1]'].includes(bancoLocal.hostname)
-  || (ia !== 'openai' && ia !== 'deepseek')) {
-  throw new Error('Use banco local migrado e selecione IA=openai ou IA=deepseek para a conferência.');
+  || ia !== 'openai') {
+  throw new Error('Use banco local migrado e selecione IA=openai para a conferência.');
 }
 
 const { iniciarGeracao } = await import('@/servidor/aprendizado/geracao');

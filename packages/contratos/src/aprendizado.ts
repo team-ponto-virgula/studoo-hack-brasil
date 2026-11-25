@@ -254,6 +254,7 @@ const codigosErro = [
   "limite_login",
   "limite_visitante",
   "ia_indisponivel",
+  "conteudo_nocivo",
   "limite_geracoes",
   "link_inativo",
   "limite_compartilhar",
@@ -481,7 +482,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
   };
 }
 
-export type ProvedorIa = "falsa" | "openai" | "deepseek";
+export type ProvedorIa = "falsa" | "openai";
 
 function normalizarAssuntoTrilha(titulo: string): string {
   return titulo.split(':')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();

@@ -1,7 +1,5 @@
 import type { PerfilDiagnostico } from '@studoo/contratos';
-import { contextoDiagnostico, instrucoesDaEstruturaAdaptada, maximoDeLicoesDiagnostico } from './comum';
-import type { MetaPlano } from "./gerador";
-import type { GeradorTrilha } from "./gerador";
+import type { GeradorTrilha, MetaPlano } from "./gerador";
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
@@ -10,12 +8,16 @@ import {
   TEMPO_CONTEUDO_DE_MATEMATICA_MS,
   TEMPO_CONTEUDO_MS,
   TEMPO_ESTRUTURA_MS,
+  analisarJson,
+  contextoDiagnostico,
   criarMontador,
   esquemaDaLicao,
   esquemaDaLicaoDeMatematica,
+  instrucoesDaEstruturaAdaptada,
   instrucoesDaLicao,
   instrucoesDaLicaoDeMatematica,
   lerLinha,
+  maximoDeLicoesDiagnostico,
   correcaoDoFormato,
   normalizarConteudo,
   normalizarLicaoSegura,
@@ -29,31 +31,24 @@ export { normalizarConteudo };
 
 /*
  * IA real do Studoo com a Responses API da OpenAI (POST /v1/responses), chamada por fetch, sem SDK.
- * - A estrutura da trilha vem por streaming: o modelo escreve uma linha JSON por evento e cada linha completa vira um
- *   evento na tela assim que chega, então a trilha nasce enquanto o modelo escreve.
+ * - A estrutura chega por streaming da OpenAI. O serviço confere a segurança antes de publicar os eventos da proposta.
  * - O conteúdo de cada lição vem com Structured Outputs (JSON Schema estrito) e passa pela mesma validação da IA falsa.
- * O pedido leva só o objetivo e os títulos da trilha: nenhum dado da conta (SEGURANCA.md §5). Os logs não levam o
+ * A geração recebe o objetivo, a estrutura e, quando houver, o diagnóstico. Não recebe dados da conta (SEGURANCA.md §5). Os logs não levam o
  * objetivo nem o conteúdo (§8). A chave fica só no servidor.
  */
 
 export const GERADOR_OPENAI = "openai-v1";
 const BASE_PADRAO = "https://api.openai.com/v1";
-/** Modelo padrão com suporte a Structured Outputs; troque por OPENAI_MODELO. */
-export const MODELO_PADRAO = "gpt-4.1";
+export const MODELO_PADRAO = "gpt-6-luna";
+export const ESFORCO_OPENAI = "max";
 
-export type ConfiguracaoOpenAi = { chave: string; base: string; modelo: string; esforco: string | null };
+export type ConfiguracaoOpenAi = { chave: string; base: string };
 
-/** Configuração da OpenAI pelo ambiente, ou null sem a chave. Só aceita HTTPS (ou HTTP no próprio computador, para testes). */
+/** Só aceita HTTPS (ou HTTP no próprio computador, para testes). */
 export function configuracaoOpenAi(): ConfiguracaoOpenAi | null {
   const chave = process.env.OPENAI_API_KEY?.trim();
-  if (!chave) return null;
   const base = validarBaseUrl(process.env.OPENAI_BASE_URL, BASE_PADRAO);
-  if (!base) return null;
-  const modelo = process.env.OPENAI_MODELO?.trim() || MODELO_PADRAO;
-  const definido = process.env.OPENAI_ESFORCO;
-  // Modelos de raciocínio respondem mais rápido com esforço baixo; nos outros, o campo não vai.
-  const esforco = definido !== undefined ? definido.trim() || null : /^(gpt-5|gpt-6|o\d)/.test(modelo) ? "low" : null;
-  return { chave, base, modelo, esforco };
+  return chave && base ? { chave, base } : null;
 }
 
 function registrar(codigo: string, detalhe: Record<string, unknown>) {
@@ -61,27 +56,15 @@ function registrar(codigo: string, detalhe: Record<string, unknown>) {
   console.error(JSON.stringify({ rota: "ia-openai", codigo, ...detalhe }));
 }
 
-/**
- * Chama a Responses API. Se o modelo recusar o campo de esforço de raciocínio (400), tenta de novo sem ele.
- * Erro do provedor vira `ia_indisponivel`.
- */
-async function pedir(config: ConfiguracaoOpenAi, corpo: Record<string, unknown>, sinal: AbortSignal): Promise<Response> {
-  const enviar = (comEsforco: boolean) => fetch(`${config.base}/responses`, {
+export async function pedirRespostaOpenAi(config: ConfiguracaoOpenAi, corpo: Record<string, unknown>, sinal: AbortSignal, repetir429 = true): Promise<Response> {
+  const enviar = () => fetch(`${config.base}/responses`, {
     method: "POST",
     headers: { Authorization: `Bearer ${config.chave}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: config.modelo, ...(comEsforco && config.esforco ? { reasoning: { effort: config.esforco } } : {}), ...corpo }),
+    body: JSON.stringify({ ...corpo, model: MODELO_PADRAO, reasoning: { effort: ESFORCO_OPENAI }, store: false }),
+    redirect: "error",
     signal: sinal,
   });
-
-  let resposta = await comNovasTentativas(() => enviar(true), { rota: "ia-openai", sinal });
-  if (resposta.status === 400 && config.esforco) {
-    const texto = await resposta.text().catch(() => "");
-    if (/reasoning|effort/i.test(texto)) resposta = await enviar(false);
-    else {
-      registrar("ia_indisponivel", { status: 400 });
-      throw new FalhaApi("ia_indisponivel");
-    }
-  }
+  const resposta = await (repetir429 ? comNovasTentativas(enviar, { rota: "ia-openai", sinal }) : enviar());
   if (!resposta.ok) {
     registrar("ia_indisponivel", { status: resposta.status });
     throw new FalhaApi("ia_indisponivel");
@@ -92,9 +75,9 @@ async function pedir(config: ConfiguracaoOpenAi, corpo: Record<string, unknown>,
 /** Texto das partes `output_text` de uma resposta sem streaming. Uma recusa do modelo vira erro. */
 function textoDaResposta(corpo: unknown): string {
   if (typeof corpo !== "object" || corpo === null) return "";
-  const dado = corpo as { output_text?: unknown; output?: unknown };
-  if (typeof dado.output_text === "string") return dado.output_text;
-  if (!Array.isArray(dado.output)) return "";
+  const dado = corpo as { status?: unknown; output_text?: unknown; output?: unknown };
+  if (dado.status !== undefined && dado.status !== "completed") throw new FalhaApi("ia_indisponivel");
+  if (!Array.isArray(dado.output)) return typeof dado.output_text === "string" ? dado.output_text : "";
   let texto = "";
   for (const item of dado.output) {
     const conteudo = (item as { content?: unknown }).content;
@@ -105,13 +88,39 @@ function textoDaResposta(corpo: unknown): string {
       if (type === "output_text" && typeof text === "string") texto += text;
     }
   }
-  return texto;
+  return texto || (typeof dado.output_text === "string" ? dado.output_text : "");
 }
 
-/**
- * Pedido curto com Structured Outputs, usado durante a aula (correção da resposta aberta e desempate da lacuna). Tem
- * prazo próprio, curto: se a IA demorar ou falhar, quem chamou fica com a correção local.
- */
+export type OpcoesDoPedidoJson = {
+  prazoMs?: number;
+  tentativas?: number;
+  matematica?: boolean;
+  sinal?: AbortSignal;
+  maxTokens?: number;
+};
+
+/** Pedido estruturado com os dados e anexos sempre na mensagem da pessoa. */
+export async function pedirJsonOpenAi(
+  config: ConfiguracaoOpenAi,
+  nome: string,
+  esquema: unknown,
+  instrucoes: string,
+  dados: unknown,
+  anexos: unknown[] = [],
+  opcoes: OpcoesDoPedidoJson = {},
+): Promise<unknown> {
+  const prazo = AbortSignal.timeout(opcoes.prazoMs ?? 60_000);
+  const sinal = opcoes.sinal ? AbortSignal.any([opcoes.sinal, prazo]) : prazo;
+  const resposta = await pedirRespostaOpenAi(config, {
+    instructions: instrucoes,
+    input: [{ role: "user", content: [{ type: "input_text", text: JSON.stringify(dados) }, ...anexos] }],
+    text: { format: { type: "json_schema", name: nome, schema: esquema, strict: true } },
+    max_output_tokens: opcoes.maxTokens ?? 10_000,
+  }, sinal, opcoes.tentativas !== 1);
+  return analisarJson(textoDaResposta(await resposta.json()), opcoes.matematica);
+}
+
+/** A correção em aula mantém a alternativa local caso a IA demore ou falhe. */
 export async function pedirCorrecao(
   config: ConfiguracaoOpenAi,
   nome: string,
@@ -120,16 +129,12 @@ export async function pedirCorrecao(
   dados: unknown,
   ms = 15_000,
 ): Promise<unknown> {
-  const resposta = await pedir(config, {
-    input: [
-      { role: "system", content: instrucoes },
-      { role: "user", content: JSON.stringify(dados) },
-    ],
+  const resposta = await pedirRespostaOpenAi(config, {
+    input: [{ role: "system", content: instrucoes }, { role: "user", content: JSON.stringify(dados) }],
     text: { format: { type: "json_schema", name: nome, schema: esquema, strict: true } },
-    max_output_tokens: 1500,
-    store: false,
+    max_output_tokens: 4096,
   }, AbortSignal.timeout(ms));
-  return JSON.parse(textoDaResposta(await resposta.json()));
+  return analisarJson(textoDaResposta(await resposta.json()));
 }
 
 /** Lê o streaming (SSE) e entrega os pedaços de texto à medida que chegam. */
@@ -138,6 +143,7 @@ async function* textoDoStreaming(resposta: Response, sinal: AbortSignal): AsyncG
   const leitor = resposta.body.getReader();
   const decodificador = new TextDecoder();
   let resto = "";
+  let completou = false;
   try {
     while (!sinal.aborted) {
       const { done, value } = await leitor.read();
@@ -155,13 +161,15 @@ async function* textoDoStreaming(resposta: Response, sinal: AbortSignal): AsyncG
         } catch {
           continue;
         }
+        if (evento.type === "response.completed") completou = true;
         if (evento.type === "response.output_text.delta" && typeof evento.delta === "string") yield evento.delta;
-        else if (evento.type === "error" || evento.type === "response.failed" || evento.type === "response.refusal.delta") {
+        else if (evento.type === "error" || evento.type === "response.failed" || evento.type === "response.incomplete" || evento.type === "response.refusal.delta") {
           registrar("ia_indisponivel", { evento: String(evento.type) });
           throw new FalhaApi("ia_indisponivel");
         }
       }
     }
+    if (!sinal.aborted && !completou) throw new FalhaApi("ia_indisponivel", undefined, "stream_incompleto");
   } finally {
     leitor.cancel().catch(() => undefined);
   }
@@ -175,7 +183,7 @@ function corpoDaEstrutura(objetivo: string, diagnostico?: PerfilDiagnostico) {
       { role: "user", content: `Objetivo de estudo: ${objetivo}` },
     ],
     stream: true,
-    max_output_tokens: 4000,
+    max_output_tokens: 8192,
   };
 }
 
@@ -195,7 +203,7 @@ export function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: nu
         strict: true,
       },
     },
-    max_output_tokens: matematica ? 10_000 : 6000,
+    max_output_tokens: matematica ? 16_000 : 10_000,
   };
 }
 
@@ -212,7 +220,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
       const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_ESTRUTURA_MS);
       const montador = criarMontador(pedido, maximoDeLicoesDiagnostico(diagnostico));
       try {
-        const resposta = await pedir(config, corpoDaEstrutura(objetivo, diagnostico), comPrazo);
+        const resposta = await pedirRespostaOpenAi(config, corpoDaEstrutura(objetivo, diagnostico), comPrazo);
         let resto = "";
         for await (const pedaco of textoDoStreaming(resposta, comPrazo)) {
           resto += pedaco;
@@ -268,7 +276,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
         let corpo: unknown;
         try {
-          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
+          const resposta = await pedirRespostaOpenAi(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
           corpo = await resposta.json();
         } catch (erro) {
           if (reserva) {

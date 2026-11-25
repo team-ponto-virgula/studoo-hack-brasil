@@ -78,7 +78,7 @@ O APK do perfil `preview` grava `EXPO_PUBLIC_STUDOO_API_URL=https://studoo-web-s
 | `STUDOO_SESSAO_MOBILE_PILOTO` | `1` | Liga o login nativo (`/api/mobile/sessao`) e as chamadas com token. |
 | `STUDOO_ORIGEM` | `https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io` | O canal do app confere o host público contra esta origem. |
 | `STUDOO_PROXY_HTTPS` | `1` | O Traefik termina o TLS. Com `1`, o servidor aceita `X-Forwarded-Proto: https` e `X-Forwarded-Host` do proxy. |
-| `IA` e `OPENAI_API_KEY` | `openai` e a chave (ou `deepseek` com a chave da OpenAI: modo misto) | Só para voz (Explique e "Falar") e leitura real de material. No modo misto, a transcrição vai para a OpenAI e o texto para a DeepSeek. Com `IA=falsa`, o app mostra o aviso de voz indisponível, e o material de demonstração e o texto funcionam. |
+| `IA` e `OPENAI_API_KEY` | `openai` e a chave | Só para voz (Explique e "Falar") e leitura real de material. Com `IA=falsa`, o app mostra o aviso de voz indisponível, e o material de demonstração e o texto funcionam. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `STUDOO_GOOGLE_MOBILE_REDIRECT_URI=studoo-dev://auth/google` | | Opcional. Sem elas, a entrada é por e-mail e senha. |
 
 **Depende da correção do canal atrás de proxy:** sem `STUDOO_PROXY_HTTPS=1` no deploy com a correção, todo pedido do app ao site publicado volta `404 nao_encontrado`. Isso vale para o login e para todo pedido com token. A tela de entrada mostra erro mesmo com a senha certa.
@@ -111,7 +111,7 @@ Faça antes da demo, no aparelho da demo, com a rota escolhida.
 
 - **Teclado:** no login, no pedido, na lacuna ou resposta aberta e no campo do Explique, o campo e o botão do rodapé (Começar, Verificar, Enviar minha explicação) ficam acima do teclado. Nada fica escondido.
 - **Microfone:**
-  - conceder: o Explique grava, as ondas seguem a voz e o texto volta para revisar, se `IA=openai` (ou `IA=deepseek` com `OPENAI_API_KEY`);
+  - conceder: o Explique grava, as ondas seguem a voz e o texto volta para revisar, se `IA=openai`;
   - negar: aparece o aviso de como liberar;
   - negar para sempre: aparece o aviso dos ajustes do app;
   - o "Falar" segue as mesmas regras e corta em 8 s.
