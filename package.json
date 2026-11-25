@@ -42,6 +42,7 @@
     "codigo:studoo": "node --import tsx scripts/codigo-studoo.mjs",
     "codigo:studoo:prova": "node --import tsx scripts/codigo-studoo-prova.mjs",
     "test:cadastro-apple": "node --env-file=.env --import tsx --test tests/acesso-cadastro-apple.test.mjs",
+    "test:onboarding": "node --env-file=.env --import tsx --test tests/onboarding-retencao.test.mjs tests/acesso-google-recuperacao.test.mjs tests/acesso-cadastro-apple.test.mjs",
     "test:privacidade": "node --env-file=.env --import tsx --test tests/privacidade.test.mjs",
     "test:feedback-aluno": "node --env-file=.env --import tsx --test tests/feedback-aluno-web.test.mjs",
     "test:email": "node --import tsx --test tests/email-resend.test.mjs tests/email-millionsend.test.mjs",
