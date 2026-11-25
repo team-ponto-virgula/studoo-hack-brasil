@@ -455,16 +455,16 @@ test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura 
   assert.match(texto(quatro), /Com uma conta, a sua trilha é a mesma no site e no app\./);
 });
 
-test('contraste: os botões de texto da página usam o azul escuro do app (o azul da ação não chega a 4,5:1 sobre o céu do herói)', () => {
+test('contraste: os botões de texto da página usam o azul escuro da Jornada e passam sobre o céu do herói', () => {
   const css = ler('src/app/conheca/conheca.css');
   assert.match(css, /\.cn-pagina \.cn-entrar, \.cn-pagina \.cn-visitante-texto, \.cn-pagina \.cn-instalar-celular \{ color: var\(--acao-escura\); \}/);
-  assert.match(ler('src/app/globals.css'), /--acao-escura: #1d4ed8;/);
+  assert.match(ler('src/ui/jornada-tokens.css'), /--acao-escura: #173B9C;/i);
   // A conta: #1D4ED8 sobre #EAF0FF (o céu do cabeçalho) e sobre o branco.
   const luz = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
   const razao = (a, b) => { const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-  assert.ok(razao('#1d4ed8', '#eaf0ff') >= 4.5, 'sobre o céu');
-  assert.ok(razao('#1d4ed8', '#ffffff') >= 4.5, 'sobre o branco');
-  assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'e é por isso que o azul da ação não serve ali');
+  assert.ok(razao('#173b9c', '#eaf0ff') >= 4.5, 'sobre o céu');
+  assert.ok(razao('#173b9c', '#ffffff') >= 4.5, 'sobre o branco');
+  assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'regressão histórica: a ação anterior não servia ali');
 });
 
 test('cada escolha oferece a captura ampliada correspondente; continuar depois também mostra o site', () => {

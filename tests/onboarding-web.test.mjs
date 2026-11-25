@@ -204,7 +204,7 @@ test('o CSS: a placa volta a ser a de antes das frases; a linha de espera troca 
   assert.match(css, /\.previa-espera__linha\[data-saindo\] \{ opacity: 0; \}/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.previa-espera__linha \{ transition: none; \} \}/);
   // A linha segue no lugar e no estilo de hoje: centralizada, 14 px, #5E6A85, escondida enquanto não é a hora.
-  assert.match(css, /\.previa-espera, \.previa-erro \{ width: min\(100%,36rem\); margin-inline: auto; color: #5e6a85; font-size: \.875rem; text-align: center; \}/);
+  assert.match(css, /\.previa-espera, \.previa-erro \{ width: min\(100%,36rem\); margin-inline: auto; color: var\(--texto2\); font-size: \.875rem; text-align: center; \}/);
   assert.match(css, /\.previa-espera:not\(\[data-visivel\]\) \{ display: none; \}/);
 });
 

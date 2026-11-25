@@ -21,19 +21,19 @@ const c = mensagens.comunidade;
 const canal = (v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
 const luminancia = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)); return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b); };
 const contraste = (a, b) => { const [x, y] = [luminancia(a), luminancia(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
-const globais = ler('src/app/globals.css');
+const globais = ler('src/ui/jornada-tokens.css') + ler('src/app/globals.css');
 const cor = (nome) => globais.match(new RegExp(`--${nome}:\\s*(#[0-9a-fA-F]{6})`))[1].toLowerCase();
 
 test('o selo "[1] Fonte do seu material" usa a ação escura: a ação sobre #E5EBFF dava 4,10:1, a ação escura dá mais de 4,5:1', () => {
   const regra = /\.aula-citacao__selo \{([^}]*)\}/.exec(ler('src/app/aula.css'))?.[1] ?? '';
   assert.match(regra, /color: var\(--acao-escura\);/);
   assert.match(regra, /background: #e5ebff;/);
-  assert.ok(contraste(cor('acao'), '#e5ebff') < 4.5, 'a ação não bastava');
+  assert.ok(contraste('#2563ff', '#e5ebff') < 4.5, 'a ação não bastava');
   assert.ok(contraste(cor('acao-escura'), '#e5ebff') >= 4.5, `a ação escura sobre #E5EBFF: ${contraste(cor('acao-escura'), '#e5ebff').toFixed(2)}:1`);
 });
 
 test('o vazio de Minhas trilhas usa o texto principal sobre a lavanda: o secundário dava 4,47:1', () => {
-  assert.ok(contraste(cor('texto2'), cor('ceu')) < 4.5, 'o secundário não bastava (4,47:1)');
+  assert.ok(contraste('#5e6a85', cor('ceu')) < 4.5, 'o secundário não bastava (4,47:1)');
   assert.match(globais, /\.planos-vazio \{[^}]*background: var\(--ceu\);/);
   assert.match(globais, /\.planos-vazio p \{ color: var\(--texto\);/);
   assert.ok(contraste(cor('texto'), cor('ceu')) >= 7, 'o texto principal sobre a lavanda passa com folga');

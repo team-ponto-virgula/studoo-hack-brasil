@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
+import { jornadaAzul } from '../packages/contratos/src/jornada-azul.ts';
 
-// Paleta do kit no app (spec 13, B5), como tests/paleta.test.mjs faz na web: as cores de marca vêm de tema.ts, e o azul e o
-// marinho antigos não voltam escritos à mão nas telas (em hexadecimal nem em rgba). Os tons claros da opção marcada
-// (#9FB1F0, #EEF2FF) continuam, iguais aos da web.
+// Jornada Azul mantém o Stu e centraliza a interface. O app deve consumir os tokens,
+// em vez de declarar uma segunda paleta que possa divergir da web.
 const pasta = new URL('../apps/mobile/src/', import.meta.url);
 const tema = readFileSync(new URL('tema.ts', pasta), 'utf8');
 
-test('tema.ts tem as cores do kit', () => {
-  for (const [chave, valor] of [['texto', '#0B1B5C'], ['acao', '#2563FF'], ['acaoEscura', '#1D4ED8'], ['ouro', '#FBBF24'], ['ceu', '#E9E7FF']]) {
-    assert.match(tema, new RegExp(`\\b${chave}: '${valor}'`, 'i'), `${chave} ${valor}`);
+test('tema.ts usa a paleta compartilhada da Jornada Azul e preserva as cores do Stu', () => {
+  assert.match(tema, /import \{ jornadaAzul \} from '\.\.\/\.\.\/\.\.\/packages\/contratos\/src\/jornada-azul';/);
+  assert.match(tema, /export const cores = jornadaAzul\.cores;/);
+  for (const [chave, valor] of [['texto', '#15275B'], ['acao', '#2457DD'], ['acaoEscura', '#173B9C'], ['ouro', '#FBBF24'], ['ceu', '#E9E7FF']]) {
+    assert.equal(jornadaAzul.cores[chave], valor, `${chave} ${valor}`);
   }
 });
 

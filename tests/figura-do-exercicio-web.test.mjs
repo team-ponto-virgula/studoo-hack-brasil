@@ -69,7 +69,7 @@ test('a ordem do exercício com figura: o enunciado (menor), a figura e as opç�
   assert.doesNotMatch(sem, /aula-figura|data-com-visual|role="img"/);
   // O CSS que acompanha: 22 de fonte com figura, e a caixa da figura.
   const css = readFileSync(join(raiz, 'src/app/aula.css'), 'utf8');
-  assert.match(css, /\.aula-miolo \.aula-pergunta\[data-com-visual\] \{ font-size: 1\.375rem; line-height: 1\.15; \}/);
+  assert.match(css, /\.aula-miolo \.aula-pergunta\[data-com-visual\] \{ font-size: 1\.375rem; line-height: 1\.875rem; \}/);
   assert.match(css, /\.aula-figura \{ margin: 2px 0 4px; \}/);
 });
 

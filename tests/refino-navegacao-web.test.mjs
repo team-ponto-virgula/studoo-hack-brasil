@@ -27,21 +27,21 @@ test('item 18: os quatro itens da lateral levam a mesma classe e os ícones da c
   assert.ok(lateral.indexOf('className="navegacao-rodape"') < lateral.indexOf('navegacao-perfil'));
 });
 
-test('item 18: 48 px de altura, ícone de 20, rótulo 16 em 800, raio 14; sem fundo e #0B1B5C fora da seleção; #E9E7FF e #1D4ED8 selecionado', () => {
+test('item 18: 48 px de altura, ícone de 20, rótulo 16 em 800, raio 14; sem fundo fora da seleção e superfície azul com ação escura no selecionado', () => {
   const comum = /\.barra-lateral \.navegacao \.navegacao-item, \.barra-lateral \.navegacao-rodape \.navegacao-item \{([^}]*)\}/.exec(css)?.[1] ?? '';
   assert.match(comum, /min-height: 48px;/);
   assert.match(comum, /border-radius: 14px;/);
   assert.match(comum, /font-size: 1rem; font-weight: 800;/);
   assert.match(comum, /background: transparent;/, 'sem fundo fora da seleção');
-  assert.match(comum, /color: #0b1b5c;/);
+  assert.match(comum, /color: var\(--texto\);/);
   assert.match(comum, /border: 0;/, 'sem a borda do botão e do cartão de antes');
   assert.match(css, /\.barra-lateral \.navegacao-item \.icone \{ flex: none; width: 20px; height: 20px; \}/);
   const selecionado = /\.barra-lateral \.navegacao \.navegacao-item\[aria-current\], [^{]*\{([^}]*)\}/.exec(css)?.[1] ?? '';
-  assert.match(selecionado, /background: var\(--lavanda\);/);
+  assert.match(selecionado, /background: var\(--nevoa\);/);
   assert.match(selecionado, /color: var\(--acao-escura\);/, 'a ação escura (5,53:1), como a subcápsula da barra de abas: a ação sobre o lavanda dá 4,03:1');
   assert.match(selecionado, /box-shadow: none;/, 'sem a sombra da pílula branca de antes');
-  assert.match(css, /--lavanda: #e9e7ff;/);
-  assert.match(css, /--acao-escura: #1d4ed8;/);
+  assert.match(ler('src/ui/jornada-tokens.css'), /--nevoa: #EDF3FF;/i);
+  assert.match(ler('src/ui/jornada-tokens.css'), /--acao-escura: #173B9C;/i);
   // Como na cápsula, o ícone selecionado é cheio.
   assert.match(css, /\.barra-lateral \.navegacao-item\[aria-current\] \.icone \{ fill: currentColor; \}/);
   // Os estilos antigos dos itens saíram (o cartão do Perfil, o gap e o ícone de 18 do Explorar, o botão com borda da Nova trilha).
