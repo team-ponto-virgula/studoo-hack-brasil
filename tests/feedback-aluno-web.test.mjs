@@ -221,8 +221,15 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   const tituloDoRastro = 'Criar rastro sem perder a exposição';
   const decisaoDoRastro = 'Escolher a abertura que mantém a exposição ao dobrar o tempo para criar um rastro de movimento.';
   const casoDoRastro = 'Em 1/125 s e f/5,6 a exposição está correta. Ao passar para 1/60 s para criar rastro, qual abertura mantém o brilho com ISO fixo?';
+  const meioPasso = 'Com ISO fixo, qual é o tempo meio passo mais lento que 1/250 s?';
+  const motivoCompleto = 'Exercício 1: de 1/250 s, meio passo mais lento é 1/200 s, não 1/160 s; o gabarito contradiz o exemplo da lição. Exercício 2: 1/80 s não é meio passo de 1/60 s (1/60→1/50 é 1/3; meio passo fica entre 1/50 e 1/40). Falta consistência verificável nos incrementos.';
+  assert.equal(motivoCompleto.length, 260);
   const revisoesDeFotografia = [];
   const pedidos = [];
+  let motivoInicial = motivoCompleto;
+  let numeroDoParecer = 1;
+  let manterDefeito = false;
+  let reescritas = 0;
   const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(url, 'http://127.0.0.1:1/v1/responses');
     const payload = JSON.parse(init.body);
@@ -254,16 +261,18 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
       revisoesDeFotografia.push(exercicio.enunciado);
       const avancou = exercicio.enunciado === casoDoRastro;
       if (avancou) assert.equal(exercicio.opcoes.find(o => o.id === exercicio.gabarito[0]).texto, 'f/8');
-      else assert.equal(exercicio.enunciado, aplicacao.enunciado);
-      return Response.json({ output_text: JSON.stringify({ avaliacoes: [{ numero: 1, resultado: avancou ? 'avanca' : 'ajustar', motivo: avancou ? '' : 'Faltam o tempo inicial, o novo tempo e uma decisão sobre a abertura.' }] }) });
+      else assert.equal(exercicio.enunciado, meioPasso);
+      return Response.json({ output_text: JSON.stringify({ avaliacoes: [{ numero: numeroDoParecer, resultado: avancou ? 'avanca' : 'ajustar', motivo: avancou ? '' : motivoInicial, correcoes: [] }] }) });
     }
     if (payload.text?.format?.name === 'diagnostico_reparar_curriculo') {
       const { licoes } = JSON.parse(payload.input[0].content[0].text);
-      assert.match(licoes[0].motivo, /novo tempo/);
+      reescritas++;
+      assert.equal(licoes[0].motivo, motivoCompleto);
       return Response.json({ output_text: JSON.stringify({ licoes: [{ numero: 1,
         conceito: 'Dobrar o tempo deixa entrar o dobro de luz. Fechar a abertura em um ponto compensa esse ganho.',
         exemplo: 'Com ISO fixo, passar de 1/250 s e f/4 para 1/125 s e f/5,6 mantém a exposição.',
-        enunciado: casoDoRastro, opcoes: ['f/8', 'f/4', 'f/5,6'], correta: 0,
+        enunciado: manterDefeito ? meioPasso : casoDoRastro,
+        opcoes: manterDefeito ? ['1/160 s', '1/200 s', '1/125 s'] : ['f/8', 'f/4', 'f/5,6'], correta: 0,
         feedbackCorreto: 'Fechar de f/5,6 para f/8 compensa o tempo dobrado.', feedbackIncorreto: 'O tempo maior já aumentou a luz. Veja qual abertura deixa entrar menos luz.',
       }] }) });
     }
@@ -281,17 +290,21 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
       const mensagem = JSON.stringify({ type: 'response.output_text.delta', delta: linhas + quebra });
       return new Response('data: ' + mensagem + quebra + quebra, { headers: { 'Content-Type': 'text/event-stream' } });
     }
-    const enunciado = adaptada ? aplicacao.enunciado : 'Qual alteração corrige a subexposição sem mudar a abertura?';
-    const opcoes = adaptada ? aplicacao.opcoes : ['Ajustar o tempo de exposição', 'Mudar apenas o foco', 'Manter todos os ajustes'];
+    const enunciado = adaptada ? meioPasso : 'Qual alteração corrige a subexposição sem mudar a abertura?';
+    const opcoes = adaptada ? ['1/160 s', '1/200 s', '1/125 s'] : ['Ajustar o tempo de exposição', 'Mudar apenas o foco', 'Manter todos os ajustes'];
+    const exercicio = {
+      tipo: 'multipla_escolha', enunciado, contexto: null, trecho: null,
+      opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })),
+      gabarito: ['0'], feedbackCorreto: 'Sim.', feedbackIncorreto: 'Considere o tempo que o sensor recebe luz.',
+    };
     return Response.json({ status: 'completed', output_text: JSON.stringify({
       objetivo: 'Fotografar em condições de luz variável.',
       conceito: 'A duração da exposição e a abertura controlam a luz que chega ao sensor.',
       exemplo: 'Em 1/60 s o sensor recebe luz por mais tempo do que em 1/500 s.',
-      exercicio: {
-        tipo: 'multipla_escolha', enunciado, contexto: null, trecho: null,
-        opcoes: opcoes.map((texto, indice) => ({ id: String(indice), texto })),
-        gabarito: ['0'], feedbackCorreto: 'Sim.', feedbackIncorreto: 'Considere o tempo que o sensor recebe luz.',
-      },
+      exercicios: adaptada ? [exercicio, {
+        ...exercicio, enunciado: 'Qual é o tempo meio passo mais rápido que 1/60 s?',
+        opcoes: ['1/80 s', '1/50 s', '1/40 s'].map((texto, indice) => ({ id: String(indice), texto })),
+      }] : [exercicio],
     }) });
   });
   const pedido = objetivo => diagnostico(req('aprendizado/diagnostico', cookie, { objetivo }));
@@ -309,10 +322,29 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
     escopo: 'Fotografar movimento', nivel: 'intermediario', demonstrados: ['Escolher velocidade para movimento'], lacunas: [],
   });
   const pa = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral, diagnosticoId: ampla.id })));
+  const aceitar = () => salvar(req('aprendizado/planos', cookie, { token: pa.token }));
+  for (const invalido of [undefined, 'x'.repeat(513)]) {
+    motivoInicial = invalido;
+    assert.equal((await aceitar()).status, 503);
+  }
+  motivoInicial = motivoCompleto;
+  numeroDoParecer = 2;
+  assert.equal((await aceitar()).status, 503);
+  assert.equal(reescritas, 0);
+  numeroDoParecer = 1;
+  manterDefeito = true;
+  revisoesDeFotografia.length = 0;
+  assert.equal((await aceitar()).status, 503);
+  assert.deepEqual(revisoesDeFotografia, [meioPasso, meioPasso]);
+  assert.equal(reescritas, 1);
+  assert.deepEqual(await ok(planos(req('aprendizado/planos', cookie))), []);
+  manterDefeito = false;
+  revisoesDeFotografia.length = 0;
   const a = (await salvarEReabrir(cookie, pa)).primeira;
   assert.match(a.titulo, /rastro/);
   assert.match(a.exercicio.enunciado, /rastro/);
-  assert.deepEqual(revisoesDeFotografia, [aplicacao.enunciado, casoDoRastro]);
+  assert.deepEqual(revisoesDeFotografia, [meioPasso, casoDoRastro]);
+  assert.equal(reescritas, 2);
   const aberturaCerta = a.exercicio.opcoes.find(o => o.texto === 'f/8');
   assert.equal((await ok(avaliar(req('aprendizado/licoes/' + a.id + '/avaliar', cookie, { resposta: aberturaCerta.id }), ctx(a.id)))).correta, true);
   assert.ok(pedidos.some(p => p.stream && p.input[1].content.includes('"nivel":"intermediario"')));

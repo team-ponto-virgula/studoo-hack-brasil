@@ -5,6 +5,7 @@ import { maximoDeLicoesDiagnostico, normalizarLicaoSegura, regraDeEscolhaUnicaAd
 import type { GeradorTrilha } from './gerador';
 
 const inteiro = { type: 'integer' };
+const limiteDoMotivoDaRevisao = 512;
 const tituloCurto = { ...texto, description: 'Título de até 60 caracteres.' };
 const esquemaCurriculo = objeto({
   fluxos: lista(objeto({ titulo: tituloCurto, licoes: lista(objeto({
@@ -37,7 +38,7 @@ const regras = [
 ].join(' ');
 
 const textoAte = (valor: unknown, limite: number): valor is string =>
-  typeof valor === 'string' && valor.trim().length > 0 && valor.length <= limite;
+  typeof valor === 'string' && valor.length <= limite && valor.trim().length > 0;
 type Curriculo = { titulo: string; licoes: { titulo: string; resumo: string }[] }[];
 type LicaoParaRevisar = { numero: number; fluxo: number; indice: number; titulo: string; decisao: string; conteudo: ConteudoLicao };
 type Pendencia = { numero: number; motivo: string; correcoes?: unknown };
@@ -98,7 +99,7 @@ async function conferirLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[],
   const avaliacoes = resposta?.avaliacoes;
   const numeros = new Set(licoes.map(l => l.numero));
   if (!Array.isArray(avaliacoes) || avaliacoes.length !== licoes.length || !avaliacoes.every(a =>
-    a && numeros.delete(a.numero) && (a.resultado === 'avanca' || (a.resultado === 'ajustar' && textoAte(a.motivo, 240))))) {
+    a && numeros.delete(a.numero) && (a.resultado === 'avanca' || (a.resultado === 'ajustar' && textoAte(a.motivo, limiteDoMotivoDaRevisao))))) {
     throw new FalhaApi('ia_indisponivel', undefined, 'progressao_verificacao');
   }
   return avaliacoes.filter(a => a.resultado === 'ajustar')
