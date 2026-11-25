@@ -505,6 +505,13 @@ export const mensagens = {
     },
     /** Perfil (spec 09). */
     perfil: {
+        estudo: {
+            titulo: 'Meu estudo',
+            trilhasConcluidas: 'Trilhas concluídas',
+            diasSeguidos: 'Dias seguidos',
+            diasDeEstudo: 'Dias de estudo',
+            continuar: 'Continuar de onde parei',
+        },
         titulo: 'Perfil',
         navegacao: 'Perfil',
         /**
