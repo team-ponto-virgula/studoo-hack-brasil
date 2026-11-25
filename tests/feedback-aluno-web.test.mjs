@@ -927,3 +927,137 @@ test('uma lição nociva da OpenAI é recusada no aceite e nunca fica disponíve
   assert.equal(await banco.planoAprendizado.count({ where: { usuarioId: id } }), 0);
   assert.equal(await banco.licao.count({ where: { usuarioId: id } }), 0);
 });
+
+test('aceite de proposta antiga usa Luna e triagem; trilha já salva continua abrindo com a origem original', async t => {
+  const { id, cookie } = await novoVisitante();
+  const objetivo = 'Aprender a identificar frações equivalentes';
+  const demonstracao = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo })));
+  const jaSalva = await ok(salvar(req('aprendizado/planos', cookie, { token: demonstracao.token })));
+  assert.match(jaSalva.origem, /Modo demonstração/);
+  const demoPendente = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: 'Aprender frações em receitas' })));
+
+  const chamadas = [];
+  simularLuna(t, pedido => {
+    const nome = pedido.text.format.name;
+    chamadas.push(nome);
+    if (nome === 'triagem_trilha') return respostaDaOpenAi({ decisao: 'permitir' });
+    assert.match(nome, /^licao_studoo(?:_matematica)?$/);
+    return respostaDaOpenAi({
+      objetivo: 'Reconhecer frações equivalentes',
+      conceito: 'Duas frações são equivalentes quando representam a mesma parte do inteiro.',
+      exemplo: 'Uma metade corresponde a dois quartos.',
+      exercicios: [{
+        tipo: 'multipla_escolha',
+        enunciado: 'Qual fração representa a mesma parte que uma metade?',
+        opcoes: [{ id: 'a', texto: 'Dois quartos' }, { id: 'b', texto: 'Dois terços' }, { id: 'c', texto: 'Três quartos' }],
+        gabarito: ['a'], feedbackCorreto: 'Uma metade contém dois quartos.', feedbackIncorreto: 'Pense em quatro partes iguais.',
+      }],
+    });
+  });
+
+  const reaberta = await ok(plano(req('aprendizado/planos/' + jaSalva.id, cookie), ctx(jaSalva.id)));
+  assert.equal(reaberta.origem, jaSalva.origem, 'a leitura não pede novo aceite nem chama a IA');
+  assert.deepEqual(chamadas, []);
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  const reenviada = await ok(salvar(req('aprendizado/planos', cookie, { token: demonstracao.token })));
+  assert.equal(reenviada.id, jaSalva.id);
+  assert.equal(reenviada.origem, jaSalva.origem);
+  assert.deepEqual(chamadas, []);
+
+  const legadoId = crypto.randomUUID();
+  const legado = {
+    titulo: 'Frações equivalentes', objetivo, origem: 'IA da DeepSeek (deepseek-flash)',
+    fluxos: [{ titulo: 'Frações no cotidiano', licoes: [{ titulo: 'Reconhecer frações equivalentes' }] }],
+  };
+  const token = emitirComprovante('proposta', id, {
+    id: legadoId, expiraEm: Date.now() + 60_000, plano: { ...legado, gerador: 'deepseek-v1' },
+  });
+  const { reaberto: aceito, primeira } = await salvarEReabrir(cookie, { ...legado, token });
+  assert.equal(aceito.id, legadoId);
+  assert.equal(aceito.origem, 'Conteúdo gerado pelo Studoo');
+  assert.equal(primeira.origem, aceito.origem);
+  assert.equal(primeira.exercicio.opcoes.find(o => o.texto === 'Dois quartos')?.texto, 'Dois quartos');
+  assert.deepEqual(chamadas, ['triagem_trilha', 'licao_studoo_matematica', 'triagem_trilha']);
+
+  const atualizada = await ok(salvar(req('aprendizado/planos', cookie, { token: demoPendente.token })));
+  assert.equal(atualizada.origem, 'Conteúdo gerado pelo Studoo', 'o aceite real não herda o rótulo simulado');
+  assert.equal(chamadas[3], 'triagem_trilha');
+  assert.equal(chamadas.at(-1), 'triagem_trilha');
+  assert.equal(chamadas.slice(4, -1).length, demoPendente.fluxos.flatMap(f => f.licoes).length);
+});
+
+test('rota NDJSON guarda toda a estrutura até a triagem final, inclusive quando falha ou expira', { timeout: 15_000 }, async t => {
+  const conta = await banco.usuario.create({ data: { email: `stream-${crypto.randomUUID()}@example.test`, fuso: 'UTC' } });
+  usuarios.add(conta.id);
+  const cookie = cookieSessao((await criarSessao(conta.id, 'WEB')).token).split(';')[0];
+  await aceitarConsentimentoIa(conta.id, VERSAO_CONSENTIMENTO_IA);
+  const estrutura = [
+    { tipo: 'plano', titulo: 'História e direito' },
+    { tipo: 'fluxo', titulo: 'Análise de fontes' },
+    { tipo: 'licao', titulo: 'Comparar documentos', resumo: 'Distinguir contexto e evidência.' },
+  ];
+  let modo = 'permitir';
+  const iniciouRevisao = Promise.withResolvers();
+  const liberarRevisao = Promise.withResolvers();
+  const revisoes = [];
+  simularLuna(t, async pedido => {
+    if (pedido.stream) {
+      const delta = estrutura.map(JSON.stringify).join('\n') + '\n';
+      const primeiraParte = `data: ${JSON.stringify({ type: 'response.output_text.delta', delta })}\n\n`;
+      if (modo === 'stream-erro') return new Response(primeiraParte + 'data: {"type":"response.failed"}\n\n');
+      if (modo === 'stream-prazo') {
+        return new Response(new ReadableStream({
+          start(canal) { canal.enqueue(new TextEncoder().encode(primeiraParte)); },
+          pull(canal) { canal.error(new DOMException('Prazo simulado no stream', 'TimeoutError')); },
+        }));
+      }
+      return new Response(primeiraParte + 'data: {"type":"response.completed"}\n\n');
+    }
+    const dados = JSON.parse(pedido.input[0].content[0].text);
+    if (!dados.estrutura) return respostaDaOpenAi({ decisao: 'permitir' });
+    revisoes.push(dados.estrutura);
+    if (modo === 'http') return new Response(null, { status: 503 });
+    if (modo === 'prazo') throw new DOMException('Prazo simulado', 'TimeoutError');
+    if (modo === 'recusar') return respostaDaOpenAi({ decisao: 'recusar' });
+    iniciouRevisao.resolve();
+    await liberarRevisao.promise;
+    return respostaDaOpenAi({ decisao: 'permitir' });
+  });
+  const abrir = () => eventosProposta(req('aprendizado/propostas/ao-vivo', cookie, { objetivo: 'Estudar história e direito' }));
+  const resposta = await abrir();
+  const leitor = resposta.body.getReader();
+  const decoder = new TextDecoder();
+  try {
+    const primeira = await leitor.read();
+    assert.equal(decoder.decode(primeira.value), '\n', 'apenas o pulso neutro da resposta precede a revisão');
+    await iniciouRevisao.promise;
+    let recebeu = false;
+    const proxima = leitor.read().then(item => { recebeu = true; return item; });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(recebeu, false, 'título, fluxo e lição continuam retidos enquanto a triagem está pendente');
+    liberarRevisao.resolve();
+    const eventos = [decoder.decode((await proxima).value)];
+    while (true) {
+      const item = await leitor.read();
+      if (item.done) break;
+      eventos.push(decoder.decode(item.value));
+    }
+    assert.deepEqual(eventos.join('').trim().split('\n').map(linha => JSON.parse(linha).tipo),
+      ['plano', 'fluxo', 'licao', 'pronto']);
+  } finally {
+    liberarRevisao.resolve();
+    await leitor.cancel();
+  }
+
+  for (const [cenario, codigo] of [
+    ['http', 'ia_indisponivel'], ['prazo', 'ia_indisponivel'], ['recusar', 'conteudo_nocivo'],
+    ['stream-erro', 'ia_indisponivel'], ['stream-prazo', 'ia_indisponivel'],
+  ]) {
+    modo = cenario;
+    const bruto = await (await abrir()).text();
+    assert.deepEqual(bruto.trim().split('\n').map(JSON.parse), [{ tipo: 'erro', codigo }]);
+    assert.doesNotMatch(bruto, /História e direito|Análise de fontes|Comparar documentos|Distinguir contexto/);
+  }
+  assert.equal(revisoes.length, 4);
+  for (const vista of revisoes) assert.deepEqual(vista.map(({ titulo }) => titulo), estrutura.map(({ titulo }) => titulo));
+});
