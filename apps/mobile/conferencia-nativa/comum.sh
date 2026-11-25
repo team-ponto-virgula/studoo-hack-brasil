@@ -49,7 +49,8 @@ CAPTURAS_ESPERADAS="
 98-ponte-passo-1 98-ponte-desafio 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
 "
 CAPTURAS_FEEDBACK_ALUNO="
-84-equacao-inicial-salva 84-equacao-inicial-exercicio
+84-equacao-inicial-salva 84-equacao-inicial-exercicio 84-equacao-inicial-ensine 84-equacao-inicial-ensine-campo
+84-equacao-inicial-caderno-do-stu 84-equacao-inicial-conclusao
 85-equacao-demonstrada-salva 85-equacao-demonstrada-exercicio
 "
 if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
@@ -513,7 +514,7 @@ fluxo_feedback_aluno() {
     [ "$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).caso' "$depois")" = "apagada" ] \
       || erro "$fase não criou exatamente uma trilha temporária."
   done
-  resumo "✅ Feedback do aluno: exercícios distintos após salvar e reabrir nos dois perfis de equação."
+  resumo "✅ Feedback do aluno: exercícios distintos após salvar e reabrir nos dois perfis de equação. No caso inicial, Ensine ao Stu, retorno e lição concluída em 1/3."
 }
 
 fluxo_telas() {

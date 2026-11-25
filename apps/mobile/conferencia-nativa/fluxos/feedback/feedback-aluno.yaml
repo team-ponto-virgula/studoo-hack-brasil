@@ -155,6 +155,76 @@ name: feedback-aluno
           id: pergunta-exercicio
           text: '.*x.*(5|cinco).*(12|doze).*'
       - takeScreenshot: 84-equacao-inicial-exercicio
+      - scrollUntilVisible:
+          element:
+            text: '^Subtrair 5$'
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          text: '^Subtrair 5$'
+          waitToSettleTimeoutMs: 1500
+      - tapOn:
+          id: enviar-resposta
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: continuar-licao
+            text: '^Continuar$'
+          timeout: 30000
+      - tapOn:
+          id: continuar-licao
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-ensino
+          timeout: 30000
+      - assertNotVisible:
+          id: pergunta-exercicio
+      - assertVisible:
+          id: ensino-seguir
+          text: '^Pular e concluir$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine
+      # O título e o campo podem ficar em dobras diferentes. Registra o campo antes de abrir o teclado.
+      - scrollUntilVisible:
+          element:
+            id: ensino-texto
+          direction: DOWN
+          timeout: 30000
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine-campo
+      - tapOn:
+          id: ensino-texto
+      - inputText: Para chegar a x = 7, tiro cinco dos dois lados. Assim a igualdade continua valendo.
+      - tapOn:
+          id: enviar-explicacao
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: caderno-do-stu
+          timeout: 30000
+      - assertVisible:
+          id: ensino-seguir
+          text: '^Concluir lição$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-caderno-do-stu
+      - tapOn:
+          id: ensino-seguir
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-conclusao
+            text: '^Lição concluída!$'
+          timeout: 30000
+      - assertVisible:
+          id: progresso-plano
+          text: '^1 de 3 lições concluídas$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-conclusao
 - runFlow:
     when:
       true: ${PERFIL == 'demonstrada'}
