@@ -1936,7 +1936,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     mudarAcompanhar(true);
     ultimoAlvo.current = null;
     if (pronta) {
-      rolarPara(fimDaTrilha());
+      // O atalho pode ser tocado antes de a medida do troféu chegar do caminho.
+      rolagem.current?.scrollToEnd({ animated: reduzir === false });
       return;
     }
     if (ultimo) rolarAteLicao(ultimo.id);
@@ -2003,10 +2004,24 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         estilo={empilhar ? estudoEstilos.geracaoBotaoSecundario : dividir ? estudoEstilos.botaoDividido : undefined} umaLinha />
     </Animated.View>
   );
+  // Durante "Criando sua trilha…" (e na passagem), a pílula sai: ela cobria o nome do nó 1 e não serve ali (como na web).
+  const pilula = !acompanhando && total > 0 && !(pronta && trofeuAVista) && !salvando && (
+    <Pressable testID="ver-licao-nova" accessibilityRole="button" onPress={verLicaoNova}
+      style={({ pressed }) => [estudoEstilos.pilulaSeguir, pressed && estudoEstilos.pilulaSeguirApertada]}>
+      <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={18} cor={cores.fundo} sistema /></View>
+      <Text style={estudoEstilos.pilulaSeguirTexto}>{pronta ? mensagens.geracao.verFimDaTrilha : mensagens.geracao.verLicaoNova(total)}</Text>
+    </Pressable>
+  );
   const rodape = (
     <Animated.View style={[estudoEstilos.geracaoRodape, pronta && reduzir === false && {
       opacity: deslize, transform: [{ translateY: deslize.interpolate({ inputRange: [0, 1], outputRange: [RITMO_DA_GERACAO.rodapeDeslize, 0] }) }],
     }]}>
+      {pronta && !salvando && (
+        <View style={estudoEstilos.estadoDaProposta}>
+          <Text style={[estilos.legenda, estudoEstilos.notaDaProposta]} testID="proposta-nao-salva">Sua proposta ainda não está salva.</Text>
+          {pilula}
+        </View>
+      )}
       <View style={empilhar ? estudoEstilos.geracaoAcoesEmpilhadas : estudoEstilos.geracaoAcoes}>
         {empilhar && principal}
         {empilhar && erroDaCriacao}
@@ -2034,20 +2049,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     </Animated.View>
   );
 
-  // Durante "Criando sua trilha…" (e na passagem), a pílula sai: ela cobria o nome do nó 1 e não serve ali (como na web).
-  const pilula = !acompanhando && total > 0 && !(pronta && trofeuAVista) && !salvando && (
-    <Pressable testID="ver-licao-nova" accessibilityRole="button" onPress={verLicaoNova}
-      style={({ pressed }) => [estudoEstilos.pilulaSeguir, pressed && estudoEstilos.pilulaSeguirApertada]}>
-      <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={18} cor={cores.fundo} sistema /></View>
-      <Text style={estudoEstilos.pilulaSeguirTexto}>{pronta ? mensagens.geracao.verFimDaTrilha : mensagens.geracao.verLicaoNova(total)}</Text>
-    </Pressable>
-  );
-
   return (
     // Com o cartão do título de volta (no fim, no alto), a faixa volta a ser o cartão: ela sai, e a placa fica no alto do mapa.
     <Tela pagina="geracao" avisoNoFluxo acoes={acoes} rodape={rodape} rolagem={rolagem} estiloConteudo={estudoEstilos.geracaoConteudo} faixaFixa={cartaoDeVolta ? undefined : faixa} faixaColada
       estiloRodapeConteudo={empilhar ? estudoEstilos.geracaoRodapeEstreito : undefined}
-      flutuante={pilula || undefined} aoMedir={(altura) => { visivel.current = altura; }} aoRolar={aoRolar}>
+      flutuante={pronta ? undefined : pilula || undefined} aoMedir={(altura) => { visivel.current = altura; }} aoRolar={aoRolar}>
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       {/* No fim, ao subir até o começo do mapa, a faixa volta a ser o cartão do título (o título, o pedido e de onde veio). */}
       {pronta && proposta && cartaoDeVolta && (
@@ -2073,8 +2079,6 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           {/* Spec 08 (c20ed0f): sem a linha "Fonte: <provedor>"; "Gerada por IA a partir do seu pedido…" continua acima. */}
         </View>
       )}
-      {pronta && proposta && !salvando &&
-        <Text style={estilos.legenda} testID="proposta-nao-salva">Sua proposta ainda não está salva.</Text>}
       {cartaoDeVolta && (
         // A placa no respiro que o céu reserva para ela (alturaPlaca + 20), 10 abaixo do começo do mapa: uma camada de altura
         // zero antes do mapa, por cima dele, sem mudar o lugar do que o mapa mede.
@@ -3233,6 +3237,9 @@ const estudoEstilos = StyleSheet.create({
   geracaoIa: { marginTop: 16, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   esqueletoOrigem: { width: '48%', maxWidth: 256, height: 12, marginTop: 10, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoRodape: { gap: 8 },
+  // Na proposta pronta, a pílula e o aviso dividem o espaço do rodapé sem cobrir a prévia.
+  estadoDaProposta: { minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 8 },
+  notaDaProposta: { flexBasis: 116, flexGrow: 1, flexShrink: 1 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   geracaoAcoesEmpilhadas: { gap: 10 },
   geracaoRodapeEstreito: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
