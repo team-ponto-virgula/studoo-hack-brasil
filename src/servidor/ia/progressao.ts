@@ -1,7 +1,7 @@
 import { exercicioValido, type ConteudoLicao, type EsqueletoPlano } from '@/dominio/aprendizado/plano';
 import { FalhaApi } from '@/servidor/acesso/http';
 import { lista, objeto, pedirJson, texto } from '@/servidor/estudio/ia';
-import { maximoDeLicoesDiagnostico, normalizarLicaoSegura } from './comum';
+import { maximoDeLicoesDiagnostico, normalizarLicaoSegura, regraDeEscolhaUnicaAdaptada } from './comum';
 import type { GeradorTrilha } from './gerador';
 
 const inteiro = { type: 'integer' };
@@ -79,6 +79,8 @@ async function conferirLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[],
     'Avalie todas as lições recebidas em relação à decisão prevista para cada uma. Use o conceito, o exemplo, os enunciados e o gabarito real. Resolva cada exercício antes de julgar: o acerto deve depender da decisão nova, e o exercício deve ter dados suficientes e resposta defensável.',
     regras,
     'Responda avanca quando a aula e os exercícios praticam corretamente a decisão, inclusive se usarem a ação demonstrada como parte da solução. Aceite formas equivalentes e reforços de etapas da decisão nova. Não exija palavras, formatos ou cálculos que o desafio não pede.',
+    regraDeEscolhaUnicaAdaptada,
+    'Na conferência, compare todas as alternativas, inclusive as que não estão no gabarito. Se mais de uma for defensável pela questão como foi escrita, devolva ajustar com correcoes: []. Explique a ambiguidade no motivo para reescrever o exercício. Não conte um critério implícito no exemplo, na intenção da lição ou no feedback.',
     'Se for preciso ajustar, descreva em até 240 caracteres o que falta no exercício (dados, decisão, gabarito ou conteúdo) e por que. Devolva exatamente um veredito por número recebido.',
     'Se apenas o gabarito e seus feedbacks estiverem errados, preencha correcoes com o número de cada exercício afetado (começa em 1), o gabarito completo corrigido e os dois feedbacks coerentes. Preserve enunciado, opções, conceito e exemplo. Confira também passos e resolução.',
     'Use exatamente os IDs existentes: na múltipla escolha, ["id"]; na associação, todos os pares ["idEsquerda=idDireita"] sem repetir nenhum ID de cada lado; na ordenação, todos os IDs na nova ordem; em verdadeiro_falso, ["verdadeiro" ou "falso", "id da justificativa"].',
@@ -134,6 +136,7 @@ async function repararLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[], 
   const resposta = await pedirJson('diagnostico_reparar_curriculo', esquemaReparo, [
     'Reescreva apenas as lições indicadas. Corrija o motivo concreto indicado no parecer e ensine a mesma decisão planejada, com um conceito breve e um exemplo resolvido.',
     'Crie um exercício de aplicação autocontido por lição, com os dados, unidades e condições necessários para resolver. Use três alternativas distintas, uma única correta, e indique em correta o índice de 0 a 2. Resolva o exercício para conferir o gabarito.',
+    regraDeEscolhaUnicaAdaptada,
     'Use no máximo duas frases no conceito da primeira lição. No retorno correto explique a decisão. No incorreto indique o que conferir.',
     regras,
     'Exemplo JSON: {"licoes":[{"numero":1,"conceito":"Some a taxa fixa ao valor por unidade.","exemplo":"R$ 8 fixos mais R$ 2 por quilo se escreve como 8 + 2k.","enunciado":"Um frete custa R$ 5 fixos e R$ 3 por quilo. Qual expressão representa o custo de k quilos?","opcoes":["5 + 3k","3 + 5k","8k"],"correta":0,"feedbackCorreto":"O 5 é fixo e apenas o 3 multiplica k.","feedbackIncorreto":"Confira qual número varia com o peso."}]}',
