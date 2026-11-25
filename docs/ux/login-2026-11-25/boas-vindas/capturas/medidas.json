@@ -1,0 +1,1005 @@
+{
+  "origin": "proposta HTML local, não app instalado; exemplos estáticos, sem API/cadastro/persistência",
+  "rows": [
+    {
+      "width": 390,
+      "scale": 100,
+      "slide": 1,
+      "file": "beneficio-1-390-100.png",
+      "title": "Seu assunto vira\numa trilha.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 844,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 173,
+            "bottom": 702,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 217,
+            "bottom": 702,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 261,
+            "bottom": 702,
+            "left": 217
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56,
+            "top": 702,
+            "right": 362,
+            "bottom": 758,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 137.3125,
+            "y": 762,
+            "width": 115.375,
+            "height": 44,
+            "top": 762,
+            "right": 252.6875,
+            "bottom": 806,
+            "left": 137.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 100,
+      "slide": 2,
+      "file": "beneficio-2-390-100.png",
+      "title": "Um erro abre\noutro caminho.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 844,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 173,
+            "bottom": 702,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 217,
+            "bottom": 702,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 261,
+            "bottom": 702,
+            "left": 217
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56,
+            "top": 702,
+            "right": 362,
+            "bottom": 758,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 137.3125,
+            "y": 762,
+            "width": 115.375,
+            "height": 44,
+            "top": 762,
+            "right": 252.6875,
+            "bottom": 806,
+            "left": 137.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 100,
+      "slide": 3,
+      "file": "beneficio-3-390-100.png",
+      "title": "Continue de\nonde parou.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 844,
+      "activeDots": 1,
+      "cta": "Criar minha conta",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 173,
+            "bottom": 702,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 217,
+            "bottom": 702,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 658,
+            "width": 44,
+            "height": 44,
+            "top": 658,
+            "right": 261,
+            "bottom": 702,
+            "left": 217
+          }
+        },
+        {
+          "text": "Criar minha conta",
+          "rect": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56,
+            "top": 702,
+            "right": 362,
+            "bottom": 758,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 137.3125,
+            "y": 762,
+            "width": 115.375,
+            "height": 44,
+            "top": 762,
+            "right": 252.6875,
+            "bottom": 806,
+            "left": 137.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 100,
+      "dialog": true,
+      "existingAccount": "../evolucao/index.html",
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 200,
+      "slide": 1,
+      "file": "beneficio-1-390-200.png",
+      "title": "Seu assunto vira\numa trilha.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 1265,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 1037.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1037.3125,
+            "right": 173,
+            "bottom": 1081.3125,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 1037.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1037.3125,
+            "right": 217,
+            "bottom": 1081.3125,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 1037.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1037.3125,
+            "right": 261,
+            "bottom": 1081.3125,
+            "left": 217
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 28,
+            "y": 1081.3125,
+            "width": 334,
+            "height": 80,
+            "top": 1081.3125,
+            "right": 362,
+            "bottom": 1161.3125,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 92.84375,
+            "y": 1165.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1165.3125,
+            "right": 297.15625,
+            "bottom": 1227.3125,
+            "left": 92.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 200,
+      "slide": 2,
+      "file": "beneficio-2-390-200.png",
+      "title": "Um erro abre\noutro caminho.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 1253,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 173,
+            "bottom": 1069.3125,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 217,
+            "bottom": 1069.3125,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 261,
+            "bottom": 1069.3125,
+            "left": 217
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 28,
+            "y": 1069.3125,
+            "width": 334,
+            "height": 80,
+            "top": 1069.3125,
+            "right": 362,
+            "bottom": 1149.3125,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 92.84375,
+            "y": 1153.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1153.3125,
+            "right": 297.15625,
+            "bottom": 1215.3125,
+            "left": 92.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 200,
+      "slide": 3,
+      "file": "beneficio-3-390-200.png",
+      "title": "Continue de\nonde parou.",
+      "scrollWidth": 390,
+      "height": 844,
+      "scrollHeight": 1182,
+      "activeDots": 1,
+      "cta": "Criar minha conta",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 129,
+            "y": 954.3125,
+            "width": 44,
+            "height": 44,
+            "top": 954.3125,
+            "right": 173,
+            "bottom": 998.3125,
+            "left": 129
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 173,
+            "y": 954.3125,
+            "width": 44,
+            "height": 44,
+            "top": 954.3125,
+            "right": 217,
+            "bottom": 998.3125,
+            "left": 173
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 217,
+            "y": 954.3125,
+            "width": 44,
+            "height": 44,
+            "top": 954.3125,
+            "right": 261,
+            "bottom": 998.3125,
+            "left": 217
+          }
+        },
+        {
+          "text": "Criar minha conta",
+          "rect": {
+            "x": 28,
+            "y": 998.3125,
+            "width": 334,
+            "height": 80,
+            "top": 998.3125,
+            "right": 362,
+            "bottom": 1078.3125,
+            "left": 28
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 92.84375,
+            "y": 1082.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1082.3125,
+            "right": 297.15625,
+            "bottom": 1144.3125,
+            "left": 92.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scale": 200,
+      "dialog": true,
+      "existingAccount": "../evolucao/index.html",
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 100,
+      "slide": 1,
+      "file": "beneficio-1-360-100.png",
+      "title": "Seu assunto vira\numa trilha.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 800,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 158,
+            "bottom": 658,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 202,
+            "bottom": 658,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 246,
+            "bottom": 658,
+            "left": 202
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56,
+            "top": 658,
+            "right": 336,
+            "bottom": 714,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 122.3125,
+            "y": 718,
+            "width": 115.375,
+            "height": 44,
+            "top": 718,
+            "right": 237.6875,
+            "bottom": 762,
+            "left": 122.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 100,
+      "slide": 2,
+      "file": "beneficio-2-360-100.png",
+      "title": "Um erro abre\noutro caminho.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 800,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 158,
+            "bottom": 658,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 202,
+            "bottom": 658,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 246,
+            "bottom": 658,
+            "left": 202
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56,
+            "top": 658,
+            "right": 336,
+            "bottom": 714,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 122.3125,
+            "y": 718,
+            "width": 115.375,
+            "height": 44,
+            "top": 718,
+            "right": 237.6875,
+            "bottom": 762,
+            "left": 122.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 100,
+      "slide": 3,
+      "file": "beneficio-3-360-100.png",
+      "title": "Continue de\nonde parou.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 800,
+      "activeDots": 1,
+      "cta": "Criar minha conta",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 158,
+            "bottom": 658,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 202,
+            "bottom": 658,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 614,
+            "width": 44,
+            "height": 44,
+            "top": 614,
+            "right": 246,
+            "bottom": 658,
+            "left": 202
+          }
+        },
+        {
+          "text": "Criar minha conta",
+          "rect": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56,
+            "top": 658,
+            "right": 336,
+            "bottom": 714,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 122.3125,
+            "y": 718,
+            "width": 115.375,
+            "height": 44,
+            "top": 718,
+            "right": 237.6875,
+            "bottom": 762,
+            "left": 122.3125
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 100,
+      "dialog": true,
+      "existingAccount": "../evolucao/index.html",
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 200,
+      "slide": 1,
+      "file": "beneficio-1-360-200.png",
+      "title": "Seu assunto vira\numa trilha.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 1307,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 1079.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1079.3125,
+            "right": 158,
+            "bottom": 1123.3125,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 1079.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1079.3125,
+            "right": 202,
+            "bottom": 1123.3125,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 1079.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1079.3125,
+            "right": 246,
+            "bottom": 1123.3125,
+            "left": 202
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 24,
+            "y": 1123.3125,
+            "width": 312,
+            "height": 80,
+            "top": 1123.3125,
+            "right": 336,
+            "bottom": 1203.3125,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 77.84375,
+            "y": 1207.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1207.3125,
+            "right": 282.15625,
+            "bottom": 1269.3125,
+            "left": 77.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 200,
+      "slide": 2,
+      "file": "beneficio-2-360-200.png",
+      "title": "Um erro abre\noutro caminho.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 1253,
+      "activeDots": 1,
+      "cta": "Continuar",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 158,
+            "bottom": 1069.3125,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 202,
+            "bottom": 1069.3125,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 1025.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1025.3125,
+            "right": 246,
+            "bottom": 1069.3125,
+            "left": 202
+          }
+        },
+        {
+          "text": "Continuar",
+          "rect": {
+            "x": 24,
+            "y": 1069.3125,
+            "width": 312,
+            "height": 80,
+            "top": 1069.3125,
+            "right": 336,
+            "bottom": 1149.3125,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 77.84375,
+            "y": 1153.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1153.3125,
+            "right": 282.15625,
+            "bottom": 1215.3125,
+            "left": 77.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 200,
+      "slide": 3,
+      "file": "beneficio-3-360-200.png",
+      "title": "Continue de\nonde parou.",
+      "scrollWidth": 360,
+      "height": 800,
+      "scrollHeight": 1354,
+      "activeDots": 1,
+      "cta": "Criar minha conta",
+      "controls": [
+        {
+          "text": "Seu assunto vira uma trilha",
+          "rect": {
+            "x": 114,
+            "y": 1078.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1078.3125,
+            "right": 158,
+            "bottom": 1122.3125,
+            "left": 114
+          }
+        },
+        {
+          "text": "Um erro abre outro caminho",
+          "rect": {
+            "x": 158,
+            "y": 1078.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1078.3125,
+            "right": 202,
+            "bottom": 1122.3125,
+            "left": 158
+          }
+        },
+        {
+          "text": "Continue de onde parou",
+          "rect": {
+            "x": 202,
+            "y": 1078.3125,
+            "width": 44,
+            "height": 44,
+            "top": 1078.3125,
+            "right": 246,
+            "bottom": 1122.3125,
+            "left": 202
+          }
+        },
+        {
+          "text": "Criar minha conta",
+          "rect": {
+            "x": 24,
+            "y": 1122.3125,
+            "width": 312,
+            "height": 128,
+            "top": 1122.3125,
+            "right": 336,
+            "bottom": 1250.3125,
+            "left": 24
+          }
+        },
+        {
+          "text": "Já tenho conta",
+          "rect": {
+            "x": 77.84375,
+            "y": 1254.3125,
+            "width": 204.3125,
+            "height": 62,
+            "top": 1254.3125,
+            "right": 282.15625,
+            "bottom": 1316.3125,
+            "left": 77.84375
+          }
+        }
+      ],
+      "images": true,
+      "errors": []
+    },
+    {
+      "width": 360,
+      "scale": 200,
+      "dialog": true,
+      "existingAccount": "../evolucao/index.html",
+      "errors": []
+    }
+  ]
+}

@@ -1,0 +1,716 @@
+{
+  "checkedAt": "2026-11-25T13:12:20.755Z",
+  "scope": "Isolated HTML welcome preview only; no implemented registration/onboarding persistence/native execution/authentication",
+  "sourceHashesBefore": {
+    "boas-vindas/index.html": "80d3d10749f1e4ccc4a677815c91fa693a38ab073354aaa23d807ee3cecda407",
+    "boas-vindas/boas-vindas.css": "fc8cb4f17a132757888a983c744e0020081cb12f523959615c71d2de0a0f5ca0",
+    "boas-vindas/boas-vindas.js": "c67bbdc51a6e74e82b32feee1eacbbb2d3f36a316e851b6b3fe86ad8ade201c3",
+    "boas-vindas/assets/stu-acolhida.webp": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+    "boas-vindas/assets/stu-feliz.webp": "498e5b52165e76b819b266b170fdda298b3c90eccf69c5be0a4ea0c4e6938314",
+    "boas-vindas/assets/stu-celebrando.webp": "ee820e8ce0e825447bed91d309220188e341643598e05786077e81c73056c838",
+    "evolucao/index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf"
+  },
+  "sourceHashesAfter": {
+    "boas-vindas/index.html": "80d3d10749f1e4ccc4a677815c91fa693a38ab073354aaa23d807ee3cecda407",
+    "boas-vindas/boas-vindas.css": "fc8cb4f17a132757888a983c744e0020081cb12f523959615c71d2de0a0f5ca0",
+    "boas-vindas/boas-vindas.js": "c67bbdc51a6e74e82b32feee1eacbbb2d3f36a316e851b6b3fe86ad8ade201c3",
+    "boas-vindas/assets/stu-acolhida.webp": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0",
+    "boas-vindas/assets/stu-feliz.webp": "498e5b52165e76b819b266b170fdda298b3c90eccf69c5be0a4ea0c4e6938314",
+    "boas-vindas/assets/stu-celebrando.webp": "ee820e8ce0e825447bed91d309220188e341643598e05786077e81c73056c838",
+    "evolucao/index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf"
+  },
+  "sourceStable": true,
+  "checks": [
+    {
+      "name": "slides-manuais-dot-acoes-100-200-390",
+      "pass": true,
+      "manualOnly": true,
+      "backViaDotWorks": true,
+      "states": [
+        {
+          "slide": 1,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 702,
+              "width": 334,
+              "height": 56,
+              "bottom": 758
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 2,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 702,
+              "width": 334,
+              "height": 56,
+              "bottom": 758
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 3,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 28,
+            "y": 702,
+            "width": 334,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 702,
+              "width": 334,
+              "height": 56,
+              "bottom": 758
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 1,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 28,
+            "y": 660.3125,
+            "width": 334,
+            "height": 80
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 660.3125,
+              "width": 334,
+              "height": 80,
+              "bottom": 740.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 2,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 28,
+            "y": 1069.3125,
+            "width": 334,
+            "height": 80
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 660.3125,
+              "width": 334,
+              "height": 80,
+              "bottom": 740.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 3,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 28,
+            "y": 998.3125,
+            "width": 334,
+            "height": 80
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "documentWidth": 390,
+            "cta": {
+              "x": 28,
+              "y": 660.3125,
+              "width": 334,
+              "height": 80,
+              "bottom": 740.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "cadastro-demonstrativo-dialogo-retorno-390",
+      "pass": true,
+      "demonstrationDeclared": true,
+      "closeRestored": true,
+      "escRestored": true,
+      "requestsDuringDemonstration": []
+    },
+    {
+      "name": "ja-tenho-conta-resolve-r2-390",
+      "pass": true,
+      "href": "../evolucao/index.html",
+      "resolved": "http://127.0.0.1:3031/evolucao/index.html",
+      "destinationPath": "/evolucao/index.html",
+      "providerDomOrder": [
+        "google",
+        "apple"
+      ]
+    },
+    {
+      "name": "movimento-normal-finito-390",
+      "pass": true,
+      "activeAnimations": [
+        {
+          "duration": 140,
+          "iterations": 1
+        },
+        {
+          "name": "enter-slide",
+          "duration": 240,
+          "iterations": 1
+        }
+      ],
+      "activeAfter600ms": 0,
+      "finite": true
+    },
+    {
+      "name": "slides-manuais-dot-acoes-100-200-360",
+      "pass": true,
+      "manualOnly": true,
+      "backViaDotWorks": true,
+      "states": [
+        {
+          "slide": 1,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 658,
+              "width": 312,
+              "height": 56,
+              "bottom": 714
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 2,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 658,
+              "width": 312,
+              "height": 56,
+              "bottom": 714
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 3,
+          "fontPercent": 100,
+          "beforeScroll": {
+            "x": 24,
+            "y": 658,
+            "width": 312,
+            "height": 56
+          },
+          "metrics": {
+            "rootFont": "16px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 658,
+              "width": 312,
+              "height": 56,
+              "bottom": 714
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 1,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 24,
+            "y": 616.3125,
+            "width": 312,
+            "height": 80
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 616.3125,
+              "width": 312,
+              "height": 80,
+              "bottom": 696.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 2,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 24,
+            "y": 1069.3125,
+            "width": 312,
+            "height": 80
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 616.3125,
+              "width": 312,
+              "height": 80,
+              "bottom": 696.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        },
+        {
+          "slide": 3,
+          "fontPercent": 200,
+          "beforeScroll": {
+            "x": 24,
+            "y": 1122.3125,
+            "width": 312,
+            "height": 128
+          },
+          "metrics": {
+            "rootFont": "32px",
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "documentWidth": 360,
+            "cta": {
+              "x": 24,
+              "y": 568.3125,
+              "width": 312,
+              "height": 128,
+              "bottom": 696.3125
+            },
+            "centerUnobstructed": true,
+            "reduced": true,
+            "animationCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "cadastro-demonstrativo-dialogo-retorno-360",
+      "pass": true,
+      "demonstrationDeclared": true,
+      "closeRestored": true,
+      "escRestored": true,
+      "requestsDuringDemonstration": []
+    },
+    {
+      "name": "ja-tenho-conta-resolve-r2-360",
+      "pass": true,
+      "href": "../evolucao/index.html",
+      "resolved": "http://127.0.0.1:3031/evolucao/index.html",
+      "destinationPath": "/evolucao/index.html",
+      "providerDomOrder": [
+        "google",
+        "apple"
+      ]
+    },
+    {
+      "name": "movimento-normal-finito-360",
+      "pass": true,
+      "activeAnimations": [
+        {
+          "duration": 140,
+          "iterations": 1
+        },
+        {
+          "name": "enter-slide",
+          "duration": 240,
+          "iterations": 1
+        }
+      ],
+      "activeAfter600ms": 0,
+      "finite": true
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "network": [
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.css"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.js"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-acolhida.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-feliz.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-celebrando.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/index.html"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.css"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.js"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-acolhida.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-feliz.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-celebrando.webp"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.css"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.js"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-acolhida.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-feliz.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-celebrando.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/index.html"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.css"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/boas-vindas.js"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-acolhida.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-feliz.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/boas-vindas/assets/stu-celebrando.webp"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg"
+    }
+  ],
+  "apiOrMutationRequests": [],
+  "screenshotsRepeated": false,
+  "sourceEdited": false
+}

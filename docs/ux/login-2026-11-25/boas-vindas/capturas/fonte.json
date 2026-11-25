@@ -1,0 +1,44 @@
+{
+  "source": "proposta isolada de boas-vindas, sem commit criado por este agente",
+  "loginBase": "R2 congelada02a1bc4, apenas referências de imagem/fonte; sem importar JS de login",
+  "origin": "HTML local3031/boas-vindas; não é aplicativo instalado",
+  "files": [
+    {
+      "file": "index.html",
+      "sha256": "80d3d10749f1e4ccc4a677815c91fa693a38ab073354aaa23d807ee3cecda407"
+    },
+    {
+      "file": "boas-vindas.css",
+      "sha256": "fc8cb4f17a132757888a983c744e0020081cb12f523959615c71d2de0a0f5ca0"
+    },
+    {
+      "file": "boas-vindas.js",
+      "sha256": "c67bbdc51a6e74e82b32feee1eacbbb2d3f36a316e851b6b3fe86ad8ade201c3"
+    },
+    {
+      "file": "assets/stu-acolhida.webp",
+      "sha256": "904faff4fc3bc437b5ba1bd821474e4eb7b84a50149f25bb3c0aad41b509a7c0"
+    },
+    {
+      "file": "assets/stu-feliz.webp",
+      "sha256": "498e5b52165e76b819b266b170fdda298b3c90eccf69c5be0a4ea0c4e6938314"
+    },
+    {
+      "file": "assets/stu-celebrando.webp",
+      "sha256": "ee820e8ce0e825447bed91d309220188e341643598e05786077e81c73056c838"
+    }
+  ],
+  "assetsOriginals": {
+    "assets/stu-acolhida.webp": "public/marca/stu/stu-acolhida-320.webp",
+    "assets/stu-feliz.webp": "public/marca/stu/stu-feliz-320.webp",
+    "assets/stu-celebrando.webp": "public/marca/stu/stu-celebrando-320.webp"
+  },
+  "limits": [
+    "exemplos estáticos identificados como Exemplo",
+    "sem backend/API/autenticação/criação de conta/persistência",
+    "não implementa regra de reinstalação; login existente aponta à propostaR2",
+    "não contém perguntas ou etapas adicionais de onboarding"
+  ],
+  "captures": "medidas.json:3páginas×2larguras×2escalas, DPR2, movimento reduzido",
+  "frozenForIndependentQA": true
+}

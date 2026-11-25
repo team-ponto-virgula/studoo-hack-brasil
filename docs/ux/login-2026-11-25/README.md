@@ -1,6 +1,10 @@
 # Login mobile — proposta para revisão
 
-**25/11/2026 · estado: proposta visual, aguardando a revisão do dono.**
+**25/11/2026 · R1 aprovada como base de organização; R2 e boas-vindas em revisão.**
+
+O dono gostou da simplicidade desta tela e pediu evolução dinâmica. A [R2](evolucao/README.md) preserva essa organização, retira o Stu pequeno, anima a logo e põe **Google antes de Apple**, conforme a correção explícita. [Ver o movimento](evolucao/capturas/login-em-movimento.gif).
+
+A nova [entrada de boas-vindas](boas-vindas/index.html) fica separada do formulário. O [plano completo de onboarding](ONBOARDING.md) distingue conta nova de login, sem depender da instalação do app. Os exemplos continuam sendo propostas visuais; nenhuma dessas mudanças foi ligada ao runtime.
 
 O objetivo desta rodada é corrigir a organização do login. O pedido mais recente substitui a aprovação visual das direções anteriores: trabalhar uma tela de cada vez e extrair o padrão depois da revisão. Esta pasta contém somente uma proposta; não altera as telas em produção, o mascote ou a intro de abertura.
 
@@ -27,7 +31,7 @@ Abrir `http://localhost:3030` no navegador da mesma máquina. Na conferência de
 
 1. Marca e uma saudação curta, com o Stu original pequeno, como companhia.
 2. E-mail → **Continuar**. A senha aparece no segundo estado, com título próprio, e-mail editável, recuperação próxima ao campo, mostrar/ocultar e **Entrar**. As demais escolhas ficam na etapa inicial; “Outras formas de entrar” volta a ela sem apagar o e-mail.
-3. Métodos sociais elegíveis juntos, abaixo da alternativa por e-mail. Apple antes de Google no iOS compatível.
+3. Métodos sociais elegíveis juntos, abaixo da alternativa por e-mail. Nesta R1 a ordem era Apple antes de Google; a R2 corrige para Google antes de Apple, a pedido do dono.
 4. Criar conta e experimentar como visitante em um grupo secundário.
 5. Ajuda e política públicas no fim.
 

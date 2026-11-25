@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>Studoo · seu próximo passo</title>
+  <link rel="icon" href="../prototipo/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./boas-vindas.css">
+  <script src="./boas-vindas.js" defer></script>
+</head>
+<body>
+  <div class="mobile-view">
+    <div class="system-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="system-icons">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect y="8" width="3" height="4" rx=".7"/><rect x="4.5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="9" y="3" width="3" height="9" rx=".7"/><rect x="13.5" width="3" height="12" rx=".7"/></svg>
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 3.2a12 12 0 0 1 15 0M3.7 6a8 8 0 0 1 9.6 0M6.4 8.6a4 4 0 0 1 4.2 0"/><circle cx="8.5" cy="11" r=".8" fill="currentColor" stroke="none"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3" stroke="currentColor" opacity=".45"/><rect x="2.5" y="2.5" width="17" height="7" rx="1" fill="currentColor"/><path d="M23 4v4c2-1 2-3 0-4" fill="currentColor" opacity=".45"/></svg>
+      </div>
+    </div>
+
+    <div class="page">
+      <header class="brand"><img src="../evolucao/assets/logo.png" alt="Studoo" width="560" height="184"></header>
+
+      <main id="main">
+        <div class="slides">
+          <section class="slide" id="beneficio-trilha" aria-labelledby="titulo-trilha">
+            <img class="stu" src="./assets/stu-acolhida.webp" alt="" width="320" height="320">
+            <h1 id="titulo-trilha" tabindex="-1">Seu assunto vira<br>uma trilha.</h1>
+            <p class="description">Conte o que quer aprender ou traga um material. O Studoo organiza o caminho para você.</p>
+            <figure class="demo demo-track">
+              <figcaption>Exemplo</figcaption>
+              <div class="demo-row topic">
+                <svg class="demo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c2-1.5 5.5-1.5 8 0 2.5-1.5 6-1.5 8 0v14c-2-1.5-5.5-1.5-8 0-2.5-1.5-6-1.5-8 0zM12 5.5v14"/></svg>
+                <span>Quero aprender SQL</span>
+              </div>
+              <div class="demo-row result">
+                <svg class="demo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v15m-5-5 5 5 5-5"/></svg>
+                <span>Sua trilha <span class="demo-detail">· 5 lições</span></span>
+              </div>
+            </figure>
+          </section>
+
+          <section class="slide" id="beneficio-explicacao" aria-labelledby="titulo-explicacao" hidden>
+            <img class="stu" src="./assets/stu-feliz.webp" alt="" width="320" height="320">
+            <h1 id="titulo-explicacao" tabindex="-1">Um erro abre<br>outro caminho.</h1>
+            <p class="description">Errou uma resposta? Veja outra explicação e tente de novo.</p>
+            <figure class="demo demo-explanation">
+              <figcaption>Exemplo</figcaption>
+              <div class="demo-row explanation-copy"><span class="feedback-sign" aria-hidden="true">↻</span><span>Ainda não foi dessa vez</span></div>
+              <div class="demo-row another-way"><span>Outro jeito de entender</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></div>
+            </figure>
+          </section>
+
+          <section class="slide" id="beneficio-progresso" aria-labelledby="titulo-progresso" hidden>
+            <img class="stu" src="./assets/stu-celebrando.webp" alt="" width="320" height="320">
+            <h1 id="titulo-progresso" tabindex="-1">Continue de<br>onde parou.</h1>
+            <p class="description">Veja o que já aprendeu e encontre seu próximo passo quando voltar.</p>
+            <figure class="demo demo-progress">
+              <figcaption>Exemplo</figcaption>
+              <div class="demo-row progress-label"><span>SQL para a prova</span><span class="demo-detail">1 de 5 lições</span></div>
+              <progress max="5" value="1" aria-label="Exemplo: 1 de 5 lições concluídas">1 de 5 lições</progress>
+              <div class="demo-row next-step"><span>Próximo: conectar tabelas</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></div>
+            </figure>
+          </section>
+        </div>
+
+        <div class="actions">
+          <nav class="pagination" aria-label="Conheça o Studoo">
+            <button class="dot-button" type="button" data-slide="0" aria-label="Seu assunto vira uma trilha" aria-current="step"><span></span></button>
+            <button class="dot-button" type="button" data-slide="1" aria-label="Um erro abre outro caminho"><span></span></button>
+            <button class="dot-button" type="button" data-slide="2" aria-label="Continue de onde parou"><span></span></button>
+          </nav>
+          <button class="primary" id="next" type="button"><span id="next-label">Continuar</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+          <a class="existing-account" href="../evolucao/index.html">Já tenho conta</a>
+        </div>
+      </main>
+    </div>
+    <div class="home-indicator" aria-hidden="true"><span></span></div>
+  </div>
+
+  <dialog id="create-preview" aria-labelledby="create-title" aria-describedby="create-copy">
+    <div class="dialog-content">
+      <p class="eyebrow">Proposta visual</p>
+      <h2 id="create-title">Vamos criar sua conta.</h2>
+      <p id="create-copy">Aqui começa o cadastro e, depois, a preparação do seu estudo. Esta demonstração termina neste ponto: nenhuma conta foi criada.</p>
+      <button class="primary" id="close-preview" type="button">Voltar à apresentação</button>
+      <a class="existing-account" href="../evolucao/index.html">Já tenho conta</a>
+    </div>
+  </dialog>
+</body>
+</html>
