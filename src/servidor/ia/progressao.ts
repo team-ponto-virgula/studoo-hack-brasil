@@ -1,4 +1,4 @@
-import type { ConteudoLicao, EsqueletoPlano } from '@/dominio/aprendizado/plano';
+import { exercicioValido, type ConteudoLicao, type EsqueletoPlano } from '@/dominio/aprendizado/plano';
 import { FalhaApi } from '@/servidor/acesso/http';
 import { lista, objeto, pedirJson, texto } from '@/servidor/estudio/ia';
 import { maximoDeLicoesDiagnostico, normalizarLicaoSegura } from './comum';
@@ -15,6 +15,10 @@ const esquemaVerificacao = objeto({
   avaliacoes: lista(objeto({
     numero: inteiro, resultado: { type: 'string', enum: ['avanca', 'ajustar'] },
     motivo: { ...texto, description: 'O que falta para resolver a nova decisão, em até 240 caracteres. Vazio se avança.' },
+    correcoes: lista(objeto({
+      exercicio: { ...inteiro, description: 'Número do exercício na lição, a partir de 1.' },
+      gabarito: lista(texto), feedbackCorreto: texto, feedbackIncorreto: texto,
+    })),
   })),
 });
 const esquemaReparo = objeto({
@@ -36,7 +40,8 @@ const textoAte = (valor: unknown, limite: number): valor is string =>
   typeof valor === 'string' && valor.trim().length > 0 && valor.length <= limite;
 type Curriculo = { titulo: string; licoes: { titulo: string; resumo: string }[] }[];
 type LicaoParaRevisar = { numero: number; fluxo: number; indice: number; titulo: string; decisao: string; conteudo: ConteudoLicao };
-type Pendencia = { numero: number; motivo: string };
+type Pendencia = { numero: number; motivo: string; correcoes?: unknown };
+type CorrecaoDeGabarito = { exercicio: number; gabarito: string[]; feedbackCorreto: string; feedbackIncorreto: string };
 
 async function orientarCurriculo(
   objetivo: string, evidencias: Pick<Parameters<GeradorTrilha['gerarEstrutura']>[2], 'diagnostico' | 'amostrasDemonstradas'>,
@@ -75,12 +80,15 @@ async function conferirLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[],
     regras,
     'Responda avanca quando a aula e os exercícios praticam corretamente a decisão, inclusive se usarem a ação demonstrada como parte da solução. Aceite formas equivalentes e reforços de etapas da decisão nova. Não exija palavras, formatos ou cálculos que o desafio não pede.',
     'Se for preciso ajustar, descreva em até 240 caracteres o que falta no exercício (dados, decisão, gabarito ou conteúdo) e por que. Devolva exatamente um veredito por número recebido.',
-    'Exemplo JSON: {"avaliacoes":[{"numero":1,"resultado":"ajustar","motivo":"O exercício só pergunta a direção. Falta indicar o desvio em EV e pedir também o número de passos."}]}',
+    'Se apenas o gabarito e seus feedbacks estiverem errados, preencha correcoes com o número de cada exercício afetado (começa em 1), o gabarito completo corrigido e os dois feedbacks coerentes. Preserve enunciado, opções, conceito e exemplo. Confira também passos e resolução.',
+    'Use exatamente os IDs existentes: na múltipla escolha, ["id"]; na associação, todos os pares ["idEsquerda=idDireita"] sem repetir nenhum ID de cada lado; na ordenação, todos os IDs na nova ordem; em verdadeiro_falso, ["verdadeiro" ou "falso", "id da justificativa"].',
+    'Use correcoes: [] se avança, faltar informação, não houver resposta defensável entre as opções, o tipo não admitir correção por ID ou a lição precisar de outra alteração.',
+    'Exemplo JSON: {"avaliacoes":[{"numero":1,"resultado":"ajustar","motivo":"O exercício só pergunta a direção. Falta indicar o desvio em EV e pedir também o número de passos.","correcoes":[]}]}',
   ].join(' '), {
     ...contextoDaRevisao(plano),
     licoes: licoes.map(({ numero, titulo, decisao, conteudo }) => ({
       numero, titulo, decisao, conceito: conteudo.conceito, exemplo: conteudo.exemplo, passos: conteudo.passos,
-      visuais: conteudo.visuais, exercicios: [conteudo.exercicio, ...(conteudo.extras ?? [])],
+      visuais: conteudo.visuais, resolucao: conteudo.resolucao, exercicios: [conteudo.exercicio, ...(conteudo.extras ?? [])],
     })),
   }, [], { prazoMs: 12000, tentativas: 1, sinal }) as { avaliacoes?: (Pendencia & { resultado: unknown })[] } | null;
   const avaliacoes = resposta?.avaliacoes;
@@ -89,7 +97,34 @@ async function conferirLicoes(plano: EsqueletoPlano, licoes: LicaoParaRevisar[],
     a && numeros.delete(a.numero) && (a.resultado === 'avanca' || (a.resultado === 'ajustar' && textoAte(a.motivo, 240))))) {
     throw new FalhaApi('ia_indisponivel', undefined, 'progressao_verificacao');
   }
-  return avaliacoes.filter(a => a.resultado === 'ajustar').map(a => ({ numero: a.numero, motivo: a.motivo.trim() }));
+  return avaliacoes.filter(a => a.resultado === 'ajustar')
+    .map(({ numero, motivo, correcoes }) => ({ numero, motivo: motivo.trim(), correcoes }));
+}
+
+function corrigirGabaritos(licao: LicaoParaRevisar, correcoes: unknown): LicaoParaRevisar | undefined {
+  const { conteudo } = licao;
+  const exercicios = [conteudo.exercicio, ...(conteudo.extras ?? [])];
+  if (!Array.isArray(correcoes) || correcoes.length === 0 || correcoes.length > exercicios.length) return;
+
+  const numeros = new Set<number>();
+  for (const correcao of correcoes as (Partial<CorrecaoDeGabarito> | null)[]) {
+    const numero = correcao?.exercicio;
+    if (typeof numero !== 'number' || !Number.isInteger(numero) || numero < 1 || numero > exercicios.length
+      || numeros.has(numero) || !correcao) return;
+
+    const original = exercicios[numero - 1];
+    if (original.tipo === 'lacuna' || original.tipo === 'aberta') return;
+    const corrigido = {
+      ...original, gabarito: correcao.gabarito,
+      feedbackCorreto: correcao.feedbackCorreto, feedbackIncorreto: correcao.feedbackIncorreto,
+    };
+    if (!exercicioValido(corrigido)) return;
+    numeros.add(numero);
+    exercicios[numero - 1] = corrigido;
+  }
+
+  const [exercicio, ...extras] = exercicios;
+  return { ...licao, conteudo: { ...conteudo, exercicio, ...(conteudo.extras && { extras }) } };
 }
 
 type Reparo = { numero: number; conceito: string; exemplo: string; enunciado: string; opcoes: string[]; correta: number; feedbackCorreto: string; feedbackIncorreto: string };
@@ -177,8 +212,20 @@ export function comProgressaoDiagnostica(gerador: GeradorTrilha): GeradorTrilha 
       }));
       const pendencias = await conferirLicoes(plano, licoes, sinal);
       if (pendencias.length === 0) return conteudos;
-      const numeros = new Set(pendencias.map(p => p.numero));
-      const reparadas = await repararLicoes(plano, licoes.filter(l => numeros.has(l.numero)), pendencias, sinal);
+      const porNumero = new Map(pendencias.map(p => [p.numero, p]));
+      const reparadas: LicaoParaRevisar[] = [];
+      const paraReescrever: LicaoParaRevisar[] = [];
+      for (const licao of licoes) {
+        const pendencia = porNumero.get(licao.numero);
+        if (!pendencia) continue;
+        const corrigida = corrigirGabaritos(licao, pendencia.correcoes);
+        if (corrigida) reparadas.push(corrigida);
+        else paraReescrever.push(licao);
+      }
+      if (paraReescrever.length) {
+        reparadas.push(...await repararLicoes(plano, paraReescrever, pendencias, sinal));
+      }
+      reparadas.sort((a, b) => a.numero - b.numero);
       if ((await conferirLicoes(plano, reparadas, sinal)).length) throw new FalhaApi('ia_indisponivel', undefined, 'progressao_licao');
       for (const { fluxo, indice, conteudo } of reparadas) conteudos[fluxo][indice] = conteudo;
       return conteudos;
