@@ -10,6 +10,7 @@ export type EtapaAula =
   | { tipo: 'conceito' }
   | { tipo: 'exemplo' }
   | { tipo: 'exercicio'; indice: number }
+  | { tipo: 'ensino' }
   | { tipo: 'pratica' };
 
 /** Os exercícios da lição; uma lição salva antes dos exercícios extras tem só o principal. */
@@ -23,8 +24,17 @@ export function etapasDaLicao(licao: Pick<LicaoDetalhe, 'exercicio'> & Partial<P
     { tipo: 'conceito' },
     { tipo: 'exemplo' },
     ...exerciciosDaLicao(licao).map((_, indice): EtapaAula => ({ tipo: 'exercicio', indice })),
+    { tipo: 'ensino' },
     ...(licao.pratica ? [{ tipo: 'pratica' } as const] : []),
   ];
+}
+
+export const VERSAO_ETAPAS_AULA = 2;
+
+/** A prática da versão antiga ficava logo após o último exercício. */
+export function migrarPassoAula(etapas: readonly EtapaAula[], passo: number, versao?: number): number {
+  const pratica = etapas.findIndex(etapa => etapa.tipo === 'pratica');
+  return versao !== VERSAO_ETAPAS_AULA && pratica > 0 && passo === pratica - 1 ? pratica : passo;
 }
 
 /** Posição da última etapa de exercício (a aula volta para ela se a confirmação da conclusão expirar). */

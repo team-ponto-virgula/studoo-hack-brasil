@@ -16,6 +16,9 @@ export type PassoDiagnostico =
 export interface EstudoNoPerfil {
   trilhasConcluidas: number;
   diasSeguidos: number;
+  diasDeEstudo: number;
+  /** Até sete datas distintas no fuso da conta, da mais recente à mais antiga. */
+  diasRecentes: string[];
 }
 
 export function perfilDiagnosticoValido(valor: unknown): valor is PerfilDiagnostico {
