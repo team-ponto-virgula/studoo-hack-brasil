@@ -291,8 +291,76 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   assert.notEqual(a.exercicio.enunciado, b.exercicio.enunciado);
 
   atrasar = true;
+  const chamadasAntesDoAtraso = fetch.mock.callCount();
   assert.equal((await pedido(geral)).status, 503);
+  assert.equal(fetch.mock.callCount(), chamadasAntesDoAtraso + 1);
   const legado = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral })));
   assert.ok(legado.fluxos.length);
   assert.equal(legado.diagnostico, undefined);
+});
+
+test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rótulos longos', async t => {
+  const { id, cookie } = await novoVisitante();
+  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1' };
+  const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
+  Object.assign(process.env, ambiente);
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+  t.after(() => {
+    for (const [chave, valor] of Object.entries(anterior)) {
+      if (valor === undefined) delete process.env[chave];
+      else process.env[chave] = valor;
+    }
+  });
+  const objetivo = 'História do Brasil';
+  const vargas = {
+    habilidade: 'Relacionar CLT e Era Vargas',
+    enunciado: 'Qual medida da Era Vargas reuniu a legislação trabalhista em 1943?',
+    opcoes: ['Lei Áurea', 'Código Eleitoral', 'CLT'], correta: 2,
+  };
+  const correta = {
+    escopo: objetivo, nivelDeclarado: 'nao_declarado',
+    questao: {
+      habilidade: 'Situar o início do Brasil republicano',
+      enunciado: 'Qual mudança de regime ocorreu no Brasil em 1889?',
+      opcoes: ['Proclamação da República', 'Independência', 'Início da Era Vargas'], correta: 0,
+    },
+    recortes: [
+      { titulo: 'Colônia', questao: { habilidade: 'Identificar a produção açucareira', enunciado: 'Qual produto era feito nos engenhos coloniais?', opcoes: ['Borracha', 'Açúcar', 'Ferro'], correta: 1 } },
+      { titulo: 'Império', questao: { habilidade: 'Situar a Independência', enunciado: 'Em que ano foi proclamada a Independência do Brasil?', opcoes: ['1808', '1822', '1889'], correta: 1 } },
+      { titulo: ' Era Vargas ', questao: { ...vargas, habilidade: ` ${vargas.habilidade} `, opcoes: ['Lei Áurea', 'Código Eleitoral', ' CLT '] } },
+    ],
+  };
+  const longo = structuredClone(correta);
+  for (const questao of [longo.questao, ...longo.recortes.map(item => item.questao)]) {
+    questao.habilidade = 'Identificar características da política trabalhista do período Vargas e seus vínculos com o controle estatal dos sindicatos.';
+  }
+  let respostas;
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    const pedido = JSON.parse(init.body);
+    assert.deepEqual(JSON.parse(pedido.messages[1].content), { objetivo });
+    assert.deepEqual(pedido.response_format, { type: 'json_object' });
+    assert.match(pedido.messages[0].content, /até 100 caracteres/);
+    assert.match(pedido.messages[0].content, /Exatamente três alternativas distintas/);
+    assert.match(pedido.messages[0].content, /"enum":\[0,1,2\]/);
+    if (respostas.length === 1) assert.match(pedido.messages[0].content, /A resposta anterior não pôde ser usada/);
+    return Response.json({ choices: [{ message: { content: JSON.stringify(respostas.shift()) } }] });
+  });
+  const pedir = () => diagnostico(req('aprendizado/diagnostico', cookie, { objetivo }));
+  respostas = [longo, correta];
+  const recorte = await ok(pedir());
+  assert.equal(fetch.mock.callCount(), 2);
+  assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Colônia', 'Império', 'Era Vargas', 'Ainda não sei']);
+  const profundidade = await responder(cookie, recorte, 'Era Vargas');
+  const amostra = await responder(cookie, profundidade, 'Intermediário');
+  assert.equal(amostra.pergunta.enunciado, vargas.enunciado);
+  const resultado = await responder(cookie, amostra, 'CLT');
+  assert.deepEqual(resultado.perfil, { escopo: 'Era Vargas', nivel: 'intermediario', demonstrados: [vargas.habilidade], lacunas: [] });
+
+  respostas = [
+    { ...correta, questao: { ...correta.questao, correta: 3 } },
+    { ...correta, questao: { ...correta.questao, opcoes: ['CLT', ' clt ', 'Outro'] } },
+  ];
+  assert.equal((await pedir()).status, 503);
+  assert.equal(fetch.mock.callCount(), 4);
 });
