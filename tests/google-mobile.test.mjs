@@ -38,6 +38,54 @@ function ambiente({ cancelado = false, falharArmazenamento = false, env = {} } =
   return { api: exports, dados, chamadas, chave, retorno, token };
 }
 
+// Executa o hook de configuração e o render de provedores de produção. Os dublês representam só o servidor,
+// a elegibilidade Apple e os componentes nativos; a decisão Google usa o código real do build acima.
+const acessoFonte = await readFile(new URL('../apps/mobile/src/acesso-mobile.tsx', import.meta.url), 'utf8');
+const acessoAst = ts.createSourceFile('acesso-mobile.tsx', acessoFonte, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const acessoFuncoes = ['useConfigAcesso', 'ProvedoresAcesso'].map(nome => {
+  const declaracao = acessoAst.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === nome);
+  assert.ok(declaracao, `função de acesso ausente: ${nome}`);
+  return declaracao.getText(acessoAst);
+}).join('\n');
+const acessoJs = ts.transpileModule(acessoFuncoes, {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+}).outputText;
+
+function nos(arvore) {
+  if (Array.isArray(arvore)) return arvore.flatMap(nos);
+  if (!arvore || typeof arvore !== 'object') return [];
+  return [arvore, ...nos(arvore.props?.children)];
+}
+
+async function provedoresDoAcesso({ google = true, apple = true, appleElegivel = true, env = {} } = {}) {
+  const estados = [], efeitos = [];
+  let cursor = 0;
+  const jsx = (type, props) => ({ type, props });
+  const api = {};
+  runInNewContext(acessoJs, {
+    exports: api, require: () => ({ jsx, jsxs: jsx }),
+    useState(inicial) {
+      const i = cursor++;
+      if (!(i in estados)) estados[i] = inicial;
+      return [estados[i], valor => { estados[i] = typeof valor === 'function' ? valor(estados[i]) : valor; }];
+    },
+    useEffect: acao => { efeitos.push(acao); },
+    criarClienteNativo: () => ({ configuracaoAcesso: async () => ({ google, apple, cadastro: true, recuperacao: true, visitante: false }) }),
+    googleNoAparelho: ambiente({ env }).api.googleNoAparelho,
+    appleDisponivelNoAparelho: async () => appleElegivel,
+    View: 'View', Text: 'Text', Pressable: 'Pressable', Image: 'Image',
+    s: new Proxy({}, { get: (_, chave) => chave }), LOGO_GOOGLE: { fonte: 'google-oficial' },
+    mensagens: { acesso: { google: 'Continuar com Google' } },
+    AppleAuthentication: { AppleAuthenticationButton: 'AppleOficial', AppleAuthenticationButtonType: { CONTINUE: 'CONTINUE' }, AppleAuthenticationButtonStyle: { WHITE_OUTLINE: 'WHITE_OUTLINE' } },
+  });
+  const renderizar = config => api.ProvedoresAcesso({ config, google() {}, apple() {}, ocupado: false, executar: acao => acao() });
+  assert.equal(renderizar(api.useConfigAcesso()), null, 'não oferece provedores antes de consultar a configuração');
+  efeitos.forEach(acao => acao());
+  await new Promise(setImmediate);
+  cursor = 0;
+  return nos(renderizar(api.useConfigAcesso()));
+}
+
 test('Google nativo usa PKCE, troca o código e só persiste a sessão no SecureStore', async () => {
   const a = ambiente();
   assert.equal(await a.api.entrarComGoogle(), a.token);
@@ -96,8 +144,18 @@ test('sem a chave (ou com outro valor), o Google segue ligado como antes', () =>
 });
 
 test('a entrada só mostra o Google quando o servidor oferece e o build não desligou; o TestFlight leva Google e Apple juntos', async () => {
-  const sessao = await readFile(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
-  assert.match(sessao, /setGoogleDisponivel\(c\.google && googleNoAparelho\(\)\)/);
+  for (const google of [false, true]) {
+    for (const chave of [undefined, 'ligado', 'desligado']) {
+      const lista = await provedoresDoAcesso({ google, env: { EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO: chave } });
+      assert.equal(lista.some(no => no.props?.testID === 'login-google'), google && chave !== 'desligado', `servidor=${google}, build=${chave}`);
+    }
+  }
+  for (const apple of [false, true]) {
+    for (const appleElegivel of [false, true]) {
+      const lista = await provedoresDoAcesso({ apple, appleElegivel });
+      assert.equal(lista.some(no => no.props?.testID === 'login-apple'), apple && appleElegivel, `Apple servidor=${apple}, aparelho=${appleElegivel}`);
+    }
+  }
   const eas = JSON.parse(await readFile(new URL('../apps/mobile/eas.json', import.meta.url), 'utf8'));
   const perfil = eas.build.testflight;
   assert.equal(perfil.ios.simulator, undefined);
@@ -110,7 +168,14 @@ test('a entrada só mostra o Google quando o servidor oferece e o build não des
   const app = JSON.parse(await readFile(new URL('../apps/mobile/app.json', import.meta.url), 'utf8'));
   assert.equal(app.expo.ios.usesAppleSignIn, true);
   assert.ok(app.expo.plugins.includes('expo-apple-authentication'));
-  assert.match(sessao, /setAppleDisponivel\(c\.apple === true && appleNoAparelho\)/);
+  const testflight = await provedoresDoAcesso({ env: perfil.env });
+  const google = testflight.find(no => no.props?.testID === 'login-google');
+  const apple = testflight.find(no => no.props?.testID === 'login-apple');
+  assert.ok(google && apple, 'TestFlight oferece ambos quando servidor e aparelho habilitam');
+  assert.ok(testflight.indexOf(google) < testflight.indexOf(apple), 'Google vem antes da Apple');
+  const oficial = testflight.find(no => no.type === 'AppleOficial');
+  assert.equal(oficial.props.buttonType, 'CONTINUE');
+  assert.equal(oficial.props.buttonStyle, 'WHITE_OUTLINE');
 });
 
 test('pacote de loja: sem o texto de Face ID (o app não usa biometria) e com a fase que tira a rede local do dev-client no Release', async () => {

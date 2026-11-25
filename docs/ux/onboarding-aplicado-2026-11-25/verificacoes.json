@@ -56,6 +56,24 @@
       "total": 4,
       "passed": 4,
       "failed": 0
+    },
+    {
+      "command": "npm run test:google-mobile",
+      "total": 17,
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:email",
+      "total": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:ia",
+      "total": 149,
+      "passed": 149,
+      "failed": 0
     }
   ],
   "typechecks": [
