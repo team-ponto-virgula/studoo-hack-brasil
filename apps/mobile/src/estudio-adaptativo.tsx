@@ -1076,8 +1076,8 @@ export function ApoioDaLicao({
 const s = StyleSheet.create({
   // Ponte clara (spec 05, 62b964b): blocos na ordem da regra, 14 entre eles.
   ponteClara: { gap: 14, marginTop: 4, marginBottom: 16 },
-  ponteMotivo: { color: '#0B1B5C', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
-  ponteCartao: { gap: 12, padding: 18, borderWidth: 2, borderColor: '#E1E7FA', borderRadius: 20, backgroundColor: cores.fundo },
+  ponteMotivo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
+  ponteCartao: { gap: 16, padding: 20, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },
   pontePassoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
   ponteRevisao: { gap: 10 },
   // Depois do cartão: os 24 da margem dele na web (12 do cartão + 12). É sempre o último do bloco de apoio, que soma 12 embaixo
@@ -1088,13 +1088,13 @@ const s = StyleSheet.create({
   legendaPrimeira: { marginTop: 12, marginBottom: -2 },
   // O "Saiba mais" no fim do aviso (spec 16, item 35): o azul de ação em 800, com alvo de toque pelo parágrafo inteiro da linha.
   saibaMaisNaLinha: { color: cores.acao, fontWeight: '800' },
-  nomeMaterial: { fontSize: 17.6, lineHeight: 22.88, letterSpacing: -0.264, marginTop: 6 },
+  nomeMaterial: { fontSize: 20, lineHeight: 26, letterSpacing: -0.3, marginTop: 6 },
   seloMaterial: { marginTop: -2, marginBottom: 10 },
   // A pergunta do desafio da ponte como a do exercício (24 px, -1 px) e as opções no espaço da lista da aula.
   // .estudio-desafio h3 da web: 1,0625rem (17) em 800, entrelinha 1,3 e -0,015em (a regra vem depois de .estudio-card h3).
   // .estudio-retorno-ponte no erro: âmbar escuro em 700.
   retornoPonte: { color: '#7A4A00', fontWeight: '700' },
-  paragrafo: { lineHeight: 25.6 },
+  paragrafo: { fontSize: 16, lineHeight: 24 },
   // O selo nunca quebra nem encolhe (bf8cf37): se não couber ao lado dele, "Voltar ao exercício" desce para a linha de baixo.
   seloPonte: { alignSelf: 'center', flexShrink: 0, marginVertical: 12 },
   // Na web, a cena vem logo depois da cabeça (10 em cima) e, sem a legenda, o parágrafo seguinte fica a 12; aqui o cartão já
@@ -1110,8 +1110,8 @@ const s = StyleSheet.create({
   // :is(.aula-quadro, .estudio-desafio) .opcoes: vão de 12.
   opcoesDesafio: { gap: 12 },
   origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
-  arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
-    borderColor: cores.acao, borderRadius: 14 },
+  arquivo: { minHeight: 52, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 1.5, borderStyle: 'dashed',
+    borderColor: cores.acao, borderRadius: 16, backgroundColor: cores.nevoa },
   arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita; sem
@@ -1121,14 +1121,14 @@ const s = StyleSheet.create({
   // (8 depois do degrau de 4).
   desafio: { gap: 12 },
   // .ensino-gravando: 12 em cima na web (24 do "Parar e transcrever", com o cartão pondo 14) e 12 até o "Enviar".
-  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, marginBottom: -2, paddingVertical: 10, paddingHorizontal: 14,
-    borderRadius: 14, backgroundColor: cores.ceu },
-  campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.gelo },
+  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12, paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 16, backgroundColor: cores.nevoa },
+  campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.bordaCampo },
   campoEnsinoDesligado: { backgroundColor: '#FAFAFA' },
   // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.
   rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 2 },
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
-  legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
+  legendaCartao: { fontSize: 14, lineHeight: 21 },
   blocoVoz: { marginVertical: -2 },
   // .estudio-feedback.ensino-caderno (um elemento só): 20 acima (o cartão já põe 14), a linha de 2 em gelo e 16 abaixo (o
   // padding-top de .ensino-caderno, que vem depois no CSS, vence o de 10).
@@ -1136,11 +1136,10 @@ const s = StyleSheet.create({
   // .estudio-card: margem de 24 entre cartões (as margens se juntam na web; aqui, 12 + 12).
   card: {
     marginVertical: 12,
-    padding: 18,
-    gap: 14,
+    padding: 20,
+    gap: 16,
     borderRadius: 24,
-    borderWidth: 2,
-    borderBottomWidth: 5,
+    borderWidth: 1.5,
     borderColor: cores.gelo,
     backgroundColor: cores.fundo,
   },
@@ -1151,6 +1150,6 @@ const s = StyleSheet.create({
     gap: 10,
   },
   // .estudio-exemplo: respiro de 18, raio de 16 e 16 em cima e embaixo (o cartão já põe 14); o texto com entrelinha de 24.
-  exemplo: { backgroundColor: '#EEF2FF', padding: 18, borderRadius: 16, marginVertical: 2 },
+  exemplo: { backgroundColor: cores.nevoa, padding: 20, borderRadius: 20, marginVertical: 2 },
   exemploTexto: { lineHeight: 24 },
 });

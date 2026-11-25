@@ -168,7 +168,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 
 .caminho-no__lente > .icone { width: 42%; height: 42%; stroke-width: 3; }
 .caminho-no[data-estado='concluida'] .caminho-no__lente { --face: var(--ouro-face); --labio: var(--ouro-labio); --tinta: #7a4a00; }
-.caminho-no[data-estado='atual'] .caminho-no__lente { --face: #4466e4; --labio: var(--acao-escura); --tinta: var(--fundo); scale: 1.14; }
+.caminho-no[data-estado='atual'] .caminho-no__lente { --face: var(--acao); --labio: var(--acao-escura); --tinta: var(--fundo); scale: 1.14; }
 .caminho-no[data-estado='previa'] .caminho-no__lente { --face: var(--fundo); --labio: #cdd6f2; --tinta: var(--acao); }
 
 .caminho-no__alvo:active:not(:disabled) .caminho-no__lente {
@@ -193,7 +193,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   pointer-events: none;
   position: absolute;
   inset: -12px;
-  border: 6px solid rgb(68 102 228 / 0.22);
+  border: 6px solid color-mix(in srgb, var(--acao) 22%, transparent);
   border-radius: 50%;
   animation: caminho-halo 240ms ease-out backwards, caminho-respirar 2200ms ease-in-out 400ms infinite;
 }
@@ -284,7 +284,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-no__titulo { font-weight: 800; line-height: 1.28; text-wrap: pretty; }
 .caminho-no[data-estado='previa'] .caminho-no__titulo { font-size: 0.9375rem; }
 .caminho-no__estado { color: var(--texto2); font-size: 0.8125rem; font-weight: 800; }
-.caminho-no__posicao { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
+.caminho-no__posicao { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
 .caminho-no[data-estado='atual'] .caminho-no__texto { border: 2px solid rgb(68 102 228 / 0.28); box-shadow: 0 4px 0 rgb(68 102 228 / 0.16); }
 .caminho-no[data-estado='atual'] .caminho-no__titulo { font-size: 1.0625rem; }
 
@@ -351,7 +351,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-parte__selo .icone { width: 22px; height: 22px; }
 .caminho-parte__texto { display: flex; grid-area: texto; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
 .caminho-parte__numero { font-family: Quicksand, sans-serif; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.02em; }
-.caminho-parte__andamento { color: #4a5568; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+.caminho-parte__andamento { color: #4a5568; font-size: 0.8125rem; font-weight: 800; white-space: nowrap; }
 .caminho-parte__barra { grid-area: barra; height: 8px; overflow: hidden; border-radius: 999px; background: var(--gelo); }
 .caminho-parte__barra > span { display: block; height: 100%; border-radius: inherit; background: var(--acao); transition: width 600ms ease-out; }
 .caminho-parte[data-vencida] .caminho-parte__selo { color: #7a4a00; background: var(--ouro-face); box-shadow: 0 4px 0 var(--ouro-labio); }
@@ -740,7 +740,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 
 /* Reforço ("outro exemplo") de uma lição: aparece como selo no balão do nó. */
-.caminho-ponte { display: block; margin-top: 6px; color: var(--acao); font-size: 0.75rem; font-weight: 800; }
+.caminho-ponte { display: block; margin-top: 6px; color: var(--acao); font-size: 0.8125rem; font-weight: 800; }
 .caminho-ponte__desenho { display: flex; align-items: end; gap: 3px; height: 24px; margin-bottom: 4px; }
 .caminho-ponte__desenho > span { width: 14px; height: 8px; border-radius: 3px; background: var(--acao); box-shadow: 0 2px 0 var(--acao-escura); animation: ponte-no-entrar 400ms both; }
 @keyframes ponte-no-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -931,7 +931,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
   display: flex; flex-direction: column; align-items: center; gap: 2px; width: max-content; max-width: 210px;
   padding: 8px 14px 10px; text-align: center; text-transform: none; letter-spacing: normal; white-space: normal;
 }
-.caminho-no__etiqueta-acao { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.caminho-no__etiqueta-acao { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
 .caminho-no__etiqueta-titulo { color: var(--texto); font-size: 0.9375rem; font-weight: 800; line-height: 1.25; }
 /* O balão puxa para o centro conforme o lado do nó (x de 27 a 73), para não encostar na borda; a seta segue no nó. */
 .caminho-no__etiqueta { --puxa: calc((50 - var(--x)) * 1.7px); translate: calc(-50% + var(--puxa)) 0; }

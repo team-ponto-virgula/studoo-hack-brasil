@@ -1,451 +1,102 @@
-/*
- * Pedido da trilha (spec 03 §1): pergunta grande com o Stu, campo amplo com dica, ideias por área de interesse
- * (qualquer assunto, não só programação), "Surpreenda-me" e "Gerar trilha".
- */
-
-.painel--pedido { display: grid; gap: 24px; width: min(100%, 44rem); }
-
-.pedido-topo { display: grid; min-width: 0; }
-
-.pedido-topo .introducao { margin-top: 10px; }
-
-.pedido-como {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  margin-left: -8px;
-  padding: 6px 10px;
-  border: 0;
-  border-radius: 12px;
-  color: var(--acao);
-  background: transparent;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-@media (hover: hover) { .pedido-como:hover:not(:disabled) { background: var(--nevoa); } }
-.pedido-como:disabled { color: var(--texto2); cursor: default; }
-
-.pedido-como__sinal {
+/* Jornada Azul · Pedido. Anatomia única nas duas plataformas; dados e callbacks permanecem do produto. */
+.painel--pedido.pedido-novo {
   display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--acao);
-  background: #e5ebff;
-  font-size: 0.8125rem;
-  font-weight: 900;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  width: min(100%, 44rem);
+  margin-inline: auto;
 }
-/* O Stu acima do campo, com um balão que reage ao pedido: convida, incentiva e comemora a ideia escolhida. */
-.pedido-stu { display: flex; align-items: flex-end; gap: 10px; margin-bottom: -10px; }
-.pedido-stu .stu { flex: none; width: 66px; transform-origin: 50% 100%; animation: pedido-stu 3000ms ease-in-out infinite; }
+.pedido-novo [hidden] { display: none !important; }
 
-.pedido-stu__fala {
-  position: relative;
-  max-width: 22rem;
-  margin-bottom: 22px;
-  padding: 10px 14px;
-  border: 2px solid var(--gelo);
+.pedido-heroi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  grid-template-rows: auto auto;
+  justify-items: start;
+  align-items: center;
+  gap: 10px 16px;
+  min-width: 0;
+  text-align: start;
+}
+.pedido-heroi h1 {
+  grid-area: 1 / 1;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  letter-spacing: -.02em;
+  text-wrap: wrap;
+}
+.pedido-heroi__stu { grid-area: 1 / 2; position: relative; display: grid; width: 72px; height: 72px; place-items: center; }
+.pedido-heroi__stu .stu { width: 72px; height: auto; }
+.pedido-heroi__halo, .pedido-heroi__estrela { display: none; }
+.pedido-heroi__fala { grid-area: 2 / 1 / auto / -1; min-width: 0; color: var(--texto2); font-size: 1rem; font-weight: 600; line-height: 1.5rem; }
+
+.pedido-aviso { padding: 12px 16px; border: 1px solid var(--gelo); border-radius: 16px; background: var(--nevoa); font-weight: 700; }
+.pedido-novo .pedido-formulario { display: grid; gap: 16px; margin: 0; }
+.pedido-novo .pedido-campo { margin: 0; }
+.pedido-novo .pedido-campo__caixa { display: grid; min-width: 0; }
+.pedido-novo .pedido-campo__caixa > textarea, .pedido-novo .pedido-campo__caixa::after { grid-area: 1 / 1; }
+.pedido-novo .pedido-campo textarea,
+.pedido-novo .pedido-campo__caixa::after {
+  min-height: 112px;
+  padding: 16px;
+  border: 1.5px solid transparent;
   border-radius: 16px;
-  color: var(--texto);
-  background: var(--fundo);
-  box-shadow: 0 3px 0 var(--gelo);
-  font-size: 0.9375rem;
-  font-weight: 800;
-  line-height: 1.3;
-  transform-origin: 0 100%;
-  animation: pedido-fala 380ms cubic-bezier(0.2, 0.9, 0.3, 1.4) backwards;
-}
-
-.pedido-stu__fala::before {
-  content: '';
-  position: absolute;
-  bottom: 12px;
-  left: -9px;
-  width: 14px;
-  height: 14px;
-  border-bottom: 2px solid var(--gelo);
-  border-left: 2px solid var(--gelo);
-  border-radius: 0 0 0 3px;
-  background: var(--fundo);
-  rotate: 45deg;
-}
-
-/* Aviso neutro, como "Geração cancelada. Nada foi salvo."; o leitor de tela ouve o mesmo texto pela região de status. */
-.pedido-aviso {
-  padding: 12px 16px;
-  border-radius: var(--raio-campo);
-  background: var(--nevoa);
+  font-size: 1rem;
   font-weight: 700;
+  line-height: 1.5rem;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.pedido-novo .pedido-campo textarea { width: 100%; color: var(--texto); border-color: var(--borda-campo); background: var(--fundo); box-shadow: none; resize: none; transition: border-color 160ms ease-out, box-shadow 160ms ease-out; }
+/* Replica is layout only: labels, counter and validation remain linked to the real textarea. */
+.pedido-novo .pedido-campo__caixa::after { content: attr(data-replica) ' '; box-sizing: border-box; max-height: 50svh; overflow: hidden; visibility: hidden; pointer-events: none; }
+.pedido-novo .pedido-campo__caixa[data-vazio]::after { font-weight: 600; }
+.pedido-novo .pedido-campo textarea::placeholder { color: var(--texto2); font-weight: 600; }
+.pedido-novo .pedido-campo textarea:focus { border-color: var(--acao); outline: 3px solid var(--acao); outline-offset: 3px; }
+.pedido-novo .pedido-campo textarea[aria-invalid='true'] { border-color: var(--erro); }
+.pedido-novo .pedido-criar { width: 100%; min-height: 52px; }
+.pedido-acao { margin: 0; }
+@media (max-width: 767px) {
+  .estudo[data-navegacao] .pedido-acao { padding: 8px; border: 1px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
+  html[data-teclado='true'] .estudo[data-navegacao] .pedido-acao { padding: 0; border: 0; background: transparent; }
 }
 
-.pedido-formulario { gap: 28px; }
-.pedido-campo textarea { min-height: 148px; padding: 14px 18px; font-size: 1.125rem; line-height: 1.45; background: #fbfcff; }
-/* Ideia aplicada: o campo brilha em dourado por um instante (dois nomes iguais para a animação rodar a cada ideia). */
-.pedido-campo textarea[data-brilho='a'] { animation: pedido-brilho-a 900ms ease-out; }
-.pedido-campo textarea[data-brilho='b'] { animation: pedido-brilho-b 900ms ease-out; }
-.pedido-dica { color: var(--texto) !important; font-weight: 700; }
-.pedido-contador { justify-self: end; }
-
-.pedido-sugestoes { display: grid; gap: 14px; min-width: 0; }
-.pedido-sugestoes__topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.pedido-sugestoes__titulo { font-family: Quicksand, sans-serif; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; }
-
-.pedido-surpresa {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border: 2px solid #ffe3a3;
-  border-radius: 999px;
-  color: #7a4a00;
-  background: #fff7e0;
-  box-shadow: 0 3px 0 #ffe3a3;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.pedido-surpresa .mundo-desenho { --tam: 18px; }
-.pedido-surpresa:active:not(:disabled) { box-shadow: 0 1px 0 #ffe3a3; transform: translateY(2px); }
-.pedido-surpresa:disabled { color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); box-shadow: none; cursor: default; }
-
-/* Áreas: no celular, uma fileira que rola para o lado; na tela larga, quebram em linhas. */
-.pedido-temas {
-  display: flex;
-  gap: 8px;
-  margin-inline: calc(-1 * var(--espaco-pagina));
-  padding: 2px var(--espaco-pagina) 6px;
-  overflow-x: auto;
-  scroll-padding-inline: var(--espaco-pagina);
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-}
-
-.pedido-temas::-webkit-scrollbar { display: none; }
-
-.pedido-tema {
-  display: inline-flex;
-  flex: none;
-  min-height: 44px;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px 6px 10px;
-  border: 2px solid var(--gelo);
-  border-radius: 999px;
-  color: var(--texto);
-  background: var(--fundo);
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  scroll-snap-align: start;
-  transition: border-color 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out;
-}
-
-.pedido-tema .mundo-desenho { --tam: 22px; }
-.pedido-tema[aria-pressed='true'] .mundo-desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
-.pedido-tema[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f0f4ff; }
-.pedido-tema:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
-
-.pedido-exemplos { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-
-.pedido-exemplo {
+/* The alternative follows the primary action and preserves the objective when switching modes. */
+.pedido-alternar {
   display: grid;
-  width: 100%;
-  min-height: 60px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px 8px 8px;
-  border: 2px solid var(--gelo);
-  border-radius: 18px;
-  color: var(--texto);
-  background: var(--fundo);
-  box-shadow: 0 3px 0 var(--gelo);
-  font-weight: 700;
-  text-align: start;
-  cursor: pointer;
-  transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
-}
-
-.pedido-exemplo__icone { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: var(--nevoa); }
-.pedido-exemplo__icone .mundo-desenho { --tam: 26px; }
-.pedido-exemplo__texto { overflow-wrap: anywhere; }
-.pedido-exemplo__acao { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: var(--texto2); }
-.pedido-exemplo__acao .icone { width: 18px; height: 18px; }
-.pedido-exemplo[data-escolhida] { border-color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
-.pedido-exemplo[data-escolhida] .pedido-exemplo__acao { color: var(--fundo); background: var(--acao); animation: pedido-check 420ms cubic-bezier(0.2, 0.9, 0.3, 1.6); }
-.pedido-exemplos > li { animation: pedido-ideia 360ms cubic-bezier(0.2, 0.8, 0.3, 1.2) backwards; }
-.pedido-exemplos > li:nth-child(2) { animation-delay: 50ms; }
-.pedido-exemplos > li:nth-child(3) { animation-delay: 100ms; }
-.pedido-exemplos > li:nth-child(4) { animation-delay: 150ms; }
-.pedido-exemplos > li:nth-child(5) { animation-delay: 200ms; }
-.pedido-exemplos > li:nth-child(6) { animation-delay: 250ms; }
-
-/* Gerar trilha: quando fica disponível, um brilho atravessa o botão uma vez. */
-.pedido-formulario .acao-principal .botao { position: relative; overflow: hidden; }
-
-.pedido-formulario .acao-principal .botao:not(:disabled)::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
-  pointer-events: none;
-  transform: translateX(-120%);
-  animation: pedido-brilho-botao 1100ms ease-out 200ms forwards;
-}
-
-@keyframes pedido-fala { from { opacity: 0; transform: scale(0.85); } }
-@keyframes pedido-stu { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@keyframes pedido-brilho-a { 0% { border-color: #f0b429; box-shadow: 0 0 0 0 rgb(255 209 102 / 0.9); } 100% { box-shadow: 0 0 0 14px rgb(255 209 102 / 0); } }
-@keyframes pedido-brilho-b { 0% { border-color: #f0b429; box-shadow: 0 0 0 0 rgb(255 209 102 / 0.9); } 100% { box-shadow: 0 0 0 14px rgb(255 209 102 / 0); } }
-@keyframes pedido-icone { 0% { transform: scale(1) rotate(0deg); } 30% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(0.95) rotate(8deg); } 100% { transform: scale(1) rotate(0deg); } }
-@keyframes pedido-check { from { transform: scale(0.3); } }
-@keyframes pedido-ideia { from { opacity: 0; transform: translateY(8px); } }
-@keyframes pedido-brilho-botao { to { transform: translateX(120%); } }
-.pedido-exemplo:active:not(:disabled) { box-shadow: 0 1px 0 var(--gelo); transform: translateY(2px); }
-.pedido-exemplo:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
-
-@media (hover: hover) {
-  .pedido-tema:hover:not(:disabled):not([aria-pressed='true']) { border-color: #c3cdf2; background: var(--nevoa); }
-  .pedido-exemplo:hover:not(:disabled):not([data-escolhida]) { border-color: #c3cdf2; }
-  .pedido-exemplo:hover:not(:disabled):not([data-escolhida]) .pedido-exemplo__acao { color: var(--acao); }
-}
-
-/* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
-
-
-@media (min-width: 768px) {
-  .painel--pedido { justify-self: center; gap: 28px; }
-  .pedido-stu .stu { width: 76px; }
-  .pedido-temas { flex-wrap: wrap; margin-inline: 0; padding: 0; overflow: visible; }
-  .pedido-exemplos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pedido-formulario .acao-principal > .botao { min-width: 14rem; }
-}
-
-
-
-@media (prefers-reduced-motion: reduce) {
-  .pedido-exemplo:active:not(:disabled), .pedido-surpresa:active:not(:disabled) { transform: none; }
-  .pedido-formulario .acao-principal .botao::after { display: none; }
-}
-
-/* A descoberta tem uma escolha por vez e um caderno como ponto de partida. */
-.pedido-novo { width:min(100%, 58rem); gap:28px; }
-.pedido-novo [hidden] { display:none!important; }
-.descoberta-hero { display:flex; align-items:center; gap:24px; min-width:0; }
-.descoberta-hero__texto { flex:1; }
-.descoberta-selo { color:var(--acao); font-size:.7rem; font-weight:900; letter-spacing:.12em; margin-bottom:12px; }
-.descoberta-hero h1 { font-size:clamp(1.8rem,3vw,2.7rem); line-height:1.12; letter-spacing:-.04em; max-width:15ch; }
-.descoberta-hero__texto > p:last-child { color:var(--texto2); margin-top:14px; max-width:40ch; line-height:1.6; }
-.descoberta-stu { position:relative; width:170px; height:170px; display:grid; place-items:center; flex:none; }
-.descoberta-stu .stu { width:125px; z-index:1; animation:pedido-stu 4s ease-in-out infinite; }
-.descoberta-orbita { position:absolute; inset:7px; background:#fff1c9; border-radius:47% 53% 62% 38%; transform:rotate(-12deg); }
-.descoberta-estrela { position:absolute; top:3px; right:8px; font-size:32px; color:#9a6700; }
-.descoberta-ponto { position:absolute; bottom:10px; left:9px; width:17px; height:17px; background:#a9dbc7; border-radius:50%; }
-.descoberta-modos { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.descoberta-modo { display:flex; align-items:center; text-align:left; gap:12px; min-height:90px; padding:17px; background:white; border:2px solid var(--gelo); border-radius:20px; color:var(--texto); cursor:pointer; transition:background .18s,border-color .18s,transform .18s; }
-@media (hover: hover) { .descoberta-modo:hover { transform:translateY(-2px); } }
-.descoberta-modo[aria-pressed=true] { border-color:var(--acao); background:#f0f3ff; }
-.descoberta-modo strong { display:block; font-size:1rem; }
-.descoberta-modo small { display:block; margin-top:5px; color:var(--texto2); line-height:1.3; }
-.descoberta-modo__icone { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; background:#fff1c9; flex:none; }
-.descoberta-modo__check { margin-left:auto; width:21px; height:21px; border:2px solid var(--gelo); border-radius:50%; flex:none; text-align:center; font-size:12px; }
-.descoberta-modo[aria-pressed=true] .descoberta-modo__check { background:var(--acao); border-color:var(--acao); color:white; }
-.descoberta-caderno { border:1px solid #e8dfcf; border-radius:24px; padding:24px; background:#fffcf6; box-shadow:0 5px 0 #f0eadf; }
-.descoberta-caderno__topo { display:flex; gap:9px; color:#715118; font-size:.85rem; font-weight:800; margin-bottom:20px; }
-.descoberta-caderno .pedido-campo { margin:0; }
-.descoberta-caderno textarea { min-height:100px; background:white; font-size:1.15rem; }
-.descoberta-caderno .botao { margin-top:20px; width:100%; justify-content:center; gap:12px; }
-.descoberta-inspiracao { display:grid; gap:14px; margin-top:26px; }
-.descoberta-ideias { display:flex; flex-wrap:wrap; gap:8px; }
-.descoberta-ideias button { display:flex; align-items:center; gap:8px; border:1px solid var(--gelo); border-radius:14px; background:white; color:var(--texto); padding:10px 12px; min-height:48px; font-weight:700; text-align:left; cursor:pointer; }
-.descoberta-ideias svg { width:28px; height:28px; flex:none; }
-.descoberta-ideias button[aria-pressed=true] { background:#edf6f0; border-color:#4c8d6f; }
-.descoberta-expandir { display:flex; justify-content:space-between; align-items:center; min-height:44px; background:none; border:0; color:var(--acao); font-weight:800; cursor:pointer; }
-.descoberta-rodape { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--gelo); padding-top:18px; }
-.descoberta-passos { display:flex; gap:16px; color:var(--texto2); font-size:.8rem; }
-.descoberta-passos span { display:flex; align-items:center; gap:6px; }
-.descoberta-passos b { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#edf4ef; color:#246549; font-size:.7rem; }
-.descoberta-painel { animation:descobrir .25s ease-out; }
-@keyframes descobrir { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-@media(max-width:600px) {
- .pedido-novo { gap:20px; }
- .descoberta-hero { gap:8px; }
- .descoberta-stu { width:96px; height:118px; }
- .descoberta-stu .stu { width:85px; }
- .descoberta-selo { font-size:.6rem; letter-spacing:.06em; }
- .descoberta-hero__texto > p:last-child { font-size:.9rem; }
- .descoberta-modos { gap:8px; }
- .descoberta-modo { flex-wrap:wrap; padding:12px; gap:8px; }
- .descoberta-modo__icone { width:32px; height:32px; }
- .descoberta-modo > span:nth-child(2) { order:3; width:100%; }
- .descoberta-modo strong { font-size:.9rem; }
- .descoberta-modo small { font-size:.75rem; }
- .descoberta-caderno { padding:18px; border-radius:20px; }
- .descoberta-rodape { flex-direction:column; }
-}
-@media(prefers-reduced-motion:reduce) { .descoberta-stu .stu,.descoberta-painel { animation:none; } .descoberta-modo { transition:none; } }
-
-/*
- * Pedido simplificado: o Stu e uma pergunta grande, um campo, o botão e uma fileira de ideias.
- * Ter um material é a alternativa discreta embaixo; a tela troca de modo sem perder o que foi escrito.
- */
-.painel--pedido.pedido-novo { display: grid; gap: 18px; width: min(100%, 36rem); margin-inline: auto; }
-
-.pedido-heroi { display: grid; justify-items: center; gap: 8px; padding-top: 8px; text-align: center; }
-.pedido-heroi h1 { font-size: clamp(1.875rem, 6vw, 2.5rem); line-height: 1.08; text-wrap: balance; }
-.pedido-heroi__fala { min-height: 1.5em; color: var(--texto2); font-size: 1.0625rem; font-weight: 700; animation: dica-entrar 320ms ease-out backwards; }
-
-.pedido-heroi__stu { position: relative; display: grid; width: 120px; height: 120px; place-items: center; }
-.pedido-heroi__stu .stu { position: relative; z-index: 1; width: 96px; height: auto; transform-origin: 50% 100%; animation: stu-acenar 4200ms ease-in-out 600ms infinite; }
-.pedido-heroi__halo { position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle, #fff3c4 0 45%, #ffe08a 46% 60%, transparent 61%); animation: caminho-respirar 2600ms ease-in-out infinite; }
-.pedido-heroi__estrela { position: absolute; top: 6px; right: 8px; z-index: 2; color: #ffb703; font-size: 1.5rem; animation: caminho-cintilar 1800ms ease-in-out infinite; }
-
-.pedido-novo .pedido-formulario { display: grid; gap: 14px; margin: 0; }
-.pedido-novo .pedido-campo { margin: 0; }
-
-.pedido-novo .pedido-campo textarea {
-  min-height: 112px;
-  padding: 18px 20px;
-  border: 3px solid var(--gelo);
-  border-radius: 24px;
-  background: var(--fundo);
-  box-shadow: 0 5px 0 var(--gelo);
-  font-size: 1.1875rem;
-  font-weight: 700;
-  line-height: 1.4;
-  resize: none;
-  transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
-}
-
-/* O campo cresce com o texto e com o exemplo (o placeholder), até meia tela, também com a letra ampliada: a cópia invisível do texto, na mesma célula da grade, dá a altura (banca P2-5).
-   Os recuos, a borda e a letra da cópia repetem os do campo (a de baixo muda no celular junto com o campo). */
-.pedido-novo .pedido-campo__caixa { display: grid; }
-.pedido-novo .pedido-campo__caixa > textarea, .pedido-novo .pedido-campo__caixa::after { grid-area: 1 / 1; }
-.pedido-novo .pedido-campo__caixa::after {
-  content: attr(data-replica) ' ';
-  box-sizing: border-box; max-height: 50svh; overflow: hidden; visibility: hidden; pointer-events: none;
-  padding: 18px 20px; border: 3px solid transparent;
-  font-size: 1.1875rem; font-weight: 700; line-height: 1.4; white-space: pre-wrap; overflow-wrap: break-word;
-}
-.pedido-novo .pedido-campo__caixa[data-vazio]::after { font-weight: 600; }
-.pedido-novo .pedido-campo textarea:focus { border-color: var(--acao); box-shadow: 0 5px 0 #b9c7f5; outline: none; }
-.pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
-.pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
-
-/* A primeira ideia fica alinhada ao campo. As demais ficam ao alcance da rolagem horizontal. */
-.pedido-ideias {
-  display: flex;
-  min-width: 0;
-  flex-wrap: nowrap;
-  scroll-padding-inline: var(--espaco-pagina);
-  gap: 10px;
-  margin: 2px calc(-1 * var(--espaco-pagina)) 0;
-  padding: 4px var(--espaco-pagina) 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-}
-
-.pedido-ideias::-webkit-scrollbar { display: none; }
-
-.pedido-ideia {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 16px 8px 10px;
-  border: 2px solid var(--gelo);
-  border-radius: 999px;
-  color: var(--texto);
-  background: var(--fundo);
-  box-shadow: 0 3px 0 var(--gelo);
-  font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 800;
-  white-space: nowrap;
-  cursor: pointer;
-  scroll-snap-align: start;
-  transition: transform 110ms ease-out, box-shadow 110ms ease-out, border-color 140ms ease-out;
-}
-
-.pedido-ideia .mundo-desenho { --tam: 24px; }
-.pedido-ideia:active:not(:disabled) { box-shadow: 0 0 0 var(--gelo); transform: translateY(3px); }
-.pedido-ideia[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
-.pedido-ideia--surpresa { border-color: #ffe08a; color: #7a4a00; background: #fff8e1; box-shadow: 0 3px 0 #ffe08a; }
-
-/* Alternativa: trazer um material (ou voltar a escrever). */
-.pedido-alternar {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
   width: 100%;
-  padding: 14px 18px 14px 14px;
-  border: 2px dashed #c9d1ea;
-  border-radius: 22px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1px solid var(--gelo);
+  border-radius: 20px;
   color: var(--texto);
-  background: transparent;
+  background: var(--fundo);
   font: inherit;
   text-align: start;
   cursor: pointer;
+  transition: border-color 160ms ease-out, background-color 160ms ease-out;
 }
-
-.pedido-alternar__icone { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px; color: var(--acao); background: var(--nevoa); }
+.pedido-alternar__icone { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; color: var(--acao); background: var(--nevoa); }
 .pedido-alternar__icone .icone { width: 22px; height: 22px; }
 .pedido-alternar__texto { display: grid; gap: 2px; min-width: 0; }
-.pedido-alternar__texto strong { font-weight: 800; }
-.pedido-alternar__texto small { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.pedido-alternar__texto strong { font-size: 1rem; font-weight: 800; line-height: 1.5rem; }
+.pedido-alternar__texto small { color: var(--texto2); font-size: 0.875rem; font-weight: 600; line-height: 1.3125rem; }
 .pedido-alternar > .icone { width: 20px; height: 20px; color: var(--texto2); }
-.pedido-novo .pedido-como { justify-self: center; margin-left: 0; }
+.pedido-alternar:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
-@media (hover: hover) {
-  .pedido-ideia:hover:not(:disabled) { border-color: #b9c7f5; }
-  .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
-}
-
-
-
-@media (min-width: 768px) {
-  .painel--pedido.pedido-novo { width: min(100%, 44rem); gap: 16px; }
-  .pedido-heroi {
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    justify-items: start;
-    align-items: center;
-    column-gap: 18px;
-    row-gap: 4px;
-    padding-top: 0;
-    text-align: start;
-  }
-  .pedido-heroi__stu { grid-row: 1 / span 2; width: 88px; height: 88px; }
-  .pedido-heroi__stu .stu { width: 72px; }
-  .pedido-heroi h1 { font-size: clamp(1.625rem, 3vw, 2.125rem); }
-}
-
-.pedido-alternar {
-  border-style: solid;
-  border-color: #c3cdf2;
-  background: linear-gradient(135deg, #f4f7ff 0%, var(--fundo) 70%);
-  box-shadow: 0 3px 0 var(--gelo);
-}
-@media (max-width: 767px) {
-  .painel--pedido.pedido-novo { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .pedido-heroi { padding-top: 0; }
-  .pedido-heroi__stu { width: 82px; height: 82px; }
-  .pedido-heroi__stu .stu { width: 72px; }
-  .pedido-novo .pedido-campo textarea { min-height: 88px; padding: 12px 16px; }
-  .pedido-novo .pedido-campo__caixa::after { padding: 12px 16px; }
-  .pedido-novo .pedido-criar { min-height: 48px; }
-  .pedido-alternar { min-height: 64px; padding-block: 8px; }
-}
-@media (max-width: 767px) and (max-height: 700px) {
-  .pedido-heroi__stu { width: 64px; height: 64px; }
-  .pedido-heroi__stu .stu { width: 56px; }
-  .pedido-novo[data-modo='ideia'] .pedido-heroi__fala { display: none; }
-}
+/* Suggestions use the same chips as choices; only actions carry tactile depth. */
+.pedido-ideias { display: flex; min-width: 0; gap: 8px; margin: 0 calc(-1 * var(--espaco-pagina)); padding: 4px var(--espaco-pagina) 8px; overflow-x: auto; scroll-padding-inline: var(--espaco-pagina); scroll-snap-type: x proximity; scrollbar-width: none; }
+.pedido-ideias::-webkit-scrollbar { display: none; }
+.pedido-ideia { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 44px; max-width: min(88vw, 32rem); padding: 8px 14px; border: 1px solid var(--gelo); border-radius: 999px; color: var(--texto); background: var(--fundo); font: inherit; font-size: 0.875rem; font-weight: 800; line-height: 1.3125rem; text-align: start; cursor: pointer; scroll-snap-align: start; transition: border-color 160ms ease-out, background-color 160ms ease-out; }
+.pedido-ideia .mundo-desenho { --tam: 22px; }
+.pedido-ideia[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: var(--nevoa); }
+.pedido-ideia--surpresa { color: var(--alerta); border-color: var(--alerta-borda, #f2cf96); background: var(--alerta-fundo, #fff6ea); }
+.pedido-ideia:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
+.pedido-como { justify-self: center; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 12px; color: var(--texto2); background: transparent; font: inherit; font-size: 0.875rem; font-weight: 800; line-height: 1.3125rem; cursor: pointer; }
+@media (hover: hover) { .pedido-alternar:hover:not(:disabled), .pedido-ideia:hover:not(:disabled), .pedido-como:hover { border-color: var(--acao); background: var(--nevoa); } }
+@media (min-width: 768px) { .pedido-heroi h1 { font-size: 2.25rem; line-height: 2.6875rem; } .pedido-ideias { flex-wrap: wrap; margin-inline: 0; padding-inline: 0; overflow: visible; } }
+@media (max-width: 767px) and (max-height: 700px) { .pedido-heroi { grid-template-columns: minmax(0, 1fr) 56px; gap: 8px 12px; } .pedido-heroi h1 { font-size: 1.5rem; line-height: 1.875rem; } .pedido-heroi__stu, .pedido-heroi__stu .stu { width: 56px; height: 56px; } }
+@media (prefers-reduced-motion: reduce) { .pedido-novo textarea, .pedido-alternar, .pedido-ideia { transition: none; } }
