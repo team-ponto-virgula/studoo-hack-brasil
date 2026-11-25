@@ -1,0 +1,77 @@
+[
+  {
+    "name": "login-390",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "width": 390,
+    "height": 844,
+    "buttonY": 361.6875,
+    "order": [
+      "google",
+      "apple"
+    ],
+    "animations": 0
+  },
+  {
+    "name": "login-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "width": 360,
+    "height": 808,
+    "buttonY": 357.6875,
+    "order": [
+      "google",
+      "apple"
+    ],
+    "animations": 0
+  },
+  {
+    "name": "senha-390",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "width": 390,
+    "height": 844,
+    "buttonY": 426.09375,
+    "order": [
+      "google",
+      "apple"
+    ],
+    "animations": 0
+  },
+  {
+    "name": "senha-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "width": 360,
+    "height": 800,
+    "buttonY": 422.09375,
+    "order": [
+      "google",
+      "apple"
+    ],
+    "animations": 0
+  },
+  {
+    "name": "texto-200-360",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "width": 360,
+    "height": 1305,
+    "buttonY": 574.890625,
+    "order": [
+      "google",
+      "apple"
+    ],
+    "animations": 0
+  }
+]

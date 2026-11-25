@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>Studoo · evolução do login mobile</title>
+  <link rel="icon" href="../prototipo/assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./login.css">
+  <script src="./login.js" defer></script>
+</head>
+<body>
+  <div class="mobile-view">
+    <div class="system-bar" aria-hidden="true">
+      <span>9:41</span>
+      <div class="system-icons">
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><rect y="8" width="3" height="4" rx=".7"/><rect x="4.5" y="5.5" width="3" height="6.5" rx=".7"/><rect x="9" y="3" width="3" height="9" rx=".7"/><rect x="13.5" width="3" height="12" rx=".7"/></svg>
+        <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 3.2a12 12 0 0 1 15 0M3.7 6a8 8 0 0 1 9.6 0M6.4 8.6a4 4 0 0 1 4.2 0"/><circle cx="8.5" cy="11" r=".8" fill="currentColor" stroke="none"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3" stroke="currentColor" opacity=".45"/><rect x="2.5" y="2.5" width="17" height="7" rx="1" fill="currentColor"/><path d="M23 4v4c2-1 2-3 0-4" fill="currentColor" opacity=".45"/></svg>
+      </div>
+    </div>
+
+    <div class="page">
+      <header class="brand">
+        <span class="brand-mark" role="img" aria-label="Studoo">
+          <span class="brand-word" aria-hidden="true"><img src="./assets/logo.png" alt="" width="560" height="184"></span>
+          <span class="brand-glasses" aria-hidden="true">
+            <span class="lens lens-left"><span class="lens-light"></span></span>
+            <span class="lens lens-right"><span class="lens-light"></span></span>
+            <img src="./assets/oculos.png" alt="" width="2240" height="736">
+          </span>
+        </span>
+      </header>
+
+      <main id="main">
+        <div class="welcome">
+          <div class="welcome-copy">
+            <h1>Olá de novo.</h1>
+            <p>Entre para continuar aprendendo.</p>
+          </div>
+        </div>
+
+        <form id="login-form" novalidate>
+          <section id="email-step" aria-label="Seu e-mail">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="voce@exemplo.com" aria-describedby="email-error">
+            <p id="email-error" class="error" role="alert" hidden></p>
+          </section>
+
+          <section id="password-step" aria-label="Sua senha" hidden>
+            <div class="email-summary">
+              <span id="chosen-email"></span>
+              <button class="text-button edit-email" type="button" id="edit-email">Alterar</button>
+            </div>
+            <div class="password-label"><label for="password">Senha</label><button class="text-button recovery" type="button" data-screen="recuperar">Esqueci minha senha</button></div>
+            <div class="password-field">
+              <input id="password" name="password" type="password" autocomplete="current-password" aria-describedby="password-error" placeholder="Sua senha" disabled>
+              <button id="toggle-password" class="eye" type="button" aria-label="Mostrar senha" aria-pressed="false">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 12s3.3-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.3 6.5-9.5 6.5S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <p id="password-error" class="error" role="alert" hidden></p>
+          </section>
+
+          <button id="continue" class="primary" type="submit"><span id="continue-label">Continuar</span><svg class="continue-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+          <button id="other-methods" class="back-to-methods" type="button" hidden>Outras formas de entrar</button>
+        </form>
+
+        <div id="alternatives">
+          <div class="separator"><span>ou</span></div>
+          <div class="social" aria-label="Outras formas de entrar">
+            <button id="google" class="provider" type="button" data-screen="google"><img class="provider-icon" src="../prototipo/assets/google-g.png" width="20" height="20" alt=""><span>Continuar com o Google</span></button>
+            <button id="apple" class="provider" type="button" data-screen="apple">
+              <svg class="provider-icon" width="20" height="23" viewBox="0 0 24 27" fill="currentColor" aria-hidden="true"><path d="M20.1 14.35c.03 4.06 3.56 5.4 3.6 5.42-.03.1-.57 1.94-1.87 3.84-1.12 1.64-2.28 3.27-4.11 3.3-1.8.04-2.39-1.06-4.45-1.06-2.06 0-2.71 1.02-4.42 1.1-1.76.07-3.1-1.77-4.23-3.4C2.31 20.2.54 14.1 2.9 9.99a6.57 6.57 0 0 1 5.56-3.37c1.74-.03 3.38 1.17 4.44 1.17s3.04-1.45 5.13-1.24c.88.04 3.36.36 4.95 2.7-.13.08-2.95 1.72-2.88 5.1ZM16.74 4.3c.94-1.14 1.56-2.71 1.39-4.3-1.35.06-2.98.9-3.94 2.03-.86 1-1.62 2.59-1.42 4.12 1.5.12 3.03-.76 3.97-1.85Z"/></svg>
+              <span>Continuar com a Apple</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="other-paths">
+          <p class="signup">Ainda não tem conta? <button class="text-button" type="button" data-screen="cadastro">Criar conta</button></p>
+          <button class="guest" type="button" data-screen="visitante">Experimentar sem conta</button>
+        </div>
+      </main>
+
+      <footer>
+        <button class="footer-link" type="button" data-screen="ajuda">Ajuda</button>
+        <span class="footer-dot" aria-hidden="true">·</span>
+        <button class="footer-link" type="button" data-screen="privacidade">Privacidade</button>
+      </footer>
+    </div>
+    <div class="home-indicator" aria-hidden="true"><span></span></div>
+  </div>
+
+  <dialog id="preview-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-copy">
+    <div class="dialog-content">
+      <p class="eyebrow">Proposta visual</p>
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-copy"></p>
+      <button class="primary" id="close-dialog" type="button">Voltar ao login</button>
+    </div>
+  </dialog>
+</body>
+</html>

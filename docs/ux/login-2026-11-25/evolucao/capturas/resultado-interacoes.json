@@ -1,0 +1,3076 @@
+{
+  "checkedAt": "2026-11-25T13:05:58.525Z",
+  "scope": "HTML isolated prototype only; no native execution or real authentication",
+  "prototypeFilesBefore": {
+    "index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf",
+    "login.css": "1cba89ca9cdad6a82b23b74fdffbc955a4e35936d05ff98d8ed0938110c4b235",
+    "login.js": "04921c578bd206751cc4d9702bf4790cc66775fb2afe07956f5af349fe841e10",
+    "assets/logo.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "assets/oculos.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b"
+  },
+  "prototypeFilesAfter": {
+    "index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf",
+    "login.css": "1cba89ca9cdad6a82b23b74fdffbc955a4e35936d05ff98d8ed0938110c4b235",
+    "login.js": "04921c578bd206751cc4d9702bf4790cc66775fb2afe07956f5af349fe841e10",
+    "assets/logo.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "assets/oculos.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b"
+  },
+  "sourceStable": true,
+  "checks": [
+    {
+      "name": "reduced-desde-entrada-e-ordem-390",
+      "pass": true,
+      "animations": 0,
+      "active": 0,
+      "reduced": true,
+      "stu": 0,
+      "order": [
+        "google",
+        "apple"
+      ]
+    },
+    {
+      "name": "email-vazio-invalido-e-foco-390",
+      "pass": true,
+      "emptyAndInvalidKeepEmailStep": true,
+      "focusReturnedToEmail": true
+    },
+    {
+      "name": "email-para-senha-sem-consulta-390",
+      "pass": true,
+      "normalizedEmailShown": true,
+      "passwordFocused": true,
+      "emailDisabled": true,
+      "passwordEnabled": true,
+      "requestsDuringProgression": []
+    },
+    {
+      "name": "senha-vazia-e-foco-390",
+      "pass": true,
+      "emptyPasswordRejected": true,
+      "focusReturnedToPassword": true
+    },
+    {
+      "name": "olho-e-editar-email-390",
+      "pass": true,
+      "showHideStateAndLabelCorrect": true,
+      "editPreservesEmail": true,
+      "editFocusesEmail": true,
+      "passwordRetainedWhenEditingSameEmail": true
+    },
+    {
+      "name": "senha-enxuta-e-outras-formas-390",
+      "pass": true,
+      "passwordHasNoRepeatedMenus": true,
+      "copyDoesNotClaimAccountLookup": true,
+      "otherMethodsPreservesEmailAndRestoresFocus": true
+    },
+    {
+      "name": "dialogos-e-retorno-foco-390",
+      "pass": true,
+      "checks": [
+        {
+          "screen": "apple",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "google",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "cadastro",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "recuperar",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "visitante",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "ajuda",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "privacidade",
+          "closeWithEscape": true,
+          "focusRestored": true
+        }
+      ]
+    },
+    {
+      "name": "enviar-e-dialogo-apenas-visual-390",
+      "pass": true,
+      "noAuthRequest": true,
+      "passwordCleared": true,
+      "dialogDeclaredVisualOnly": true,
+      "closeButtonRestoresPrimary": true
+    },
+    {
+      "name": "flags-todas-desligadas-390",
+      "pass": true,
+      "optionalPathsHidden": true,
+      "noEmptyAlternativeSeparator": true,
+      "emailStillWorks": true
+    },
+    {
+      "name": "flags-provedores-independentes-390",
+      "pass": true,
+      "independentFlags": true
+    },
+    {
+      "name": "texto200-sem-overflow-390",
+      "pass": true,
+      "states": [
+        {
+          "state": "email",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "rootFont": "32px",
+            "documentWidth": 390,
+            "bodyWidth": 390,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "senha-email-longo",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "rootFont": "32px",
+            "documentWidth": 390,
+            "bodyWidth": 390,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "dialogo-ajuda",
+          "dialogGeometry": {
+            "width": 358,
+            "clientWidth": 358,
+            "scrollWidth": 358,
+            "clientHeight": 741,
+            "scrollHeight": 741
+          }
+        },
+        {
+          "state": "dialogo-privacidade",
+          "dialogGeometry": {
+            "width": 358,
+            "clientWidth": 358,
+            "scrollWidth": 358,
+            "clientHeight": 741,
+            "scrollHeight": 741
+          }
+        }
+      ]
+    },
+    {
+      "name": "reduced-sem-animacoes-em-todo-fluxo-390",
+      "pass": true,
+      "calls": 0,
+      "active": 0
+    },
+    {
+      "name": "reduced-desde-entrada-e-ordem-360",
+      "pass": true,
+      "animations": 0,
+      "active": 0,
+      "reduced": true,
+      "stu": 0,
+      "order": [
+        "google",
+        "apple"
+      ]
+    },
+    {
+      "name": "email-vazio-invalido-e-foco-360",
+      "pass": true,
+      "emptyAndInvalidKeepEmailStep": true,
+      "focusReturnedToEmail": true
+    },
+    {
+      "name": "email-para-senha-sem-consulta-360",
+      "pass": true,
+      "normalizedEmailShown": true,
+      "passwordFocused": true,
+      "emailDisabled": true,
+      "passwordEnabled": true,
+      "requestsDuringProgression": []
+    },
+    {
+      "name": "senha-vazia-e-foco-360",
+      "pass": true,
+      "emptyPasswordRejected": true,
+      "focusReturnedToPassword": true
+    },
+    {
+      "name": "olho-e-editar-email-360",
+      "pass": true,
+      "showHideStateAndLabelCorrect": true,
+      "editPreservesEmail": true,
+      "editFocusesEmail": true,
+      "passwordRetainedWhenEditingSameEmail": true
+    },
+    {
+      "name": "senha-enxuta-e-outras-formas-360",
+      "pass": true,
+      "passwordHasNoRepeatedMenus": true,
+      "copyDoesNotClaimAccountLookup": true,
+      "otherMethodsPreservesEmailAndRestoresFocus": true
+    },
+    {
+      "name": "dialogos-e-retorno-foco-360",
+      "pass": true,
+      "checks": [
+        {
+          "screen": "apple",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "google",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "cadastro",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "recuperar",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "visitante",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "ajuda",
+          "closeWithEscape": true,
+          "focusRestored": true
+        },
+        {
+          "screen": "privacidade",
+          "closeWithEscape": true,
+          "focusRestored": true
+        }
+      ]
+    },
+    {
+      "name": "enviar-e-dialogo-apenas-visual-360",
+      "pass": true,
+      "noAuthRequest": true,
+      "passwordCleared": true,
+      "dialogDeclaredVisualOnly": true,
+      "closeButtonRestoresPrimary": true
+    },
+    {
+      "name": "flags-todas-desligadas-360",
+      "pass": true,
+      "optionalPathsHidden": true,
+      "noEmptyAlternativeSeparator": true,
+      "emailStillWorks": true
+    },
+    {
+      "name": "flags-provedores-independentes-360",
+      "pass": true,
+      "independentFlags": true
+    },
+    {
+      "name": "texto200-sem-overflow-360",
+      "pass": true,
+      "states": [
+        {
+          "state": "email",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "rootFont": "32px",
+            "documentWidth": 360,
+            "bodyWidth": 360,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "senha-email-longo",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "rootFont": "32px",
+            "documentWidth": 360,
+            "bodyWidth": 360,
+            "overflowNodes": []
+          }
+        },
+        {
+          "state": "dialogo-ajuda",
+          "dialogGeometry": {
+            "width": 328,
+            "clientWidth": 328,
+            "scrollWidth": 328,
+            "clientHeight": 730,
+            "scrollHeight": 741
+          }
+        },
+        {
+          "state": "dialogo-privacidade",
+          "dialogGeometry": {
+            "width": 328,
+            "clientWidth": 328,
+            "scrollWidth": 328,
+            "clientHeight": 730,
+            "scrollHeight": 741
+          }
+        }
+      ]
+    },
+    {
+      "name": "reduced-sem-animacoes-em-todo-fluxo-360",
+      "pass": true,
+      "calls": 0,
+      "active": 0
+    },
+    {
+      "name": "motion-normal-interacao-cancelamento-390",
+      "pass": true,
+      "firstGestureFocusUnblocked": true,
+      "focusAfterMs": 14,
+      "entryAnimations": 7,
+      "transitionActiveCount": 13,
+      "cancelledOnPreferenceChange": true,
+      "reducedStateChangeAnimations": 0,
+      "activeAfter1500ms": 0,
+      "allFinite": true
+    },
+    {
+      "name": "motion-normal-interacao-cancelamento-360",
+      "pass": true,
+      "firstGestureFocusUnblocked": true,
+      "focusAfterMs": 13,
+      "entryAnimations": 7,
+      "transitionActiveCount": 13,
+      "cancelledOnPreferenceChange": true,
+      "reducedStateChangeAnimations": 0,
+      "activeAfter1500ms": 0,
+      "allFinite": true
+    },
+    {
+      "name": "natural-entry-390",
+      "pass": true,
+      "activeInitially": 7,
+      "activeAfter": 0
+    },
+    {
+      "name": "reduce-during-entry-390",
+      "pass": true,
+      "activeInitially": 7,
+      "activeAfter": 0
+    },
+    {
+      "name": "natural-entry-360",
+      "pass": true,
+      "activeInitially": 7,
+      "activeAfter": 0
+    },
+    {
+      "name": "reduce-during-entry-360",
+      "pass": true,
+      "activeInitially": 7,
+      "activeAfter": 0
+    }
+  ],
+  "motion": [
+    {
+      "width": 390,
+      "entry": {
+        "created": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 73.29999999981374,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 74.60000000009313,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 74.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 76.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 76.89999999990687,
+            "cancelled": false,
+            "finished": false
+          }
+        ],
+        "active": [
+          {
+            "target": "brand-glasses",
+            "state": "running",
+            "duration": 780
+          },
+          {
+            "target": "lens-light",
+            "state": "running",
+            "duration": 520
+          },
+          {
+            "target": "lens-light",
+            "state": "running",
+            "duration": 520
+          },
+          {
+            "target": "welcome-copy",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "login-form",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "alternatives",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "other-paths",
+            "state": "running",
+            "duration": 320
+          }
+        ]
+      },
+      "focusAfterMs": 14,
+      "transition": {
+        "created": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 73.29999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 74.60000000009313,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 74.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 76.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 76.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.10000000009313,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.1999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.5,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 186.79999999981374,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 187.1999999997206,
+            "cancelled": false,
+            "finished": false
+          }
+        ],
+        "active": [
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "continue",
+            "state": "running",
+            "duration": 280
+          },
+          {
+            "target": "welcome-copy",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "chosen-email",
+            "state": "running",
+            "duration": 300
+          },
+          {
+            "target": "edit-email",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "password-label",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "password-field",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "other-methods",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "brand-glasses",
+            "state": "running",
+            "duration": 440
+          }
+        ]
+      },
+      "cancelled": {
+        "reduced": true,
+        "active": [],
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 73.29999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 74.60000000009313,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 74.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 76.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 76.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.10000000009313,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.5,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 186.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 187.1999999997206,
+            "cancelled": true,
+            "finished": false
+          }
+        ]
+      },
+      "reducedStepAddsNoAnimations": true,
+      "normalAgain": {
+        "active": 15,
+        "called": 23
+      },
+      "settled": {
+        "active": [],
+        "allFinite": true,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 73.29999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 74.60000000009313,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 74.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 76.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 76.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 76.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.10000000009313,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.5,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 186.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 186.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 187.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 392.39999999990687,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 392.39999999990687,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 392.6999999997206,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 392.6999999997206,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 392.6999999997206,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 392.6999999997206,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 392.6999999997206,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 393,
+            "cancelled": false,
+            "finished": true
+          }
+        ]
+      }
+    },
+    {
+      "width": 360,
+      "entry": {
+        "created": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 81.09999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 81.79999999981374,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 81.89999999990687,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 82,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 82.1999999997206,
+            "cancelled": false,
+            "finished": false
+          }
+        ],
+        "active": [
+          {
+            "target": "brand-glasses",
+            "state": "running",
+            "duration": 780
+          },
+          {
+            "target": "lens-light",
+            "state": "running",
+            "duration": 520
+          },
+          {
+            "target": "lens-light",
+            "state": "running",
+            "duration": 520
+          },
+          {
+            "target": "welcome-copy",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "login-form",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "alternatives",
+            "state": "running",
+            "duration": 320
+          },
+          {
+            "target": "other-paths",
+            "state": "running",
+            "duration": 320
+          }
+        ]
+      },
+      "focusAfterMs": 13,
+      "transition": {
+        "created": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 81.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 81.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 81.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 82,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 82.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.09999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.1999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.39999999990687,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 173.6999999997206,
+            "cancelled": false,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 174.09999999962747,
+            "cancelled": false,
+            "finished": false
+          }
+        ],
+        "active": [
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "password",
+            "state": "running",
+            "duration": 140
+          },
+          {
+            "target": "continue",
+            "state": "running",
+            "duration": 280
+          },
+          {
+            "target": "welcome-copy",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "chosen-email",
+            "state": "running",
+            "duration": 300
+          },
+          {
+            "target": "edit-email",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "password-label",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "password-field",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "other-methods",
+            "state": "running",
+            "duration": 260
+          },
+          {
+            "target": "brand-glasses",
+            "state": "running",
+            "duration": 440
+          }
+        ]
+      },
+      "cancelled": {
+        "reduced": true,
+        "active": [],
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 81.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 81.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 81.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 82,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 82.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.39999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 173.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 174.09999999962747,
+            "cancelled": true,
+            "finished": false
+          }
+        ]
+      },
+      "reducedStepAddsNoAnimations": true,
+      "normalAgain": {
+        "active": 15,
+        "called": 23
+      },
+      "settled": {
+        "active": [],
+        "allFinite": true,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 81.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "createdAt": 81.79999999981374,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "lens-light",
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "createdAt": 81.89999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 82,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "login-form",
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "alternatives",
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "createdAt": 82.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-paths",
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "createdAt": 82.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.1999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.39999999990687,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 173.59999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 173.6999999997206,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 174.09999999962747,
+            "cancelled": true,
+            "finished": false
+          },
+          {
+            "target": "continue",
+            "duration": 280,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 336.59999999962747,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "welcome-copy",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 336.59999999962747,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "chosen-email",
+            "duration": 300,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 336.89999999990687,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "edit-email",
+            "duration": 260,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 336.89999999990687,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "password-label",
+            "duration": 260,
+            "delay": 25,
+            "iterations": 1,
+            "createdAt": 336.89999999990687,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "password-field",
+            "duration": 260,
+            "delay": 50,
+            "iterations": 1,
+            "createdAt": 337,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "other-methods",
+            "duration": 260,
+            "delay": 75,
+            "iterations": 1,
+            "createdAt": 337,
+            "cancelled": false,
+            "finished": true
+          },
+          {
+            "target": "brand-glasses",
+            "duration": 440,
+            "delay": 0,
+            "iterations": 1,
+            "createdAt": 337.29999999981374,
+            "cancelled": false,
+            "finished": true
+          }
+        ]
+      }
+    }
+  ],
+  "failedChecks": [],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "network": [
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 390,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/",
+      "type": "document"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.css",
+      "type": "stylesheet"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/login.js",
+      "type": "script"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/logo.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/evolucao/assets/oculos.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/google-g.png",
+      "type": "image"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/Inter.ttf",
+      "type": "font"
+    },
+    {
+      "width": 360,
+      "method": "GET",
+      "path": "/prototipo/assets/logo.svg",
+      "type": "other"
+    }
+  ],
+  "authOrApiRequests": [],
+  "noProductChanges": true,
+  "entryMotion": [
+    {
+      "name": "natural-entry-390",
+      "width": 390,
+      "initial": {
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 159.70000000018626,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 160,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 160.10000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 160.20000000018626,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 160.3000000002794,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 160.39999999990687,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 160.5,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "active": 7,
+        "at": 185.10000000009313
+      },
+      "result": {
+        "at": 1696.8000000002794,
+        "active": 0,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 159.70000000018626,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 160,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 160.10000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 160.20000000018626,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 160.3000000002794,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 160.39999999990687,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 160.5,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "glassesTransform": "none",
+        "lensOpacity": [
+          "0",
+          "0"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "reduce-during-entry-390",
+      "width": 390,
+      "initial": {
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 43.3000000002794,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 43.5,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 43.60000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 43.700000000186265,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 43.700000000186265,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 43.8000000002794,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 43.8000000002794,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "active": 7,
+        "at": 83
+      },
+      "result": {
+        "active": 0,
+        "reduced": true,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 43.3000000002794,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "lens-light",
+            "at": 43.5,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "lens-light",
+            "at": 43.60000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "welcome-copy",
+            "at": 43.700000000186265,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "login-form",
+            "at": 43.700000000186265,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "alternatives",
+            "at": 43.8000000002794,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "other-paths",
+            "at": 43.8000000002794,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": true
+          }
+        ],
+        "afterPreferenceRestored": {
+          "active": 0,
+          "calls": 7
+        }
+      },
+      "pass": true
+    },
+    {
+      "name": "natural-entry-360",
+      "width": 360,
+      "initial": {
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 78.10000000009313,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 78.5,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 78.60000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 78.70000000018626,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 78.8000000002794,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 78.90000000037253,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 78.90000000037253,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "active": 7,
+        "at": 138.40000000037253
+      },
+      "result": {
+        "at": 1648.1000000000931,
+        "active": 0,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 78.10000000009313,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 78.5,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 78.60000000009313,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 78.70000000018626,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 78.8000000002794,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 78.90000000037253,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 78.90000000037253,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "glassesTransform": "none",
+        "lensOpacity": [
+          "0",
+          "0"
+        ]
+      },
+      "pass": true
+    },
+    {
+      "name": "reduce-during-entry-360",
+      "width": 360,
+      "initial": {
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 41.90000000037253,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 42.200000000186265,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "lens-light",
+            "at": 42.40000000037253,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "welcome-copy",
+            "at": 42.5,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "login-form",
+            "at": 42.5,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "alternatives",
+            "at": 42.60000000009313,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": false
+          },
+          {
+            "target": "other-paths",
+            "at": 43.200000000186265,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": false
+          }
+        ],
+        "active": 7,
+        "at": 60.40000000037253
+      },
+      "result": {
+        "active": 0,
+        "reduced": true,
+        "calls": [
+          {
+            "target": "brand-glasses",
+            "at": 41.90000000037253,
+            "duration": 780,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "lens-light",
+            "at": 42.200000000186265,
+            "duration": 520,
+            "delay": 110,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "lens-light",
+            "at": 42.40000000037253,
+            "duration": 520,
+            "delay": 155,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "welcome-copy",
+            "at": 42.5,
+            "duration": 320,
+            "delay": 0,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "login-form",
+            "at": 42.5,
+            "duration": 320,
+            "delay": 35,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "alternatives",
+            "at": 42.60000000009313,
+            "duration": 320,
+            "delay": 70,
+            "iterations": 1,
+            "cancelled": true
+          },
+          {
+            "target": "other-paths",
+            "at": 43.200000000186265,
+            "duration": 320,
+            "delay": 105,
+            "iterations": 1,
+            "cancelled": true
+          }
+        ],
+        "afterPreferenceRestored": {
+          "active": 0,
+          "calls": 7
+        }
+      },
+      "pass": true
+    }
+  ],
+  "entrySourceHashesBefore": {
+    "index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf",
+    "login.css": "1cba89ca9cdad6a82b23b74fdffbc955a4e35936d05ff98d8ed0938110c4b235",
+    "login.js": "04921c578bd206751cc4d9702bf4790cc66775fb2afe07956f5af349fe841e10",
+    "assets/logo.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "assets/oculos.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b"
+  },
+  "entrySourceHashesAfter": {
+    "index.html": "3f460b4f869b14fb3d5ccf4b5e89a30291e667dec47cdb29ab5ebf249a8c24cf",
+    "login.css": "1cba89ca9cdad6a82b23b74fdffbc955a4e35936d05ff98d8ed0938110c4b235",
+    "login.js": "04921c578bd206751cc4d9702bf4790cc66775fb2afe07956f5af349fe841e10",
+    "assets/logo.png": "6e9510435d0fb5adeef192c6ecef2d3c86caadc8ce6e301e245098dd809cf82f",
+    "assets/oculos.png": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b"
+  }
+}
