@@ -1,3 +1,4 @@
+import type { EstudoNoPerfil } from './diagnostico';
 import type { CartaoTrilha, EstadoSeguir, Visibilidade } from './comunidade';
 
 /*
@@ -150,6 +151,7 @@ export interface LinkCompartilhado {
 
 /** GET /api/perfil */
 export interface Perfil {
+  estudo?: EstudoNoPerfil;
   fotoModeracao?: 'pendente' | 'aprovado' | 'recusado' | null;
   perfilModeracao?: 'pendente' | 'aprovado' | 'recusado';
   nome: string | null;

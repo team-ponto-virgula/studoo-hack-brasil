@@ -1,3 +1,5 @@
+import type { PassoDiagnostico, PerfilDiagnostico } from './diagnostico';
+export * from './diagnostico';
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
@@ -40,6 +42,7 @@ export interface Progresso {
 }
 
 export interface PropostaPlano {
+  diagnostico?: PerfilDiagnostico;
   token: string;
   titulo: string;
   objetivo: string;
@@ -58,6 +61,7 @@ export interface PlanoResumo extends MarcasCompartilhar {
 }
 
 export interface PlanoDetalhe extends PlanoResumo {
+  diagnostico?: PerfilDiagnostico;
   objetivo: string;
   origem: string;
   fluxos: {
@@ -464,6 +468,9 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     trilhaCompartilhada: (codigo: string) => solicitar<TrilhaCompartilhada>(`/compartilhar/${encodeURIComponent(codigo)}`),
     adicionarTrilha: (codigo: string) => solicitar<TrilhaAdicionada>(`/compartilhar/${encodeURIComponent(codigo)}/adicionar`, "POST", {}),
     perfilPublico: (perfilId: string) => solicitar<PerfilPublico>(`/perfis/${encodeURIComponent(perfilId)}`),
+    iniciarDiagnostico: (objetivo: string) => solicitar<PassoDiagnostico>('/aprendizado/diagnostico', 'POST', { objetivo }),
+    responderDiagnostico: (id: string, perguntaId: string, opcaoId: string) =>
+      solicitar<PassoDiagnostico>('/aprendizado/diagnostico', 'POST', { id, perguntaId, opcaoId }),
     obterLicao: (id: string) => solicitar<LicaoDetalhe>(`/aprendizado/licoes/${encodeURIComponent(id)}`),
     /** `indice`: qual exercício da lição (0 é o primeiro). */
     avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),
