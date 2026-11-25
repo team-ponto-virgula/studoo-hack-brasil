@@ -140,7 +140,7 @@ export function CabecalhoPublico({ perfil, perfilId, logado, visitante = false }
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
+export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, continuarEstudo, registrarGuarda }: {
   /** Guarda de saída do editor (alteração não salva pede a confirmação do app ao navegar). */
   registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
   perfil: Perfil | null;
@@ -149,6 +149,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
   visitante: boolean;
   /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
   irParaTrilhas?: () => void;
+  continuarEstudo?: () => void;
   /** Com a comunidade: o nível de cada trilha, "Visibilidade" (abre a folha) e os cartões como aparecem na página. */
   comunidade?: boolean;
   aoAdicionado?: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
@@ -360,12 +361,13 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
         </>
       )}
       {dadosEstudo && <section className="perfil-secao" aria-labelledby="perfil-estudo">
-        <h2 id="perfil-estudo" className="perfil-secao__titulo">Seu estudo</h2>
+        <h2 id="perfil-estudo" className="perfil-secao__titulo">{p.estudo.titulo}</h2>
         <dl>
-          <div><dt>Trilhas concluídas</dt><dd>{dadosEstudo.trilhasConcluidas}</dd></div>
-          <div><dt>Dias seguidos</dt><dd>{dadosEstudo.diasSeguidos}</dd></div>
-          <div><dt>Dias de estudo</dt><dd>{dadosEstudo.diasDeEstudo}</dd></div>
+          <div><dt>{p.estudo.trilhasConcluidas}</dt><dd>{dadosEstudo.trilhasConcluidas}</dd></div>
+          <div><dt>{p.estudo.diasSeguidos}</dt><dd>{dadosEstudo.diasSeguidos}</dd></div>
+          <div><dt>{p.estudo.diasDeEstudo}</dt><dd>{dadosEstudo.diasDeEstudo}</dd></div>
         </dl>
+        {continuarEstudo && <Botao variante="secundario" onClick={continuarEstudo}>{p.estudo.continuar}</Botao>}
       </section>}
       <SecaoSomPerfil />
       <SecaoPrivacidade visitante={visitante} />

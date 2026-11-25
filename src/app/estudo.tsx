@@ -1022,11 +1022,13 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                 apagar={() => { if (resumo) apagarPlano(resumo, () => navegar({ tipo: 'planos' })); }} />
             );
           })()}
-          {visivel && tela.tipo === 'perfil' && (
-            <TelaPerfil focoNome={tela.focoNome} perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
+          {visivel && tela.tipo === 'perfil' && (() => {
+            const retomar = planos.find(plano => plano.progresso.concluidas < plano.progresso.total
+              && (temAndamentoNoPlano(plano.id) || plano.progresso.concluidas > 0));
+            return <TelaPerfil continuarEstudo={retomar ? () => void abrirPlano(retomar.id) : undefined} focoNome={tela.focoNome} perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
               comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
-          )}
+         })()}
           {visivel && tela.tipo === 'explorar' && comunidade && (
             <Explorar logado visitante={visitante} aoSair={() => void sair()}
               temaInicial={filtroExplorar.tema} abaInicial={filtroExplorar.aba} buscaInicial={filtroExplorar.busca}
