@@ -2,7 +2,7 @@
 
 ## Experiência
 
-Nas telas de topo, a web em celular e o app têm os destinos ao alcance do polegar: **Minhas trilhas** e **Nova trilha**, mais **Explorar** e **Perfil** quando o servidor liga a comunidade e o compartilhamento. A seleção tem fundo claro e uma animação curta no ícone. A barra passa a ser uma cápsula que flutua sobre o conteúdo, com a aba selecionada numa subcápsula; a regra está em "Barra de abas em cápsula", abaixo, e ainda está em implementação. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
+Nas telas de topo, a web em celular e o app têm os destinos ao alcance do polegar: **Minhas trilhas** e **Nova trilha**, mais **Explorar** e **Perfil** quando o servidor liga a comunidade e o compartilhamento. A seleção tem fundo claro e uma animação curta no ícone. A barra passa a ser uma cápsula que flutua sobre o conteúdo, com a aba selecionada em uma superfície arredondada; a regra vigente está em "Barra de abas em cápsula", abaixo, atualizada para Jornada Azul em 25/11. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
 
 Em Minhas trilhas, **Seu próximo passo** destaca a primeira trilha em andamento na ordem da lista. Se nenhuma foi iniciada, destaca a primeira não concluída. **Retomar trilha** abre o caminho e permite continuar pela lição disponível. A contagem de lições concluídas soma os planos salvos; não é XP nem uma métrica inventada. Se todos foram concluídos, o destaque convida a revisar ou criar outro assunto.
 
@@ -20,9 +20,11 @@ Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa 
 
 ## Barra de abas em cápsula (pedido do dono, 19/11)
 
-**Estado:** regra de design, em implementação na web e no app; ainda sem validação no aparelho.
+**Estado:** regra de design de 19/11, atualizada pela escolha Jornada Azul em 25/11/2026; integração em andamento e conferência de produto a consolidar. Sem nova declaração de validação no aparelho.
 
-**Pedido do dono.** A barra de baixo deve parecer a do WhatsApp: uma cápsula só, que flutua acima da área de gesto, com espaço visível dos lados e embaixo, e a aba selecionada numa subcápsula. Os ícones e os textos são os do Studoo. No iPhone, o material é o Liquid Glass do sistema quando o aparelho tem. A captura que ele mandou não entra no repositório; esta descrição basta.
+**Pedido original do dono (19/11).** A barra de baixo deve parecer a do WhatsApp: uma cápsula só, que flutua acima da área de gesto, com espaço visível dos lados e embaixo, e a aba selecionada numa subcápsula. Os ícones e os textos são os do Studoo. No iPhone, o material é o Liquid Glass do sistema quando o aparelho tem. A captura que ele mandou não entra no repositório; esta descrição basta.
+
+**Escolha vigente (25/11).** Na Jornada Azul, a navegação mantém a posição flutuante, a altura-base de 62, as medidas de toque, os nomes/ícones, a ordem, o crescimento com texto e a reserva de área segura. O contorno externo passa de raio 31 a **24**, e a aba selecionada passa de 27 a **16**, com fundo azul suave `#EDF3FF` e tinta de ação `#2457DD`; as demais usam `#50607A`. A alteração vale igualmente para web móvel, Android e iPhone e aproxima a barra da família de cartões/ações do Studoo. Não é uma nova exceção de plataforma nem muda os controles de foco/teclado. A geometria anterior permanece no [registro histórico](https://github.com/team-ponto-virgula/studoo-hack-brasil/blob/8c057241f6fc4820f36c284218a4f04affa59543/docs/specs/05-navegacao-mobile-movimento.md). A revisão da integração deve conferir os pares e contrastes reais; números de contraste do desenho anterior não são provas da nova candidata.
 
 **O que não muda.**
 - Onde a barra aparece: nas telas de topo (Minhas trilhas e o mapa de uma trilha, Nova trilha, Explorar, Perfil e as telas abertas a partir deles, P22 da spec 07), também sem trilhas (spec 04, banca, item 5). Fica fora da aula, da apresentação, da geração e da entrada. Some com o teclado aberto.
@@ -34,21 +36,21 @@ Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa 
 **Geometria (texto em 100%).** É a mesma na web até 767 px, no Android e no iPhone.
 - **Cápsula:** 16 de margem dos lados. Com área segura lateral, a margem é `max(16, área segura + 8)`. Largura máxima de 480, centrada.
 - **Distância da base:** 8 acima da área segura de baixo, e nunca menos de 16 da borda. Os 16 valem onde a área segura é 0, como no navegador e no Android com botões. No iPhone com barra de início (34), a base fica a 42 da borda.
-- **Altura:** 62 (respiro de 4, aba de 54, respiro de 4), com raio 31.
+- **Altura:** 62 (respiro de 4, aba de 54, respiro de 4), com raio 24.
 - **Abas:**
   - A largura vem do rótulo, e a sobra da cápsula é dividida igualmente entre as abas: `flex: 1 1 auto`, e `flex-shrink: 0` nos rótulos de uma palavra.
   - Mínimo de 48 × 54 por aba, sem vão entre elas. O toque de cada aba vai até a borda da cápsula, incluindo os 4 de respiro, e não há faixa morta.
   - Por dentro: respiro de 6, ícone de 24 em cima, vão de 2 e rótulo em Nunito 800 de 12/15, centrado, numa linha.
-- **Aba selecionada:** a subcápsula preenche a aba, com raio 27 (concêntrico com o 31 da cápsula). O fundo é #E9E7FF (o fundo de "selecionado" da spec 13, §B5), com ícone cheio e rótulo em #1D4ED8 (5,53:1). As outras abas têm ícone de contorno e rótulo em #5E6A85 (5,42:1 no branco).
+- **Aba selecionada:** a superfície preenche a aba, com raio 16, dentro do contorno externo de raio 24. O fundo é `#EDF3FF`, com ícone cheio e rótulo em `#2457DD`. As outras abas têm ícone de contorno e rótulo em `#50607A`. O estado selecionado continua explicitado por semântica, além da cor.
 - **Por que a largura vem do rótulo:** com abas iguais em 390, "Minhas trilhas" (81 px em 12) não cabe numa linha. Com a largura pelo rótulo, as quatro abas cabem numa linha a partir de 320 (94 + 76 + 62 + 48 = 280, a largura útil da cápsula).
 
 **Material.**
-- **iPhone com iOS 26 ou mais novo, sem "Reduzir transparência":** Liquid Glass do sistema (`GlassView`, `glassEffectStyle="regular"`, `colorScheme="light"`), sem contorno e sem sombra próprios, porque o vidro já tem os dele. A subcápsula #E9E7FF é opaca, para o rótulo selecionado não depender do que passa por baixo. No aparelho, confira o contraste de #5E6A85 sobre o vidro com o mapa e os cartões coloridos atrás. Se ficar abaixo de 4,5:1, clareie o vidro com `tintColor` branco, começando em `rgba(255, 255, 255, 0.5)`.
+- **iPhone com iOS 26 ou mais novo, sem "Reduzir transparência":** Liquid Glass do sistema (`GlassView`, `glassEffectStyle="regular"`, `colorScheme="light"`), sem contorno e sem sombra próprios, porque o vidro já tem os dele. A superfície selecionada `#EDF3FF` é opaca, para o rótulo não depender do que passa por baixo. No aparelho, confira o contraste de `#50607A` sobre o vidro com o mapa e os cartões coloridos atrás. Se ficar abaixo de 4,5:1, clareie o vidro com `tintColor` branco, começando em `rgba(255, 255, 255, 0.5)`.
 - **iOS anterior, iOS com "Reduzir transparência", Android e web estreita:** superfície #FFFFFF opaca, sem desfoque. O contorno é de 1 px `rgba(11, 27, 92, 0.10)`, desenhado por fora, sem ocupar espaço. A sombra é leve. Na web: `box-shadow: 0 0 0 1px rgba(11,27,92,.10), 0 8px 24px rgba(11,27,92,.14)`; no app, a mesma lista em `boxShadow`. O app lê "Reduzir transparência" em `AccessibilityInfo.isReduceTransparencyEnabled()` e acompanha o evento `reduceTransparencyChanged`, trocando o material na hora.
 
 **Texto ampliado e telas estreitas.**
 - O rótulo cresce com o tamanho de texto do sistema até 1,3× (15,6/19,5) e para aí: `maxFontSizeMultiplier={1.3}` no app e `font-size: min(0.75rem, 15.6px)` na web. O ícone fica em 24.
-- Quando os rótulos não cabem numa linha, os de duas palavras quebram no espaço ("Minhas / trilhas", "Nova / trilha"). Os de uma palavra nunca quebram nem encolhem. As abas ficam com a altura da mais alta, com os ícones alinhados em cima. A cápsula cresce (85 com duas linhas a 1,3×), e o raio continua 31.
+- Quando os rótulos não cabem numa linha, os de duas palavras quebram no espaço ("Minhas / trilhas", "Nova / trilha"). Os de uma palavra nunca quebram nem encolhem. As abas ficam com a altura da mais alta, com os ícones alinhados em cima. A cápsula cresce (85 com duas linhas a 1,3×), e o raio externo continua 24; o selecionado mantém raio 16.
 - Conferido no esboço do Designer, com a Nunito do projeto, sem nenhum rótulo vazando:
 
 | Tela | Texto | Cápsula | Abas (largura) | Rótulos |
