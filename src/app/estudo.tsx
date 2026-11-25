@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ErroStudoo,
+  mesmoDiagnostico,
   estadoDoCompartilhamento,
   recebidaTemNome,
   trilhaRepetida,
@@ -631,6 +632,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     setPlanos((anteriores) => {
       const resumo: PlanoResumo = {
         id: plano.id, titulo: plano.titulo, progresso: plano.progresso,
+        ...(plano.diagnostico && { diagnostico: plano.diagnostico }),
         ...(plano.capa ? { capa: plano.capa } : {}), ...(plano.tema ? { tema: plano.tema } : {}),
         ...(plano.link ? { link: plano.link } : {}), ...(plano.recebida ? { recebida: plano.recebida } : {}),
       };
@@ -712,7 +714,9 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     if (!iniciar) {
       navegar({ tipo: 'planos' });
       setObjetivo('');
-      setAviso('Trilha salva em Minhas trilhas. Comece quando quiser.');
+      setAviso(visitante
+        ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste navegador.'
+        : 'Trilha salva em Minhas trilhas. Comece quando quiser.');
       anunciar('Trilha salva em Minhas trilhas.');
       return;
     }
@@ -992,7 +996,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
               aceitar={painel => void comecar(painel)} salvar={painel => void comecar(painel, false)}
               visitante={visitante} remontar={() => void gerar(previa.objetivo, previa.diagnosticoId)}
-              existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo)) : undefined}
+              existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo) && mesmoDiagnostico(plano.diagnostico, previa.proposta!.diagnostico)) : undefined}
               abrirExistente={id => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (

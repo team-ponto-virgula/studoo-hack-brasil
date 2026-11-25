@@ -29,3 +29,11 @@ export function perfilDiagnosticoValido(valor: unknown): valor is PerfilDiagnost
   return NIVEIS_DIAGNOSTICO.includes(p.nivel) && typeof p.escopo === 'string'
     && p.escopo.length > 0 && p.escopo.length <= 150 && lista(p.demonstrados) && lista(p.lacunas);
 }
+
+
+export function mesmoDiagnostico(a?: PerfilDiagnostico, b?: PerfilDiagnostico): boolean {
+  if (!a || !b) return a === b;
+  const mesmaLista = (x: string[], y: string[]) => x.length === y.length && x.every(item => y.includes(item));
+  return a.nivel === b.nivel && a.escopo === b.escopo
+    && mesmaLista(a.demonstrados, b.demonstrados) && mesmaLista(a.lacunas, b.lacunas);
+}

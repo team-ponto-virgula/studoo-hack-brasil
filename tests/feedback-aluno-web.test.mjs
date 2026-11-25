@@ -182,7 +182,7 @@ test('nova ordem de etapas e retomada numérica antiga da prática', () => {
 });
 
 
-test('conta sem consentimento não chama IA; provedor simulado recebe só o pedido e a falha se mantém pulável', async t => {
+test('provedor simulado: classifica Fotografia, afunila exposição e preserva geração quando o diagnóstico demora', async t => {
   const conta = await banco.usuario.create({
     data: { email: `feedback-${crypto.randomUUID()}@example.test`, fuso: 'UTC' },
   });
@@ -200,29 +200,99 @@ test('conta sem consentimento não chama IA; provedor simulado recebe só o pedi
   assert.deepEqual(provedoresConfiguradosIa(), []);
   Object.assign(process.env, ambiente);
   assert.deepEqual(provedoresConfiguradosIa().map(p => p.id), ['openai']);
-  let falhar = false;
+  let atrasar = false;
+  const geral = 'Fotografia';
+  const estreito = 'Compensar a exposição usando o obturador, no nível intermediário';
+  const aplicacao = {
+    habilidade: 'Escolher velocidade para movimento',
+    enunciado: 'Qual velocidade congela melhor o movimento de um ciclista?',
+    opcoes: ['1/500 s', '1/15 s', '2 s'], correta: 0,
+  };
+  const exposicao = {
+    habilidade: 'Compensar a exposição mantendo a abertura',
+    enunciado: 'Em prioridade à abertura, qual mudança compensa uma imagem escura sem alterar ISO nem abertura?',
+    opcoes: ['Obturador mais lento', 'Obturador mais rápido', 'Mudar o ponto de foco'], correta: 0,
+  };
+  const pedidos = [];
   const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(url, 'http://127.0.0.1:1/v1/responses');
     const payload = JSON.parse(init.body);
-    assert.equal(payload.store, false);
-    assert.deepEqual(JSON.parse(payload.input[0].content[0].text), { objetivo });
-    assert.doesNotMatch(init.body, /example\.test/);
-    if (falhar) return Response.json({ status: 'incomplete' });
+    assert.doesNotMatch(init.body, /example.test/);
+    pedidos.push(payload);
+    if (payload.text?.format?.name === 'diagnostico') {
+      assert.equal(payload.store, false);
+      const { objetivo } = JSON.parse(payload.input[0].content[0].text);
+      assert.ok([geral, estreito].includes(objetivo));
+      if (atrasar) return new Promise((_, reject) => {
+        init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true });
+      });
+      const amplo = objetivo === geral;
+      return Response.json({ status: 'completed', output_text: JSON.stringify({
+        escopo: amplo ? 'Fotografia' : 'Compensar exposição com o obturador',
+        nivelDeclarado: amplo ? 'nao_declarado' : 'intermediario',
+        questao: amplo ? aplicacao : exposicao,
+        recortes: amplo ? [{ titulo: 'Fotografar movimento', questao: aplicacao }, { titulo: 'Exposição manual', questao: exposicao }] : [],
+      }) });
+    }
+    const entrada = payload.input[1].content;
+    const avancado = entrada.includes('Fotografar movimento') && entrada.includes('Escolher velocidade para movimento');
+    const ajuste = entrada.includes('Compensar exposição com o obturador');
+    const titulo = avancado ? 'Criar rastro sem perder a exposição' : ajuste ? 'Corrigir a subexposição' : 'Começar pela exposição';
+    if (payload.stream) {
+      const quebra = String.fromCharCode(10);
+      const linhas = [
+        { tipo: 'plano', titulo: 'Fotografia em prática', objetivo: 'Praticar fotografia.' },
+        { tipo: 'fluxo', titulo: 'Aplicação' },
+        { tipo: 'licao', titulo },
+      ].map(x => JSON.stringify(x)).join(quebra);
+      const mensagem = JSON.stringify({ type: 'response.output_text.delta', delta: linhas + quebra });
+      return new Response('data: ' + mensagem + quebra + quebra, { headers: { 'Content-Type': 'text/event-stream' } });
+    }
+    const enunciado = avancado ? 'Qual ajuste cria um rastro de movimento sem aumentar a exposição?' : 'Qual alteração corrige a subexposição sem mudar a abertura?';
     return Response.json({ status: 'completed', output_text: JSON.stringify({
-      habilidade: 'Combinar ingredientes', enunciado: 'Qual ingrediente engrossa um molho?',
-      opcoes: ['Água', 'Farinha', 'Sal'], correta: 1,
+      objetivo: 'Fotografar em condições de luz variável.',
+      conceito: 'A duração da exposição e a abertura controlam a luz que chega ao sensor.',
+      exemplo: 'Em 1/60 s o sensor recebe luz por mais tempo do que em 1/500 s.',
+      exercicio: {
+        tipo: 'multipla_escolha', enunciado, contexto: null, trecho: null,
+        opcoes: [{ id: 'a', texto: 'Ajustar o tempo de exposição' }, { id: 'b', texto: 'Mudar apenas o foco' }, { id: 'c', texto: 'Manter todos os ajustes' }],
+        gabarito: ['Ajustar o tempo de exposição'], feedbackCorreto: 'Sim.', feedbackIncorreto: 'Considere o tempo que o sensor recebe luz.',
+      },
     }) });
   });
-  const objetivo = 'Quero aprender a engrossar molhos';
-  const pedido = () => diagnostico(req('aprendizado/diagnostico', cookie, { objetivo }));
-  assert.equal((await pedido()).status, 428);
+  const pedido = objetivo => diagnostico(req('aprendizado/diagnostico', cookie, { objetivo }));
+  assert.equal((await pedido(geral)).status, 428);
   assert.equal(fetch.mock.callCount(), 0);
   await aceitarConsentimentoIa(conta.id, VERSAO_CONSENTIMENTO_IA);
-  const passo = await ok(pedido());
-  const resultado = await responder(cookie, passo, 'Farinha');
-  assert.deepEqual(resultado.perfil.demonstrados, ['Combinar ingredientes']);
-  falhar = true;
-  assert.equal((await pedido()).status, 503);
-  process.env.IA = 'falsa';
-  assert.ok((await ok(proposta(req('aprendizado/propostas', cookie, { objetivo })))).fluxos.length);
+
+  const recorte = await ok(pedido(geral));
+  const profundidade = await responder(cookie, recorte, 'Fotografar movimento');
+  const verificacao = await responder(cookie, profundidade, 'Avançado');
+  assert.match(verificacao.pergunta.enunciado, /ciclista/);
+  const ampla = await responder(cookie, verificacao, '1/500 s');
+  assert.deepEqual(ampla.perfil, {
+    escopo: 'Fotografar movimento', nivel: 'avancado', demonstrados: ['Escolher velocidade para movimento'], lacunas: [],
+  });
+  const pa = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral, diagnosticoId: ampla.id })));
+  const a = (await salvarEReabrir(cookie, pa)).primeira;
+  assert.match(a.titulo, /rastro/);
+  assert.match(a.exercicio.enunciado, /rastro/);
+  assert.ok(pedidos.some(p => p.stream && p.input[1].content.includes('"nivel":"avancado"')));
+
+  const amostra = await ok(pedido(estreito));
+  assert.equal(amostra.numero, 1);
+  assert.match(amostra.pergunta.enunciado, /prioridade à abertura/);
+  const curta = await responder(cookie, amostra, 'Ainda não sei');
+  assert.equal(curta.perfil.nivel, 'intermediario');
+  assert.deepEqual(curta.perfil.demonstrados, []);
+  const pb = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: estreito, diagnosticoId: curta.id })));
+  const b = (await salvarEReabrir(cookie, pb)).primeira;
+  assert.match(b.titulo, /subexposição/);
+  assert.notEqual(a.exercicio.enunciado, b.exercicio.enunciado);
+
+  atrasar = true;
+  assert.equal((await pedido(geral)).status, 503);
+  const legado = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo: geral })));
+  assert.ok(legado.fluxos.length);
+  assert.equal(legado.diagnostico, undefined);
 });
