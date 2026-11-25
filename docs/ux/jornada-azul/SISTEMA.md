@@ -26,7 +26,7 @@ A personalização usa dados que já existem: objetivo, título da trilha, etapa
 | Borda | `#DFE7F2` | Separação de superfície; campos e estado selecionado exigem contraste próprio mais forte. |
 | Campo | Borda `#7B8AAF`, raio 16 px | Texto 16/24 ou maior, padding lateral 16; rótulo externo e erro associados. |
 | Semânticas | Sucesso `#1F7A5A`, atenção `#9A5B00`, erro `#C23B4E` | Sempre acompanhadas de texto/ícone/estado; azul não substitui sucesso ou erro. |
-| Título | Quicksand 700 | Principal 30/36; seção 22/28; cartão 20/26; evitar compressão de letras. |
+| Título | Quicksand 700 | Principal 30/38; seção 24/30; cartão 20/26. O enunciado do exercício usa 22/30 para orientar a resposta sem ocupar o papel do título da tela. |
 | Corpo | Nunito 400/700/800 | Base 16/24; leitura longa até 17/26; auxiliares 14/21, metadados a partir de 13/20. |
 | Escala | 4, 8, 12, 16, 20, 24, 32, 44 px | Separar componente, grupo e seção; não ajustar cada tela com números avulsos. |
 | Superfícies | Raio 24 px | Bloco principal, cartão de trilha e confirmação. Campos/ações usam 16; selos, pílula. |
@@ -59,7 +59,7 @@ Fontes e renderização seguem a exceção técnica da [spec 07](../../specs/07-
 
 A sequência é **contexto → tarefa → feedback → próximo passo**. Cabeçalho informa onde a pessoa está; conteúdo resolve uma tarefa; rodapé segura a ação principal onde o contrato exige. Não empilhar uma segunda barra com as mesmas ações.
 
-Até 600 px, a ação principal ocupa a largura útil, aparece antes das saídas secundárias e fica visível na entrada da tarefa. Rótulos crescem/rolam com texto ampliado: o mínimo de altura não é teto. Nenhuma ação fica por baixo do teclado, da cápsula, do aviso ou da área segura. “Etapa anterior” permanece contextual, junto do andamento/conteúdo; não cria uma fileira de quatro ações concorrentes no rodapé.
+Até 600 px, a ação principal ocupa a largura útil, aparece antes das saídas secundárias e fica visível na entrada da tarefa. A navegação distribui as abas em colunas iguais, permite quebra e mede sua altura; não limita os rótulos a 1,3×. Rótulos crescem/rolam com texto ampliado: o mínimo de altura não é teto. Nenhuma ação fica por baixo do teclado, da cápsula, do aviso ou da área segura. “Etapa anterior” permanece contextual, junto do andamento/conteúdo; não cria uma fileira de quatro ações concorrentes no rodapé.
 
 - **Acolher:** entrada, apresentação e conta explicam valor e oferecem conta/visitante conforme flags reais.
 - **Preparar:** objetivo e material têm acesso claro; geração é a trilha tomando forma por eventos reais, com cancelar e recuperar.

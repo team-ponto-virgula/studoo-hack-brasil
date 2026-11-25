@@ -4,8 +4,8 @@ import { TextoComFormulas } from './texto-com-formulas';
 import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { usePulinho } from './animacoes';
-import { degrauFora, estilos } from './interface';
-import { cores, fontes } from './tema';
+import { degrauFora, estilos, useMovimentoReduzido } from './interface';
+import { cores, fontes, raios } from './tema';
 import { focoVisivel } from './foco';
 
 /** Letras das opções de múltipla escolha, como na web (A, B, C…). */
@@ -30,13 +30,14 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   acao: () => void;
 }) {
   const [focada, setFocada] = useState(false);
+  const reduzir = useMovimentoReduzido();
   const pulo = usePulinho(retorno === 'certa', 1.04);
   let estado = null;
-  // O degrau por fora tem a cor da sombra da web (0 4px 0): gelo; #9FB1F0 marcada; #9AD8B5 certa; #F2CF96 errada.
+  // A seleção ganha o azul da ação; a correção mantém seus estados semânticos, como na web.
   let corDegrau: string = cores.gelo;
   if (retorno === 'certa') { estado = opcaoEstilos.opcaoCerta; corDegrau = '#9AD8B5'; }
   else if (retorno === 'errada') { estado = opcaoEstilos.opcaoErrada; corDegrau = '#F2CF96'; }
-  else if (selecionada) { estado = opcaoEstilos.opcaoSelecionada; corDegrau = '#9FB1F0'; }
+  else if (selecionada) { estado = opcaoEstilos.opcaoSelecionada; corDegrau = cores.acao; }
 
   // Spec 16, item 6: o quadrinho da letra cresce com o texto do sistema (lado de 1,75 × o tamanho da letra, no mínimo 30,
   // sempre quadrado e raio 9); o texto da opção ocupa o resto da linha e quebra ao lado dele, nunca por baixo.
@@ -48,7 +49,7 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
       <Pressable ref={referencia} testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
         // O texto falado (a fórmula lida pela árvore): nunca o texto cru com `$…$` (caso real cb532bb, opções só em fórmula).
         accessibilityLabel={falarTextoComFormulas(texto)} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
-        style={({ pressed }) => [degrauFora(4, 16, corDegrau, pressed), focada && estilos.foco]}>
+        style={({ pressed }) => [degrauFora(4, raios.campo, corDegrau, pressed && reduzir === false), focada && estilos.foco]}>
         {/* A face: borda de 2 que fecha em volta (o degrau de 4 é o pai, por fora, como a sombra da web). */}
         <View style={[opcaoEstilos.opcao, estado]}>
         <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
@@ -79,13 +80,13 @@ const opcaoEstilos = StyleSheet.create({
   // .opcoes label: 60 de altura mínima, 12 × 16 de respiro, borda de 2 em volta e raio de 16.
   opcao: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 2,
     borderColor: cores.gelo, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: cores.fundo },
-  opcaoSelecionada: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
-  opcaoCerta: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
-  opcaoErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
+  opcaoSelecionada: { borderColor: cores.acao, backgroundColor: cores.nevoa },
+  opcaoCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoFundo },
+  opcaoErrada: { borderColor: '#E3A24A', backgroundColor: cores.alertaFundo },
   opcaoTexto: { flex: 1, fontWeight: '700' },
   letra: { width: 30, height: 30, flexShrink: 0, alignSelf: 'center', borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
   letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },
-  letraCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoClaro },
-  letraErrada: { borderColor: '#E3A24A', backgroundColor: '#E3A24A' },
+  letraCerta: { borderColor: cores.sucesso, backgroundColor: cores.sucesso },
+  letraErrada: { borderColor: cores.alerta, backgroundColor: cores.alerta },
   letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: LETRA_DA_OPCAO, lineHeight: 18, textAlign: 'center' },
 });

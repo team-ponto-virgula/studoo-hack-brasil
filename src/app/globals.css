@@ -1,3 +1,5 @@
+@import "../ui/jornada-tokens.css";
+
 /*
  * Cada fonte em duas partes (o navegador só baixa a parte que a página usa). A "latim" tem o latim, a pontuação, as setas e TODOS os caracteres
  * especiais do texto do app (CARACTERES_ESPECIAIS_DO_TEXTO, inclusive o grego e os símbolos da matemática): é a que quase toda página usa, a que o
@@ -38,29 +40,12 @@
 
 :root {
   color-scheme: light;
-  --fundo: #fff;
-  --nevoa: #f1f4fd;
-  --gelo: #e1e7fa;
-  --texto: #0b1b5c;
-  --texto2: #5e6a85;
-  --fundo-aviso-comunidade: #1b2a5e;
-  --acao: #2563ff;
-  --acao-escura: #1d4ed8;
-  --sucesso: #1f7a5a;
-  --sucesso-claro: #2f9e6f;
-  --alerta: #9a5b00;
-  --erro: #c23b4e;
-  --ouro: #fbbf24;
-  --ouro-escuro: #e0a92e;
-  --ceu: #e9e7ff;
+  --fundo-aviso-comunidade: var(--texto);
   /* Paleta do kit do mascote (spec 13, B5): violeta só como enfeite (texto em --violeta-texto), azul claro nunca como texto. */
   --violeta: #8b5cf6;
   --violeta-texto: #6d28d9;
   --azul-claro: #3b82f6;
   --lavanda: #e9e7ff;
-  --borda-campo: #c9d1ea;
-  --raio-campo: 14px;
-  --raio-bloco: 20px;
   --largura-leitura: 70ch;
   --espaco-pagina: clamp(24px, 5vw, 76px);
 }
@@ -125,47 +110,68 @@ button, input, textarea { font: inherit; }
 .logo { width: 140px; }
 .logo-quadro { display: inline-block; vertical-align: middle; }
 
-/* Botões com relevo: a face e um lábio embaixo; no toque, a face desce até o lábio. */
+/* Jornada Azul: a face desce no gesto; tamanho e leitura permanecem estáveis. */
 .botao {
   --labio: transparent;
   display: inline-flex;
-  min-height: 48px;
-  min-width: 44px;
+  min-height: var(--jornada-acao);
+  min-width: var(--jornada-alvo);
+  max-width: 100%;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 22px;
+  gap: 10px;
+  padding: 12px 20px;
   border: 2px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--raio-campo);
+  font-size: 1.0625rem;
   font-weight: 800;
+  line-height: 1.5rem;
   text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
   color: var(--acao);
   background: var(--fundo);
-  box-shadow: 0 4px 0 var(--labio);
+  box-shadow: 0 var(--jornada-degrau) 0 var(--labio);
   cursor: pointer;
-  transition: color 160ms ease-out, background-color 160ms ease-out, border-color 160ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--jornada-micro) ease-out, background-color var(--jornada-micro) ease-out,
+    border-color var(--jornada-micro) ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
 }
 
-.botao .icone { width: 20px; height: 20px; }
-.botao--primario { --labio: var(--acao-escura); color: var(--fundo); background: var(--acao); }
-/* Verde e âmbar do retorno da aula, escuros o bastante para o texto branco ter contraste AA. */
-.botao--sucesso { --labio: #145a42; color: var(--fundo); background: var(--sucesso); }
-.botao--alerta { --labio: #6e4100; color: var(--fundo); background: var(--alerta); }
-.botao--secundario { --labio: var(--gelo); border-color: var(--gelo); }
-.botao--texto { padding-inline: 12px; background: transparent; box-shadow: none; }
-.botao:active:not(:disabled):not(.botao--texto) { box-shadow: 0 1px 0 var(--labio); transform: translateY(3px); }
-.botao:disabled { --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); cursor: default; }
-/* Falta um passo (como contar como foi a prática): o botão parece desativado, mas responde ao toque e leva até o que falta. */
-.botao[aria-disabled='true']:not(:disabled) {
-  --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa);
+.botao .icone { flex: none; width: 20px; height: 20px; }
+.botao--primario { --labio: var(--acao-escura); color: #fff; background: var(--acao); }
+.botao--sucesso { --labio: #145a42; color: #fff; background: var(--sucesso); }
+.botao--alerta { --labio: #6e4100; color: #fff; background: var(--alerta); }
+.botao--secundario, .botao--texto {
+  min-height: var(--jornada-alvo);
+  padding: 8px 16px;
+  font-size: 1rem;
+  box-shadow: none;
 }
-/* Hover só onde há ponteiro que paira: no toque, o botão não fica "aceso" depois de tocado. */
+.botao--secundario { border-width: 1.5px; border-color: var(--borda-campo); background: var(--fundo); }
+.botao--texto { padding-inline: 12px; border-color: transparent; background: transparent; }
+.botao--compacto { min-height: var(--jornada-alvo); padding: 8px 14px; font-size: .875rem; line-height: 1.25rem; }
+.botao:active:not(:disabled):not([aria-disabled='true']):not(.botao--texto):not(.botao--secundario) {
+  box-shadow: 0 1px 0 var(--labio);
+  transform: translateY(3px);
+}
+.botao:disabled, .botao[aria-disabled='true']:not(:disabled) {
+  --labio: var(--labio-neutro);
+  color: var(--texto2);
+  border-color: var(--gelo);
+  background: var(--nevoa);
+  cursor: default;
+}
+.botao[aria-busy='true'] { cursor: progress; }
+.botao.modal-confirmar--destrutivo { color: var(--erro); border-color: var(--erro); background: var(--fundo); box-shadow: none; }
+/* A pressão nunca deixa uma seleção de hover persistente na tela de toque. */
 @media (hover: hover) {
-  .botao--primario:hover:not(:disabled) { background: color-mix(in srgb, var(--acao) 88%, #000); }
-  .botao--sucesso:hover:not(:disabled) { background: #1a6b4f; }
-  .botao--alerta:hover:not(:disabled) { background: #8a5100; }
-  .botao--secundario:hover:not(:disabled), .botao--texto:hover:not(:disabled) { background: var(--nevoa); }
-  .botao[aria-disabled='true']:not(:disabled):hover { --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); }
+  .botao--primario:hover:not(:disabled):not([aria-disabled='true']) { background: var(--acao-escura); }
+  .botao--sucesso:hover:not(:disabled):not([aria-disabled='true']) { background: #1a6b4f; }
+  .botao--alerta:hover:not(:disabled):not([aria-disabled='true']) { background: #8a5100; }
+  .botao--secundario:hover:not(:disabled):not([aria-disabled='true']),
+  .botao--texto:hover:not(:disabled):not([aria-disabled='true']) { background: var(--nevoa); }
 }
 .botao--texto:disabled { background: transparent; border-color: transparent; }
 
@@ -181,13 +187,14 @@ button, input, textarea { font: inherit; }
   padding: 12px 16px;
   color: var(--texto);
   background: var(--fundo);
-  border: 2px solid var(--borda-campo);
+  border: 1.5px solid var(--borda-campo);
   border-radius: var(--raio-campo);
-  transition: border-color 140ms ease-out, box-shadow 140ms ease-out;
+  line-height: 1.5rem;
+  transition: border-color var(--jornada-micro) ease-out, box-shadow var(--jornada-micro) ease-out;
 }
 
-.campo input::placeholder, .campo textarea::placeholder { color: #7a84a0; }
-.campo input:focus, .campo textarea:focus { outline: none; border-color: var(--acao); box-shadow: 0 0 0 4px rgb(37 99 255 / 0.16); }
+.campo input::placeholder, .campo textarea::placeholder { color: var(--texto2); opacity: 1; }
+.campo input:focus, .campo textarea:focus { outline: none; border-color: var(--acao); box-shadow: 0 0 0 3px rgb(36 87 221 / 0.16); }
 .campo textarea { min-height: 136px; resize: vertical; }
 .campo input:disabled, .campo textarea:disabled { background: var(--nevoa); }
 .campo [aria-invalid='true'] { border-color: var(--erro); }
@@ -227,10 +234,10 @@ button, input, textarea { font: inherit; }
   align-items: center;
   gap: 14px 16px;
   padding: 16px 18px;
-  border: 2px solid color-mix(in srgb, var(--erro) 40%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--erro) 55%, white);
   border-radius: 20px;
   color: var(--erro);
-  background: #fff5f6;
+  background: var(--erro-fundo);
 }
 .estado-erro .stu { width: 48px; flex: none; }
 .estado-erro__corpo { display: grid; justify-items: start; gap: 10px; flex: 1; min-width: min(100%, 220px); }
@@ -289,7 +296,7 @@ button, input, textarea { font: inherit; }
 }
 
 .entrada-mensagem__titulo {
-  color: #0b1b5c;
+  color: var(--texto);
   font-family: Quicksand, sans-serif;
   font-size: clamp(1.75rem, 3.4cqw, 2.5rem);
   font-weight: 700;
@@ -298,7 +305,7 @@ button, input, textarea { font: inherit; }
   text-wrap: balance;
 }
 
-.entrada-mensagem p:not(.entrada-mensagem__titulo) { max-width: 30rem; color: #5e6a85; font-size: 1.0625rem; font-weight: 600; }
+.entrada-mensagem p:not(.entrada-mensagem__titulo) { max-width: 30rem; color: var(--texto2); font-size: 1.0625rem; font-weight: 600; }
 .entrada-temas { position: absolute; inset: 0; }
 
 .entrada-tema {
@@ -358,8 +365,8 @@ button, input, textarea { font: inherit; }
   flex-direction: column;
   overflow-y: auto;
   padding: 32px 20px 24px;
-  border-right: 2px solid var(--nevoa);
-  background: #f7f9ff;
+  border-right: 1px solid var(--gelo);
+  background: var(--superficie-sutil);
 }
 
 .barra-marca { min-height: 48px; margin-bottom: 32px; padding-inline: 4px; }
@@ -379,18 +386,16 @@ button, input, textarea { font: inherit; }
 @media (hover: hover) { .navegacao .botao--texto:hover:not(:disabled) { background: var(--fundo); box-shadow: 0 2px 0 var(--gelo); } }
 .navegacao .botao--texto[aria-current] { color: var(--acao); }
 .navegacao-plano { color: var(--texto); font-weight: 700; }
-/* Spec 16, item 18: os quatro itens da navegação lateral (Minhas trilhas, Nova trilha, Explorar e Perfil) são iguais: 48 px de altura, ícone de 20 (os da cápsula do app: livro, lâmpada,
-   bússola e pessoa), rótulo de 16 em 800 e raio de 14. Fora da seleção, sem fundo e com o texto em #0B1B5C; selecionado, fundo #E9E7FF e texto e ícone em #1D4ED8 (5,53:1, o azul da subcápsula da
-   barra de abas; o #2563FF da spec dá 4,03:1 sobre o lavanda, abaixo dos 4,5:1 que a paleta exige) (antes eram quatro estilos: link sem ícone, botão com borda, pílula branca com sombra e cartão com borda azul). O "Perfil" continua embaixo. */
+/* As quatro entradas da navegação usam a mesma anatomia. A seleção Jornada Azul combina a superfície azul suave e a tinta de ação escura. */
 .barra-lateral .navegacao .navegacao-item, .barra-lateral .navegacao-rodape .navegacao-item {
   display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: 48px; padding: 0 14px; border: 0; border-radius: 14px; background: transparent; box-shadow: none;
-  color: #0b1b5c; font: inherit; font-size: 1rem; font-weight: 800; text-align: left; cursor: pointer;
+  color: var(--texto); font: inherit; font-size: 1rem; font-weight: 800; text-align: left; cursor: pointer;
 }
 .barra-lateral .navegacao-item .icone { flex: none; width: 20px; height: 20px; }
 .barra-lateral .navegacao .navegacao-item[aria-current], .barra-lateral .navegacao-rodape .navegacao-item[aria-current],
-.barra-lateral .navegacao .navegacao-plano[aria-current] { background: var(--lavanda); box-shadow: none; color: var(--acao-escura); }
+.barra-lateral .navegacao .navegacao-plano[aria-current] { background: var(--nevoa); box-shadow: none; color: var(--acao-escura); }
 .barra-lateral .navegacao-item[aria-current] .icone { fill: currentColor; }
-.barra-lateral .navegacao-item[aria-current] .icone__detalhe { fill: var(--lavanda); stroke: var(--lavanda); stroke-width: 1.5; }
+.barra-lateral .navegacao-item[aria-current] .icone__detalhe { fill: var(--nevoa); stroke: var(--nevoa); stroke-width: 1.5; }
 @media (hover: hover) {
   .barra-lateral .navegacao .navegacao-item:hover:not(:disabled):not([aria-current]), .barra-lateral .navegacao-rodape .navegacao-item:hover:not(:disabled):not([aria-current]) { background: var(--nevoa); box-shadow: none; }
 }
@@ -405,7 +410,7 @@ button, input, textarea { font: inherit; }
   justify-content: space-between;
   min-height: 76px;
   padding: 12px var(--espaco-pagina);
-  border-bottom: 2px solid var(--nevoa);
+  border-bottom: 1px solid var(--gelo);
 }
 
 @media (min-width: 1024px) { .estudo-cabecalho[data-vazia-no-computador] { display: none; } }
@@ -421,7 +426,7 @@ button, input, textarea { font: inherit; }
   border-radius: 999px;
   color: var(--texto2);
   background: var(--nevoa);
-  font-size: 0.75rem;
+  font-size: .8125rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -441,7 +446,7 @@ button, input, textarea { font: inherit; }
 
 .painel { min-width: 0; }
 .painel--concluida { max-width: 640px; }
-.contexto-tela { margin-bottom: 8px; color: var(--texto2); font-weight: 800; }
+.contexto-tela { margin-bottom: 8px; color: var(--acao); font-size: .8125rem; line-height: 1.25rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
 .acoes-tela { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
 
 /* Meus planos: destaque único "Continue de onde parou" + grade secundária. */
@@ -451,7 +456,7 @@ button, input, textarea { font: inherit; }
 .planos-vazio__halo span { display: block; }
 .planos-vazio h2 { font-size: 1.25rem; }
 .planos-vazio p { color: var(--texto); font-size: 1rem; line-height: 1.5; }
-.planos-vazio .botao { width: 100%; min-height: 48px; }
+.planos-vazio .botao { width: 100%; min-height: var(--jornada-acao); }
 @media (prefers-reduced-motion: no-preference) {
   .planos-vazio { animation: planos-vazio-entrar 200ms ease-out; }
   .planos-vazio__halo .mascote { animation: planos-vazio-flutuar 3s ease-in-out infinite; }
@@ -466,19 +471,19 @@ button, input, textarea { font: inherit; }
 .plano-destaque {
   position: relative;
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr) auto;
+  grid-template-columns: 88px minmax(0, 1fr);
   align-items: center;
-  gap: 20px;
+  gap: 20px 16px;
   margin-top: 12px;
-  padding: 18px 54px 18px 18px;
-  border: 2px solid #c3cdf2;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #f6f8ff 0%, var(--fundo) 62%);
-  box-shadow: 0 4px 0 #c3cdf2;
+  padding: 20px;
+  border: 1.5px solid var(--destaque-borda);
+  border-radius: var(--raio-bloco);
+  background: var(--nevoa);
 }
 .plano-destaque__cena {
   position: relative;
-  height: 120px;
+  width: 88px;
+  height: 88px;
   overflow: hidden;
   border-radius: 18px;
   background: var(--chao);
@@ -486,22 +491,40 @@ button, input, textarea { font: inherit; }
 .plano-destaque__cena .plano-cartao__colina { bottom: -32px; height: 68px; }
 .plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 64px; translate: -50% 0; }
 .plano-destaque__cena .mundo-desenho { position: absolute; bottom: 10px; }
-.plano-destaque__cena .mundo-desenho:nth-of-type(1) { left: 10%; --tam: 38px; }
-.plano-destaque__cena .mundo-desenho:nth-of-type(2) { right: 10%; --tam: 34px; }
-.plano-destaque__corpo { display: grid; gap: 8px; min-width: 0; }
+.plano-destaque__cena .mundo-desenho:nth-of-type(1) { left: 4%; --tam: 26px; }
+.plano-destaque__cena .mundo-desenho:nth-of-type(2) { right: 4%; --tam: 24px; }
+.plano-destaque__corpo { display: grid; gap: 8px; min-width: 0; padding-top: 28px; }
 .plano-destaque__topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.plano-destaque__rotulo { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
-.plano-destaque__corpo h2 { font-size: 1.375rem; }
-.plano-destaque__acoes { display: grid; justify-items: end; gap: 8px; }
+.plano-destaque__rotulo { color: var(--acao); font-size: .8125rem; line-height: 1.25rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+.plano-destaque__corpo h2 { font-size: 1.375rem; line-height: 1.75rem; }
+.plano-destaque__corpo .progresso { margin-top: 0; }
+.plano-destaque__acoes { grid-column: 1 / -1; display: grid; justify-items: stretch; gap: 8px; }
+.plano-destaque__acoes .botao { width: 100%; }
+.plano-destaque__progresso { grid-column: 1 / -1; }
+.plano-destaque > .plano-cartao__menu { top: 12px; right: 12px; }
 
-@media (max-width: 767px) {
-  .plano-destaque { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 16px; }
-  .plano-destaque__cena { height: 96px; }
-  .plano-destaque__acoes { justify-items: stretch; }
-  .plano-destaque__acoes .botao { width: 100%; }
-  /* O "•••" fica dentro da ilustração (8 px do topo e da direita dela), como nos cartões de "Outras trilhas". */
-  .plano-destaque > .plano-cartao__menu { top: 24px; right: 24px; }
+/* Menu do cartão: ocupa sua própria camada, inclusive sobre os cartões seguintes. */
+.planos-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.plano-cartao__menu { position: absolute; top: 10px; right: 10px; z-index: 3; }
+.plano-cartao__menu > summary {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
+  padding: 0 10px; border-radius: 12px; color: var(--texto2); background: var(--fundo);
+  font-weight: 800; cursor: pointer; list-style: none;
 }
+.plano-cartao__menu > summary::-webkit-details-marker { display: none; }
+.plano-cartao__menu[open] > summary { color: var(--texto); background: var(--nevoa); }
+.plano-cartao__menu > summary:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.plano-cartao:has(.plano-cartao__menu[open]), .plano-destaque:has(.plano-cartao__menu[open]) { z-index: 10; overflow: visible; }
+.plano-cartao__cena, .plano-destaque__cena { pointer-events: none; }
+.plano-cartao__cena { border-radius: 22px 22px 0 0; }
+.plano-cartao__menu[open] > .plano-cartao__opcoes { z-index: 4; min-width: min(200px, calc(100vw - 48px)); max-width: min(280px, calc(100vw - 48px)); border-radius: 16px; }
+.plano-cartao__opcoes > button { display: flex; align-items: center; gap: 12px; min-height: 48px; border-radius: 10px; font-size: 1rem; line-height: 1.5rem; }
+.plano-cartao__opcoes > button .icone { flex-shrink: 0; width: 20px; height: 20px; }
+.plano-cartao__menu[data-acima] > .plano-cartao__opcoes { top: auto; bottom: calc(100% + 6px); }
+.plano-cartao__apagar { min-height: 48px; padding: 0 10px; border: 0; border-radius: 10px; background: transparent; color: var(--erro); font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; }
+.plano-cartao__apagar:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
+.plano-cartao__apagar:disabled { cursor: default; opacity: .6; }
+@media (hover: hover) { .plano-cartao__menu > summary:hover, .plano-cartao__apagar:hover:not(:disabled) { background: var(--nevoa); } }
 
 .planos-secao-titulo { margin-top: 12px; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
 
@@ -600,136 +623,54 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   transition: border-color 140ms ease-out, background-color 140ms ease-out;
 }
 
-.opcoes label:has(input:checked) { border-color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
+.opcoes label:has(input:checked) { border-color: var(--acao); background: var(--nevoa); box-shadow: 0 3px 0 var(--destaque-borda); }
+.opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
+.opcoes label:has(input:disabled) { cursor: default; }
 .opcoes input { width: 20px; height: 20px; flex: none; accent-color: var(--acao); }
 .opcoes span { overflow-wrap: anywhere; }
 
-/* Lição concluída: tela inteira e centrada, com chuva de confete, raios girando atrás do Stu, que pula, e o resumo. */
-.estudo-principal:has(.painel--concluida) { width: min(100%, 54rem); margin-inline: auto; padding-top: clamp(24px, 6vw, 56px); }
-.painel--concluida { display: grid; justify-items: center; text-align: center; }
+/* Conclusão: o que foi salvo e o próximo passo precedem os detalhes da sessão. */
+.estudo-principal:has(.painel--concluida) { width: min(100%, 48rem); margin-inline: auto; padding-top: 24px; }
+.painel--concluida { display: grid; gap: 0; justify-items: center; text-align: center; }
 .painel--concluida p { margin-inline: auto; }
-.conclusao-cena { position: relative; display: grid; width: 190px; height: 172px; place-items: end center; margin-bottom: 14px; }
-
-.conclusao-raios {
-  position: absolute;
-  inset: -14px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, rgb(255 209 102 / 0.42) 0deg 11deg, transparent 11deg 30deg);
-  mask: radial-gradient(circle, #000 30%, transparent 70%);
-  animation: conclusao-girar 16s linear infinite, conclusao-raios 700ms ease-out backwards;
-}
-
-.conclusao-cena .stu {
-  position: relative;
-  width: 140px;
-}
-/* Trilha concluída: o Stu com o troféu em 165 (spec 13, E2); no celular, lição e trilha ficam em 110. */
-.conclusao-cena[data-trilha] .stu { width: 165px; }
-@media (max-width: 767px) { .conclusao-cena .stu, .conclusao-cena[data-trilha] .stu { width: 110px; } }
-.conclusao-cena .stu {
-  animation: conclusao-pular 480ms cubic-bezier(0.3, 0.6, 0.4, 1) 250ms 4 alternate both, conclusao-flutuar 2600ms ease-in-out 2200ms infinite;
-}
-
+.conclusao-heroi { display: grid; justify-items: center; gap: 8px; width: 100%; }
+.conclusao-cena { position: relative; display: grid; width: 110px; height: 110px; place-items: end center; margin: 0; }
+.conclusao-cena .stu, .conclusao-cena[data-trilha] .stu { position: relative; width: 110px; }
+.conclusao-raios { display: none; }
 .conclusao-selo {
-  position: absolute;
-  right: 6px;
-  bottom: 30px;
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--fundo);
-  background: var(--sucesso-claro);
-  box-shadow: 0 4px 0 var(--sucesso), 0 0 0 4px var(--fundo);
-  animation: conclusao-selo 520ms cubic-bezier(0.2, 0.9, 0.3, 1.6) 700ms backwards;
+  position: absolute; right: -2px; bottom: 8px; display: grid; width: 30px; height: 30px;
+  place-items: center; border-radius: 50%; color: #fff; background: var(--sucesso); box-shadow: 0 0 0 3px var(--fundo);
 }
-
-.conclusao-selo .icone { width: 28px; height: 28px; stroke-width: 3.2; }
-.conclusao-texto { margin-top: 8px; color: var(--texto2); font-size: 1.0625rem; font-weight: 800; }
-.conclusao-licao { margin-top: 2px; font-weight: 700; }
-
-.conclusao-numeros {
-  display: grid;
-  width: 100%;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 24px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.conclusao-numeros li {
-  display: grid;
-  min-width: 0;
-  overflow: hidden;
-  border: 2px solid var(--cor-numero);
-  border-radius: 16px;
-  background: var(--cor-numero);
-  box-shadow: 0 4px 0 color-mix(in srgb, var(--cor-numero) 70%, #000);
-  animation: conclusao-numero 480ms cubic-bezier(0.2, 0.9, 0.3, 1.4) 600ms backwards;
-}
-
-.conclusao-numeros li:nth-child(2) { animation-delay: 720ms; }
-.conclusao-numeros li:nth-child(3) { animation-delay: 840ms; }
-.conclusao-numeros li[data-tipo='tempo'] { --cor-numero: var(--acao); }
-.conclusao-numeros li[data-tipo='acerto'] { --cor-numero: var(--alerta); }
-.conclusao-numeros li[data-tipo='acerto'][data-primeira] { --cor-numero: var(--sucesso); }
-.conclusao-numeros li[data-tipo='etapas'] { --cor-numero: #5b4bb7; }
-.conclusao-numeros li[data-tipo='pratica'] { --cor-numero: #6b3fa0; }
-.conclusao-numeros li:nth-child(4) { animation-delay: 960ms; }
-/* Com a prática, quatro números: lado a lado no computador, dois por linha no celular. */
-.conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-@media (max-width: 560px) { .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 480px) {
-  .conclusao-numeros { gap: 6px; }
-  .conclusao-numeros__rotulo { min-width: 0; font-size: 0.625rem; letter-spacing: 0; padding: 6px 2px; gap: 3px; }
-  .conclusao-numeros__rotulo .icone { width: 13px; height: 13px; flex-shrink: 0; }
-  .conclusao-numeros__valor { font-size: 1.0625rem; padding: 10px 4px; }
-  .estudo-cabecalho { flex-wrap: wrap; gap: 6px 8px; padding-block: max(6px, env(safe-area-inset-top)) 8px; }
-  .estudo-identificacao { order: 3; flex: 1 1 100%; min-width: 0; }
-  .selo-sincronia { max-width: 100%; white-space: normal; line-height: 1.25; }
-}
-
-.conclusao-numeros__rotulo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 8px;
-  color: var(--fundo);
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.conclusao-numeros__rotulo .icone { width: 16px; height: 16px; stroke-width: 2.75; }
-
-.conclusao-numeros__valor {
-  margin: 0 2px 2px;
-  padding: 12px 6px;
-  border-radius: 13px;
-  color: var(--texto);
-  background: var(--fundo);
-  font-size: 1.25rem;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.painel--concluida .conclusao-liberada { justify-content: center; animation: conclusao-numero 480ms cubic-bezier(0.2, 0.9, 0.3, 1.4) 1000ms backwards; }
-
-.conclusao-progresso {
-  width: 100%;
-  margin-top: 20px;
-  padding: 20px;
-  border: 2px solid var(--gelo);
-  border-radius: 24px;
-  box-shadow: 0 4px 0 var(--gelo);
-  text-align: start;
-}
-
+.conclusao-selo .icone { width: 18px; height: 18px; stroke-width: 2.5; }
+.conclusao-heroi h1 { font-size: 1.875rem; line-height: 2.25rem; letter-spacing: -.02em; }
+.conclusao-licao { margin: 0; color: var(--texto2); font-size: 1.0625rem; font-weight: 700; line-height: 1.625rem; }
+.conclusao-nucleo { display: grid; gap: 16px; width: 100%; margin-top: 24px; text-align: start; }
+.conclusao-progresso { width: 100%; margin: 0; padding: 20px; border: 1.5px solid var(--destaque-borda); border-radius: var(--raio-bloco); background: var(--nevoa); text-align: start; }
+.conclusao-progresso h2 { font-size: 1.0625rem; line-height: 1.625rem; }
+.conclusao-progresso .barra { height: 8px; }
+.conclusao-progresso .barra__preenchimento::after { display: none; }
+.conclusao-sincronia { display: flex; align-items: start; gap: 8px; margin: 0; color: var(--sucesso); text-align: start; font-size: 0.875rem; font-weight: 700; line-height: 1.3125rem; }
+.conclusao-sincronia .icone { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+.painel--concluida .conclusao-liberada { justify-content: start; width: 100%; max-width: none; margin: 0; color: var(--texto); font-size: 1.0625rem; line-height: 1.625rem; }
+.conclusao-aprendizado { display: grid; gap: 6px; padding-top: 16px; border-top: 1px solid var(--gelo); }
+.conclusao-aprendizado strong { font-size: 0.875rem; font-weight: 800; line-height: 1.3125rem; color: var(--texto2); }
+.conclusao-aprendizado p { margin: 0; font-size: 1.0625rem; line-height: 1.625rem; }
+.conclusao-rever { display: flex; align-items: flex-start; justify-content: start; gap: 8px; max-width: none; margin: 0; padding: 12px 16px; border-radius: 16px; color: var(--alerta); background: var(--alerta-fundo); font-size: 1rem; font-weight: 800; line-height: 1.5rem; text-align: start; }
+.conclusao-rever .icone { flex: none; width: 20px; height: 20px; margin-top: 2px; }
+.conclusao-texto { width: 100%; margin-top: 24px; color: var(--texto2); font-size: 1rem; font-weight: 600; line-height: 1.5rem; text-align: start; }
+.conclusao-numeros, .conclusao-numeros:has(li:nth-child(4)) { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 24px 0 0; padding: 0; list-style: none; }
+.conclusao-numeros li { display: grid; min-width: 0; align-content: start; gap: 6px; padding: 16px; border: 1px solid var(--gelo); border-radius: 16px; background: var(--superficie-sutil); }
+.conclusao-numeros__rotulo { display: flex; align-items: start; justify-content: start; gap: 6px; padding: 0; color: var(--texto2); font-size: 0.875rem; font-weight: 700; line-height: 1.3125rem; letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; }
+.conclusao-numeros__rotulo .icone { width: 18px; height: 18px; flex: none; }
+.conclusao-numeros__valor { margin: 0; padding: 0; color: var(--texto); font-size: 1.0625rem; font-weight: 900; line-height: 1.625rem; text-align: start; }
+.conclusao-numeros__legenda { margin: 18px 0 -8px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; text-align: start; }
+.conclusao-compartilhar { margin-top: 24px; }
 .painel--concluida .acoes-tela { justify-content: center; }
+@media (max-width: 767px) {
+  .estudo-principal:has(.painel--concluida) { padding: max(24px, env(safe-area-inset-top)) 20px calc(154px + env(safe-area-inset-bottom)); }
+  .painel--concluida .acao-principal { gap: 8px; padding-top: 12px; border-top: 1px solid var(--gelo); }
+  .painel--concluida .acao-principal > .botao--secundario { min-height: 44px; }
+}
 
 /* Barra de progresso: enche com uma animação curta ao aparecer, a partir de onde estava (--de). */
 .barra { position: relative; height: 12px; overflow: hidden; border-radius: 999px; background: var(--nevoa); }
@@ -779,7 +720,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
 @media (max-width: 767px) {
   :root { --espaco-pagina: 20px; }
-  .selo-sincronia { padding: 3px 8px; font-size: 0.75rem; }
+  .selo-sincronia { padding: 3px 8px; font-size: .8125rem; }
   /* Rodapé fixo da conclusão (duas ações, 134 px com o respiro) + 40 px entre o último conteúdo e ele. */
   .estudo-principal:has(.painel--concluida) { padding-bottom: calc(146px + env(safe-area-inset-bottom)); }
 
@@ -789,14 +730,12 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
   .entrada-cabecalho .logo { width: 124px; }
   .entrada-forma .formulario { margin-top: 24px; }
-  .entrada-forma .acao-principal { padding-inline: max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right)); }
+  .entrada-forma .acao-principal { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
   .entrada-forma .acao-principal > .botao { max-width: 400px; }
   .estudo-cabecalho { min-height: 64px; padding: max(4px, env(safe-area-inset-top)) 16px 4px; }
   .estudo-cabecalho .logo { width: 102px; }
   .estudo-conta .botao { min-height: 44px; padding-inline: 8px; font-size: 0.875rem; }
   .estudo-principal { padding: 28px var(--espaco-pagina) calc(116px + env(safe-area-inset-bottom)); }
-  .conclusao-numeros { gap: 8px; }
-  .conclusao-numeros__valor { padding: 10px 4px; font-size: 1rem; }
 
   .acao-principal {
     display: flex;
@@ -883,14 +822,14 @@ button { touch-action: manipulation; }
     display: flex;
     padding: 4px;
     overflow: hidden;
-    border-radius: 31px;
+    border-radius: 24px;
     background: var(--fundo);
     box-shadow: var(--sombra-ilha);
   }
   .navegacao-mobile button {
     position: relative;
     display: flex;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     flex-direction: column;
     align-items: center;
     min-width: 48px;
@@ -898,26 +837,26 @@ button { touch-action: manipulation; }
     gap: 2px;
     padding: 6px;
     border: 0;
-    border-radius: 27px;
+    border-radius: 16px;
     color: var(--texto2);
     background: transparent;
-    font-size: min(0.75rem, 15.6px);
+    font-size: .8125rem;
     font-weight: 800;
-    line-height: 1.25;
+    line-height: 1.0625rem;
     text-align: center;
     cursor: pointer;
     transition: background-color 180ms ease-out, color 180ms ease-out;
   }
-  /* Explorar e Perfil têm uma palavra; cedem espaço as abas que podem quebrar no espaço. */
-  .navegacao-mobile button:nth-child(n + 3) { flex-shrink: 0; white-space: nowrap; }
+  /* Colunas iguais: texto ampliado quebra dentro da própria aba e a cápsula cresce com ele. */
+  .navegacao-mobile button { white-space: normal; overflow-wrap: anywhere; }
   /* O respiro da cápsula também responde ao toque, até a borda e sem invadir a aba vizinha. */
   .navegacao-mobile button::after { content: ''; position: absolute; inset: -4px 0; }
   .navegacao-mobile button:first-child::after { left: -4px; }
   .navegacao-mobile button:last-child::after { right: -4px; }
   .navegacao-mobile .icone { flex: none; width: 24px; height: 24px; transition: transform 180ms ease-out; }
-  .navegacao-mobile button[aria-current] { color: var(--acao-escura); background: var(--lavanda); }
+  .navegacao-mobile button[aria-current] { color: var(--acao-escura); background: var(--nevoa); }
   .navegacao-mobile button[aria-current] .icone { fill: currentColor; }
-  .navegacao-mobile button[aria-current] .icone__detalhe { fill: var(--lavanda); stroke: var(--lavanda); stroke-width: 1.5; }
+  .navegacao-mobile button[aria-current] .icone__detalhe { fill: var(--nevoa); stroke: var(--nevoa); stroke-width: 1.5; }
   .navegacao-mobile button:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
   .navegacao-mobile button:active:not(:disabled) .icone { transform: scale(0.9); }
   .navegacao-mobile button:disabled { opacity: 0.6; }
@@ -929,7 +868,7 @@ button { touch-action: manipulation; }
 }
 /* Só no celular (até 767 px) as ações de rodapé (a principal, o próximo passo da trilha) flutuam; no tablet elas ficam no fluxo da página. */
 @media (max-width: 767px) {
-  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .trilha-vazia, .pedido-novo[data-modo="material"] .estudio-acoes--previa)) {
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .trilha-vazia, .pedido-novo[data-modo="ideia"] .pedido-acao, .pedido-novo[data-modo="material"] .estudio-acoes--previa)) {
     --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
   }
   .estudo[data-navegacao] .acao-principal {
@@ -997,7 +936,7 @@ button { touch-action: manipulation; }
 .acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
 .acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
 .acesso-ajuda { font-size: .875rem; color: var(--texto2); }
-.acesso-visitante { display: grid; gap: 8px; padding: 14px; border: 2px solid var(--gelo); border-radius: 16px; background: #f8faff; }
+.acesso-visitante { display: grid; gap: 8px; padding: 16px; border: 1.5px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--superficie-sutil); }
 .acesso-link { display: inline-flex; min-height: 44px; align-items: center; padding: 0; border: 0; background: none; font: inherit; color: var(--acao); font-weight: 800; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; appearance: none; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
@@ -1008,14 +947,14 @@ button { touch-action: manipulation; }
 .entrada-privacidade { justify-self: center; font-size: 0.875rem; color: var(--texto2); }
 .recuperar-simbolo { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 20px; border-radius: 18px; color: var(--acao); background: var(--nevoa); }
 .recuperar-simbolo .icone { width: 28px; height: 28px; }
-.recuperar-aviso { padding: 14px; border-radius: 14px; color: var(--texto); background: var(--nevoa); }
+.recuperar-aviso { padding: 16px; border-radius: var(--raio-campo); color: var(--texto); background: var(--nevoa); font-size: 1rem; line-height: 1.5rem; }
 @media (max-width: 480px) { .recuperar-cartao { padding: 20px; } }
 
 /* A mesma hierarquia e medidas do app, com o rodapé ao alcance do polegar. */
 .recuperar-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 @media (max-width: 767px) {
-  h1 { font-size: 32px; line-height: 40px; letter-spacing: -1px; }
-  .introducao { font-size: 17px; line-height: 24px; }
+  h1 { font-size: 1.875rem; line-height: 2.375rem; letter-spacing: -1px; }
+  .introducao { font-size: 1.0625rem; line-height: 1.5rem; }
   .entrada-conteudo { padding-inline: 20px; padding-top: 16px; }
   /* A barra do logo cola no topo e o conteúdo começa do alto, em qualquer altura de tela (como em "sessão expirada"). */
   .entrada-conteudo { place-items: start center; align-content: start; }
@@ -1027,7 +966,7 @@ button { touch-action: manipulation; }
   .recuperar-topo .logo { width: 112px; }
   .recuperar-cartao { margin-top: 24px; padding: 0; border: 0; border-radius: 0; }
   .recuperar .acao-principal { position: static; width: 100%; padding: 0; margin-top: 16px; border: 0; background: none; box-shadow: none; }
-  .recuperar .acao-principal > .botao { width: 100%; min-height: 48px; }
+  .recuperar .acao-principal > .botao { width: 100%; min-height: var(--jornada-acao); }
 }
 @media (max-width: 767px) {
   .entrada-cabecalho .som-marca { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
@@ -1042,77 +981,6 @@ button { touch-action: manipulation; }
   .entrada-forma .acesso-link { justify-content: center; text-decoration: none; }
 }
 
-/* Resumo da lição: rótulos que cabem nas três caixas do celular; "Liberada na trilha" alinhada com o ícone. */
-.conclusao-numeros__rotulo { padding-inline: 4px; letter-spacing: 0.02em; white-space: nowrap; }
-.painel--concluida .conclusao-liberada { max-width: 24rem; margin-inline: auto; text-align: start; }
-@media (max-width: 767px) { .conclusao-numeros__rotulo { font-size: 0.6875rem; gap: 4px; } }
-.painel--concluida .conclusao-liberada { color: var(--texto); }
-.painel--concluida .conclusao-liberada .icone { color: var(--acao); }
-
-/* Lição terminada com erro ou com a prática em "ainda não": um lembrete gentil de rever. */
-.conclusao-rever { display: flex; align-items: flex-start; justify-content: center; gap: 8px; max-width: 28rem; margin: 16px auto 0; color: var(--alerta); font-weight: 800; text-align: left; }
-.conclusao-rever .icone { flex: none; width: 20px; height: 20px; margin-top: 2px; }
-
-/* Fim da trilha: os números são da última lição, e a legenda diz isso. */
-.conclusao-numeros__legenda { margin: 18px 0 -8px; color: var(--texto2); font-weight: 800; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
-
-/* Apagar trilha: menu discreto no cartão, para não competir com a ação principal. */
-.planos-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.plano-cartao__menu { position: absolute; top: 10px; right: 10px; z-index: 2; }
-.plano-cartao__menu > summary {
-  display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
-  padding: 0 10px; border-radius: 12px; color: var(--texto2); background: rgb(255 255 255 / 0.88);
-  font-weight: 800; cursor: pointer; list-style: none; backdrop-filter: blur(4px);
-}
-.plano-cartao__menu > summary::-webkit-details-marker { display: none; }
-.plano-cartao__menu[open] > summary { background: var(--nevoa); color: var(--texto); }
-@media (hover: hover) { .plano-cartao__menu > summary:hover { background: var(--nevoa); color: var(--texto); } }
-.plano-cartao__menu[open] > .plano-cartao__apagar {
-  position: absolute; top: calc(100% + 4px); right: 0; white-space: nowrap;
-  padding: 6px 12px; border: 1px solid var(--gelo); border-radius: 12px;
-  background: var(--fundo); box-shadow: 0 8px 20px rgb(15 23 42 / 0.12);
-}
-.plano-cartao__apagar {
-  justify-self: start; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--texto2);
-  font: inherit; font-size: 0.875rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
-}
-@media (hover: hover) { .plano-cartao__apagar:hover:not(:disabled) { color: #b3261e; } }
-.plano-cartao__apagar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
-.plano-cartao__apagar:disabled { cursor: default; opacity: 0.6; }
-
-/* Diálogo de confirmação no próprio produto (Sair / Apagar trilha). */
-.modal-fundo {
-  position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 20px;
-  background: rgba(15, 23, 42, 0.45);
-}
-.modal-cartao {
-  width: min(100%, 440px); padding: 24px; border: 2px solid var(--gelo); border-radius: 24px;
-  background: var(--fundo); box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
-}
-.modal-mensagem { margin: 0 0 20px; color: var(--texto); font-size: 1.05rem; font-weight: 800; line-height: 1.5; }
-.modal-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
-.modal-confirmar--destrutivo { color: #b3261e; border-color: #f3c4c0; }
-/* O foco começa em Cancelar. Quando os rótulos precisam de duas linhas, a ação fica acima. */
-.folha--confirmar .folha-acoes--par,
-:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) {
-  display: flex;
-  flex-flow: row wrap-reverse;
-  gap: 10px;
-}
-.folha--confirmar .folha-acoes--par > .botao,
-:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) > .botao {
-  flex: 1 0 max-content;
-  width: auto;
-  max-width: 100%;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) .modal-confirmar--destrutivo:not(:disabled) {
-  --labio: #8f2a39;
-  color: white;
-  border-color: #c23b4e;
-  background: #c23b4e;
-}
 
 /* Fim da trilha: um resumo da trilha inteira antes dos números da última lição. */
 .conclusao-trilha {
@@ -1125,35 +993,11 @@ button { touch-action: manipulation; }
 .geracao-repetida { display: grid; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: #fff6d9; color: #7a4a00; font-weight: 800; }
 .geracao-repetida .botao { justify-self: start; }
 
-/* Momento 4: Cartões qualitativos na conclusão e confirmação de sincronia entre dispositivos. */
-.conclusao-historia {
-  display: grid;
-  width: 100%;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-  gap: 12px;
-  margin: 18px 0 0;
-  padding: 0;
-  list-style: none;
-  text-align: start;
-}
-.conclusao-historia li {
-  display: grid;
-  align-content: start;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 2px solid var(--gelo);
-  border-radius: 18px;
-  background: var(--nevoa);
-}
-@media (max-width: 480px) {
-  .conclusao-historia { grid-template-columns: minmax(0, 1fr); }
-}
-.conclusao-historia li[data-tipo='ponte'] { border-color: #c3cdf2; background: var(--ceu); }
-.conclusao-historia li[data-tipo='ensino'] { border-color: #9ad8b5; background: #eefaf3; }
-.conclusao-historia strong { font-size: 0.8125rem; font-weight: 900; color: var(--acao); text-transform: uppercase; letter-spacing: 0.04em; }
-.conclusao-historia li[data-tipo='ensino'] strong { color: var(--sucesso); }
-.conclusao-historia p { font-size: 0.9375rem; font-weight: 700; color: var(--texto); }
-.conclusao-sincronia { margin-top: 14px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; text-align: center; }
+/* Detalhes da sessão, depois da continuidade e do próximo passo. */
+.conclusao-historia { display: grid; width: 100%; gap: 0; margin: 20px 0 0; padding: 0; list-style: none; text-align: start; }
+.conclusao-historia li { display: grid; gap: 6px; padding: 16px 0; border-top: 1px solid var(--gelo); }
+.conclusao-historia strong { color: var(--texto); font-size: 0.875rem; font-weight: 800; line-height: 1.3125rem; }
+.conclusao-historia p { color: var(--texto); font-size: 1rem; font-weight: 600; line-height: 1.5rem; }
 
 /* Capa com foto (lote 4): a foto cobre a capa; um véu escuro suave no alto e embaixo mantém legíveis o selo do tema,
    "Demonstração" e o numeral do Em alta. */
@@ -1175,13 +1019,13 @@ button { touch-action: manipulation; }
    de altura (acima, 120 px); título 28/34 e texto 15/22; "Entrar" dentro do formulário, logo depois da senha, com 48 px
    e na largura toda; "Esqueci minha senha" embaixo dele, como botão de texto de 44 px; sem rodapé preso. */
 .entrada-entrar { display: grid; margin-top: 4px; }
-.entrada-entrar > .botao { width: 100%; min-height: 48px; }
+.entrada-entrar > .botao { width: 100%; min-height: var(--jornada-acao); }
 .entrada-esqueci { justify-self: center; }
 @media (max-width: 767px) {
   .entrada-conteudo { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   .entrada-banner { height: 120px; margin-bottom: 20px; }
-  .entrada-cabecalho h1 { font-size: 28px; line-height: 34px; letter-spacing: -0.5px; }
-  .entrada-cabecalho .introducao { font-size: 15px; line-height: 22px; }
+  .entrada-cabecalho h1 { font-size: 1.75rem; line-height: 2.125rem; letter-spacing: -0.5px; }
+  .entrada-cabecalho .introducao { font-size: 0.9375rem; line-height: 1.375rem; }
   .entrada-cabecalho .acesso-link { min-height: 44px; }
   .entrada-cabecalho .som-marca { margin-bottom: 20px; }
   .entrada-forma .formulario { margin-top: 16px; }
@@ -1195,10 +1039,37 @@ button { touch-action: manipulation; }
 @media (max-width: 767px) {
   .entrada-banner { display: none; }
   .entrada-titulo-faixa { display: grid; grid-template-columns: minmax(0, 1fr) 72px; align-items: start; column-gap: 12px; }
-  .entrada-titulo-faixa h1 { font-size: 26px; line-height: 32px; letter-spacing: -0.5px; }
+  .entrada-titulo-faixa h1 { font-size: 1.625rem; line-height: 2rem; letter-spacing: -0.5px; }
   .entrada-stu-celular { display: block; width: 72px; margin-top: -2px; }
 }
 /* Em 320 px a coluna do título sobra com 196 px: a letra desce mais um pouco para o título seguir em 3 linhas. */
-@media (max-width: 340px) { .entrada-titulo-faixa h1 { font-size: 22px; line-height: 28px; } }
+@media (max-width: 340px) { .entrada-titulo-faixa h1 { font-size: 1.375rem; line-height: 1.75rem; } }
 
 .recuperar-acoes { display: flex; align-items: center; gap: 8px; }
+
+/* Peças de composição Jornada Azul, espelhadas em componentes-jornada.tsx no app. */
+.jornada-cartao { display: grid; min-width: 0; gap: 12px; padding: 20px; border: 1.5px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+.jornada-cartao--destaque { border-color: var(--destaque-borda); background: var(--nevoa); }
+.jornada-cartao--sucesso { border-color: #b8ddc9; background: var(--sucesso-fundo); }
+.jornada-cartao--alerta { border-color: var(--alerta-borda); background: var(--alerta-fundo); }
+.jornada-cabecalho { display: grid; min-width: 0; gap: 8px; }
+.jornada-cabecalho__linha { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; }
+.jornada-cabecalho__texto { display: grid; flex: 1; min-width: 180px; gap: 8px; }
+.jornada-contexto { color: var(--acao); font-size: 0.8125rem; font-weight: 900; line-height: 1.25rem; letter-spacing: .65px; text-transform: uppercase; }
+.jornada-cabecalho__titulo { color: var(--texto); font-size: 1.5rem; line-height: 1.875rem; letter-spacing: -.5px; }
+.jornada-cabecalho__descricao { color: var(--texto2); font-size: 1rem; line-height: 1.5rem; }
+.jornada-cabecalho__acao { display: flex; align-items: center; flex-shrink: 1; min-height: 44px; max-width: 100%; }
+.jornada-estado { display: inline-flex; align-items: center; justify-self: start; gap: 6px; min-height: 28px; max-width: 100%; padding: 4px 10px; border-radius: 999px; color: var(--acao-escura); background: var(--nevoa); font-size: 0.8125rem; font-weight: 800; line-height: 1.25rem; overflow-wrap: anywhere; }
+.jornada-estado .icone { flex: none; width: 16px; height: 16px; }
+.jornada-estado--concluida { color: var(--sucesso); background: var(--sucesso-fundo); }
+.jornada-estado--bloqueada { color: var(--texto2); background: var(--superficie-sutil); }
+.jornada-progresso { display: grid; min-width: 0; gap: 8px; }
+.jornada-progresso__rotulo { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--texto); font-size: 0.8125rem; font-weight: 800; line-height: 1.25rem; }
+.jornada-progresso__rotulo > span { flex-grow: 1; }
+.jornada-progresso__rotulo strong { color: var(--texto); font-weight: 800; }
+.jornada-progresso progress { height: 8px; background: var(--gelo); }
+.jornada-progresso progress::-webkit-progress-bar { background: var(--gelo); }
+@media (forced-colors: active) {
+  .botao, .jornada-cartao, .jornada-estado { border: 1px solid ButtonText; }
+  .jornada-progresso progress { border: 1px solid CanvasText; }
+}

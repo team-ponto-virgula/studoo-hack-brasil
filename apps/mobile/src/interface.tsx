@@ -34,7 +34,7 @@ export { useMovimentoReduzido } from './movimento';
 
 import { Icone } from './icone';
 import { mensagens } from './mensagens';
-import { cores, fontes } from './tema';
+import { cores, fontes, medidas, raios } from './tema';
 import type { NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
 import { Stu } from './mascote';
@@ -76,13 +76,13 @@ export const EspacoDaBarra = createContext(0);
 /**
  * A barra de abas em cápsula (spec 05, "Barra de abas em cápsula", pedido do dono de 20/11), igual na web estreita, no
  * Android e no iPhone: 16 dos lados (ou a área segura lateral + 8), 8 acima da área segura de baixo e nunca menos de 16 da
- * borda, até 480 de largura, centrada. Altura usual de 62 (respiro de 4, aba de 54, respiro de 4) e raio 31; a aba atual
- * numa subcápsula de raio 27. As ações presas das telas de topo (o cartão da próxima lição no mapa, a barra de salvar do
+ * borda, até 480 de largura, centrada. Altura usual de 62 (respiro de 4, aba de 54, respiro de 4) e raio 24; a aba atual
+ * numa superfície azul de raio 16. As ações presas das telas de topo (o cartão da próxima lição no mapa, a barra de salvar do
  * perfil) flutuam 12 acima dela, num bloco com a mesma superfície, de raio 24 e respiro 8. O fim da rolagem reserva a
  * cápsula, a distância até a borda e mais 16.
  */
 export const CAPSULA = {
-  lateral: 16, acimaDaAreaSegura: 8, minimoDaBorda: 16, larguraMaxima: 480, altura: 62, raio: 31, raioDaAba: 27,
+  lateral: 16, acimaDaAreaSegura: 8, minimoDaBorda: 16, larguraMaxima: 480, altura: 62, raio: 24, raioDaAba: 16,
   acimaDaCapsula: 12, raioDoBloco: 24, folgaDoFim: 16,
 } as const;
 
@@ -593,8 +593,8 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false, plano = false }: {
-  /** Apresentação opt-in da direção Clareza: sem relevo, CTA 52 e alternativa 44. Não muda ações ou estados. */
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false, plano: _plano = false }: {
+  /** @deprecated A Jornada Azul é o padrão em todo o app; mantido para compatibilidade das chamadas. */
   plano?: boolean;
   /** O rótulo numa linha só (o "Ajustar pedido" que volta ao lado do botão principal, sem quebrar enquanto ele encolhe). */
   umaLinha?: boolean;
@@ -651,7 +651,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
   const principal = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo';
   let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : variante === 'destrutivoBaixo' ? cores.erro : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
-  // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
+  // Como .botao da web: a face de 52 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
   // (--labio); nos botões claros, a borda e o degrau somam a faixa de 6 da web. O botão de texto não tem degrau.
   const comDegrau = variante !== 'texto';
   const apagado = desativado || esmaecido;
@@ -665,10 +665,10 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
           {iconeAntes && <Icone nome={iconeAntes} tamanho={18} cor={corTexto} />}
           {imagemAntes && (
             <Image source={imagemAntes.fonte} resizeMode="contain" accessible={false} accessibilityElementsHidden importantForAccessibility="no"
-              // 12 até o texto (o gap do botão é 8) e, desativado, 38% de opacidade sem virar cinza (spec 06).
-              style={{ width: imagemAntes.tamanho, height: imagemAntes.tamanho, marginRight: 4, opacity: apagado ? 0.38 : 1 }} />
+              // 12 até o texto (gap 10 + margem 2) e, desativado, 38% de opacidade sem virar cinza (spec 06).
+              style={{ width: imagemAntes.tamanho, height: imagemAntes.tamanho, marginRight: 2, opacity: apagado ? 0.38 : 1 }} />
           )}
-          <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, plano && { fontSize: principal ? 17 : 16, lineHeight: principal ? 24 : 22, fontWeight: principal ? '900' : '700' }, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+          <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, principal && estilos.botaoTextoPrincipal, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
         </>
@@ -680,14 +680,14 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
     return (
       <Pressable ref={referencia} testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
         accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} aria-busy={ocupado || carregando} disabled={bloqueado}
-        onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
+        onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao} hitSlop={principal ? 0 : 2}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
-        // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
-        style={({ pressed }) => [plano ? { borderRadius: 16, opacity: pressed ? 0.88 : 1 } : degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
+        // A caixa ocupa os 52 da ação principal, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
+        style={({ pressed }) => [degrauFora(principal ? 4 : 0, raios.campo, labio, principal && ((pressed && reduzir === false) || afundado)), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
           variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
           variante === 'destrutivoBaixo' && estilos.botaoFaceDestrutivaBaixa,
-          compacto && estilos.botaoFaceCompacta, plano && { minHeight: principal ? 52 : 44, borderWidth: 0, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 10, ...(variante === 'secundario' ? { backgroundColor: 'transparent' } : {}) }, face, apagado && estilos.botaoFaceApagada]}>
+          !principal && estilos.botaoFaceAlternativa, compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
           {conteudo}
         </View>
       </Pressable>
@@ -706,6 +706,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
       onPressIn={() => pressionar(0.97)}
       onPressOut={() => pressionar(1)}
       onPress={acao}
+      hitSlop={2}
       onFocus={() => setFocado(focoVisivel())}
       onBlur={() => setFocado(false)}
       style={({ pressed }) => [estilos.botao, estilos.botaoTextoLivre, compacto && estilos.botaoCompacto, estilo,
@@ -830,7 +831,7 @@ export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio
             !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}>
           {(estilo) => (
             <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
-              placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'} style={estilo}
+              placeholderTextColor={props.placeholderTextColor ?? cores.textoSecundario} style={estilo}
               onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
               onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
           )}
@@ -913,7 +914,7 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
 }) {
   const area = useRef<ComponentRef<typeof View>>(null);
   const cor = tipo === 'correto' ? cores.sucesso : tipo === 'ajuste' ? cores.alerta : cores.erro;
-  const fundo = tipo === 'correto' ? '#E9F7EE' : tipo === 'ajuste' ? '#FFF3DE' : '#FFF5F6';
+  const fundo = tipo === 'correto' ? cores.sucessoFundo : tipo === 'ajuste' ? cores.alertaFundo : cores.erroFundo;
 
   useEffect(() => {
     if (foco && area.current && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') {
@@ -1077,7 +1078,7 @@ export function useAlturaDoTeclado() {
 
 export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
   confirmarDesativado = false, ocupado = false, erro, visivel = true, aoFechar, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const { width, height } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
   const margens = useSafeAreaInsets();
   // Spec 17, defeito B3 (e spec 11): o cartão nunca passa da tela. O título fica no alto, as ações presas embaixo e só o
   // miolo (o texto, a lista de quem recebe no aceite de IA, o campo de "Excluir conta") encolhe e rola; o foco do leitor de
@@ -1115,10 +1116,11 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
   }, [entrada, visivel]);
   // Cartão de min(100% − 32, 400) com respiro de 24: cada ação fica com metade do miolo, menos os 8 entre elas.
   const metade = (Math.min(width - 32, 400) - 48 - 8) / 2;
-  const cabe = (rotulo: string) => rotulo.length * LARGURA_MEDIA_DO_CARACTERE + 36 + 4 <= metade;
+  const escalaFonte = Number.isFinite(fontScale) && fontScale > 0 ? fontScale : 1;
+  const cabe = (rotulo: string) => rotulo.length * LARGURA_MEDIA_DO_CARACTERE * escalaFonte + 36 + 4 <= metade;
   const empilhar = !cabe(confirmarRotulo) || !cabe(cancelarRotulo);
-  const cancelar = <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
-  const confirmar = <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado || confirmarDesativado} carregando={ocupado}
+  const cancelar = <Botao key="cancelar" rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
+  const confirmar = <Botao key="confirmar" rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado || confirmarDesativado} carregando={ocupado}
     acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
     <Modal transparent visible={visivel} animationType="fade" statusBarTranslucent onDismiss={aoFechar} onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
@@ -1424,7 +1426,7 @@ export function Skeleton({ texto = mensagens.carregando }: { texto?: string }) {
 
 export const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  cabecalho: { borderBottomWidth: 2, borderColor: cores.nevoa },
+  cabecalho: { borderBottomWidth: 1, borderColor: cores.gelo },
   marcaConteudo: {
     width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 8,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, minHeight: 60,
@@ -1445,9 +1447,8 @@ export const estilos = StyleSheet.create({
   acoes: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   rolagemConteudo: { flexGrow: 1 },
   conteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
-  // Paridade (levantamento de 18/11, G2): o h1 da web no celular tem 32/40 e -1px (globals.css, até 767 px). As telas em
-  // que a web usa outro tamanho (pedido 30, aula e proposta 24) passam o próprio estilo. h2/h3 seguem com -0,015em.
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 32, letterSpacing: -1, lineHeight: 40 },
+  // Jornada Azul: o título de página é 30/38; contextos menores mantêm seus próprios papéis tipográficos.
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 30, letterSpacing: -0.9, lineHeight: 38 },
   subtitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, letterSpacing: -0.3, lineHeight: 26 },
   tituloBloco: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, letterSpacing: -0.27, lineHeight: 24 },
   texto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
@@ -1457,13 +1458,13 @@ export const estilos = StyleSheet.create({
   campo: { gap: 8 },
   rotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   entrada: {
-    minHeight: 52, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 2, borderRadius: 14,
+    minHeight: medidas.acao, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1.5, borderRadius: raios.campo,
     borderColor: cores.bordaCampo, color: cores.texto, backgroundColor: cores.fundo,
     fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24,
   },
   entradaMultilinha: { minHeight: 132, textAlignVertical: 'top' },
   entradaErro: { borderColor: cores.erro },
-  entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(37, 99, 255, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
+  entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(36, 87, 221, 0.18)', outlineWidth: 3, outlineOffset: 0, outlineStyle: 'solid' },
   entradaErroFocada: { outlineColor: 'rgba(194, 59, 78, 0.14)' },
   entradaComAcessorio: { paddingRight: 52 },
   // O campo dentro da caixa do Android: a caixa desenha borda, fundo e respiro; o campo preenche o que sobra.
@@ -1475,7 +1476,7 @@ export const estilos = StyleSheet.create({
   campoErroIcone: { marginTop: 2 },
   campoErroTextoColado: { fontWeight: '800' },
   mensagem: {
-    marginTop: 16, padding: 12, borderRadius: 14, borderWidth: 2,
+    marginTop: 16, padding: 16, borderRadius: raios.campo, borderWidth: 1.5,
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
   },
   mensagemConteudo: { flex: 1, gap: 4 },
@@ -1483,7 +1484,7 @@ export const estilos = StyleSheet.create({
   // Como na web, o corpo pede pelo menos 220 de largura: em 360, ele desce para baixo do Stu (flex-wrap, vão de 14 entre as linhas).
   estadoErro: {
     marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 14, columnGap: 16, paddingVertical: 16, paddingHorizontal: 18,
-    borderWidth: 2, borderRadius: 20, borderColor: 'rgba(194, 59, 78, 0.4)', backgroundColor: cores.erroFundo,
+    borderWidth: 1.5, borderRadius: raios.bloco, borderColor: 'rgba(194, 59, 78, 0.4)', backgroundColor: cores.erroFundo,
   },
   estadoErroStu: { flexShrink: 0 },
   estadoErroCorpo: { flex: 1, minWidth: 220, gap: 10 },
@@ -1491,10 +1492,10 @@ export const estilos = StyleSheet.create({
   mensagemTitulo: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // .sinal da web: 800 em 0,875rem.
   sinal: { width: 24, height: 24, textAlign: 'center', fontSize: 14, lineHeight: 22, borderRadius: 12, borderWidth: 1, fontFamily: fontes.corpo, fontWeight: '800' },
-  skeleton: { marginTop: 20, gap: 8 },
+  skeleton: { marginTop: 20, gap: 12, padding: 20, borderRadius: raios.bloco, backgroundColor: cores.superficieSutil },
   skeletonCurto: { width: '55%', height: 24, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
-  rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
+  rodape: { borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
   // iOS 26: o vidro é o fundo do rodapé (sem o branco e sem a linha de cima).
   rodapeVidro: {},
   // Rodapé por cima do conteúdo (com o vidro): encostado embaixo, de ponta a ponta.
@@ -1508,7 +1509,7 @@ export const estilos = StyleSheet.create({
   rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, gap: 10 },
   // Como .botao da web: face de 48 px com o lábio de 4 px embaixo (aqui, a borda de baixo) e texto 16 px/800.
   botao: {
-    minHeight: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 8,
+    minHeight: medidas.alvo, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 8,
     // Como .botao: borda de 2 transparente (o fundo aparece por baixo); o lábio é a borda de baixo, mais escura.
     borderWidth: 2, borderBottomWidth: 4, borderRadius: 16, borderColor: 'transparent', borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
   },
@@ -1532,13 +1533,13 @@ export const estilos = StyleSheet.create({
   flutuante: { position: 'absolute', left: 16, right: 16, zIndex: 7, alignItems: 'center' },
   // A superfície opaca da cápsula e das ações presas: branco, contorno de 1 rgba(11, 27, 92, 0,10) por fora e sombra leve,
   // a mesma lista da web (spec 05).
-  superficieOpaca: { backgroundColor: cores.fundo, boxShadow: '0 0 0 1px rgba(11, 27, 92, 0.10), 0 8px 24px rgba(11, 27, 92, 0.14)' },
+  superficieOpaca: { backgroundColor: cores.fundo, boxShadow: '0 0 0 1px rgba(21, 39, 91, 0.10), 0 8px 24px rgba(21, 39, 91, 0.10)' },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   // Confirmação (spec 11): cartão de até 400 com respiro de 24, cantos de 24, borda de 2 e 12 entre os blocos.
-  confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
+  confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: raios.bloco, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 48, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
-  confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 28 },
   // O miolo do cartão é o único que encolhe e rola quando falta altura (as ações ficam presas embaixo, o título no alto).
   confirmacaoMiolo: { flexGrow: 0, flexShrink: 1, minHeight: 0 },
   confirmacaoMioloConteudo: { gap: 12 },
@@ -1553,7 +1554,7 @@ export const estilos = StyleSheet.create({
   menuBotaoAberto: { backgroundColor: cores.nevoa },
   menuPontos: { flexDirection: 'row', gap: 4 },
   menuPonto: { width: 4, height: 4, borderRadius: 2 },
-  menuBalao: { position: 'absolute', minWidth: 200, padding: RESPIRO_DO_MENU, borderWidth: 1, borderColor: cores.gelo, borderRadius: 16,
+  menuBalao: { position: 'absolute', minWidth: 200, padding: RESPIRO_DO_MENU, borderWidth: 1, borderColor: cores.gelo, borderRadius: 20,
     backgroundColor: cores.fundo, boxShadow: '0 12px 28px rgba(15, 23, 42, 0.18)' },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, height: ITEM_DO_MENU, paddingHorizontal: 12, borderRadius: 10 },
   menuItemTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
@@ -1572,7 +1573,7 @@ export const estilos = StyleSheet.create({
   avisoTexto: { flex: 1, color: '#FFFFFF', fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, fontWeight: '800' },
   avisoAcao: { minHeight: 44, marginVertical: -11, justifyContent: 'center', paddingLeft: 4 },
   avisoAcaoTexto: { color: '#AFC2FF', fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, fontWeight: '800' },
-  modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
+  modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 1.5, borderColor: cores.gelo, borderRadius: raios.bloco, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
   modalAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10 },
@@ -1584,11 +1585,12 @@ export const estilos = StyleSheet.create({
   dialogoAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
   dialogoAcoesEmpilhadas: { flexDirection: 'column', alignItems: 'stretch' },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
-  // Botão com degrau: fora, o lábio (degrauFora, 4 por fora); dentro, a face de 48 com a borda de 2 que fecha em volta.
+  // A ação principal tem face de 52 e lábio de 4 por fora; alternativas usam a mesma anatomia sem relevo.
   botaoDegrauCompacto: { alignSelf: 'flex-start', flexShrink: 1 },
-  botaoFace: { minHeight: 48, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 6,
-    borderWidth: 2, borderRadius: 16, borderColor: 'transparent', backgroundColor: cores.acao },
-  botaoFaceSecundaria: { borderColor: cores.gelo, backgroundColor: cores.fundo },
+  botaoFace: { minHeight: medidas.acao, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 12,
+    borderWidth: 2, borderRadius: raios.campo, borderColor: 'transparent', backgroundColor: cores.acao },
+  botaoFaceSecundaria: { borderWidth: 1.5, borderColor: cores.bordaCampo, backgroundColor: cores.fundo },
+  botaoFaceAlternativa: { minHeight: medidas.alvo, paddingHorizontal: 16, paddingVertical: 8 },
   botaoFaceSucesso: { backgroundColor: cores.sucesso },
   botaoFaceAlerta: { backgroundColor: cores.alerta },
   botaoFaceDestrutiva: { borderColor: '#F3C4C0', backgroundColor: cores.fundo },
@@ -1597,14 +1599,15 @@ export const estilos = StyleSheet.create({
   // Spec 11: a ação que destrói, vermelha cheia (#C23B4E), texto branco e degrau #8F2A39.
   botaoFacePerigo: { borderColor: cores.erro, backgroundColor: cores.erro },
   botaoFaceApagada: { borderColor: cores.gelo, backgroundColor: cores.nevoa },
-  botaoFaceCompacta: { minHeight: 44, minWidth: 44, paddingHorizontal: 8 },
+  botaoFaceCompacta: { minHeight: medidas.alvo, minWidth: medidas.alvo, paddingHorizontal: 14, paddingVertical: 8 },
   // O raio do botão da web é 16 também no botão pequeno ("Sair", "Pular").
-  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 16, flexShrink: 1 },
-  botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
+  botaoCompacto: { alignSelf: 'flex-start', minHeight: medidas.alvo, minWidth: medidas.alvo, paddingHorizontal: 14, paddingVertical: 8, borderRadius: raios.campo, flexShrink: 1 },
+  botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, flexShrink: 1 },
   botaoPressionado: { opacity: 0.82 },
-  foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
+  foco: { outlineColor: cores.acao, outlineWidth: 3, outlineOffset: 3, outlineStyle: 'solid' },
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
   botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
+  botaoTextoPrincipal: { fontSize: 17, lineHeight: 24 },
   giro: { width: 16, height: 16, borderRadius: 8, borderWidth: 2 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
   // .aula-fechar e .campo-senha__alternar da web: 44 × 44. O toque chega a 48 dp por fora (hitSlop de 2), sem mudar o
@@ -1661,19 +1664,16 @@ function NavegacaoInferior({ base, lados, aoMedir }: {
       onLayout={(evento: LayoutChangeEvent) => aoMedir(evento.nativeEvent.layout.height)}>
       {itens.map((item, posicao) => {
         const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
-        // Os rótulos de uma palavra nunca quebram nem encolhem; os de duas quebram no espaço quando não cabem numa linha.
-        const umaPalavra = !item.rotulo.includes(' ');
         // O toque vai até a borda da cápsula: os 4 de respiro em cima, embaixo e nas pontas.
         const toque = { top: 4, bottom: 4, left: posicao === 0 ? 4 : 0, right: posicao === itens.length - 1 ? 4 : 0 };
         return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
           aria-selected={selecionado} aria-disabled={nav.ocupado}
           accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao} hitSlop={toque}
-          style={[navegacaoEstilos.aba, umaPalavra && navegacaoEstilos.abaUmaPalavra, selecionado && navegacaoEstilos.ativa]}>
+          style={[navegacaoEstilos.aba, selecionado && navegacaoEstilos.ativa]}>
           {({ pressed }) => <>
             <IndicadorNavegacao icone={item.icone} selecionado={selecionado} pressionado={pressed} />
-            {/* 12/15, centrado; com o texto do sistema maior, cresce até 1,3× e para aí (a cápsula cresce junto). */}
-            <Text numberOfLines={umaPalavra ? 1 : 2} maxFontSizeMultiplier={1.3}
-              style={[navegacaoEstilos.rotulo, selecionado && navegacaoEstilos.rotuloAtivo]}>{item.rotulo}</Text>
+            {/* Texto ampliado pode quebrar e aumentar a cápsula; nenhum limite encobre o nome da aba. */}
+            <Text style={[navegacaoEstilos.rotulo, selecionado && navegacaoEstilos.rotuloAtivo]}>{item.rotulo}</Text>
           </>}
         </Pressable>;
       })}
@@ -1705,16 +1705,13 @@ const navegacaoEstilos = StyleSheet.create({
   lugar: { position: 'absolute', alignItems: 'center' },
   // Respiro de 4 em volta das abas (62 = 4 + 54 + 4); as abas esticam até a altura da mais alta.
   capsula: { width: '100%', maxWidth: CAPSULA.larguraMaxima, flexDirection: 'row', alignItems: 'stretch', padding: 4 },
-  // Cada aba: a largura do rótulo e a sobra dividida por igual (flex 1 1 auto), 48 × 54 no mínimo, respiro de 6, o ícone em
-  // cima e o rótulo 2 abaixo, alinhados no alto (com uma aba em duas linhas, as outras ficam com os ícones na mesma altura).
-  aba: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 48, minHeight: 54, padding: 6, gap: 2, alignItems: 'center',
+  // Colunas iguais, com 48 × 54 no mínimo. Texto maior ocupa mais linhas e a altura medida reserva o fim da rolagem.
+  aba: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 48, minHeight: 54, padding: 6, gap: 2, alignItems: 'center',
     borderRadius: CAPSULA.raioDaAba },
-  abaUmaPalavra: { flexShrink: 0 },
-  // A aba atual: a subcápsula opaca #E9E7FF (o "selecionado" da spec 13, §B5), também sobre o vidro, para o rótulo não
-  // depender do que passa por baixo.
-  ativa: { backgroundColor: cores.ceu },
-  rotulo: { fontFamily: fontes.corpo, fontSize: 12, lineHeight: 15, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
-  // #1D4ED8 na subcápsula: 5,53:1.
+  // A aba atual usa a superfície azul da Jornada, também sobre o vidro, para o rótulo não depender do conteúdo atrás.
+  ativa: { backgroundColor: cores.nevoa },
+  rotulo: { maxWidth: '100%', flexShrink: 1, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 17, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
+  // O rótulo selecionado conserva o azul escuro de ação, inclusive sobre a superfície azul.
   rotuloAtivo: { color: cores.acaoEscura },
   iconePressionado: { transform: [{ scale: 0.9 }] },
 });

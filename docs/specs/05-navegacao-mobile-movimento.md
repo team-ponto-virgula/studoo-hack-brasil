@@ -36,32 +36,23 @@ Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa 
 **Geometria (texto em 100%).** É a mesma na web até 767 px, no Android e no iPhone.
 - **Cápsula:** 16 de margem dos lados. Com área segura lateral, a margem é `max(16, área segura + 8)`. Largura máxima de 480, centrada.
 - **Distância da base:** 8 acima da área segura de baixo, e nunca menos de 16 da borda. Os 16 valem onde a área segura é 0, como no navegador e no Android com botões. No iPhone com barra de início (34), a base fica a 42 da borda.
-- **Altura:** 62 (respiro de 4, aba de 54, respiro de 4), com raio 24.
+- **Altura mínima:** 62 (respiro de 4, aba de 54, respiro de 4), com raio 24. Cresce com as linhas do rótulo e sua altura medida reserva o conteúdo.
 - **Abas:**
-  - A largura vem do rótulo, e a sobra da cápsula é dividida igualmente entre as abas: `flex: 1 1 auto`, e `flex-shrink: 0` nos rótulos de uma palavra.
+  - A largura é dividida em colunas iguais (`flex: 1 1 0`), inclusive nas quatro abas. O texto pode quebrar dentro de cada coluna; nenhum rótulo invade o vizinho.
   - Mínimo de 48 × 54 por aba, sem vão entre elas. O toque de cada aba vai até a borda da cápsula, incluindo os 4 de respiro, e não há faixa morta.
-  - Por dentro: respiro de 6, ícone de 24 em cima, vão de 2 e rótulo em Nunito 800 de 12/15, centrado, numa linha.
+  - Por dentro: respiro de 6, ícone de 24 em cima, vão de 2 e rótulo em Nunito 800 de 13/17, centrado, com as linhas necessárias.
 - **Aba selecionada:** a superfície preenche a aba, com raio 16, dentro do contorno externo de raio 24. O fundo é `#EDF3FF`, com ícone cheio e rótulo em `#2457DD`. As outras abas têm ícone de contorno e rótulo em `#50607A`. O estado selecionado continua explicitado por semântica, além da cor.
-- **Por que a largura vem do rótulo:** com abas iguais em 390, "Minhas trilhas" (81 px em 12) não cabe numa linha. Com a largura pelo rótulo, as quatro abas cabem numa linha a partir de 320 (94 + 76 + 62 + 48 = 280, a largura útil da cápsula).
+- **Por que as colunas são iguais:** a revisão real em fonte 200% encontrou rótulos sobrepostos na distribuição anterior por tamanho de palavra. As colunas têm alvos previsíveis; o texto quebra e a barra cresce, sem limitar a ampliação.
 
 **Material.**
 - **iPhone com iOS 26 ou mais novo, sem "Reduzir transparência":** Liquid Glass do sistema (`GlassView`, `glassEffectStyle="regular"`, `colorScheme="light"`), sem contorno e sem sombra próprios, porque o vidro já tem os dele. A superfície selecionada `#EDF3FF` é opaca, para o rótulo não depender do que passa por baixo. No aparelho, confira o contraste de `#50607A` sobre o vidro com o mapa e os cartões coloridos atrás. Se ficar abaixo de 4,5:1, clareie o vidro com `tintColor` branco, começando em `rgba(255, 255, 255, 0.5)`.
 - **iOS anterior, iOS com "Reduzir transparência", Android e web estreita:** superfície #FFFFFF opaca, sem desfoque. O contorno é de 1 px `rgba(11, 27, 92, 0.10)`, desenhado por fora, sem ocupar espaço. A sombra é leve. Na web: `box-shadow: 0 0 0 1px rgba(11,27,92,.10), 0 8px 24px rgba(11,27,92,.14)`; no app, a mesma lista em `boxShadow`. O app lê "Reduzir transparência" em `AccessibilityInfo.isReduceTransparencyEnabled()` e acompanha o evento `reduceTransparencyChanged`, trocando o material na hora.
 
-**Texto ampliado e telas estreitas.**
-- O rótulo cresce com o tamanho de texto do sistema até 1,3× (15,6/19,5) e para aí: `maxFontSizeMultiplier={1.3}` no app e `font-size: min(0.75rem, 15.6px)` na web. O ícone fica em 24.
-- Quando os rótulos não cabem numa linha, os de duas palavras quebram no espaço ("Minhas / trilhas", "Nova / trilha"). Os de uma palavra nunca quebram nem encolhem. As abas ficam com a altura da mais alta, com os ícones alinhados em cima. A cápsula cresce (85 com duas linhas a 1,3×), e o raio externo continua 24; o selecionado mantém raio 16.
-- Conferido no esboço do Designer, com a Nunito do projeto, sem nenhum rótulo vazando:
-
-| Tela | Texto | Cápsula | Abas (largura) | Rótulos |
-|---|---|---|---|---|
-| 320, 4 abas | 100% | 288 × 62 | 94, 76, 62, 48 | uma linha |
-| 390, 4 abas | 100% | 358 × 62 | 112, 94, 80, 63 | uma linha |
-| 360, 4 abas | 130% | 328 × 85 | 107, 86, 75, 52 | duas linhas nas de duas palavras |
-| 320, 4 abas | 130% | 288 × 85 | 85, 68, 75, 52 | duas linhas nas de duas palavras |
-| 390, 2 abas | 100% | 358 × 62 | 184, 166 | uma linha |
-
-- Na web, o zoom da página escala tudo. A 320 px de CSS (o refluxo da WCAG), cabe numa linha. A 260 px de CSS (390 com o zoom de 150% do Safari), cabe com duas linhas.
+**Texto ampliado e telas estreitas (Jornada Azul, 25/11).**
+- O rótulo acompanha o tamanho de texto do sistema sem cap1,3× e sem limite de linhas. O ícone continua24. Na web, fonte em rem e `overflow-wrap:anywhere`; no app, Text sem `numberOfLines` ou `maxFontSizeMultiplier` para a navegação.
+- As quatro colunas conservam mínimo48×54. Com as linhas necessárias, todas acompanham a altura da mais alta, alinhando os ícones pelo topo. A cápsula mantém raio24 e seleção16.
+- A medida da barra, incluindo seu crescimento, reserva o fim da rolagem e reposiciona as ações presas. Texto ampliado não fica por baixo da barra.
+- A prova anterior de esboço em130% é histórica e não certifica o novo controle; o relatório da implementação vincula as capturas reais100/200% e distingue web/RNWeb de aparelho.
 
 **Fim da rolagem, foco e o que fica preso no pé.**
 - O conteúdo rola por baixo da cápsula em todas as plataformas, não só no vidro.
