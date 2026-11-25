@@ -178,14 +178,23 @@ name: feedback-aluno
           visible:
             id: titulo-ensino
           timeout: 30000
+      - assertNotVisible:
+          id: pergunta-exercicio
       - assertVisible:
           id: ensino-seguir
           text: '^Pular e concluir$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine
+      # O título e o campo podem ficar em dobras diferentes. Registra o campo antes de abrir o teclado.
       - scrollUntilVisible:
           element:
             id: ensino-texto
           direction: DOWN
-          timeout: 10000
+          timeout: 30000
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine-campo
       - tapOn:
           id: ensino-texto
       - inputText: Para chegar a x = 7, tiro cinco dos dois lados. Assim a igualdade continua valendo.
@@ -202,6 +211,20 @@ name: feedback-aluno
       - waitForAnimationToEnd:
           timeout: 2000
       - takeScreenshot: 84-equacao-inicial-caderno-do-stu
+      - tapOn:
+          id: ensino-seguir
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-conclusao
+            text: '^Lição concluída!$'
+          timeout: 30000
+      - assertVisible:
+          id: progresso-plano
+          text: '^1 de 3 lições concluídas$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-conclusao
 - runFlow:
     when:
       true: ${PERFIL == 'demonstrada'}
