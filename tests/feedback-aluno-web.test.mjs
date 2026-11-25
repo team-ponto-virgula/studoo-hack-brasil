@@ -561,3 +561,132 @@ test('DeepSeek simulado: a mesma resposta corrigida muda a ação exigida no pri
   assert.deepEqual(revisoes, [[repeticao, repeticao], [aplicacao, conferencia], [repeticao, repeticao], [repeticao, repeticao]]);
   assert.equal((await ok(planos(req('aprendizado/planos', cookie)))).length, 3);
 });
+
+test('DeepSeek simulado: corrige os gabaritos de exposição e conserva todas as lições ao salvar', async t => {
+  const { id, cookie } = await novoVisitante();
+  const ambiente = { IA: 'deepseek', DEEPSEEK_API_KEY: 'chave-sintetica', DEEPSEEK_BASE_URL: 'http://127.0.0.1:1', STUDOO_IA_RESERVA: 'nenhuma' };
+  const anterior = Object.fromEntries(Object.keys(ambiente).map(chave => [chave, process.env[chave]]));
+  Object.assign(process.env, ambiente);
+  t.after(() => {
+    for (const [chave, valor] of Object.entries(anterior)) {
+      if (valor === undefined) delete process.env[chave];
+      else process.env[chave] = valor;
+    }
+  });
+  await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+
+  const objetivo = 'Aprender a compensar a exposição usando o obturador, em nível intermediário';
+  const questao = {
+    habilidade: 'Ajustar o obturador para clarear uma foto',
+    enunciado: 'Com abertura e ISO fixos, o que muda no tempo de exposição para clarear uma foto escura?',
+    opcoes: ['Aumenta', 'Diminui', 'Fica igual'], correta: 0,
+  };
+  const curriculo = [
+    { titulo: 'Ler o fotômetro', resumo: 'Escolher os passos no obturador a partir da leitura do fotômetro.' },
+    { titulo: 'Preservar o movimento', resumo: 'Escolher o ISO quando o tempo necessário borraria o movimento.' },
+    { titulo: 'Equilibrar obturador e abertura', resumo: 'Escolher a direção e o tempo de obturador que compensam mudanças de abertura.' },
+    { titulo: 'Manter o ISO no limite', resumo: 'Escolher como compensar quando o ISO e o tempo já chegaram ao limite.' },
+  ];
+  function escolha(enunciado, opcoes, correta) {
+    return {
+      tipo: 'multipla_escolha', enunciado, opcoes: opcoes.map((texto, i) => ({ id: 'o' + i, texto })),
+      gabarito: ['o' + correta], feedbackCorreto: 'Isso mantém a exposição.', feedbackIncorreto: 'Compare os passos de luz.',
+    };
+  }
+  const associacao = {
+    tipo: 'associar', enunciado: 'Com ISO fixo, associe cada mudança de abertura ao ajuste que mantém a exposição.',
+    esquerda: [{ id: 'e1', texto: 'Fechar um passo' }, { id: 'e2', texto: 'Abrir dois passos' }],
+    direita: [{ id: 'd1', texto: 'Tempo quatro vezes menor' }, { id: 'd2', texto: 'Dobrar o tempo' }],
+    gabarito: [], feedbackCorreto: 'Fechar pede menos tempo.', feedbackIncorreto: 'Abra o obturador por menos tempo ao fechar a abertura.',
+  };
+  const fotografias = [
+    { conceito: 'Cada ponto no fotômetro equivale a um passo de luz.', exemplo: 'Se a leitura é −1 EV, dobre o tempo para compensar.',
+      exercicios: [escolha('O fotômetro indica −2 EV. Com ISO e abertura fixos, que tempo usar no lugar de 1/250 s?', ['1/60 s', '1/125 s', '1/500 s'], 0)] },
+    { conceito: 'Aumentar o ISO permite manter um tempo curto.', exemplo: 'Se o tempo de 1/500 s não pode mudar, dobrar o ISO compensa um passo de luz.',
+      exercicios: [escolha('Em 1/500 s e ISO 200, falta um passo de brilho. Com abertura e tempo fixos, qual ISO escolher?', ['ISO 100', 'ISO 200', 'ISO 400'], 2)] },
+    { conceito: 'A luz perdida ao fechar a abertura pode ser recuperada com um tempo maior.', exemplo: 'De f/4 para f/5,6, passe de 1/250 s para 1/125 s.',
+      exercicios: [associacao, escolha('Com ISO fixo, ao passar de f/4 para f/8, qual tempo substitui 1/250 s?', ['1/60 s', '1/125 s', '1/1000 s'], 2)] },
+    { conceito: 'Quando ISO e tempo já estão no limite, use a abertura para compensar.', exemplo: 'Abrir de f/8 para f/5,6 compensa um passo.',
+      exercicios: [escolha('A foto em f/8 está um passo escura e ISO e tempo já estão no limite. Que abertura compensa?', ['f/11', 'f/8', 'f/5,6'], 2)] },
+  ];
+
+  const revisoes = [];
+  const geradas = [];
+  const respostaJson = dados => Response.json({ choices: [{ message: { content: JSON.stringify(dados) } }] });
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, 'http://127.0.0.1:1/chat/completions');
+    const pedido = JSON.parse(init.body);
+    const [sistema, entrada] = pedido.messages.map(m => m.content);
+    if (pedido.stream) {
+      const linhas = [
+        { tipo: 'plano', titulo: 'Fotografia em prática' }, { tipo: 'fluxo', titulo: 'Exposição' },
+        ...curriculo.map(licao => ({ tipo: 'licao', ...licao })),
+      ].map(linha => JSON.stringify(linha)).join('\n') + '\n';
+      return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content: linhas } }] })}\n\ndata: [DONE]\n\n`);
+    }
+    if (sistema.includes('Classifique a abrangência')) {
+      return respostaJson({ escopo: 'Compensar a exposição', nivelDeclarado: 'intermediario', recortes: [], questao });
+    }
+    if (sistema.includes('Revise o conjunto das lições obrigatórias')) {
+      return respostaJson({ fluxos: [{ titulo: 'Exposição', licoes: curriculo }] });
+    }
+    if (sistema.includes('Avalie todas as lições recebidas')) {
+      const { licoes } = JSON.parse(entrada);
+      revisoes.push(licoes.map(l => l.numero));
+      return respostaJson({ avaliacoes: licoes.map(({ numero, exercicios }) => {
+        const aprovado = { numero, resultado: 'avanca', motivo: '', correcoes: [] };
+        if (numero !== 3) return aprovado;
+        const [pares, escolha] = exercicios;
+        assert.equal(pares.enunciado, associacao.enunciado);
+        assert.deepEqual(pares.esquerda, associacao.esquerda);
+        assert.deepEqual(pares.direita, associacao.direita);
+        assert.equal(escolha.enunciado, fotografias[2].exercicios[1].enunciado);
+        assert.deepEqual(escolha.opcoes, fotografias[2].exercicios[1].opcoes);
+        if (revisoes.length === 1) {
+          assert.deepEqual(pares.gabarito, ['e1=d1', 'e2=d2']);
+          assert.deepEqual(escolha.gabarito, ['o2']);
+          return { numero, resultado: 'ajustar', motivo: 'Os pares estão invertidos. De f/4 para f/8, o tempo correto é próximo de 1/60 s.', correcoes: [
+            { exercicio: 1, gabarito: ['e1=d2', 'e2=d1'], feedbackCorreto: 'Fechar pede mais tempo. Abrir pede menos tempo.', feedbackIncorreto: 'Veja se a abertura deixou entrar mais ou menos luz.' },
+            { exercicio: 2, gabarito: ['o0'], feedbackCorreto: 'Fechar dois passos pede cerca de quatro vezes o tempo.', feedbackIncorreto: 'Conte os passos de f/4 até f/8.' },
+          ] };
+        }
+        assert.deepEqual(pares.gabarito, ['e1=d2', 'e2=d1']);
+        assert.deepEqual(escolha.gabarito, ['o0']);
+        assert.match(pares.feedbackCorreto, /Fechar pede mais tempo/);
+        return aprovado;
+      }) });
+    }
+    assert.doesNotMatch(sistema, /Reescreva apenas as lições indicadas/);
+    const numero = Number(entrada.match(/Escreva a lição (\d+):/)?.[1]);
+    assert.ok(numero >= 1 && numero <= 4);
+    geradas.push(numero);
+    return respostaJson({ objetivo: curriculo[numero - 1].resumo, ...fotografias[numero - 1] });
+  });
+
+  const amostra = await ok(diagnostico(req('aprendizado/diagnostico', cookie, { objetivo })));
+  const demonstrado = await responder(cookie, amostra, 'Aumenta');
+  const previa = await ok(proposta(req('aprendizado/propostas', cookie, { objetivo, diagnosticoId: demonstrado.id })));
+  const { reaberto } = await salvarEReabrir(cookie, previa);
+  assert.deepEqual([...geradas].sort(), [1, 2, 3, 4]);
+  assert.deepEqual(revisoes, [[1, 2, 3, 4], [3]]);
+
+  const ids = reaberto.fluxos[0].licoes.map(l => l.id);
+  const aulas = await Promise.all(ids.map(id => ok(licao(req('aprendizado/licoes/' + id, cookie), ctx(id)))));
+  assert.deepEqual(aulas.map(l => l.titulo), curriculo.map(l => l.titulo));
+  assert.deepEqual(aulas.map(l => l.conceito), fotografias.map(l => l.conceito));
+  assert.deepEqual(aulas.map(l => l.exemplo), fotografias.map(l => l.exemplo));
+  assert.deepEqual(aulas.map(l => l.exercicio.enunciado), fotografias.map(l => l.exercicios[0].enunciado));
+
+  const terceira = aulas[2];
+  assert.equal(terceira.exercicio.tipo, 'associar');
+  assert.ok(!Object.hasOwn(terceira.exercicio, 'gabarito'));
+  assert.deepEqual(terceira.exercicio.esquerda, associacao.esquerda);
+  assert.deepEqual(terceira.exercicio.direita.toSorted((a, b) => a.id.localeCompare(b.id)), associacao.direita);
+  const verificar = (resposta, indice = 0) =>
+    ok(avaliar(req('aprendizado/licoes/' + terceira.id + '/avaliar', cookie, { resposta, indice }), ctx(terceira.id)));
+  assert.equal((await verificar('e1=d1,e2=d2')).correta, false);
+  const pares = await verificar('e1=d2,e2=d1');
+  assert.equal(pares.correta, true);
+  assert.match(pares.feedback, /Fechar pede mais tempo/);
+  assert.equal((await verificar(terceira.exercicios[1].opcoes.find(o => o.texto === '1/60 s').id, 1)).correta, true);
+});
