@@ -74,6 +74,24 @@
       "total": 149,
       "passed": 149,
       "failed": 0
+    },
+    {
+      "command": "npm run test:acesso",
+      "total": 27,
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:marco",
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "command": "npm run test:trilha",
+      "total": 33,
+      "passed": 33,
+      "failed": 0
     }
   ],
   "typechecks": [
