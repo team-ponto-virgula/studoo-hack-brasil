@@ -268,7 +268,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
       return meta;
     },
 
-    async gerarConteudo(esqueleto, fluxo, licao, sinal) {
+    async gerarConteudo(esqueleto, fluxo, licao, sinal, opcoes) {
       // Registra o motivo da última falha sem registrar conteúdo.
       let ultimoMotivo: string | undefined;
       const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
@@ -289,10 +289,11 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
       let reserva: { conteudo: ConteudoLicao; valor: number } | undefined;
       let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
-        const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
+        const prazoLocal = opcoes?.prazoCompartilhado ? undefined
+          : sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
         let corpo: unknown;
         try {
-          const resposta = await pedirRespostaOpenAi(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
+          const resposta = await pedirRespostaOpenAi(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), prazoLocal?.sinal ?? sinal);
           corpo = await resposta.json();
         } catch (erro) {
           if (reserva) {
@@ -301,10 +302,10 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           }
           if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (matematica && tentativa === 0) {
-            desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
+            desligarMatematica(prazoLocal?.estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
             continue;
           }
-          if (estourou()) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
+          if (prazoLocal?.estourou()) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
           if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
           registrarFalha({ motivo: "rede", tentativa });
           continue;

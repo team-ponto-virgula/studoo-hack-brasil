@@ -31,8 +31,11 @@ export interface GeradorTrilha {
     sinal: AbortSignal,
     opcoes: { aoVivo: boolean; diagnostico?: PerfilDiagnostico; amostrasDemonstradas?: AmostraDemonstrada[] },
   ): AsyncGenerator<EventoEstrutura, MetaPlano | undefined>;
-  /** Cria o conteúdo de uma lição do esqueleto aceito. Recusa (`proposta_invalida`) um esqueleto de outro gerador. */
-  gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;
+  /** Cria uma lição. Com prazo compartilhado, conserva a chamada em andamento até o limite do aceite. */
+  gerarConteudo(
+    esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal,
+    opcoes?: { prazoCompartilhado?: boolean },
+  ): Promise<ConteudoLicao>;
   revisarConteudos?(esqueleto: EsqueletoPlano, conteudos: ConteudoLicao[][], sinal: AbortSignal): Promise<ConteudoLicao[][]>;
 }
 

@@ -785,7 +785,7 @@ function simularLuna(t, responder) {
     assert.deepEqual(pedido.reasoning, { effort: 'max' });
     assert.equal(pedido.store, false);
     assert.doesNotMatch(init.body, /@example.test|consentimentoIaEm/);
-    return responder(pedido);
+    return responder(pedido, init.signal);
   });
 }
 
@@ -1060,4 +1060,111 @@ test('rota NDJSON guarda toda a estrutura até a triagem final, inclusive quando
   }
   assert.equal(revisoes.length, 4);
   for (const vista of revisoes) assert.deepEqual(vista.map(({ titulo }) => titulo), estrutura.map(({ titulo }) => titulo));
+});
+
+test('uma lição lenta usa a janela restante do aceite sem repetir as seis que terminaram', async t => {
+  for (const [duracao, status] of [[175_000, 200], [220_000, 503]]) {
+    await t.test(`provedor leva ${duracao / 1000} s na última lição`, { timeout: 10_000 }, async caso => {
+      const { id, cookie } = await novoVisitante();
+      await aceitarConsentimentoIa(id, VERSAO_CONSENTIMENTO_IA);
+      const paralelasAnteriores = process.env.STUDOO_GERACAO_PARALELA;
+      process.env.STUDOO_GERACAO_PARALELA = '10';
+      caso.after(() => {
+        if (paralelasAnteriores === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+        else process.env.STUDOO_GERACAO_PARALELA = paralelasAnteriores;
+      });
+
+      let agora = 0;
+      const relogios = [];
+      const timeoutReal = AbortSignal.timeout.bind(AbortSignal);
+      caso.mock.method(AbortSignal, 'timeout', ms => {
+        if (![150_000, 180_000, 220_000, 240_000].includes(ms)) return timeoutReal(ms);
+        const controle = new AbortController();
+        relogios.push({ controle, vence: agora + ms });
+        return controle.signal;
+      });
+      function avancar(tempo) {
+        agora = tempo;
+        for (const { controle, vence } of relogios) {
+          if (vence <= agora) controle.abort(new DOMException('Prazo do aceite', 'TimeoutError'));
+        }
+      }
+
+      const iniciaram = Promise.withResolvers();
+      const pendentes = new Map();
+      const chamadas = [];
+      const licoes = Array.from({ length: 7 }, (_, i) => ({ titulo: `Princípio ${i + 1} da mediação escolar` }));
+      simularLuna(caso, (pedido, sinal) => {
+        const nome = pedido.text.format.name;
+        if (nome === 'triagem_trilha') {
+          chamadas.push(nome);
+          return respostaDaOpenAi({ decisao: 'permitir' });
+        }
+        assert.equal(nome, 'licao_studoo');
+        const indice = Number(pedido.input[1].content.match(/Escreva a lição (\d+):/)?.[1]);
+        assert.ok(indice >= 1 && indice <= 7);
+        assert.equal(pendentes.has(indice), false, 'cada lição começa uma vez');
+        chamadas.push(indice);
+        return new Promise((resolve, reject) => {
+          sinal.addEventListener('abort', () => reject(sinal.reason), { once: true });
+          pendentes.set(indice, {
+            sinal,
+            terminar: () => resolve(respostaDaOpenAi({
+              objetivo: licoes[indice - 1].titulo,
+              conceito: 'Uma escuta atenta ajuda a compreender a situação.',
+              exemplo: `Na conversa ${indice}, a turma ouve as partes antes de propor um acordo.`,
+              exercicios: [{
+                tipo: 'multipla_escolha', enunciado: 'Como começar a conversa de mediação?',
+                opcoes: [{ id: 'a', texto: 'Ouvir as partes' }, { id: 'b', texto: 'Encerrar o encontro' }, { id: 'c', texto: 'Sortear a decisão' }],
+                gabarito: ['a'], feedbackCorreto: 'Assim cada parte conta sua perspectiva.',
+                feedbackIncorreto: 'Considere o que se pode fazer para conhecer as perspectivas.',
+              }],
+            })),
+          });
+          if (pendentes.size === licoes.length) iniciaram.resolve();
+        });
+      });
+
+      const planoId = crypto.randomUUID();
+      const token = emitirComprovante('proposta', id, {
+        id: planoId, expiraEm: Date.now() + 60_000,
+        plano: {
+          gerador: 'openai-v1', origem: 'Conteúdo gerado pelo Studoo',
+          titulo: 'Mediação escolar', objetivo: 'Estudar a resolução pacífica de conflitos na escola',
+          fluxos: [{ titulo: 'Escutar e mediar', licoes }],
+        },
+      });
+      const resposta = salvar(req('aprendizado/planos', cookie, { token }));
+      try {
+        await iniciaram.promise;
+        for (const [i, tempo] of [37_000, 54_000, 79_000, 98_000, 118_000, 120_000].entries()) {
+          avancar(tempo);
+          pendentes.get(i + 1).terminar();
+          await new Promise(resolve => setImmediate(resolve));
+        }
+        avancar(150_000);
+        assert.equal(pendentes.get(7).sinal.aborted, false, 'a lição mantém a própria requisição após 150 s');
+        avancar(duracao);
+        if (status === 200) {
+          pendentes.get(7).terminar();
+          const salvo = await ok(resposta);
+          assert.equal(salvo.id, planoId);
+          const reaberto = await ok(plano(req('aprendizado/planos/' + planoId, cookie), ctx(planoId)));
+          assert.deepEqual(reaberto.fluxos.flatMap(f => f.licoes.map(l => l.titulo)), licoes.map(l => l.titulo));
+          assert.equal(chamadas.at(-1), 'triagem_trilha');
+        } else {
+          assert.equal(pendentes.get(7).sinal.aborted, true, 'o teto compartilhado cancela a última lição');
+          const erro = await resposta;
+          assert.equal(erro.status, status);
+          assert.equal((await erro.json()).codigo, 'ia_indisponivel');
+          assert.deepEqual(await ok(planos(req('aprendizado/planos', cookie))), []);
+          assert.equal(chamadas.filter(nome => nome === 'triagem_trilha').length, 1);
+        }
+        assert.deepEqual(chamadas.filter(nome => typeof nome === 'number'), [1, 2, 3, 4, 5, 6, 7]);
+      } finally {
+        avancar(300_000);
+        await resposta;
+      }
+    });
+  }
 });

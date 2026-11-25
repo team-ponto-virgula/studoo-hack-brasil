@@ -217,10 +217,10 @@ async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise
   let proxima = 0;
   let falhou = false;
   async function trabalhar() {
-    while (!falhou && proxima < tarefas.length) {
+    while (!falhou && !sinal.aborted && proxima < tarefas.length) {
       const { indiceFluxo, indiceLicao } = tarefas[proxima++];
       try {
-        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal);
+        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal, { prazoCompartilhado: true });
       } catch (erro) {
         falhou = true;
         throw erro;
@@ -228,6 +228,7 @@ async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise
     }
   }
   await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
+  if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
   const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(plano, conteudos, sinal) : conteudos;
   if (!revisados.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
