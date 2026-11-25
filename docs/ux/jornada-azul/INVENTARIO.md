@@ -2,7 +2,7 @@
 
 25/11/2026 · inspeção da base `8c057241f6fc4820f36c284218a4f04affa59543` · escopo web de estudo e app do estudante. A direção **A** passa a orientar todo o sistema. O [plano](PLANO.md) define a ordem e o [sistema](SISTEMA.md) define anatomia, identidade e estados.
 
-**Status inicial deste inventário: implementação em andamento, fechamento a consolidar.** As linhas são alvos concretos da migração, não declarações de que foram verificadas. Um estilo central pode atingir várias linhas; isso não permite marcar todas como concluídas sem conferir seus estados. O responsável registra a conclusão no relatório de implementação com commit/evidência e qualquer pendência.
+**Situação da entrega:** os componentes centrais e os consumidores do percurso/conta/comunidade foram integrados na candidata R2 `b3e97e7`. O Stu foi preservado. O [resultado](RESULTADOS.md) e o [registro JSON](RESULTADOS.json) discriminam os recortes executados. As 44 linhas abaixo continuam sendo a matriz de aceites: não são 44 aprovações por inferência do tema. Formatos/QR/moderação/mídia e as demais variantes sem prova visual nesta execução permanecem `integrado_sem_evidencia`; C15 mantém AR8 `pendente` de refino baixo. Não há nota integral/nativa por essa matriz.
 
 ## Fundamentos e estrutura
 

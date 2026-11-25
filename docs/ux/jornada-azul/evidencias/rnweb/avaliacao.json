@@ -1,0 +1,35 @@
+{
+  "method": "Parecer independente de fluxo em React Native Web, sem herdar a nota9 dos protótipos.",
+  "competentCriteria": {
+    "D1": {
+      "score": 9,
+      "scope": "Textos/valor e orientação na jornadaSQL examinada."
+    },
+    "D2": {
+      "before": 8,
+      "score": 9,
+      "scope": "Ações da jornada e dos estados visitados; CTA estreito de Explique foi achado médio e está fechado na R2."
+    },
+    "D8": {
+      "score": 9,
+      "scope": "Erro>,reforço,acerto>=,opcionalExplique,confirmação/cancelar."
+    },
+    "D9": {
+      "score": 9,
+      "scope": "Progresso real1/5 no PostgreSQL, reload, abertura da lição2 e avisos honestos de visitante."
+    }
+  },
+  "notRatedByThisReviewer": {
+    "D3": null,
+    "D4": null,
+    "D5": null,
+    "D6": null,
+    "D7": null,
+    "D10": null
+  },
+  "weightedGlobalScore": null,
+  "installedNativeScore": null,
+  "voiceOverTalkBack": null,
+  "studentResearch": null,
+  "note": "As notas cobrem apenas as facetas declaradas. Não são aprovação de todos os fluxos do produto nem do binário iOS/Android; arte/acessibilidade/movimento/cobertura têm outros pareceres."
+}

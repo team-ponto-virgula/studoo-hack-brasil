@@ -1,0 +1,579 @@
+{
+  "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "historicalSource": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "data": "synthetic",
+  "nativeExecution": false,
+  "curatedPackagesOnly": true,
+  "files": [
+    {
+      "path": "entrega/catalogo-componentes.png",
+      "bytes": 250942,
+      "sha256": "98e4f8a93f5f40f4cfa5aa218d483407a42acfcc2e5b42a42ccb5723398dfe41"
+    },
+    {
+      "path": "entrega/studoo-jornada-azul-componentes.pdf",
+      "bytes": 341370,
+      "sha256": "c7600ca3cbf0e94f5eb30fabd061e2726b6924ced5c3f63e8f47ad575ceffb41"
+    },
+    {
+      "path": "evidencias/arte/LEIA-ME.md",
+      "bytes": 2543,
+      "sha256": "71ddf9668a9594b00ce2f0408acfb961df74f92633a65b3fa0e131783866b5ec"
+    },
+    {
+      "path": "evidencias/arte/capturas/r1/ar6-antes-correcao-confirmacao-360-200.png",
+      "bytes": 120559,
+      "sha256": "6e09b3f1f7b5fc58e131feaf81e66f3732f0e92412870ebb19fe15af96daef5d"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/ar8-anterior-dispensa-musica-360.png",
+      "bytes": 62649,
+      "sha256": "ada0ba7008d794b19c1c540936ff50a75b0c989ab03956bd7684f4689b076584"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/ar8-anterior-dispensa-musica-390.png",
+      "bytes": 65873,
+      "sha256": "bd610d381377142f5f6459e1f9426de06380863ae2406a1f630678d6f172c9b5"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/confirmacao-360-100.png",
+      "bytes": 123761,
+      "sha256": "f0b66742aea05eab682b5ec4d1377c9c1895281a72af3ceb9076471d8fabae1a"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/confirmacao-360-200.png",
+      "bytes": 121449,
+      "sha256": "457a19903287e8e46aa19d7c3f1e00cf53e1a5318ac5ce89aa00cdec241e3191"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/confirmacao-390-100.png",
+      "bytes": 135451,
+      "sha256": "c13bda72c883c87325e62e2e1b8884e8b89698bffc9da7566f0062db0f1a698c"
+    },
+    {
+      "path": "evidencias/arte/capturas/r2/confirmacao-390-200.png",
+      "bytes": 135970,
+      "sha256": "80f842ac94bb669975abf2a7188f8f64154114339cfaf15e5df5c99bb396ce29"
+    },
+    {
+      "path": "evidencias/arte/dados/ar6-antes-metricas.json",
+      "bytes": 1570,
+      "sha256": "a502e96e6fa786b9562841586e2d556dc244e0ae5605d07182869129fc0d1a95"
+    },
+    {
+      "path": "evidencias/arte/dados/ar8-metadados.json",
+      "bytes": 4835,
+      "sha256": "509d090ca800393b73de14f7b5853ce74228e36ab144e5eb656c3033e67ddec6"
+    },
+    {
+      "path": "evidencias/arte/dados/confirmacao-r2.json",
+      "bytes": 10466,
+      "sha256": "814ac5b660819e830598ea725ebaf3ff1885585c05853447fa93a74cb40f17b3"
+    },
+    {
+      "path": "evidencias/arte/dados/equivalencia-r1-r2.json",
+      "bytes": 2868,
+      "sha256": "986b7153399e7af09acf6ba92cb7299eae1c0f60dbd27c3bfb5d4d0bdf2642cf"
+    },
+    {
+      "path": "evidencias/arte/manifest.json",
+      "bytes": 4393,
+      "sha256": "c817bf370ea5155b2ba96288b9d70518dd86d89b778bc49a1ec78aafcfb50665"
+    },
+    {
+      "path": "evidencias/catalogo.json",
+      "bytes": 8639,
+      "sha256": "6cb99320c5794a38e2431b199e871e8354719de28e290cc9f2d91b9c857cbef5"
+    },
+    {
+      "path": "evidencias/checks.json",
+      "bytes": 833,
+      "sha256": "b99b16d3fed617fba4112c5b285fc83c7bde3a6e3f0e3316409988c0e76f69db"
+    },
+    {
+      "path": "evidencias/rnweb/PARECER-RNWEB.md",
+      "bytes": 3316,
+      "sha256": "49a705d66fe16af01e4882197e0796322b31fff46735d001ed49b6f132dca752"
+    },
+    {
+      "path": "evidencias/rnweb/avaliacao.json",
+      "bytes": 1144,
+      "sha256": "36c430ac8273d72c1d4ec40c7adc252b97032f1e91b2b86d807ade8be80baf70"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-acerto-360.png",
+      "bytes": 58505,
+      "sha256": "a0a9f80221d1b79a01bbf801e863fa53f04104bc0539c18bc4c2b3244a1a2e36"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-acerto-390.png",
+      "bytes": 64376,
+      "sha256": "5be001e15dd4d5cc2477b70ba859e5c76c3755b67f521bfdc6ed9a32008c88ef"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-conceito-360.png",
+      "bytes": 51202,
+      "sha256": "0067373072ca51cd5a0033bffc954e216f22fcfb7ff4fee968995337724e8339"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-conceito-390.png",
+      "bytes": 51173,
+      "sha256": "b3cfc73acd734130fc65e37887855f71d661b9a123ef60a393d6afa13cdf7631"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-erro-360.png",
+      "bytes": 64850,
+      "sha256": "b0ad9dd70da38e1c99fa8535b80a44ef54234142380fcee8b81212f884ca8842"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-erro-390.png",
+      "bytes": 67826,
+      "sha256": "00f6dffc233ebaf271760d92dcb4b269b3e16ce56427b0569e6db526f7cf6ec7"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-exemplo-360.png",
+      "bytes": 38046,
+      "sha256": "0186073c95b2c3f3b5f7a23a12d7337469a27fd7de8fad1a57b9693b60c9696b"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-exemplo-390.png",
+      "bytes": 38742,
+      "sha256": "e632b0e31597d954a44034628d87403475477d77f31e96fb6a8f6ca009968037"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-exercicio-360.png",
+      "bytes": 48381,
+      "sha256": "329bda00414e4f389ca16861d3cc3eed5209f8f50fc02dae333c66a9459efed4"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-aula-exercicio-390.png",
+      "bytes": 54592,
+      "sha256": "2ca97c31f8532a416c37f82511234e271e80b0def8b99fdee269c1653a5b7b75"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-conclusao-360.png",
+      "bytes": 65180,
+      "sha256": "7f3fe999ebeaf5a616ef49ccd9dfca2a545ea88eb6f71b1a05f5e9f76cebb41a"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-conclusao-390.png",
+      "bytes": 70923,
+      "sha256": "54420ac5a4a1d26bc7550a1c22617d16a6c6b2264f4b7849c0497201ada77172"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-confirmacao-entrar-360.png",
+      "bytes": 56250,
+      "sha256": "553a2efd231927d65e53e344ee61a0e49ad9100422c2d97cf7ec6d8268dddef3"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-confirmacao-entrar-390.png",
+      "bytes": 63918,
+      "sha256": "64ba9f898779f531039440b45168de9592ccf874efaa08acb067ba2b5ae1775c"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-entrada-360.png",
+      "bytes": 54018,
+      "sha256": "a39ce048a5fade1bb03b742ce2d37f992c0089954dfc2e8a1dcda4ade6d29fac"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-entrada-390.png",
+      "bytes": 53422,
+      "sha256": "a3ca80e19cfac0a8c098d8a3e9a265564c2aa3ced222f900e535b11064f85a7c"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explique-360.png",
+      "bytes": 51274,
+      "sha256": "a3af4b04f2534438b32c56792482152ce7695deb3e684d683bc61d215e6e23f0"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explique-390.png",
+      "bytes": 58018,
+      "sha256": "14e1b8472cd45b169c09bdcf91b46c09c57e100e24678d72d23a32ca7527dfa8"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explique-retorno-360.png",
+      "bytes": 59090,
+      "sha256": "fe3b43478c5c75bbe72ebdaaaf9a47ac91e0634a85531072a5f2df1413babe14"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explique-retorno-390.png",
+      "bytes": 65889,
+      "sha256": "77c04231b55d97910e89d08fc63af30925289f76d82f5fb3199b9993945ce961"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explorar-360.png",
+      "bytes": 81529,
+      "sha256": "3097771cb8334846210c306f336bbecfb41d554a6456d1a9b12c9726744027ce"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explorar-390.png",
+      "bytes": 89410,
+      "sha256": "79cad405861759f56b8e709a936b4ab00fe61a3abf3718349f782d9dcc3ecfbd"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explorar-seguindo-visitante-360.png",
+      "bytes": 66275,
+      "sha256": "1bd153c01a7f54c6dbe2ea5278d027b046f2537ea02d82a6c6c34eaeb419c781"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-explorar-seguindo-visitante-390.png",
+      "bytes": 67251,
+      "sha256": "5e055ff2211e11ba12c347e551a37fa5a4eb5383390c06eb0e45606bcc4803ea"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-inicio-retomada-360.png",
+      "bytes": 48855,
+      "sha256": "67788453d63babb8892f55c1deb95a3e1404dad1b5d5809635a63e80ee9c42f8"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-inicio-retomada-390.png",
+      "bytes": 49283,
+      "sha256": "fa41d76bade7d2763688eb204bc3d7739ef4ba34adf6857834c9b71ccfaf07df"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-mapa-progresso-360.png",
+      "bytes": 77581,
+      "sha256": "fb70ad368b529b0622395e103a216e597ab6c346dc9e5c494f984edbb0741d3a"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-mapa-progresso-390.png",
+      "bytes": 80553,
+      "sha256": "a0090e9bc29b0852d0f7ad147b1134e6c7094ba10666689a63d972984f367c53"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-pedido-360.png",
+      "bytes": 62811,
+      "sha256": "7024b0e55bd0daefa5453916fa561280f819692770eaff5e65f9d724b9281d49"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-pedido-390.png",
+      "bytes": 63850,
+      "sha256": "ca226f2152f04d316ad78accab94700ab7ffdaa16b4921d9fa3550c24eea1388"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-perfil-publico-360.png",
+      "bytes": 85182,
+      "sha256": "7bf164908c7d6e19fa4fec2057087b0ca8d3416cb3937a18f44526fc3267c875"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-perfil-publico-390.png",
+      "bytes": 91284,
+      "sha256": "0cc8517814cc999d75a61abdd12477c9a9f0ea2f677e025b3524f31fa1af80b9"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-perfil-visitante-360.png",
+      "bytes": 49812,
+      "sha256": "fb3ecd4ff3179b046b2fb971e516d0692ca5a8b94645181781240d89939cbc2b"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-perfil-visitante-390.png",
+      "bytes": 57506,
+      "sha256": "e2f011f2512849369a8ed48bdb74809ffbc246f15db30cb32d197c5e70151769"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-previa-publica-360.png",
+      "bytes": 70528,
+      "sha256": "130d1eb0edfa715c554ad86c835a2ab7e60997d76b9c190c1217488cbaa435aa"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-previa-publica-390.png",
+      "bytes": 74322,
+      "sha256": "937bcf0643b14d8a8325300fba0f227b2d9220b22f27eaaddf53130eef136172"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-proposta-360.png",
+      "bytes": 67004,
+      "sha256": "154e7e894cb6cbb04669e6fb9af6b4fc392240bbc10b3f724f058c65983210be"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-proposta-390.png",
+      "bytes": 69809,
+      "sha256": "27c23135e76381ff291f9f78beece66ea41fb82d758cf31ec4c5fa0d91005801"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-reforco-360.png",
+      "bytes": 46651,
+      "sha256": "795ffe3e599b4fd14285ddda11278ea293b83926c67aa5ca9dd395cf504c9323"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-reforco-390.png",
+      "bytes": 47381,
+      "sha256": "d8397986bc6c5debc4c88354865e94cc514122c3afa63ffdd8db914309bfe41b"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-retomada-proxima-licao-360.png",
+      "bytes": 48822,
+      "sha256": "318ebd27b146155d0ee29b21a45358e59e2c57a27cd3afcc16d7ad3379d680c9"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-retomada-proxima-licao-390.png",
+      "bytes": 49136,
+      "sha256": "73b81ea1dd32ceebdaa17988cc54dcfd0b73c4dcb12d4428c5e9260e308b0b17"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-retomada-reload-360.png",
+      "bytes": 77691,
+      "sha256": "1085b0f273695df7ceadd2e82fd2f2a18908df32ab0c8e885bb8d54f73a8a45d"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/fa4/rnweb-retomada-reload-390.png",
+      "bytes": 80695,
+      "sha256": "bca45319356296a01aa3773c594671ed87389d9219b8b59ac94fb4c6fde908a8"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-aula-acerto-360.png",
+      "bytes": 58574,
+      "sha256": "96323fc3e76f5fa3c0b9a4ffab84806d941ae15c17cf4939e63bbe384d8cff3d"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-aula-acerto-390.png",
+      "bytes": 64441,
+      "sha256": "22f3491f1a90a3a63c40425bd2a4aaf6f2a4f8b581085c7a86ed32cbe3ff1bb4"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-conclusao-360.png",
+      "bytes": 63819,
+      "sha256": "462a0723b3d30a836daa967d2c83615b9d46420fdf510f225dc47d85f6497536"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-conclusao-390.png",
+      "bytes": 64703,
+      "sha256": "35edc0262066ae98c0a2aa8b8c503c3eeec18344bd43ca00043cb83688f0869f"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-explique-retorno-360.png",
+      "bytes": 56208,
+      "sha256": "411229167ae78854f3af28bf99b661c0fea1ca61b608c22df583fdba63a24e69"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-explique-retorno-390.png",
+      "bytes": 59439,
+      "sha256": "f8787bd1204dab2a1116d797b3c463ecf0d95bc7c8ec53cca43261fc84226ee1"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-retomada-reload-360.png",
+      "bytes": 81036,
+      "sha256": "061e7ca4b54c65f024d2d839e1f9aafb976a6b925a0c7dd0c0311e70d715a636"
+    },
+    {
+      "path": "evidencias/rnweb/capturas/r2/rnweb-retomada-reload-390.png",
+      "bytes": 83958,
+      "sha256": "21608d1f1b381dfa0281dff3bd467dc8a74ed5b08d890bb831513b3332b62dfb"
+    },
+    {
+      "path": "evidencias/rnweb/capturas.json",
+      "bytes": 71943,
+      "sha256": "720460b0efde36c439b67e481223799f418f73f3e18d71829307ae18ad8dbcca"
+    },
+    {
+      "path": "evidencias/rnweb/contraste-sql.json",
+      "bytes": 411,
+      "sha256": "4d2add64e2c8160af481b8911f5f3bb778e6eaefbbf98eb2abc4ff843c824d24"
+    },
+    {
+      "path": "evidencias/rnweb/fontes.json",
+      "bytes": 58254,
+      "sha256": "7c1a5f6d386e617970c9c3266167a8dd89c8f2f6f5c9d51c90378ab7722e76be"
+    },
+    {
+      "path": "evidencias/rnweb/historico-harness.json",
+      "bytes": 1858,
+      "sha256": "32ca5101271376285504b53b2aaa2d20eb6d7ddf0ad89906590d7879ef7d25e6"
+    },
+    {
+      "path": "evidencias/rnweb/manifesto-sha256.json",
+      "bytes": 10488,
+      "sha256": "caada0fa3ef22c2ccda1086ea884127ed7be070c9ce3c574fcb90187202f2a3c"
+    },
+    {
+      "path": "evidencias/rnweb/resumo.json",
+      "bytes": 2015,
+      "sha256": "34a48cbfa4a8c40e964f61adfc221b186524bfeec7ab49e46fd008d2e7db0f57"
+    },
+    {
+      "path": "evidencias/rnweb/verificacoes.json",
+      "bytes": 23817,
+      "sha256": "ef051641d28f320bb38a35dd6d010004e2d61468130b66816fc65a4bc1310995"
+    },
+    {
+      "path": "evidencias/web/MANIFESTO.json",
+      "bytes": 9002,
+      "sha256": "0201c39791ab80d6d9766f514a453fb90cc590ed562e123ddad77f4211d3a1d9"
+    },
+    {
+      "path": "evidencias/web/PUBLICAVEL-FA4.json",
+      "bytes": 71058,
+      "sha256": "63d676fafee83c0ed9aa184eb310d9b8b86263ff7eda46b4ec470fb21ff8bd64"
+    },
+    {
+      "path": "evidencias/web/README.md",
+      "bytes": 3916,
+      "sha256": "744f858c9fe73ce10a3c22ee4af2606e096f619f8b7d46f2f3e0c6ded00decca"
+    },
+    {
+      "path": "evidencias/web/capturas/configuracoes-360.png",
+      "bytes": 69490,
+      "sha256": "41b11e61ef0c1fa10320dbaca68d97c97d18c1fbf919c1e5fd45a49e27f51966"
+    },
+    {
+      "path": "evidencias/web/capturas/configuracoes-390.png",
+      "bytes": 73798,
+      "sha256": "86aebff6cffb7ebd607570980511c330c6e874da1a0d957df90913195fa9a9a1"
+    },
+    {
+      "path": "evidencias/web/capturas/confirmacao-200-360.png",
+      "bytes": 51068,
+      "sha256": "f4b76d64fa31e421de04ae9475a2ccaea09f3a4af92349c578a58d86ca8de0c5"
+    },
+    {
+      "path": "evidencias/web/capturas/confirmacao-200-390.png",
+      "bytes": 56515,
+      "sha256": "8e73b6cca2764624fbf1b625a5e5b7d767553462aa646ee3434c7ea96fc8ff9b"
+    },
+    {
+      "path": "evidencias/web/capturas/menu-cartao-proprio-360.png",
+      "bytes": 67450,
+      "sha256": "c8754f1a6b8450bfdbbaaf2204ebab214e6d5ea3af13c59264e2c72755f8b942"
+    },
+    {
+      "path": "evidencias/web/capturas/menu-cartao-proprio-390.png",
+      "bytes": 70037,
+      "sha256": "e5eda8cc3063dc2fbb20da9d82f6ba94cba18d0382f4f2e1a20d8f40ea3b7906"
+    },
+    {
+      "path": "evidencias/web/capturas/menu-publicacao-360.png",
+      "bytes": 84504,
+      "sha256": "7826fb1c0a66ad2e7adecdd5940030e059a09f75920b49f8fb1310bf1b1adc9f"
+    },
+    {
+      "path": "evidencias/web/capturas/menu-publicacao-390.png",
+      "bytes": 96740,
+      "sha256": "00a95beb30d4c0f3a5719539de3d9983a16d9394b881829a1542f542a0ccb6ea"
+    },
+    {
+      "path": "evidencias/web/capturas/minhas-trilhas-progresso-360.png",
+      "bytes": 49189,
+      "sha256": "0dbcf9ef326e0d75e11c9ab769db50e8e99ade5ad078889a157e9b1369e42245"
+    },
+    {
+      "path": "evidencias/web/capturas/minhas-trilhas-progresso-390.png",
+      "bytes": 50398,
+      "sha256": "d8b652cea92f89ac34113ed40a6e77c1da5eadfc7812dc704c2bfc3da4d5d069"
+    },
+    {
+      "path": "evidencias/web/capturas/navbar-200-planos-360.png",
+      "bytes": 73722,
+      "sha256": "041838b1378420f6e9ca75ad4aec1d877eb11f7a1bb6917e0dc6c889adb22720"
+    },
+    {
+      "path": "evidencias/web/capturas/pedido-360-100.png",
+      "bytes": 62919,
+      "sha256": "1fa563ad82af456245e703a1d1bf092a7a6f9d932e0d33ca2ca58a449b60f7d1"
+    },
+    {
+      "path": "evidencias/web/capturas/pedido-360-200.png",
+      "bytes": 53796,
+      "sha256": "a53797567bbae02fff40fa78cf3381f831d0fe43aa9f8ec6fdd135b6f57ab33b"
+    },
+    {
+      "path": "evidencias/web/capturas/pedido-390-100.png",
+      "bytes": 64214,
+      "sha256": "7db1e7963180ce8cd71d2750880cbfb57d75aeda33096d5cfd1057669ac74e6b"
+    },
+    {
+      "path": "evidencias/web/capturas/pedido-390-200.png",
+      "bytes": 57759,
+      "sha256": "dfa479b0aaec5b4228cdc15b4ff058b18489dbcd26210578b4ecc12efca6e78a"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-conclusao-360.png",
+      "bytes": 64216,
+      "sha256": "4a17952291975c01a0a5dc16d5fed41d9e49fd8804ca32e55e988b3978d35a66"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-conclusao-390.png",
+      "bytes": 70295,
+      "sha256": "26fee61bd05cf6ce57a1d599945fdf68a97a98967f6c41c8d850c4bcfa7fa8cb"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-exercicio-360.png",
+      "bytes": 50655,
+      "sha256": "e42d61b756978eb54bed51db119323220f439a443d11a8a33a18583a4a1c6891"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-exercicio-390.png",
+      "bytes": 54933,
+      "sha256": "441140b4ba1146663d4e6a6382898141400b39318db3294f53bf37b3741c6544"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-feedback-erro-360.png",
+      "bytes": 66551,
+      "sha256": "022a52ec23b957932d47d524db814736cf0e9d44dc8eb188a4103f4b7892727c"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-feedback-erro-390.png",
+      "bytes": 71731,
+      "sha256": "ad5bc738a39a07b23a780d879794ac01ad32d14aa10c14bb8f5652e100f60de5"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-proposta-360.png",
+      "bytes": 62451,
+      "sha256": "6919798ecca9d31f59765866feac5a4fb34db3ddcaa8b10b5c2c1c2d51090a7e"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-proposta-390.png",
+      "bytes": 64370,
+      "sha256": "12073cd1927a4da4ea85f926a1f14049f4fd7fc19a446467c20639eb995b75b7"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-retomada-inner-join-360.png",
+      "bytes": 46794,
+      "sha256": "d423383782b4edd603a181d247a9645c7e13103606892f0ef914ebcd10f7e050"
+    },
+    {
+      "path": "evidencias/web/capturas/sql-retomada-inner-join-390.png",
+      "bytes": 47173,
+      "sha256": "16cd76cb15627c3aedbfd3d9807bbbeb3344a35171560bd684a9db31b281100d"
+    },
+    {
+      "path": "evidencias/web-r2/PARECER-R2.md",
+      "bytes": 2981,
+      "sha256": "c66207ebeb74dcb2377bb0127b327165c1011926cb6db266a17fe38db4c2122d"
+    },
+    {
+      "path": "evidencias/web-r2/PUBLICAVEL.json",
+      "bytes": 8718,
+      "sha256": "2691fb8657add8cdae2a540a4602289a080b33d5ad3be1f5882a65f0ac93966f"
+    },
+    {
+      "path": "evidencias/web-r2/aviso-modal-hidratado/apos-fechar-360.png",
+      "bytes": 51002,
+      "sha256": "882ed8a443963308b2c962d25291291bc9d0fbb9e4dfeca0051ad128d66a7d96"
+    },
+    {
+      "path": "evidencias/web-r2/aviso-modal-hidratado/apos-fechar-390.png",
+      "bytes": 61075,
+      "sha256": "ed92b0b37dacaece0fe0c800b49f9df2aad7cda9f46dd579a3953db081f7976a"
+    },
+    {
+      "path": "evidencias/web-r2/aviso-modal-hidratado/modal200-360.png",
+      "bytes": 56350,
+      "sha256": "637ce3fc4a98c3e69f6c268a145bb57c9f0eec660a4d392c362768529d94f106"
+    },
+    {
+      "path": "evidencias/web-r2/aviso-modal-hidratado/modal200-390.png",
+      "bytes": 62572,
+      "sha256": "cfb4980a3964616f37a74d2b365b201e584f754baa51a61cd4ce6a12591e9aeb"
+    },
+    {
+      "path": "evidencias/web-r2/compacto/360-compacto-certa-explique.png",
+      "bytes": 49800,
+      "sha256": "56ff35667f8bb66f64af98091cb15670e8c127fcdcfd719f6136e784c2742189"
+    },
+    {
+      "path": "evidencias/web-r2/compacto/390-compacto-certa-explique.png",
+      "bytes": 54207,
+      "sha256": "55af9481ecfa8d9f0c9aaa292eaf481f6a43c432dab87f0b0c24b1161a75e52b"
+    }
+  ]
+}

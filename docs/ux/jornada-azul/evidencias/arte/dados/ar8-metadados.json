@@ -1,0 +1,153 @@
+{
+  "finding": "AR8",
+  "classification": "baixo residual, não aprovação integral C15",
+  "nativeExecuted": false,
+  "origin": "React Native Web8091+API local sintética",
+  "inheritedEvidenceFrom": "/root/auditar_base_jornada_a",
+  "reviewerOpenedFrames": true,
+  "sets": [
+    {
+      "directory": "/workspace/work/qa-jornada-native/rodada-r2-aviso-transitorio",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "sourceEnd": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "sourceStable": true,
+      "frames": [
+        {
+          "path": "/workspace/work/qa-jornada-native/rodada-r2-aviso-transitorio/rnweb-explique-retorno-390.png",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "sha256": "bd610d381377142f5f6459e1f9426de06380863ae2406a1f630678d6f172c9b5",
+          "capturerHashMatches": true,
+          "controls": [
+            {
+              "id": "enviar-explicacao",
+              "label": "Enviar minha explicação",
+              "x": 41,
+              "y": 42,
+              "width": 308,
+              "height": 56
+            },
+            {
+              "id": "aviso-acao",
+              "label": "Desligar",
+              "x": 293.984375,
+              "y": 71,
+              "width": 64.015625,
+              "height": 44
+            },
+            {
+              "id": "continuar-licao",
+              "label": "Continuar",
+              "x": 20,
+              "y": 776,
+              "width": 350,
+              "height": 56
+            }
+          ]
+        },
+        {
+          "path": "/workspace/work/qa-jornada-native/rodada-r2-aviso-transitorio/rnweb-explique-retorno-360.png",
+          "viewport": {
+            "width": 360,
+            "height": 800
+          },
+          "sha256": "ada0ba7008d794b19c1c540936ff50a75b0c989ab03956bd7684f4689b076584",
+          "capturerHashMatches": true,
+          "controls": [
+            {
+              "id": "enviar-explicacao",
+              "label": "Enviar minha explicação",
+              "x": 41,
+              "y": 42,
+              "width": 278,
+              "height": 56
+            },
+            {
+              "id": "aviso-acao",
+              "label": "Desligar",
+              "x": 263.984375,
+              "y": 71,
+              "width": 64.015625,
+              "height": 44
+            },
+            {
+              "id": "continuar-licao",
+              "label": "Continuar",
+              "x": 20,
+              "y": 732,
+              "width": 320,
+              "height": 56
+            }
+          ]
+        }
+      ],
+      "observation": "aviso primeiro gesto durante7s"
+    },
+    {
+      "directory": "/workspace/work/qa-jornada-native/final-r2",
+      "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "sourceEnd": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+      "sourceStable": true,
+      "frames": [
+        {
+          "path": "/workspace/work/qa-jornada-native/final-r2/rnweb-explique-retorno-390.png",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "sha256": "f8787bd1204dab2a1116d797b3c463ecf0d95bc7c8ec53cca43261fc84226ee1",
+          "capturerHashMatches": true,
+          "controls": [
+            {
+              "id": "enviar-explicacao",
+              "label": "Enviar minha explicação",
+              "x": 41,
+              "y": 42,
+              "width": 308,
+              "height": 56
+            },
+            {
+              "id": "continuar-licao",
+              "label": "Continuar",
+              "x": 20,
+              "y": 776,
+              "width": 350,
+              "height": 56
+            }
+          ]
+        },
+        {
+          "path": "/workspace/work/qa-jornada-native/final-r2/rnweb-explique-retorno-360.png",
+          "viewport": {
+            "width": 360,
+            "height": 800
+          },
+          "sha256": "411229167ae78854f3af28bf99b661c0fea1ca61b608c22df583fdba63a24e69",
+          "capturerHashMatches": true,
+          "controls": [
+            {
+              "id": "enviar-explicacao",
+              "label": "Enviar minha explicação",
+              "x": 41,
+              "y": 42,
+              "width": 278,
+              "height": 56
+            },
+            {
+              "id": "continuar-licao",
+              "label": "Continuar",
+              "x": 20,
+              "y": 732,
+              "width": 320,
+              "height": 56
+            }
+          ]
+        }
+      ],
+      "observation": "depois da dispensa normal, sem ocultação no harness"
+    }
+  ],
+  "recommendation": "Tratar ciclo contextual do aviso ao entrar no retorno do Explique; manter preferência/áudio e evitar qualquer salto do conteúdo. Revalidar contexto ativo, troca/rolagem e aviso vigente/dispensado nas duas superfícies."
+}

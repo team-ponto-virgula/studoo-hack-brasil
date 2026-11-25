@@ -76,6 +76,16 @@ A consolidação usa a menor nota sustentada dos revisores competentes. As evid�
 
 A conferência em aparelho permanece identificada quando não disponível; não se declara teclado, VoiceOver/TalkBack, permissões, Keychain, áudio ou desempenho nativos aprovados por RN Web. A regra do repositório sobre conferência Android posterior, a pedido do dono, continua valendo. Novas diferenças técnicas entram na spec 07 antes da entrega.
 
+## Acompanhamento residual da revisão R2
+
+**AR8 · C15/aviso · baixo, aberto e planejado.** Em RN Web, ao rolar até o retorno do Explique durante os sete segundos do aviso padrão de música, a faixa cobre parte de “Enviar minha explicação”, ação já usada que voltou disponível. O principal Continuar fica inteiramente livre. É descumprimento residual da regra de não cobrir campo/botão da spec 16 §14 nesse consumidor/estado; não é exceção nova à spec nem aprovação integral de C15.
+
+Recomenda-se tratar o **ciclo contextual do aviso** ao entrar no retorno do Explique, preservando preferências/áudio e evitando salto de conteúdo. A correção futura deve conferir aviso vigente/dispensado, troca de contexto, rolagem e modal nas duas superfícies e larguras. Isso não será obtido apenas aguardando o aviso sumir no harness.
+
+Fonte observada: R2 `b3e97e7cbe7d6b8b711216070453a13ebcad36e3`. Antes/depois do relógio estão preservados em `/workspace/work/qa-jornada-native/{rodada-r2-aviso-transitorio,final-r2}/rnweb-explique-retorno-{360,390}.png`; metadados dos quatro quadros, hashes e geometria dos controles em `/workspace/work/qa-jornada-arte/r2/ar8-metadados.json`. Julgamento e limites em [PARECER-ARTE](PARECER-ARTE.md#ar8--aviso-transitório-sobre-ação-secundária-no-conteúdo-rolado). A candidata não recebe nova alteração de runtime por esse residual baixo.
+
 ## Registro de entrega
+
+A integração e os resultados desta execução estão no [índice da entrega](README.md), com a candidata R2, catálogo real e [verificações](RESULTADOS.md). Os lotes 1–5 têm alterações de código nas duas plataformas; a revisão do lote 6 cobre os recortes declarados e mantém a cobertura integral/nativa sem nota. O acompanhamento de AR8 e os estados não exercitados continuam explícitos, sem uma aprovação global fictícia.
 
 O fechamento deve apontar commit, inventário com status, caminhos executados, ambiente/flags, testes e capturas reais, achados ainda abertos e como abrir a prévia. A PR descreve a aparência e o comportamento finais, o que muda nas duas plataformas e qualquer risco material. Build/TestFlight é uma etapa separada: só uma distribuição efetivamente enviada e confirmada pode ser descrita como disponível.

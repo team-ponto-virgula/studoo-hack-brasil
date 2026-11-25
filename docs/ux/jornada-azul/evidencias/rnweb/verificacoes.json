@@ -1,0 +1,992 @@
+{
+  "fa4": {
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "checks": [
+      {
+        "name": "API isolada confirma IA falsa",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: entrada/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: entrada/390",
+        "passed": true,
+        "geometry": {
+          "id": "experimentar-sem-conta",
+          "x": 37,
+          "y": 286,
+          "width": 316,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: entrada/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: entrada/360",
+        "passed": true,
+        "geometry": {
+          "id": "experimentar-sem-conta",
+          "x": 37,
+          "y": 348,
+          "width": 286,
+          "height": 56
+        }
+      },
+      {
+        "name": "entrada oferece visitante sem credenciais",
+        "passed": true
+      },
+      {
+        "name": "sessão MOBILE visitante retornou200",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: pedido/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: pedido/390",
+        "passed": true,
+        "geometry": {
+          "id": "gerar-trilha",
+          "x": 24,
+          "y": 674,
+          "width": 342,
+          "height": 58
+        }
+      },
+      {
+        "name": "sem overflow horizontal: pedido/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: pedido/360",
+        "passed": true,
+        "geometry": {
+          "id": "gerar-trilha",
+          "x": 24,
+          "y": 630,
+          "width": 312,
+          "height": 58
+        }
+      },
+      {
+        "name": "geração SQL ao vivo pela API200",
+        "passed": true
+      },
+      {
+        "name": "proposta contém cinco lições",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: proposta/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: proposta/390",
+        "passed": true,
+        "geometry": {
+          "id": "comecar-trilha",
+          "x": 20,
+          "y": 722,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: proposta/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: proposta/360",
+        "passed": true,
+        "geometry": {
+          "id": "comecar-trilha",
+          "x": 20,
+          "y": 678,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "aceite real criou plano200",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: aula-conceito/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-conceito/390",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-conceito/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-conceito/360",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-exemplo/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-exemplo/390",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-exemplo/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-exemplo/360",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-exercicio/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-exercicio/390",
+        "passed": true,
+        "geometry": {
+          "id": "enviar-resposta",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-exercicio/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-exercicio/360",
+        "passed": true,
+        "geometry": {
+          "id": "enviar-resposta",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "resposta > gera erro recuperável",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: aula-erro/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-erro/390",
+        "passed": true,
+        "geometry": {
+          "id": "ver-outro-jeito",
+          "x": 20,
+          "y": 718,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-erro/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-erro/360",
+        "passed": true,
+        "geometry": {
+          "id": "ver-outro-jeito",
+          "x": 20,
+          "y": 674,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "lacuna de código usa nevoa em fundo navy",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: reforco/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: reforco/390",
+        "passed": true,
+        "geometry": {
+          "id": "ponte-ver-exemplo",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: reforco/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: reforco/360",
+        "passed": true,
+        "geometry": {
+          "id": "ponte-ver-exemplo",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "reforço avança para exemplo",
+        "passed": true
+      },
+      {
+        "name": "resposta >= gera acerto",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: aula-acerto/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-acerto/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-acerto/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-acerto/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: explique/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique/390",
+        "passed": true,
+        "geometry": {
+          "id": "enviar-explicacao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: explique/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique/360",
+        "passed": true,
+        "geometry": {
+          "id": "enviar-explicacao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "explicação textual recebeu retorno da API200",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: explique-retorno/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique-retorno/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 260.484375,
+          "y": 776,
+          "width": 109.515625,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: explique-retorno/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique-retorno/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 230.484375,
+          "y": 732,
+          "width": 109.515625,
+          "height": 56
+        }
+      },
+      {
+        "name": "conclusão confirma1de5",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: conclusao/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: conclusao/390",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 724,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: conclusao/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: conclusao/360",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 680,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "PostgreSQL retorna uma lição concluída",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: mapa-progresso/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: mapa-progresso/360",
+        "passed": true
+      },
+      {
+        "name": "reload retomou plano e liberouINNERJOIN",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: retomada-reload/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: retomada-reload/360",
+        "passed": true
+      },
+      {
+        "name": "retomada abriu lição2 da API",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: retomada-proxima-licao/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: retomada-proxima-licao/390",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: retomada-proxima-licao/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: retomada-proxima-licao/360",
+        "passed": true,
+        "geometry": {
+          "id": "avancar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: inicio-retomada/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: inicio-retomada/390",
+        "passed": true,
+        "geometry": {
+          "id": "abrir-destaque",
+          "x": 41,
+          "y": 396.59375,
+          "width": 308,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: inicio-retomada/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: inicio-retomada/360",
+        "passed": true,
+        "geometry": {
+          "id": "abrir-destaque",
+          "x": 41,
+          "y": 415.78125,
+          "width": 278,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: perfil-visitante/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: perfil-visitante/360",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: confirmacao-entrar/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: confirmacao-entrar/360",
+        "passed": true
+      },
+      {
+        "name": "cancelar troca de conta mantém visitante",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: explorar/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: explorar/360",
+        "passed": true
+      },
+      {
+        "name": "Explorar recebeu dados reais sintéticos200",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: explorar-seguindo-visitante/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explorar-seguindo-visitante/390",
+        "passed": true,
+        "geometry": {
+          "id": "seguindo-entrar",
+          "x": 43,
+          "y": 610,
+          "width": 304,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: explorar-seguindo-visitante/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explorar-seguindo-visitante/360",
+        "passed": true,
+        "geometry": {
+          "id": "seguindo-entrar",
+          "x": 43,
+          "y": 610,
+          "width": 274,
+          "height": 56
+        }
+      },
+      {
+        "name": "sem overflow horizontal: previa-publica/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: previa-publica/360",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: perfil-publico/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: perfil-publico/360",
+        "passed": true
+      },
+      {
+        "name": "perfil público e prévia chegaram pela API",
+        "passed": true
+      },
+      {
+        "name": "nenhum pageerror não capturado",
+        "passed": true
+      },
+      {
+        "name": "nenhuma API500 ou falha de transporte",
+        "passed": true
+      },
+      {
+        "name": "fonte RN estável durante a execução",
+        "passed": true
+      }
+    ],
+    "apiRequests": [
+      {
+        "request": "GET /api/auth/config 200",
+        "count": 6
+      },
+      {
+        "request": "POST /api/mobile/visitante 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/privacidade 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/aprendizado/planos 200",
+        "count": 3
+      },
+      {
+        "request": "GET /api/perfil 200",
+        "count": 3
+      },
+      {
+        "request": "POST /api/aprendizado/propostas/ao-vivo 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/aprendizado/planos 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/aprendizado/licoes/:id 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/estudio/licoes/:id 200",
+        "count": 4
+      },
+      {
+        "request": "POST /api/aprendizado/licoes/:id/avaliar 200",
+        "count": 2
+      },
+      {
+        "request": "POST /api/estudio/licoes/:id/ponte 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/estudio/licoes/:id/ensinar 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/aprendizado/licoes/:id/concluir 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/sessao 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/aprendizado/planos/:id 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/bloqueios 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/explorar 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/fotos/NKFSgIoL1dabD7tK/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/0jsx_T0rnBuOpyjU/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/_cOIWGB_owk9rHCr/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/W81xG561nJvE8VrR/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/bILjI0jmVX9ETBTt/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/qyPdAVLTEtpFxEZh/128 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/compartilhar/:codigo 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/perfis/:perfil 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/fotos/qyPdAVLTEtpFxEZh/512 200",
+        "count": 1
+      }
+    ],
+    "pageErrors": [],
+    "consoleMessages": [
+      "Invalid ARIA attribute `%s`. Did you mean `%s`? ariaHidden aria-hidden"
+    ],
+    "knownFinding": "O gate original media posição/altura, mas não largura. A inspeção encontrou CTA109,515625px em Explique-retorno; R2 corrige e acrescenta o gate de largura."
+  },
+  "r2": {
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "checks": [
+      {
+        "name": "API isolada confirma IA falsa",
+        "passed": true
+      },
+      {
+        "name": "pré-condição: acerto real via API200",
+        "passed": true
+      },
+      {
+        "name": "aviso da música saiu pelo relógio normal",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: aula-acerto/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-acerto/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: aula-acerto/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56,
+          "minimumUsefulWidth": 302
+        }
+      },
+      {
+        "name": "sem overflow horizontal: aula-acerto/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: aula-acerto/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: aula-acerto/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56,
+          "minimumUsefulWidth": 272
+        }
+      },
+      {
+        "name": "retorno textual real da API200",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: explique-retorno/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique-retorno/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: explique-retorno/390",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 776,
+          "width": 350,
+          "height": 56,
+          "minimumUsefulWidth": 302
+        }
+      },
+      {
+        "name": "sem overflow horizontal: explique-retorno/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: explique-retorno/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: explique-retorno/360",
+        "passed": true,
+        "geometry": {
+          "id": "continuar-licao",
+          "x": 20,
+          "y": 732,
+          "width": 320,
+          "height": 56,
+          "minimumUsefulWidth": 272
+        }
+      },
+      {
+        "name": "Continuar ocupa toda a largura útil: 390",
+        "passed": true
+      },
+      {
+        "name": "Continuar ocupa toda a largura útil: 360",
+        "passed": true
+      },
+      {
+        "name": "conclusão confirmou1de5",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: conclusao/390",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: conclusao/390",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 724,
+          "width": 350,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: conclusao/390",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 724,
+          "width": 350,
+          "height": 56,
+          "minimumUsefulWidth": 302
+        }
+      },
+      {
+        "name": "sem overflow horizontal: conclusao/360",
+        "passed": true
+      },
+      {
+        "name": "CTA visível e >=52px: conclusao/360",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 680,
+          "width": 320,
+          "height": 56
+        }
+      },
+      {
+        "name": "CTA ocupa largura útil mobile: conclusao/360",
+        "passed": true,
+        "geometry": {
+          "id": "proxima-licao",
+          "x": 20,
+          "y": 680,
+          "width": 320,
+          "height": 56,
+          "minimumUsefulWidth": 272
+        }
+      },
+      {
+        "name": "retomada mantém1de5 apósreload",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: retomada-reload/390",
+        "passed": true
+      },
+      {
+        "name": "sem overflow horizontal: retomada-reload/360",
+        "passed": true
+      },
+      {
+        "name": "sem pageerrors não capturados",
+        "passed": true
+      },
+      {
+        "name": "sem API500 ou erro de transporte",
+        "passed": true
+      },
+      {
+        "name": "somente licao.tsx mudou no runtime em comparaçãoFA4",
+        "passed": true
+      },
+      {
+        "name": "fonteR2estável durante a execução",
+        "passed": true
+      }
+    ],
+    "apiRequests": [
+      {
+        "request": "GET /api/auth/config 200",
+        "count": 6
+      },
+      {
+        "request": "POST /api/mobile/visitante 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/aprendizado/planos 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/privacidade 200",
+        "count": 2
+      },
+      {
+        "request": "GET /api/perfil 200",
+        "count": 2
+      },
+      {
+        "request": "POST /api/aprendizado/propostas/ao-vivo 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/aprendizado/planos 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/aprendizado/licoes/:id 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/estudio/licoes/:id 200",
+        "count": 2
+      },
+      {
+        "request": "POST /api/aprendizado/licoes/:id/avaliar 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/estudio/licoes/:id/ensinar 200",
+        "count": 1
+      },
+      {
+        "request": "POST /api/aprendizado/licoes/:id/concluir 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/sessao 200",
+        "count": 1
+      },
+      {
+        "request": "GET /api/aprendizado/planos/:id 200",
+        "count": 1
+      }
+    ],
+    "pageErrors": [],
+    "consoleMessages": [],
+    "scope": "Focal: pré-condições reais de SQL, acerto, Explique textual, largura do Continuar, concluir1/5 e recarregar/retomar."
+  }
+}

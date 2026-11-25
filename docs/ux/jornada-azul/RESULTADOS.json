@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "candidate": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "base": "8c057241f6fc4820f36c284218a4f04affa59543",
+  "direction": "A · Jornada Azul",
+  "mascot": {
+    "approvedByOwner": true,
+    "preserved": true,
+    "changedPaths": []
+  },
+  "environment": {
+    "data": "synthetic",
+    "ai": "falsa",
+    "email": "falso",
+    "database": "studoo_jornada_azul",
+    "webPort": 3020
+  },
+  "checks": {
+    "paridade": {
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "skipped": 0
+    },
+    "movimento": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0
+    },
+    "visitante-mobile": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "skipped": 0
+    },
+    "formatos": {
+      "tests": 271,
+      "pass": 271,
+      "fail": 0,
+      "skipped": 0
+    },
+    "dominio": {
+      "tests": 18,
+      "pass": 18,
+      "fail": 0,
+      "skipped": 0
+    },
+    "estudio-interface": {
+      "tests": 693,
+      "pass": 693,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "webTypecheck": true,
+  "mobileTypecheck": true,
+  "productionWebBuild": true,
+  "iosBundleExport": true,
+  "nativeBinaryBuild": false,
+  "nativeExecuted": false,
+  "newTestFlightDistribution": false,
+  "productionCatalogRouteStatus": 404,
+  "catalog": {
+    "pdfPages": 3,
+    "mobileViews": 4,
+    "focusChecks": 2
+  },
+  "reviews": {
+    "visualC4": {
+      "score": 9,
+      "scope": "observed implementation sample"
+    },
+    "visualC3": {
+      "score": 9,
+      "scope": "observed visual facets"
+    },
+    "flow": {
+      "score": 9,
+      "scope": "declared web/RNWeb SQL and focused scenarios"
+    },
+    "all44FamiliesScore": null,
+    "globalProductScore": null,
+    "nativeScore": null,
+    "researchWithPeople": false
+  },
+  "evidence": {
+    "rnweb": {
+      "fa4": {
+        "source": "fa4be429992037cdaa1be055f52be6a529d32f76",
+        "checksPassed": 95,
+        "screenshots": 44,
+        "apiCalls": 43
+      },
+      "r2": {
+        "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+        "checksPassed": 32,
+        "screenshots": 8,
+        "apiCalls": 23
+      },
+      "adaptersOnlyInHarness": true
+    },
+    "webR2": {
+      "checksPassed": 4,
+      "scope": "music notice/modal and compact Continue"
+    },
+    "sumOverlappingEvidence": false
+  },
+  "openFindings": [
+    {
+      "id": "AR8",
+      "severity": "low",
+      "component": "C15 / first-gesture music notice",
+      "scope": "RNWeb / Explique return after scroll during initial notice",
+      "primaryActionObstructed": false,
+      "description": "Notice partially covers a previously used secondary Send action; calm captures do not eliminate this transient state.",
+      "status": "planned"
+    }
+  ],
+  "unexecuted": [
+    "native iOS/Android",
+    "VoiceOver/TalkBack",
+    "native keyboard/permissions/coffer/media selectors",
+    "visual inspection of every variant of all44 families",
+    "research with students"
+  ]
+}

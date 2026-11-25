@@ -1,0 +1,68 @@
+{
+  "from": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "to": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "changedFiles": [
+    "apps/mobile/src/licao.tsx",
+    "docs/specs/16-refinamento-ui.md",
+    "src/app/aula.css",
+    "src/ui/aviso.css",
+    "tests/refino-p1-mobile.test.mjs"
+  ],
+  "comparedUnits": [
+    {
+      "file": "apps/mobile/src/interface.tsx",
+      "sha256R1": "488ba25912f1011c4cbd6b8e2a0ab2a63986c8153236b0b2deb4f1c42d944186",
+      "sha256R2": "488ba25912f1011c4cbd6b8e2a0ab2a63986c8153236b0b2deb4f1c42d944186",
+      "identical": true
+    },
+    {
+      "file": "apps/mobile/src/componentes-jornada.tsx",
+      "sha256R1": "4d2f1284163ad787360f40a0e1bf1827774ab3dbe62c9d6b4fd67954ecc125d8",
+      "sha256R2": "4d2f1284163ad787360f40a0e1bf1827774ab3dbe62c9d6b4fd67954ecc125d8",
+      "identical": true
+    },
+    {
+      "file": "apps/mobile/src/aula-formatos.tsx",
+      "sha256R1": "3bff20a1c32542fc770a23d345c14b6cbf28e251889946f88de361a50364a0f0",
+      "sha256R2": "3bff20a1c32542fc770a23d345c14b6cbf28e251889946f88de361a50364a0f0",
+      "identical": true
+    },
+    {
+      "file": "apps/mobile/src/comunidade.tsx",
+      "sha256R1": "e06ed1ee4fcee0ed511ccbf07061d05e2cfadaeb3bbb2e614038f0e670a2774d",
+      "sha256R2": "e06ed1ee4fcee0ed511ccbf07061d05e2cfadaeb3bbb2e614038f0e670a2774d",
+      "identical": true
+    },
+    {
+      "file": "src/ui/componentes.tsx",
+      "sha256R1": "8d996f4d53ddd0a9de0d2020dae0dcb5637e7aaa86263da512d6601a8a79293d",
+      "sha256R2": "8d996f4d53ddd0a9de0d2020dae0dcb5637e7aaa86263da512d6601a8a79293d",
+      "identical": true
+    },
+    {
+      "file": "src/ui/jornada.tsx",
+      "sha256R1": "d1a4c910d70c6587b9a2a3fb19f9ce40ec92f18955ae7b5e71ac60481cf96732",
+      "sha256R2": "d1a4c910d70c6587b9a2a3fb19f9ce40ec92f18955ae7b5e71ac60481cf96732",
+      "identical": true
+    },
+    {
+      "file": "src/app/compartilhar.tsx",
+      "sha256R1": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+      "sha256R2": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+      "identical": true
+    },
+    {
+      "file": "src/app/compartilhar.css",
+      "sha256R1": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+      "sha256R2": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+      "identical": true
+    },
+    {
+      "file": "packages/contratos/src/jornada-azul.ts",
+      "sha256R1": "4de9bd469c81999ef91e3017bf09ce4efc1667c099ea15324f115564b6f9fd7a",
+      "sha256R2": "4de9bd469c81999ef91e3017bf09ce4efc1667c099ea15324f115564b6f9fd7a",
+      "identical": true
+    }
+  ],
+  "scope": "Heredan\u00e7a expl\u00edcita dos quadros R1 n\u00e3o afetados. aula.css e licao.tsx mudam apenas CTA compacto de Explique; aviso.css apenas preced\u00eancia do aviso de m\u00fasica. N\u00e3o s\u00e3o novas capturas das 44 fam\u00edlias."
+}

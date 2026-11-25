@@ -1,0 +1,42 @@
+{
+  "sourceFA4": "fa4be429992037cdaa1be055f52be6a529d32f76",
+  "sourceR2": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "fa4": {
+    "checks": 95,
+    "checksPassed": 95,
+    "pngs": 44,
+    "apiCalls": 43,
+    "sourceStable": true
+  },
+  "r2": {
+    "checks": 32,
+    "checksPassed": 32,
+    "pngs": 8,
+    "apiCalls": 23,
+    "sourceStable": true
+  },
+  "noUncaughtPageErrors": true,
+  "uncorrectedCriticalHighMediumFindingsInExaminedScope": [],
+  "nativeExecuted": false,
+  "publicSafe": true,
+  "containsCredentials": false,
+  "containsSessions": false,
+  "containsAccountSetup": false,
+  "adapters": [
+    "SecureStore.web substituído por localStorage só no harness",
+    "setAccessibilityFocus e sendAccessibilityEvent sem implementações RNWeb: stubs só no harness",
+    "HTTPS sintético interceptado para API local HTTP com headers MOBILE; TLS e cofre nativos não validados"
+  ],
+  "limits": [
+    "RNWeb/Chromium, não iOS/Android.",
+    "API MOBILE real local com banco sintético; hostnameHTTPS interceptado para HTTP local com headers de proxy. TLS real não validado.",
+    "Cofre simulado no harness; SecureStore real não validado.",
+    "IA=falsa, EMAIL=falso. Nenhum e-mail externo ou IA externa.",
+    "Microfone, câmera, seletores e compartilhamento do sistema não executados.",
+    "VoiceOver/TalkBack, teclado nativo, desempenho/FPS nativo e teste com estudantes não realizados.",
+    "Cadastro/recuperação RNWeb não avaliados: EMAIL=falso só habilita envio em origem loopback; a origemHTTPSsintética não é loopback. Web3020 é outra execução.",
+    "Aviso ariaHidden vem do adaptador RNWeb/react-native-svg em capas. O console foi preservado; somente o LogBox já emitido foi limpo para os quadros."
+  ],
+  "files": "Somente este diretório foi preparado para cópia pública. Não copiar o diretório pai com servidores, scripts, logs e sessões.",
+  "mascote": "Stu/mascote atuais aprovados pelo dono e preservados; nenhuma alteração de assets nesta implementação."
+}

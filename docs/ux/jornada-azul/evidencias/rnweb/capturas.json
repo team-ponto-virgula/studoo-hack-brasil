@@ -1,0 +1,3249 @@
+[
+  {
+    "case": "entrada",
+    "file": "capturas/fa4/rnweb-entrada-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "a3ca80e19cfac0a8c098d8a3e9a265564c2aa3ced222f900e535b11064f85a7c",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "ver-como-funciona",
+        "x": 20,
+        "y": 190,
+        "width": 140.328125,
+        "height": 44
+      },
+      {
+        "id": "experimentar-sem-conta",
+        "x": 37,
+        "y": 286,
+        "width": 316,
+        "height": 56
+      },
+      {
+        "id": "alternar-senha",
+        "x": 322,
+        "y": 593,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "entrar",
+        "x": 20,
+        "y": 786,
+        "width": 350,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "entrada",
+    "file": "capturas/fa4/rnweb-entrada-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "a39ce048a5fade1bb03b742ce2d37f992c0089954dfc2e8a1dcda4ade6d29fac",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "ver-como-funciona",
+        "x": 20,
+        "y": 259,
+        "width": 140.328125,
+        "height": 44
+      },
+      {
+        "id": "experimentar-sem-conta",
+        "x": 37,
+        "y": 348,
+        "width": 286,
+        "height": 56
+      },
+      {
+        "id": "alternar-senha",
+        "x": 292,
+        "y": 679,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "entrar",
+        "x": 20,
+        "y": 742,
+        "width": 320,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "pedido",
+    "file": "capturas/fa4/rnweb-pedido-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "ca226f2152f04d316ad78accab94700ab7ffdaa16b4921d9fa3550c24eea1388",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "alternar-modo",
+        "x": 20,
+        "y": 375,
+        "width": 350,
+        "height": 64
+      },
+      {
+        "id": "sugestao-0",
+        "x": 20,
+        "y": 455,
+        "width": 276.703125,
+        "height": 44
+      },
+      {
+        "id": "sugestao-1",
+        "x": 306.703125,
+        "y": 455,
+        "width": 276.140625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-2",
+        "x": 592.84375,
+        "y": 455,
+        "width": 227.078125,
+        "height": 44
+      },
+      {
+        "id": "sugestao-3",
+        "x": 829.921875,
+        "y": 455,
+        "width": 257.640625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-4",
+        "x": 1097.5625,
+        "y": 455,
+        "width": 109.765625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-5",
+        "x": 1217.328125,
+        "y": 455,
+        "width": 217.234375,
+        "height": 44
+      },
+      {
+        "id": "surpreenda-me",
+        "x": 1444.5625,
+        "y": 455,
+        "width": 161.578125,
+        "height": 44
+      },
+      {
+        "id": "por-link-abrir",
+        "x": 102.40625,
+        "y": 526,
+        "width": 185.171875,
+        "height": 44
+      },
+      {
+        "id": "ir-ao-explorar",
+        "x": 70.6875,
+        "y": 596,
+        "width": 248.609375,
+        "height": 44
+      },
+      {
+        "id": "como-funciona",
+        "x": 114.828125,
+        "y": 656,
+        "width": 160.328125,
+        "height": 44
+      },
+      {
+        "id": "gerar-trilha",
+        "x": 24,
+        "y": 674,
+        "width": 342,
+        "height": 58
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "pedido",
+    "file": "capturas/fa4/rnweb-pedido-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "7024b0e55bd0daefa5453916fa561280f819692770eaff5e65f9d724b9281d49",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "alternar-modo",
+        "x": 20,
+        "y": 375,
+        "width": 320,
+        "height": 64
+      },
+      {
+        "id": "sugestao-0",
+        "x": 20,
+        "y": 455,
+        "width": 276.703125,
+        "height": 44
+      },
+      {
+        "id": "sugestao-1",
+        "x": 306.703125,
+        "y": 455,
+        "width": 276.140625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-2",
+        "x": 592.84375,
+        "y": 455,
+        "width": 227.078125,
+        "height": 44
+      },
+      {
+        "id": "sugestao-3",
+        "x": 829.921875,
+        "y": 455,
+        "width": 257.640625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-4",
+        "x": 1097.5625,
+        "y": 455,
+        "width": 109.765625,
+        "height": 44
+      },
+      {
+        "id": "sugestao-5",
+        "x": 1217.328125,
+        "y": 455,
+        "width": 217.234375,
+        "height": 44
+      },
+      {
+        "id": "surpreenda-me",
+        "x": 1444.5625,
+        "y": 455,
+        "width": 161.578125,
+        "height": 44
+      },
+      {
+        "id": "por-link-abrir",
+        "x": 87.40625,
+        "y": 526,
+        "width": 185.171875,
+        "height": 44
+      },
+      {
+        "id": "ir-ao-explorar",
+        "x": 55.6875,
+        "y": 596,
+        "width": 248.609375,
+        "height": 44
+      },
+      {
+        "id": "como-funciona",
+        "x": 99.828125,
+        "y": 656,
+        "width": 160.328125,
+        "height": 44
+      },
+      {
+        "id": "gerar-trilha",
+        "x": 24,
+        "y": 630,
+        "width": 312,
+        "height": 58
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "proposta",
+    "file": "capturas/fa4/rnweb-proposta-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "27c23135e76381ff291f9f78beece66ea41fb82d758cf31ec4c5fa0d91005801",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "comecar-trilha",
+        "x": 20,
+        "y": 722,
+        "width": 350,
+        "height": 56
+      },
+      {
+        "id": "voltar-pedido",
+        "x": 20,
+        "y": 784,
+        "width": 350,
+        "height": 44
+      },
+      {
+        "id": "ver-licao-nova",
+        "x": 101.53125,
+        "y": 645,
+        "width": 186.9375,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "proposta",
+    "file": "capturas/fa4/rnweb-proposta-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "154e7e894cb6cbb04669e6fb9af6b4fc392240bbc10b3f724f058c65983210be",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "comecar-trilha",
+        "x": 20,
+        "y": 678,
+        "width": 320,
+        "height": 56
+      },
+      {
+        "id": "voltar-pedido",
+        "x": 20,
+        "y": 740,
+        "width": 320,
+        "height": 44
+      },
+      {
+        "id": "ver-licao-nova",
+        "x": 86.53125,
+        "y": 601,
+        "width": 186.9375,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "aula-conceito",
+    "file": "capturas/fa4/rnweb-aula-conceito-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "b3cfc73acd734130fc65e37887855f71d661b9a123ef60a393d6afa13cdf7631",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-conceito",
+    "file": "capturas/fa4/rnweb-aula-conceito-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "0067373072ca51cd5a0033bffc954e216f22fcfb7ff4fee968995337724e8339",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-exemplo",
+    "file": "capturas/fa4/rnweb-aula-exemplo-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "e632b0e31597d954a44034628d87403475477d77f31e96fb6a8f6ca009968037",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "etapa-anterior",
+        "x": 20,
+        "y": 86,
+        "width": 350,
+        "height": 29
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-exemplo",
+    "file": "capturas/fa4/rnweb-aula-exemplo-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "0186073c95b2c3f3b5f7a23a12d7337469a27fd7de8fad1a57b9693b60c9696b",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "etapa-anterior",
+        "x": 20,
+        "y": 86,
+        "width": 320,
+        "height": 29
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-exercicio",
+    "file": "capturas/fa4/rnweb-aula-exercicio-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "2ca97c31f8532a416c37f82511234e271e80b0def8b99fdee269c1653a5b7b75",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "etapa-anterior",
+        "x": 20,
+        "y": 86,
+        "width": 350,
+        "height": 29
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 42.5,
+        "y": 594.5,
+        "width": 305,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 725,
+        "width": 307.078125,
+        "height": 44
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 695,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "enviar-resposta",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-exercicio",
+    "file": "capturas/fa4/rnweb-aula-exercicio-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "329bda00414e4f389ca16861d3cc3eed5209f8f50fc02dae333c66a9459efed4",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "etapa-anterior",
+        "x": 20,
+        "y": 86,
+        "width": 320,
+        "height": 29
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 41,
+        "y": 623,
+        "width": 278,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 752,
+        "width": 278,
+        "height": 68
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 651,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "enviar-resposta",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-erro",
+    "file": "capturas/fa4/rnweb-aula-erro-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "00f6dffc233ebaf271760d92dcb4b269b3e16ce56427b0569e6db526f7cf6ec7",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 42.5,
+        "y": 398.5,
+        "width": 305,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 529,
+        "width": 307.078125,
+        "height": 44
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 496,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "ver-outro-jeito",
+        "x": 20,
+        "y": 718,
+        "width": 350,
+        "height": 56
+      },
+      {
+        "id": "tentar-de-novo",
+        "x": 20,
+        "y": 782,
+        "width": 195.765625,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 227.765625,
+        "y": 780,
+        "width": 142.234375,
+        "height": 48
+      }
+    ]
+  },
+  {
+    "case": "aula-erro",
+    "file": "capturas/fa4/rnweb-aula-erro-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "b0ad9dd70da38e1c99fa8535b80a44ef54234142380fcee8b81212f884ca8842",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 41,
+        "y": 427,
+        "width": 278,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 556,
+        "width": 278,
+        "height": 68
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 428,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "ver-outro-jeito",
+        "x": 20,
+        "y": 674,
+        "width": 320,
+        "height": 56
+      },
+      {
+        "id": "tentar-de-novo",
+        "x": 20,
+        "y": 738,
+        "width": 165.765625,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 197.765625,
+        "y": 736,
+        "width": 142.234375,
+        "height": 48
+      }
+    ]
+  },
+  {
+    "case": "reforco",
+    "file": "capturas/fa4/rnweb-reforco-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "d8397986bc6c5debc4c88354865e94cc514122c3afa63ffdd8db914309bfe41b",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "ponte-voltar",
+        "x": 20,
+        "y": 534.078125,
+        "width": 350,
+        "height": 48
+      },
+      {
+        "id": "ponte-ver-exemplo",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "reforco",
+    "file": "capturas/fa4/rnweb-reforco-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "795ffe3e599b4fd14285ddda11278ea293b83926c67aa5ca9dd395cf504c9323",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "ponte-voltar",
+        "x": 20,
+        "y": 558.078125,
+        "width": 320,
+        "height": 48
+      },
+      {
+        "id": "ponte-ver-exemplo",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-acerto",
+    "file": "capturas/fa4/rnweb-aula-acerto-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "5be001e15dd4d5cc2477b70ba859e5c76c3755b67f521bfdc6ed9a32008c88ef",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 42.5,
+        "y": 472.5,
+        "width": 305,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 603,
+        "width": 307.078125,
+        "height": 44
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 570,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "convite-explique",
+        "x": 20,
+        "y": 718,
+        "width": 305.9375,
+        "height": 48
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-acerto",
+    "file": "capturas/fa4/rnweb-aula-acerto-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "a0a9f80221d1b79a01bbf801e863fa53f04104bc0539c18bc4c2b3244a1a2e36",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 41,
+        "y": 501,
+        "width": 278,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 630,
+        "width": 278,
+        "height": 68
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 526,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "convite-explique",
+        "x": 20,
+        "y": 674,
+        "width": 305.9375,
+        "height": 48
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique",
+    "file": "capturas/fa4/rnweb-explique-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "14e1b8472cd45b169c09bdcf91b46c09c57e100e24678d72d23a32ca7527dfa8",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 42.5,
+        "y": 0.5,
+        "width": 305,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 131,
+        "width": 307.078125,
+        "height": 44
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 808.78125,
+        "width": 308,
+        "height": 44
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique",
+    "file": "capturas/fa4/rnweb-explique-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "a3af4b04f2534438b32c56792482152ce7695deb3e684d683bc61d215e6e23f0",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 41,
+        "y": 29,
+        "width": 278,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 158,
+        "width": 278,
+        "height": 68
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique-retorno",
+    "file": "capturas/fa4/rnweb-explique-retorno-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "77c04231b55d97910e89d08fc63af30925289f76d82f5fb3199b9993945ce961",
+    "classification": "antes: CTA estreito, substituído pelos quadros R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 41,
+        "y": 42,
+        "width": 308,
+        "height": 56
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 724,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 260.484375,
+        "y": 776,
+        "width": 109.515625,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique-retorno",
+    "file": "capturas/fa4/rnweb-explique-retorno-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "fe3b43478c5c75bbe72ebdaaaf9a47ac91e0634a85531072a5f2df1413babe14",
+    "classification": "antes: CTA estreito, substituído pelos quadros R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 41,
+        "y": 42,
+        "width": 278,
+        "height": 56
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 680,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 230.484375,
+        "y": 732,
+        "width": 109.515625,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "conclusao",
+    "file": "capturas/fa4/rnweb-conclusao-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "54420ac5a4a1d26bc7550a1c22617d16a6c6b2264f4b7849c0497201ada77172",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "proxima-licao",
+        "x": 20,
+        "y": 724,
+        "width": 350,
+        "height": 56
+      },
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 786,
+        "width": 350,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "conclusao",
+    "file": "capturas/fa4/rnweb-conclusao-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "7f3fe999ebeaf5a616ef49ccd9dfca2a545ea88eb6f71b1a05f5e9f76cebb41a",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "proxima-licao",
+        "x": 20,
+        "y": 680,
+        "width": 320,
+        "height": 56
+      },
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 742,
+        "width": 320,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "mapa-progresso",
+    "file": "capturas/fa4/rnweb-mapa-progresso-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "a0090e9bc29b0852d0f7ad147b1134e6c7094ba10666689a63d972984f367c53",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 193.3125,
+        "y": 143.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "mapa-progresso",
+    "file": "capturas/fa4/rnweb-mapa-progresso-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "fb70ad368b529b0622395e103a216e597ab6c346dc9e5c494f984edbb0741d3a",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 175.671875,
+        "y": 143.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "retomada-reload",
+    "file": "capturas/fa4/rnweb-retomada-reload-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "bca45319356296a01aa3773c594671ed87389d9219b8b59ac94fb4c6fde908a8",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 193.3125,
+        "y": 143.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "retomada-reload",
+    "file": "capturas/fa4/rnweb-retomada-reload-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "1085b0f273695df7ceadd2e82fd2f2a18908df32ab0c8e885bb8d54f73a8a45d",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 175.671875,
+        "y": 143.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "retomada-proxima-licao",
+    "file": "capturas/fa4/rnweb-retomada-proxima-licao-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "73b81ea1dd32ceebdaa17988cc54dcfd0b73c4dcb12d4428c5e9260e308b0b17",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "retomada-proxima-licao",
+    "file": "capturas/fa4/rnweb-retomada-proxima-licao-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "318ebd27b146155d0ee29b21a45358e59e2c57a27cd3afcc16d7ad3379d680c9",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "avancar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "inicio-retomada",
+    "file": "capturas/fa4/rnweb-inicio-retomada-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "fa41d76bade7d2763688eb204bc3d7739ef4ba34adf6857834c9b71ccfaf07df",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "apagar-destaque-menu",
+        "x": 317,
+        "y": 228.59375,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "abrir-destaque",
+        "x": 41,
+        "y": 396.59375,
+        "width": 308,
+        "height": 56
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "inicio-retomada",
+    "file": "capturas/fa4/rnweb-inicio-retomada-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "67788453d63babb8892f55c1deb95a3e1404dad1b5d5809635a63e80ee9c42f8",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "apagar-destaque-menu",
+        "x": 287,
+        "y": 228.59375,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "abrir-destaque",
+        "x": 41,
+        "y": 415.78125,
+        "width": 278,
+        "height": 56
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "perfil-visitante",
+    "file": "capturas/fa4/rnweb-perfil-visitante-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "e2f011f2512849369a8ed48bdb74809ffbc246f15db30cb32d197c5e70151769",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "perfil-visitante-entrar",
+        "x": 41,
+        "y": 292,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "perfil-visitante",
+    "file": "capturas/fa4/rnweb-perfil-visitante-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "fb3ecd4ff3179b046b2fb971e516d0692ca5a8b94645181781240d89939cbc2b",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "perfil-visitante-entrar",
+        "x": 41,
+        "y": 316,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "confirmacao-entrar",
+    "file": "capturas/fa4/rnweb-confirmacao-entrar-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "64ba9f898779f531039440b45168de9592ccf874efaa08acb067ba2b5ae1775c",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "perfil-visitante-entrar",
+        "x": 41,
+        "y": 292,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "confirmacao-confirmar",
+        "x": 41,
+        "y": 445,
+        "width": 308,
+        "height": 56
+      },
+      {
+        "id": "confirmacao-cancelar",
+        "x": 41,
+        "y": 507,
+        "width": 308,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "confirmacao-entrar",
+    "file": "capturas/fa4/rnweb-confirmacao-entrar-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "553a2efd231927d65e53e344ee61a0e49ad9100422c2d97cf7ec6d8268dddef3",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "perfil-visitante-entrar",
+        "x": 41,
+        "y": 316,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "confirmacao-confirmar",
+        "x": 41,
+        "y": 423,
+        "width": 278,
+        "height": 56
+      },
+      {
+        "id": "confirmacao-cancelar",
+        "x": 41,
+        "y": 485,
+        "width": 278,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "explorar",
+    "file": "capturas/fa4/rnweb-explorar-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "79cad405861759f56b8e709a936b4ab00fe61a3abf3718349f782d9dcc3ecfbd",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "explorar-buscar",
+        "x": 20,
+        "y": 290,
+        "width": 75.109375,
+        "height": 44
+      },
+      {
+        "id": "aba-todos",
+        "x": 24,
+        "y": 358,
+        "width": 132.140625,
+        "height": 44
+      },
+      {
+        "id": "aba-seguindo",
+        "x": 160.140625,
+        "y": 358,
+        "width": 132.6875,
+        "height": 44
+      },
+      {
+        "id": "tema-todos",
+        "x": 20,
+        "y": 428,
+        "width": 153.734375,
+        "height": 44
+      },
+      {
+        "id": "tema-idiomas",
+        "x": 181.734375,
+        "y": 428,
+        "width": 95.234375,
+        "height": 44
+      },
+      {
+        "id": "tema-matematica",
+        "x": 284.96875,
+        "y": 428,
+        "width": 124.765625,
+        "height": 44
+      },
+      {
+        "id": "tema-ciencias",
+        "x": 417.734375,
+        "y": 428,
+        "width": 98.265625,
+        "height": 44
+      },
+      {
+        "id": "tema-programacao",
+        "x": 524,
+        "y": 428,
+        "width": 233.921875,
+        "height": 44
+      },
+      {
+        "id": "tema-negocios",
+        "x": 765.921875,
+        "y": 428,
+        "width": 185.671875,
+        "height": 44
+      },
+      {
+        "id": "tema-vestibular",
+        "x": 959.59375,
+        "y": 428,
+        "width": 207.109375,
+        "height": 44
+      },
+      {
+        "id": "tema-historia",
+        "x": 1174.703125,
+        "y": 428,
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "tema-artes",
+        "x": 1371.8125,
+        "y": 428,
+        "width": 148.203125,
+        "height": 44
+      },
+      {
+        "id": "tema-saude",
+        "x": 1528.015625,
+        "y": 428,
+        "width": 179.46875,
+        "height": 44
+      },
+      {
+        "id": "tema-culinaria",
+        "x": 1715.484375,
+        "y": 428,
+        "width": 155.03125,
+        "height": 44
+      },
+      {
+        "id": "tema-carreira",
+        "x": 1878.515625,
+        "y": 428,
+        "width": 220.703125,
+        "height": 44
+      },
+      {
+        "id": "tema-outros",
+        "x": 2107.21875,
+        "y": 428,
+        "width": 88.390625,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "explorar",
+    "file": "capturas/fa4/rnweb-explorar-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "3097771cb8334846210c306f336bbecfb41d554a6456d1a9b12c9726744027ce",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "explorar-buscar",
+        "x": 20,
+        "y": 290,
+        "width": 75.109375,
+        "height": 44
+      },
+      {
+        "id": "aba-todos",
+        "x": 24,
+        "y": 358,
+        "width": 132.140625,
+        "height": 44
+      },
+      {
+        "id": "aba-seguindo",
+        "x": 160.140625,
+        "y": 358,
+        "width": 132.6875,
+        "height": 44
+      },
+      {
+        "id": "tema-todos",
+        "x": 20,
+        "y": 428,
+        "width": 153.734375,
+        "height": 44
+      },
+      {
+        "id": "tema-idiomas",
+        "x": 181.734375,
+        "y": 428,
+        "width": 95.234375,
+        "height": 44
+      },
+      {
+        "id": "tema-matematica",
+        "x": 284.96875,
+        "y": 428,
+        "width": 124.765625,
+        "height": 44
+      },
+      {
+        "id": "tema-ciencias",
+        "x": 417.734375,
+        "y": 428,
+        "width": 98.265625,
+        "height": 44
+      },
+      {
+        "id": "tema-programacao",
+        "x": 524,
+        "y": 428,
+        "width": 233.921875,
+        "height": 44
+      },
+      {
+        "id": "tema-negocios",
+        "x": 765.921875,
+        "y": 428,
+        "width": 185.671875,
+        "height": 44
+      },
+      {
+        "id": "tema-vestibular",
+        "x": 959.59375,
+        "y": 428,
+        "width": 207.109375,
+        "height": 44
+      },
+      {
+        "id": "tema-historia",
+        "x": 1174.703125,
+        "y": 428,
+        "width": 189.109375,
+        "height": 44
+      },
+      {
+        "id": "tema-artes",
+        "x": 1371.8125,
+        "y": 428,
+        "width": 148.203125,
+        "height": 44
+      },
+      {
+        "id": "tema-saude",
+        "x": 1528.015625,
+        "y": 428,
+        "width": 179.46875,
+        "height": 44
+      },
+      {
+        "id": "tema-culinaria",
+        "x": 1715.484375,
+        "y": 428,
+        "width": 155.03125,
+        "height": 44
+      },
+      {
+        "id": "tema-carreira",
+        "x": 1878.515625,
+        "y": 428,
+        "width": 220.703125,
+        "height": 44
+      },
+      {
+        "id": "tema-outros",
+        "x": 2107.21875,
+        "y": 428,
+        "width": 88.390625,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "explorar-seguindo-visitante",
+    "file": "capturas/fa4/rnweb-explorar-seguindo-visitante-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "5e055ff2211e11ba12c347e551a37fa5a4eb5383390c06eb0e45606bcc4803ea",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "aba-todos",
+        "x": 24,
+        "y": 205,
+        "width": 132.140625,
+        "height": 44
+      },
+      {
+        "id": "aba-seguindo",
+        "x": 160.140625,
+        "y": 205,
+        "width": 132.6875,
+        "height": 44
+      },
+      {
+        "id": "seguindo-entrar",
+        "x": 43,
+        "y": 610,
+        "width": 304,
+        "height": 56
+      },
+      {
+        "id": "vazio-ver-todas",
+        "x": 43,
+        "y": 672,
+        "width": 193.40625,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "explorar-seguindo-visitante",
+    "file": "capturas/fa4/rnweb-explorar-seguindo-visitante-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "1bd153c01a7f54c6dbe2ea5278d027b046f2537ea02d82a6c6c34eaeb419c781",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "aba-todos",
+        "x": 24,
+        "y": 205,
+        "width": 132.140625,
+        "height": 44
+      },
+      {
+        "id": "aba-seguindo",
+        "x": 160.140625,
+        "y": 205,
+        "width": 132.6875,
+        "height": 44
+      },
+      {
+        "id": "seguindo-entrar",
+        "x": 43,
+        "y": 610,
+        "width": 274,
+        "height": 56
+      },
+      {
+        "id": "vazio-ver-todas",
+        "x": 43,
+        "y": 672,
+        "width": 193.40625,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "previa-publica",
+    "file": "capturas/fa4/rnweb-previa-publica-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "937bcf0643b14d8a8325300fba0f227b2d9220b22f27eaaddf53130eef136172",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-previa",
+        "x": 300.8125,
+        "y": 6,
+        "width": 73.1875,
+        "height": 44
+      },
+      {
+        "id": "previa-adicionar",
+        "x": 20,
+        "y": 371.8125,
+        "width": 350,
+        "height": 56
+      },
+      {
+        "id": "previa-mais",
+        "x": 20,
+        "y": 435.8125,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "previa-publica",
+    "file": "capturas/fa4/rnweb-previa-publica-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "130d1eb0edfa715c554ad86c835a2ab7e60997d76b9c190c1217488cbaa435aa",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-previa",
+        "x": 270.8125,
+        "y": 6,
+        "width": 73.1875,
+        "height": 44
+      },
+      {
+        "id": "previa-adicionar",
+        "x": 20,
+        "y": 371.8125,
+        "width": 320,
+        "height": 56
+      },
+      {
+        "id": "previa-mais",
+        "x": 20,
+        "y": 435.8125,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "perfil-publico",
+    "file": "capturas/fa4/rnweb-perfil-publico-390.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "0cc8517814cc999d75a61abdd12477c9a9f0ea2f677e025b3524f31fa1af80b9",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-perfil-publico",
+        "x": 300.8125,
+        "y": 6,
+        "width": 73.1875,
+        "height": 44
+      },
+      {
+        "id": "perfil-publico-compartilhar",
+        "x": 41,
+        "y": 485.703125,
+        "width": 308,
+        "height": 44
+      },
+      {
+        "id": "perfil-publico-entrar",
+        "x": 20,
+        "y": 606.703125,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "perfil-publico",
+    "file": "capturas/fa4/rnweb-perfil-publico-360.png",
+    "sourceCommit": "fa4be429992037cdaa1be055f52be6a529d32f76",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "7bf164908c7d6e19fa4fec2057087b0ca8d3416cb3937a18f44526fc3267c875",
+    "classification": "histórico: aproveitado por equivalência, não reexecutado na R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-perfil-publico",
+        "x": 270.8125,
+        "y": 6,
+        "width": 73.1875,
+        "height": 44
+      },
+      {
+        "id": "perfil-publico-compartilhar",
+        "x": 41,
+        "y": 485.703125,
+        "width": 278,
+        "height": 44
+      },
+      {
+        "id": "perfil-publico-entrar",
+        "x": 20,
+        "y": 606.703125,
+        "width": 189.78125,
+        "height": 44
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "aula-acerto",
+    "file": "capturas/r2/rnweb-aula-acerto-390.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "22f3491f1a90a3a63c40425bd2a4aaf6f2a4f8b581085c7a86ed32cbe3ff1bb4",
+    "classification": "novo R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 42.5,
+        "y": 472.5,
+        "width": 305,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 603,
+        "width": 307.078125,
+        "height": 44
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 570,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "convite-explique",
+        "x": 20,
+        "y": 718,
+        "width": 305.9375,
+        "height": 48
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "aula-acerto",
+    "file": "capturas/r2/rnweb-aula-acerto-360.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "96323fc3e76f5fa3c0b9a4ffab84806d941ae15c17cf4939e63bbe384d8cff3d",
+    "classification": "novo R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "rever-explicacao",
+        "x": 41,
+        "y": 501,
+        "width": 278,
+        "height": 48
+      },
+      {
+        "id": null,
+        "x": 41,
+        "y": 630,
+        "width": 278,
+        "height": 68
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 526,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "convite-explique",
+        "x": 20,
+        "y": 674,
+        "width": 305.9375,
+        "height": 48
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique-retorno",
+    "file": "capturas/r2/rnweb-explique-retorno-390.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "f8787bd1204dab2a1116d797b3c463ecf0d95bc7c8ec53cca43261fc84226ee1",
+    "classification": "novo R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 326,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 41,
+        "y": 42,
+        "width": 308,
+        "height": 56
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 115.40625,
+        "y": 674,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 776,
+        "width": 350,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "explique-retorno",
+    "file": "capturas/r2/rnweb-explique-retorno-360.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "411229167ae78854f3af28bf99b661c0fea1ca61b608c22df583fdba63a24e69",
+    "classification": "novo R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "aula-som",
+        "x": 296,
+        "y": 10,
+        "width": 44,
+        "height": 44
+      },
+      {
+        "id": "enviar-explicacao",
+        "x": 41,
+        "y": 42,
+        "width": 278,
+        "height": 56
+      },
+      {
+        "id": "mais-abaixo",
+        "x": 100.40625,
+        "y": 630,
+        "width": 159.1875,
+        "height": 44
+      },
+      {
+        "id": "continuar-licao",
+        "x": 20,
+        "y": 732,
+        "width": 320,
+        "height": 56
+      }
+    ]
+  },
+  {
+    "case": "conclusao",
+    "file": "capturas/r2/rnweb-conclusao-390.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "35edc0262066ae98c0a2aa8b8c503c3eeec18344bd43ca00043cb83688f0869f",
+    "classification": "novo R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "proxima-licao",
+        "x": 20,
+        "y": 724,
+        "width": 350,
+        "height": 56
+      },
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 786,
+        "width": 350,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "conclusao",
+    "file": "capturas/r2/rnweb-conclusao-360.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "462a0723b3d30a836daa967d2c83615b9d46420fdf510f225dc47d85f6497536",
+    "classification": "novo R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "proxima-licao",
+        "x": 20,
+        "y": 680,
+        "width": 320,
+        "height": 56
+      },
+      {
+        "id": "voltar-plano",
+        "x": 20,
+        "y": 742,
+        "width": 320,
+        "height": 44
+      }
+    ]
+  },
+  {
+    "case": "retomada-reload",
+    "file": "capturas/r2/rnweb-retomada-reload-390.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "sha256": "21608d1f1b381dfa0281dff3bd467dc8a74ed5b08d890bb831513b3332b62dfb",
+    "classification": "novo R2",
+    "documentWidth": 390,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 193.3125,
+        "y": 167.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 241.671875,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 107.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 195,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 282.5,
+        "y": 752,
+        "width": 87.5,
+        "height": 72
+      }
+    ]
+  },
+  {
+    "case": "retomada-reload",
+    "file": "capturas/r2/rnweb-retomada-reload-360.png",
+    "sourceCommit": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+    "sourceStable": true,
+    "origin": "React Native Web em Chromium; não iOS/Android",
+    "viewport": {
+      "width": 360,
+      "height": 800
+    },
+    "sha256": "061e7ca4b54c65f024d2d839e1f9aafb976a6b925a0c7dd0c0311e70d715a636",
+    "classification": "novo R2",
+    "documentWidth": 360,
+    "controls": [
+      {
+        "id": "plano-compartilhar",
+        "x": 20,
+        "y": 64.15625,
+        "width": 163.109375,
+        "height": 44
+      },
+      {
+        "id": "plano-configurar",
+        "x": 191.109375,
+        "y": 62.15625,
+        "width": 48,
+        "height": 52
+      },
+      {
+        "id": null,
+        "x": 175.671875,
+        "y": 167.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 487.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": null,
+        "x": 220.3125,
+        "y": 707.75,
+        "width": 72,
+        "height": 72
+      },
+      {
+        "id": "nav-planos",
+        "x": 20,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-objetivo",
+        "x": 100,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-explorar",
+        "x": 180,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      },
+      {
+        "id": "nav-perfil",
+        "x": 260,
+        "y": 708,
+        "width": 80,
+        "height": 72
+      }
+    ]
+  }
+]

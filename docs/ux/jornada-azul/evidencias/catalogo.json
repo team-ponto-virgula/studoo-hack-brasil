@@ -1,0 +1,352 @@
+{
+  "scope": "web real / bancada de desenvolvimento",
+  "generatedAt": "2026-11-25T04:52:16.661Z",
+  "results": [
+    {
+      "width": 390,
+      "height": 844,
+      "percent": 100,
+      "passed": true,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "font": "30px",
+        "buttons": [
+          {
+            "label": "Continuar minha trilha",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ajustar meu pedido",
+            "height": 44,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Voltar para minhas trilhas",
+            "height": 44,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Aceitar a trilha",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Salvando seu progresso…",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ver estado de erro",
+            "height": 44,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Retomar INNER JOIN",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Continuar",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Tentar de novo",
+            "height": 52,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ver confirmação de recomeço",
+            "height": 44,
+            "width": 308,
+            "clipped": false
+          }
+        ]
+      },
+      "file": "catalogo-390-100.png"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "percent": 200,
+      "passed": true,
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "font": "60px",
+        "buttons": [
+          {
+            "label": "Continuar minha trilha",
+            "height": 124,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ajustar meu pedido",
+            "height": 114,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Voltar para minhas trilhas",
+            "height": 116,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Aceitar a trilha",
+            "height": 76,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Salvando seu progresso…",
+            "height": 124,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ver estado de erro",
+            "height": 114,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Retomar INNER JOIN",
+            "height": 124,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Continuar",
+            "height": 76,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Tentar de novo",
+            "height": 76,
+            "width": 308,
+            "clipped": false
+          },
+          {
+            "label": "Ver confirmação de recomeço",
+            "height": 114,
+            "width": 308,
+            "clipped": false
+          }
+        ]
+      },
+      "file": "catalogo-390-200.png"
+    },
+    {
+      "width": 390,
+      "check": "confirmacao / Escape / foco no acionador",
+      "passed": true
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "percent": 100,
+      "passed": true,
+      "metrics": {
+        "width": 360,
+        "scrollWidth": 360,
+        "font": "30px",
+        "buttons": [
+          {
+            "label": "Continuar minha trilha",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ajustar meu pedido",
+            "height": 44,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Voltar para minhas trilhas",
+            "height": 44,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Aceitar a trilha",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Salvando seu progresso…",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ver estado de erro",
+            "height": 44,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Retomar INNER JOIN",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Continuar",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Tentar de novo",
+            "height": 52,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ver confirmação de recomeço",
+            "height": 44,
+            "width": 278,
+            "clipped": false
+          }
+        ]
+      },
+      "file": "catalogo-360-100.png"
+    },
+    {
+      "width": 360,
+      "height": 800,
+      "percent": 200,
+      "passed": true,
+      "metrics": {
+        "width": 360,
+        "scrollWidth": 360,
+        "font": "60px",
+        "buttons": [
+          {
+            "label": "Continuar minha trilha",
+            "height": 124,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ajustar meu pedido",
+            "height": 114,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Voltar para minhas trilhas",
+            "height": 116,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Aceitar a trilha",
+            "height": 124,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Salvando seu progresso…",
+            "height": 124,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ver estado de erro",
+            "height": 114,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Retomar INNER JOIN",
+            "height": 124,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Continuar",
+            "height": 76,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Tentar de novo",
+            "height": 124,
+            "width": 278,
+            "clipped": false
+          },
+          {
+            "label": "Ver confirmação de recomeço",
+            "height": 162,
+            "width": 278,
+            "clipped": false
+          }
+        ]
+      },
+      "file": "catalogo-360-200.png"
+    },
+    {
+      "width": 360,
+      "check": "confirmacao / Escape / foco no acionador",
+      "passed": true
+    }
+  ],
+  "files": [
+    "catalogo-390-100.png",
+    "catalogo-390-200.png",
+    "catalogo-360-100.png",
+    "catalogo-360-200.png",
+    "catalogo-componentes.png",
+    "studoo-jornada-azul-componentes.pdf"
+  ],
+  "artifacts": [
+    {
+      "file": "catalogo-390-100.png",
+      "bytes": 234848,
+      "sha256": "01a7b868452e43d79a259f840acc47548969927e98bfe20cd7e70b555f95f4f2"
+    },
+    {
+      "file": "catalogo-390-200.png",
+      "bytes": 531775,
+      "sha256": "a46fea6505fc2be0e881d2e6b45a93cb8d71249fb71ae57dc7e32d96495fa617"
+    },
+    {
+      "file": "catalogo-360-100.png",
+      "bytes": 235126,
+      "sha256": "9f6865bfcbc5c75d3fa88059b0305ad7b10e90d65d2a2f069a418b739c597207"
+    },
+    {
+      "file": "catalogo-360-200.png",
+      "bytes": 538366,
+      "sha256": "b5e3e0dc0bdbe0f77d9ba1e6ac2e29a4de96b7bb2d697705933b2f1096b421e9"
+    },
+    {
+      "file": "catalogo-componentes.png",
+      "bytes": 250942,
+      "sha256": "98e4f8a93f5f40f4cfa5aa218d483407a42acfcc2e5b42a42ccb5723398dfe41"
+    },
+    {
+      "file": "studoo-jornada-azul-componentes.pdf",
+      "bytes": 341370,
+      "sha256": "c7600ca3cbf0e94f5eb30fabd061e2726b6924ced5c3f63e8f47ad575ceffb41"
+    }
+  ]
+}

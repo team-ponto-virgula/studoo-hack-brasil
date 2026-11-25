@@ -1,0 +1,325 @@
+{
+  "source": "b3e97e7cbe7d6b8b711216070453a13ebcad36e3",
+  "origin": "web3020/sistema-ui, componente real e estado local de bancada, sem alteração de dados ou execução nativa",
+  "browser": "156.0.8078.79",
+  "DPR": 2,
+  "before": {
+    "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+    "src/ui/componentes.tsx": "8d996f4d53ddd0a9de0d2020dae0dcb5637e7aaa86263da512d6601a8a79293d",
+    "src/ui/jornada.tsx": "d1a4c910d70c6587b9a2a3fb19f9ce40ec92f18955ae7b5e71ac60481cf96732",
+    "src/app/sistema-ui/bancada.tsx": "ae4f40908dd9994239ea2ef090ecb51a63c9bb2c89a68101a506730b8c057ccb",
+    "src/app/sistema-ui/bancada.css": "ecdbb6c066ed9b8b0da1bbd155dd361fe9dc210d95f5619cba685e6e4e44064d",
+    "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+    "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+    "packages/contratos/src/jornada-azul.ts": "4de9bd469c81999ef91e3017bf09ce4efc1667c099ea15324f115564b6f9fd7a",
+    "apps/mobile/src/interface.tsx": "488ba25912f1011c4cbd6b8e2a0ab2a63986c8153236b0b2deb4f1c42d944186",
+    "apps/mobile/src/componentes-jornada.tsx": "4d2f1284163ad787360f40a0e1bf1827774ab3dbe62c9d6b4fd67954ecc125d8",
+    "src/ui/aviso.css": "d0c45a2ca9503cfd386e016227f12acf1c7efe650379907f7dad57f2380c965b"
+  },
+  "after": {
+    "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+    "src/ui/componentes.tsx": "8d996f4d53ddd0a9de0d2020dae0dcb5637e7aaa86263da512d6601a8a79293d",
+    "src/ui/jornada.tsx": "d1a4c910d70c6587b9a2a3fb19f9ce40ec92f18955ae7b5e71ac60481cf96732",
+    "src/app/sistema-ui/bancada.tsx": "ae4f40908dd9994239ea2ef090ecb51a63c9bb2c89a68101a506730b8c057ccb",
+    "src/app/sistema-ui/bancada.css": "ecdbb6c066ed9b8b0da1bbd155dd361fe9dc210d95f5619cba685e6e4e44064d",
+    "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+    "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+    "packages/contratos/src/jornada-azul.ts": "4de9bd469c81999ef91e3017bf09ce4efc1667c099ea15324f115564b6f9fd7a",
+    "apps/mobile/src/interface.tsx": "488ba25912f1011c4cbd6b8e2a0ab2a63986c8153236b0b2deb4f1c42d944186",
+    "apps/mobile/src/componentes-jornada.tsx": "4d2f1284163ad787360f40a0e1bf1827774ab3dbe62c9d6b4fd67954ecc125d8",
+    "src/ui/aviso.css": "d0c45a2ca9503cfd386e016227f12acf1c7efe650379907f7dad57f2380c965b"
+  },
+  "committed": {
+    "src/app/globals.css": "828f7d1a271df6c8882c801fef2a17ecdf6a08722b46cda3f086d6d74ee10a6c",
+    "src/ui/componentes.tsx": "8d996f4d53ddd0a9de0d2020dae0dcb5637e7aaa86263da512d6601a8a79293d",
+    "src/ui/jornada.tsx": "d1a4c910d70c6587b9a2a3fb19f9ce40ec92f18955ae7b5e71ac60481cf96732",
+    "src/app/sistema-ui/bancada.tsx": "ae4f40908dd9994239ea2ef090ecb51a63c9bb2c89a68101a506730b8c057ccb",
+    "src/app/sistema-ui/bancada.css": "ecdbb6c066ed9b8b0da1bbd155dd361fe9dc210d95f5619cba685e6e4e44064d",
+    "src/app/compartilhar.tsx": "266000f26cafeebd55d694d2819670a532c2b982c18237b34729b714f0676adb",
+    "src/app/compartilhar.css": "a5ab7d6a69fe8388f1b50befad36bf57410ebe3785717b6adb0afc4d328abecc",
+    "packages/contratos/src/jornada-azul.ts": "4de9bd469c81999ef91e3017bf09ce4efc1667c099ea15324f115564b6f9fd7a",
+    "apps/mobile/src/interface.tsx": "488ba25912f1011c4cbd6b8e2a0ab2a63986c8153236b0b2deb4f1c42d944186",
+    "apps/mobile/src/componentes-jornada.tsx": "4d2f1284163ad787360f40a0e1bf1827774ab3dbe62c9d6b4fd67954ecc125d8",
+    "src/ui/aviso.css": "d0c45a2ca9503cfd386e016227f12acf1c7efe650379907f7dad57f2380c965b"
+  },
+  "sourceStable": true,
+  "commitMatch": true,
+  "rows": [
+    {
+      "width": 390,
+      "scale": 100,
+      "file": "web-confirmacao-390-100.png",
+      "errors": [],
+      "noticeDuring": {
+        "visibility": "hidden",
+        "text": ""
+      },
+      "noticeAfter": {
+        "visibility": "visible",
+        "text": "Música de fundo ligada.\nDesligar"
+      },
+      "text": "Recomeçar esta tentativa?\n\nEste é um exemplo local. Nenhuma lição ou trilha será alterada.\n\nRecomeçar\nContinuar de onde parei",
+      "rect": {
+        "x": 16,
+        "y": 292,
+        "width": 358,
+        "height": 260,
+        "top": 292,
+        "right": 374,
+        "bottom": 552,
+        "left": 16
+      },
+      "scrollWidth": 356,
+      "clientWidth": 356,
+      "buttons": [
+        {
+          "text": "Recomeçar",
+          "rect": {
+            "x": 41,
+            "y": 421,
+            "width": 308,
+            "height": 52,
+            "top": 421,
+            "right": 349,
+            "bottom": 473,
+            "left": 41
+          },
+          "focused": false
+        },
+        {
+          "text": "Continuar de onde parei",
+          "rect": {
+            "x": 41,
+            "y": 483,
+            "width": 308,
+            "height": 44,
+            "top": 483,
+            "right": 349,
+            "bottom": 527,
+            "left": 41
+          },
+          "focused": true
+        }
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": {
+        "noticeHiddenDuring": true,
+        "noticeRestoredAfter": true,
+        "primaryBeforeSafeVisual": true,
+        "primaryBeforeSafeDOM": true,
+        "safeFocused": true,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "width": 390,
+      "scale": 200,
+      "file": "web-confirmacao-390-200.png",
+      "errors": [],
+      "noticeDuring": {
+        "visibility": "hidden",
+        "text": ""
+      },
+      "noticeAfter": {
+        "visibility": "visible",
+        "text": "Música de fundo ligada.\nDesligar"
+      },
+      "text": "Recomeçar esta tentativa?\n\nEste é um exemplo local. Nenhuma lição ou trilha será alterada.\n\nRecomeçar\nContinuar de onde parei",
+      "rect": {
+        "x": 16,
+        "y": 103,
+        "width": 358,
+        "height": 638,
+        "top": 103,
+        "right": 374,
+        "bottom": 741,
+        "left": 16
+      },
+      "scrollWidth": 356,
+      "clientWidth": 356,
+      "buttons": [
+        {
+          "text": "Recomeçar",
+          "rect": {
+            "x": 41,
+            "y": 516,
+            "width": 308,
+            "height": 76,
+            "top": 516,
+            "right": 349,
+            "bottom": 592,
+            "left": 41
+          },
+          "focused": false
+        },
+        {
+          "text": "Continuar de onde parei",
+          "rect": {
+            "x": 41,
+            "y": 602,
+            "width": 308,
+            "height": 114,
+            "top": 602,
+            "right": 349,
+            "bottom": 716,
+            "left": 41
+          },
+          "focused": true
+        }
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "checks": {
+        "noticeHiddenDuring": true,
+        "noticeRestoredAfter": true,
+        "primaryBeforeSafeVisual": true,
+        "primaryBeforeSafeDOM": true,
+        "safeFocused": true,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "width": 360,
+      "scale": 100,
+      "file": "web-confirmacao-360-100.png",
+      "errors": [],
+      "noticeDuring": {
+        "visibility": "hidden",
+        "text": ""
+      },
+      "noticeAfter": {
+        "visibility": "visible",
+        "text": "Música de fundo ligada.\nDesligar"
+      },
+      "text": "Recomeçar esta tentativa?\n\nEste é um exemplo local. Nenhuma lição ou trilha será alterada.\n\nRecomeçar\nContinuar de onde parei",
+      "rect": {
+        "x": 16,
+        "y": 256,
+        "width": 328,
+        "height": 288,
+        "top": 256,
+        "right": 344,
+        "bottom": 544,
+        "left": 16
+      },
+      "scrollWidth": 326,
+      "clientWidth": 326,
+      "buttons": [
+        {
+          "text": "Recomeçar",
+          "rect": {
+            "x": 41,
+            "y": 413,
+            "width": 278,
+            "height": 52,
+            "top": 413,
+            "right": 319,
+            "bottom": 465,
+            "left": 41
+          },
+          "focused": false
+        },
+        {
+          "text": "Continuar de onde parei",
+          "rect": {
+            "x": 41,
+            "y": 475,
+            "width": 278,
+            "height": 44,
+            "top": 475,
+            "right": 319,
+            "bottom": 519,
+            "left": 41
+          },
+          "focused": true
+        }
+      ],
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "checks": {
+        "noticeHiddenDuring": true,
+        "noticeRestoredAfter": true,
+        "primaryBeforeSafeVisual": true,
+        "primaryBeforeSafeDOM": true,
+        "safeFocused": true,
+        "noHorizontalOverflow": true
+      }
+    },
+    {
+      "width": 360,
+      "scale": 200,
+      "file": "web-confirmacao-360-200.png",
+      "errors": [],
+      "noticeDuring": {
+        "visibility": "hidden",
+        "text": ""
+      },
+      "noticeAfter": {
+        "visibility": "visible",
+        "text": "Música de fundo ligada.\nDesligar"
+      },
+      "text": "Recomeçar esta tentativa?\n\nEste é um exemplo local. Nenhuma lição ou trilha será alterada.\n\nRecomeçar\nContinuar de onde parei",
+      "rect": {
+        "x": 16,
+        "y": 81,
+        "width": 328,
+        "height": 638,
+        "top": 81,
+        "right": 344,
+        "bottom": 719,
+        "left": 16
+      },
+      "scrollWidth": 326,
+      "clientWidth": 326,
+      "buttons": [
+        {
+          "text": "Recomeçar",
+          "rect": {
+            "x": 41,
+            "y": 494,
+            "width": 278,
+            "height": 76,
+            "top": 494,
+            "right": 319,
+            "bottom": 570,
+            "left": 41
+          },
+          "focused": false
+        },
+        {
+          "text": "Continuar de onde parei",
+          "rect": {
+            "x": 41,
+            "y": 580,
+            "width": 278,
+            "height": 114,
+            "top": 580,
+            "right": 319,
+            "bottom": 694,
+            "left": 41
+          },
+          "focused": true
+        }
+      ],
+      "viewport": {
+        "width": 360,
+        "height": 800
+      },
+      "checks": {
+        "noticeHiddenDuring": true,
+        "noticeRestoredAfter": true,
+        "primaryBeforeSafeVisual": true,
+        "primaryBeforeSafeDOM": true,
+        "safeFocused": true,
+        "noHorizontalOverflow": true
+      }
+    }
+  ]
+}
