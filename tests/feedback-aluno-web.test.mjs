@@ -966,11 +966,11 @@ test('aceite de proposta antiga usa Luna e triagem; trilha já salva continua ab
 
   const legadoId = crypto.randomUUID();
   const legado = {
-    titulo: 'Frações equivalentes', objetivo, origem: 'IA da DeepSeek (deepseek-flash)',
+    titulo: 'Frações equivalentes', objetivo, origem: 'IA do Provedor Legado',
     fluxos: [{ titulo: 'Frações no cotidiano', licoes: [{ titulo: 'Reconhecer frações equivalentes' }] }],
   };
   const token = emitirComprovante('proposta', id, {
-    id: legadoId, expiraEm: Date.now() + 60_000, plano: { ...legado, gerador: 'deepseek-v1' },
+    id: legadoId, expiraEm: Date.now() + 60_000, plano: { ...legado, gerador: 'provedor-legado-v1' },
   });
   const { reaberto: aceito, primeira } = await salvarEReabrir(cookie, { ...legado, token });
   assert.equal(aceito.id, legadoId);

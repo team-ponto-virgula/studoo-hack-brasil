@@ -46,10 +46,10 @@ export function geracaoParalela(): number {
   return Number.isInteger(valor) && valor >= 1 && valor <= 10 ? valor : 10;
 }
 
-/** Prazo compartilhado pelas lições e reparos. Uma onda tem até 165 s, com teto total de 240 s. */
+/** Prazo compartilhado pelas lições e reparos. Uma onda tem até 220 s, com teto total de 240 s. */
 export function tempoDoAceite(licoes: number, paralelas = geracaoParalela()): number {
   const ondas = Math.max(1, Math.ceil(licoes / paralelas));
-  return Math.min(240_000, 165_000 * ondas);
+  return Math.min(240_000, 220_000 * ondas);
 }
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 

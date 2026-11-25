@@ -29,9 +29,9 @@ import {
 import { instrucoesDeOrdem } from "./ordem";
 
 export const TEMPO_ESTRUTURA_MS = 45_000;
-export const TEMPO_CONTEUDO_MS = 80_000;
+export const TEMPO_CONTEUDO_MS = 150_000;
 /** Fórmulas, figuras e resolução usam mais tokens que as outras lições. */
-export const TEMPO_CONTEUDO_DE_MATEMATICA_MS = 95_000;
+export const TEMPO_CONTEUDO_DE_MATEMATICA_MS = 180_000;
 export const TITULO_MAXIMO = 120;
 
 /** Valida URL base: só aceita HTTPS (ou HTTP no próprio computador, para testes). */

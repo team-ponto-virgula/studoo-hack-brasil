@@ -41,6 +41,14 @@ export const GERADOR_OPENAI = "openai-v1";
 const BASE_PADRAO = "https://api.openai.com/v1";
 export const MODELO_PADRAO = "gpt-6-luna";
 export const ESFORCO_OPENAI = "max";
+// A Responses API conta raciocínio e texto visível no mesmo teto.
+const TOKENS_DA_LICAO = 25_000;
+const TOKENS_DA_LICAO_DE_MATEMATICA = 32_000;
+const INSTRUCAO_LICAO_CURTA = [
+  "Escreva uma versão compacta desta mesma lição, diretamente no JSON do esquema.",
+  "Inclua dois exercícios curtos, explique o gabarito e mantenha o critério da atividade.",
+  "Use null nos recursos dispensáveis. Preserve as fórmulas e a resolução curta quando forem necessárias para aprender.",
+].join(" ");
 
 export type ConfiguracaoOpenAi = { chave: string; base: string };
 
@@ -75,7 +83,16 @@ export async function pedirRespostaOpenAi(config: ConfiguracaoOpenAi, corpo: Rec
 /** Texto das partes `output_text` de uma resposta sem streaming. Uma recusa do modelo vira erro. */
 function textoDaResposta(corpo: unknown): string {
   if (typeof corpo !== "object" || corpo === null) return "";
-  const dado = corpo as { status?: unknown; output_text?: unknown; output?: unknown };
+  const dado = corpo as {
+    status?: unknown;
+    incomplete_details?: { reason?: unknown } | null;
+    output_text?: unknown;
+    output?: unknown;
+  };
+  if (dado.status === "incomplete") {
+    const motivo = dado.incomplete_details?.reason === "max_output_tokens" ? "limite_tokens" : "resposta_incompleta";
+    throw new FalhaApi("ia_indisponivel", undefined, motivo);
+  }
   if (dado.status !== undefined && dado.status !== "completed") throw new FalhaApi("ia_indisponivel");
   if (!Array.isArray(dado.output)) return typeof dado.output_text === "string" ? dado.output_text : "";
   let texto = "";
@@ -203,13 +220,12 @@ export function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: nu
         strict: true,
       },
     },
-    max_output_tokens: matematica ? 16_000 : 10_000,
+    max_output_tokens: matematica ? TOKENS_DA_LICAO_DE_MATEMATICA : TOKENS_DA_LICAO,
   };
 }
 
 /**
- * Gerador da OpenAI. A estrutura chega por streaming e vira eventos na hora; o conteúdo de cada lição é pedido no
- * aceite, com Structured Outputs, e tem uma segunda tentativa se vier fora do formato.
+ * A estrutura chega por streaming. No aceite, cada lição usa Structured Outputs com uma única tentativa de recuperação.
  */
 export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
   const origem = ORIGEM_GERADA;
@@ -253,7 +269,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
     },
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
-      // O motivo da última falha do laço (rede, vazio, formato), para o erro final dizer "formato" ou "rede" no registro do servidor (sem conteúdo).
+      // Registra o motivo da última falha sem registrar conteúdo.
       let ultimoMotivo: string | undefined;
       const registrarFalha = (dados: { motivo: string; detalhe?: string; tentativa: number }) => {
         ultimoMotivo = dados.motivo;
@@ -297,11 +313,17 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         try {
           bruto = JSON.parse(textoDaResposta(corpo));
         } catch (erro) {
+          const limiteDeTokens = erro instanceof FalhaApi && erro.motivo === "limite_tokens";
           if (reserva) {
-            registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
+            registrar("resolucao_nova_tentativa", { aceita: false, motivo: limiteDeTokens ? "limite_tokens" : "formato" });
             return reserva.conteudo;
           }
-          if (erro instanceof FalhaApi) throw erro; // recusa do modelo
+          if (limiteDeTokens && tentativa === 0 && !sinal.aborted) {
+            registrarFalha({ motivo: "limite_tokens", tentativa });
+            correcao = INSTRUCAO_LICAO_CURTA;
+            continue;
+          }
+          if (erro instanceof FalhaApi) throw erro;
           registrarFalha({ motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
           desligarMatematica("formato");
