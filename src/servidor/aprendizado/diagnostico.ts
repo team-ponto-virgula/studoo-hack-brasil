@@ -23,11 +23,13 @@ type Estado = {
   respostaCorreta?: string;
   habilidade?: string;
   classificacao?: Classificacao;
+  usarQuestaoGeral?: boolean;
   anteriores?: { estado: Omit<Estado, 'anteriores'>; opcaoId: string }[];
 };
 
 const DESCONHECIDO = 'Ainda não sei';
-const escopos = ['Visão geral', 'Planetas e suas luas', 'Como os astros se movem'];
+const VISAO_GERAL = 'Visão geral';
+const escopos = [VISAO_GERAL, 'Planetas e suas luas', 'Como os astros se movem'];
 const niveis = ['Básico', 'Intermediário', 'Avançado'];
 const idValido = (x: unknown): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x);
 const noBanco = (estado: Estado) => JSON.parse(JSON.stringify(estado)) as Prisma.InputJsonValue;
@@ -127,8 +129,8 @@ async function classificarPedido(objetivo: string): Promise<Classificacao | null
   const instrucoes = [
     'Classifique a abrangência do objetivo de estudo sem assumir que a pessoa domina algo.',
     'Se já especifica uma habilidade ou tarefa prática com escopo claro, devolva recortes vazio.',
-    'Se pede um tema amplo sem recorte claro, sugira 2 ou 3 recortes distintos, com nomes curtos e uma pergunta de aplicação específica para cada.',
-    'A pergunta principal cobre o tema geral e serve se a pessoa não escolher um recorte.',
+    'Se pede um tema amplo sem recorte claro, sugira 2 ou 3 recortes específicos distintos, com nomes curtos e uma pergunta de aplicação para cada.',
+    'Não inclua Visão geral nos recortes. A pergunta principal cobre o tema geral e serve para a opção Visão geral e para quem não escolher um recorte.',
     'Use nivelDeclarado só quando o pedido indicar a profundidade desejada explicitamente; senão retorne nao_declarado.',
     `Escreva cada habilidade como um rótulo de 3 a 8 palavras, com até ${limites.habilidade} caracteres, sem explicação. Os outros limites estão no esquema.`,
     'Cada questão mede uma única habilidade com exatamente três alternativas plausíveis e distintas. Confira que apenas uma está correta e indique seu índice inteiro a partir de zero. Não inclua Ainda não sei nem revele a resposta no enunciado.',
@@ -154,11 +156,22 @@ async function classificarPedido(objetivo: string): Promise<Classificacao | null
 
 function perguntaDoRecorte(estado: Estado): Questao {
   if (estado.classificacao) {
+    if (estado.usarQuestaoGeral) return estado.classificacao.questao;
     return estado.classificacao.recortes.find(r => r.titulo === estado.perfil.escopo)?.questao ?? estado.classificacao.questao;
   }
   const { escopo } = estado.perfil;
   const indice = escopo === escopos[1] ? 1 : escopo === escopos[2] ? 2 : 0;
   return SOLAR[indice];
+}
+
+function opcoesDeEscopo(classificacao: Classificacao) {
+  const escopo = normalizarAssunto(rotuloComparavel(classificacao.escopo)).replace(/[.!?]+$/, '');
+  const recortes = classificacao.recortes.map(r => r.titulo).filter(titulo => {
+    const rotulo = normalizarAssunto(rotuloComparavel(titulo)).replace(/[.!?]+$/, '');
+    const panorama = rotulo.match(/^(?:uma? )?(?:visao geral|panorama(?: geral)?)(?: (?:de|da|do|das|dos) (.+))?$/);
+    return !panorama || (panorama[1] && panorama[1] !== escopo);
+  });
+  return [VISAO_GERAL, ...recortes];
 }
 
 export async function iniciarDiagnostico(usuarioId: string, entrada: unknown): Promise<PassoDiagnostico> {
@@ -177,7 +190,7 @@ export async function iniciarDiagnostico(usuarioId: string, entrada: unknown): P
     estado.perfil.escopo = classificacao.escopo;
     if (classificacao.nivelDeclarado !== 'nao_declarado') estado.perfil.nivel = classificacao.nivelDeclarado;
     estado = classificacao.recortes.length
-      ? perguntar({ ...estado, fase: 'escopo' }, 'Onde você quer concentrar o estudo?', classificacao.recortes.map(r => r.titulo))
+      ? perguntar({ ...estado, fase: 'escopo' }, 'Onde você quer concentrar o estudo?', opcoesDeEscopo(classificacao))
       : aplicarQuestao(estado, classificacao.questao);
   } else if (assunto === 'solar') {
     estado = perguntar({ ...estado, fase: 'escopo' }, 'Onde você quer concentrar o estudo do sistema solar?', escopos);
@@ -217,7 +230,9 @@ export async function responderDiagnostico(usuarioId: string, entrada: Record<st
   const perfil = estado.perfil;
   let novo: Estado;
   if (estado.fase === 'escopo') {
-    perfil.escopo = opcao.texto === DESCONHECIDO ? estado.classificacao?.escopo ?? escopos[0] : opcao.texto;
+    const geral = opcao.texto === DESCONHECIDO || opcao.texto === VISAO_GERAL;
+    estado.usarQuestaoGeral = geral;
+    perfil.escopo = geral ? estado.classificacao?.escopo ?? VISAO_GERAL : opcao.texto;
     novo = estado.classificacao && estado.classificacao.nivelDeclarado !== 'nao_declarado'
       ? aplicarQuestao(estado, perguntaDoRecorte(estado))
       : perguntar({ ...estado, fase: 'nivel' }, 'Até onde você quer chegar nesse recorte?', niveis);

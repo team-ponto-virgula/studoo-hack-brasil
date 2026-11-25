@@ -690,8 +690,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     const tentativa = new AbortController();
     const somDoAceite = tocaSons.sinalDosEfeitos;
     aceiteAtual.current = tentativa;
-    setAceite('salvando');
-    anunciar(mensagens.geracao.anuncioCriando);
+    setAceite(iniciar ? 'iniciando' : 'salvando');
+    anunciar(iniciar ? mensagens.geracao.anuncioCriando : mensagens.geracao.anuncioSalvando);
     let plano: PlanoDetalhe;
     try {
       // O cliente pode sair, mas o pedido já enviado continua no servidor.
@@ -702,7 +702,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
       setAnuncio('');
-      setAceite(codigo === 'proposta_invalida' ? 'expirada' : 'erro');
+      setAceite(codigo === 'proposta_invalida' ? 'expirada' : iniciar ? 'erro' : 'erro-salvar');
       return;
     }
     if (!montado.current) return;

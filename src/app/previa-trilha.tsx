@@ -12,7 +12,7 @@ import { tocaSons } from './sons';
 import './previa-trilha.css';
 import { ResumoDiagnostico } from './diagnostico';
 
-export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
+export type EstadoAceite = 'livre' | 'iniciando' | 'salvando' | 'erro' | 'erro-salvar' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,13 +104,15 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   /** Do momento em que a trilha fica pronta até a rolagem até o nó 1 terminar: o Stu já fica no lado do nó 1, e não pula para o troféu que passa pela tela. */
   const [indoAoPrimeiro, setIndoAoPrimeiro] = useState(false);
   const cancelarRolagem = useRef<(() => void) | null>(null);
-  const salvando = aceite === 'salvando' || !!passagem;
+  const iniciando = aceite === 'iniciando' || !!passagem;
+  const salvando = aceite === 'salvando';
+  const ocupado = iniciando || salvando;
   const falhou = aceite === 'erro' || aceite === 'expirada';
-  const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;
-  const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
+  const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !ocupado && !falhou;
+  const fase = passagem ? 'criada' : iniciando ? 'salvando' : proposta ? 'pronta' : 'montando';
   // A linha de espera embaixo do botão (spec 17, mudança 1, revista em 23/11): só enquanto a trilha é criada (depois de "Começar a lição 1"), a partir de 1,5 s depois do toque. O relógio das frases
   // começa quando ela aparece. A placa não tem frases: na geração, "Montando sua trilha" (e a espera longa de 12 s sem lição nova); com a proposta pronta, e também durante a criação, a faixa dela.
-  const linhaDaEspera = !!proposta && demorou && aceite === 'salvando' && !passagem;
+  const linhaDaEspera = !!proposta && demorou && aceite === 'iniciando' && !passagem;
   const espera = useDicaDaEspera(linhaDaEspera);
   const textoDaLinha = espera.indice === null ? t.escrevendoLicoes : t.dicas[espera.indice];
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
@@ -136,7 +138,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   }, [nos.length, proposta]);
   useEffect(() => {
     setDemorou(false);
-    if (aceite !== 'salvando' || passagem) return;
+    if (aceite !== 'iniciando' || passagem) return;
     const relogio = window.setTimeout(() => setDemorou(true), 1500);
     return () => window.clearTimeout(relogio);
   }, [aceite, passagem]);
@@ -193,7 +195,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     const area = mapa.current;
     if (!area) return;
     if (aceite === 'erro' || aceite === 'expirada') { area.scrollTop = 0; return; }
-    if (aceite !== 'salvando' && !passagem) return;
+    if (aceite !== 'iniciando' && !passagem) return;
     // A pessoa tocou em "Começar a lição 1" no meio da rolagem até o nó 1: a volta ao topo da passagem assume.
     cancelarRolagem.current?.();
     setIndoAoPrimeiro(false);
@@ -239,17 +241,17 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   }
 
   const acaoPrincipal = proposta && (
-    <Botao key="principal" className="previa-comecar" aria-disabled={salvando} aria-busy={salvando || undefined} onClick={() => {
-      if (!painel.current || salvando) return;
+    <Botao key="principal" className="previa-comecar" aria-disabled={ocupado} aria-busy={iniciando || undefined} onClick={() => {
+      if (!painel.current || ocupado) return;
       if (aceite === 'expirada') { remontar(); return; }
       aceitar(painel.current);
     }}>
-      {salvando && <span className="previa-giro" aria-hidden="true" />}
-      {salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
+      {iniciando && <span className="previa-giro" aria-hidden="true" />}
+      {iniciando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
     </Botao>
   );
   const acaoSecundaria = (
-    <Botao key="secundaria" className="previa-ajustar" variante="secundario" disabled={salvando} onClick={proposta ? ajustar : cancelar}>
+    <Botao key="secundaria" className="previa-ajustar" variante="secundario" disabled={ocupado} onClick={proposta ? ajustar : cancelar}>
       {proposta ? t.ajustar : t.cancelar}
     </Botao>
   );
@@ -322,21 +324,25 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
           </div>
           <span>{mensagens.trilha.chegada}</span>
         </div>}
-        {proposta && existente && !salvando && <aside className="geracao-repetida"><p>{t.repetida(existente.titulo)}</p>
+        {proposta && existente && !ocupado && <aside className="geracao-repetida"><p>{t.repetida(existente.titulo)}</p>
           <Botao variante="secundario" onClick={() => abrirExistente(existente.id)}>{t.abrirExistente}</Botao></aside>}
       </div>
-      {!acompanhando && !salvando && nos.length > 0 && !(proposta && trofeuAVista) && (
+      {!acompanhando && !ocupado && nos.length > 0 && !(proposta && trofeuAVista) && (
         <button type="button" className="previa-seguir" onClick={voltarAAcompanhar}>
           <Icone nome="seta" />{proposta ? t.verFimDaTrilha : t.verLicaoNova(nos.length)}
         </button>
       )}
     </div>
     {proposta?.diagnostico && <div className="previa-diagnostico"><ResumoDiagnostico perfil={proposta.diagnostico} /></div>}
-    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined} data-falha={falhou || undefined}>
+    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={iniciando || undefined} data-falha={falhou || undefined}>
       <div className="previa-botoes">
         {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
-        {proposta && salvar && !salvando && aceite !== 'expirada' && <div className="previa-salvar">
-          <Botao variante="texto" onClick={() => { if (painel.current) salvar(painel.current); }}>Salvar para depois</Botao>
+        {proposta && salvar && !iniciando && aceite !== 'expirada' && <div className="previa-salvar">
+          <Botao variante="texto" aria-disabled={salvando} aria-busy={salvando || undefined}
+            onClick={() => { if (painel.current && !ocupado) salvar(painel.current); }}>
+            {salvando ? t.salvandoTrilha : t.salvarParaDepois}
+          </Botao>
+          {aceite === 'erro-salvar' && <p className="previa-erro" role="alert">{t.erroSalvar}</p>}
           <p>{visitante ? 'Depois de salvar, disponível por até 24 h a partir da entrada neste navegador.' : 'A proposta entra em Minhas trilhas ao salvar ou começar.'}</p>
         </div>}
         {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || undefined}>

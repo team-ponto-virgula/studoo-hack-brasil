@@ -213,6 +213,11 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
     enunciado: 'Em prioridade à abertura, qual mudança compensa uma imagem escura sem alterar ISO nem abertura?',
     opcoes: ['Obturador mais lento', 'Obturador mais rápido', 'Mudar o ponto de foco'], correta: 0,
   };
+  const questaoGeral = {
+    habilidade: 'Identificar funções da câmera',
+    enunciado: 'Qual controle da câmera determina o tempo de exposição?',
+    opcoes: ['Obturador', 'Visor', 'Ponto de foco'], correta: 0,
+  };
   const pedidos = [];
   const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
     assert.equal(url, 'http://127.0.0.1:1/v1/responses');
@@ -230,7 +235,7 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
       return Response.json({ status: 'completed', output_text: JSON.stringify({
         escopo: amplo ? 'Fotografia' : 'Compensar exposição com o obturador',
         nivelDeclarado: amplo ? 'nao_declarado' : 'intermediario',
-        questao: amplo ? aplicacao : exposicao,
+        questao: amplo ? questaoGeral : exposicao,
         recortes: amplo ? [{ titulo: 'Fotografar movimento', questao: aplicacao }, { titulo: 'Exposição manual', questao: exposicao }] : [],
       }) });
     }
@@ -266,6 +271,7 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   await aceitarConsentimentoIa(conta.id, VERSAO_CONSENTIMENTO_IA);
 
   const recorte = await ok(pedido(geral));
+  assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Visão geral', 'Fotografar movimento', 'Exposição manual', 'Ainda não sei']);
   const profundidade = await responder(cookie, recorte, 'Fotografar movimento');
   const verificacao = await responder(cookie, profundidade, 'Avançado');
   assert.match(verificacao.pergunta.enunciado, /ciclista/);
@@ -278,6 +284,18 @@ test('provedor simulado: classifica Fotografia, afunila exposição e preserva g
   assert.match(a.titulo, /rastro/);
   assert.match(a.exercicio.enunciado, /rastro/);
   assert.ok(pedidos.some(p => p.stream && p.input[1].content.includes('"nivel":"avancado"')));
+
+  for (const opcao of ['Visão geral', 'Ainda não sei']) {
+    const escolha = await ok(pedido(geral));
+    const nivel = await responder(cookie, escolha, opcao);
+    const amostraGeral = await responder(cookie, nivel, 'Básico');
+    assert.equal(amostraGeral.numero, 3);
+    assert.equal(amostraGeral.pergunta.enunciado, questaoGeral.enunciado);
+    const perfilGeral = await responder(cookie, amostraGeral, opcao === 'Visão geral' ? 'Obturador' : 'Ainda não sei');
+    assert.deepEqual(perfilGeral.perfil, {
+      escopo: geral, nivel: 'basico', demonstrados: opcao === 'Visão geral' ? [questaoGeral.habilidade] : [], lacunas: [],
+    });
+  }
 
   const amostra = await ok(pedido(estreito));
   assert.equal(amostra.numero, 1);
@@ -325,7 +343,7 @@ test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rót
       opcoes: ['Proclamação da República', 'Independência', 'Início da Era Vargas'], correta: 0,
     },
     recortes: [
-      { titulo: 'Colônia', questao: { habilidade: 'Identificar a produção açucareira', enunciado: 'Qual produto era feito nos engenhos coloniais?', opcoes: ['Borracha', 'Açúcar', 'Ferro'], correta: 1 } },
+      { titulo: ' Panorama geral da História do Brasil. ', questao: { habilidade: 'Identificar a produção açucareira', enunciado: 'Qual produto era feito nos engenhos coloniais?', opcoes: ['Borracha', 'Açúcar', 'Ferro'], correta: 1 } },
       { titulo: 'Império', questao: { habilidade: 'Situar a Independência', enunciado: 'Em que ano foi proclamada a Independência do Brasil?', opcoes: ['1808', '1822', '1889'], correta: 1 } },
       { titulo: ' Era Vargas ', questao: { ...vargas, habilidade: ` ${vargas.habilidade} `, opcoes: ['Lei Áurea', 'Código Eleitoral', ' CLT '] } },
     ],
@@ -350,7 +368,7 @@ test('DeepSeek simulado: recupera História do Brasil quando a resposta tem rót
   respostas = [longo, correta];
   const recorte = await ok(pedir());
   assert.equal(fetch.mock.callCount(), 2);
-  assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Colônia', 'Império', 'Era Vargas', 'Ainda não sei']);
+  assert.deepEqual(recorte.pergunta.opcoes.map(o => o.texto), ['Visão geral', 'Império', 'Era Vargas', 'Ainda não sei']);
   const profundidade = await responder(cookie, recorte, 'Era Vargas');
   const amostra = await responder(cookie, profundidade, 'Intermediário');
   assert.equal(amostra.pergunta.enunciado, vargas.enunciado);

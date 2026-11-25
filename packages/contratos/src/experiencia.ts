@@ -1069,6 +1069,10 @@ export const mensagens = {
         propostaPronta: (licoes: number, partes: number) =>
             `Sua trilha está pronta: ${licoes} ${licoes === 1 ? 'lição curta' : 'lições curtas'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`,
         comecarLicao1: 'Começar a lição 1',
+        salvarParaDepois: 'Salvar para depois',
+        salvandoTrilha: 'Salvando trilha…',
+        anuncioSalvando: 'Salvando trilha.',
+        erroSalvar: 'Não deu para salvar. Tente de novo.',
         criandoTrilha: 'Criando sua trilha…',
         anuncioCriando: 'Criando sua trilha.',
         /**

@@ -164,8 +164,8 @@ test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta c
   // Pronta, antes do toque: a linha de espera existe no lugar dela, escondida, com o texto de sempre; o botão não está ocupado e a linha não é região viva.
   assert.match(pronta, /<p class="previa-espera"><span class="previa-espera__linha">Escrevendo suas lições…<\/span><\/p>/);
   assert.doesNotMatch(pronta, /aria-busy/);
-  // Depois de "Começar a lição 1" (o aceite está salvando): a placa SEGUE com a faixa da proposta (sem "Criando sua trilha…" nem frases), e o botão fica afundado, ocupado e com o giro.
-  const criando = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'salvando' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
+  // Depois de "Começar a lição 1": a placa segue com a faixa da proposta, e o botão fica afundado, ocupado e com o giro.
+  const criando = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'iniciando' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
   assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 6 lições curtas em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span><\/p>/);
   assert.match(criando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>|<button[^>]*aria-busy="true"[^>]*class="[^"]*previa-comecar/);
   assert.match(criando, /previa-giro[\s\S]*?Criando sua trilha…/);
@@ -176,18 +176,34 @@ test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta c
   assert.doesNotMatch(erro, /previa-espera" data-visivel/);
 });
 
+test('Salvar para depois tem espera e erro próprios e mantém a ação para tentar de novo', () => {
+  const fluxos = [{ titulo: 'Parte 1', licoes: [{ titulo: 'Probabilidade' }] }];
+  const proposta = { token: 'x', titulo: 'Probabilidade', objetivo: 'Probabilidade', fluxos };
+  const renderizar = aceite => renderToStaticMarkup(createElement(PreviaTrilha, {
+    ...parametros({ aceite, salvar() {} }), geracao: trilhaEmGeracao([{ ...fluxos[0], licoes: ['Probabilidade'] }], proposta),
+  }));
+  const salvando = renderizar('salvando');
+  assert.match(salvando, /<button[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>Salvando trilha…<\/button>/);
+  assert.match(salvando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*>Começar a lição 1<\/button>/);
+  assert.doesNotMatch(salvando, /Criando sua trilha|previa-giro|previa-espera" data-visivel/);
+  const erro = renderizar('erro-salvar');
+  assert.match(erro, /aria-disabled="false"[^>]*>Salvar para depois<\/button>/);
+  assert.match(erro, /role="alert">Não deu para salvar\. Tente de novo\.<\/p>/);
+  assert.doesNotMatch(erro, /Não deu para criar/);
+});
+
 test('o fonte da tela: só a criação tem frases, o relógio liga quando a linha aparece e usa a conta do contrato, a placa não leva frase e a criação não é anunciada de novo', () => {
   const tela = ler('src/app/previa-trilha.tsx');
   assert.match(tela, /function useDicaDaEspera\(ativa: boolean\): EstadoDaEspera \{/);
   assert.match(tela, /trocarDicasDaEspera\(\{ qualDica: \(decorridoMs\) => dicaDaEspera\(decorridoMs, t\.dicas\.length\), reduzido: movimentoReduzido, aoMudar: setEstado \}\)/, 'a conta do contrato, a mesma do app');
-  assert.match(tela, /const linhaDaEspera = !!proposta && demorou && aceite === 'salvando' && !passagem;/, 'a linha entra 1,5 s depois do toque (demorou) e sai com a troca de tela ou com o erro');
+  assert.match(tela, /const linhaDaEspera = !!proposta && demorou && aceite === 'iniciando' && !passagem;/, 'a linha entra 1,5 s depois do toque (demorou) e sai com a troca de tela ou com o erro');
   assert.match(tela, /const espera = useDicaDaEspera\(linhaDaEspera\);/, 'o relógio das frases liga quando a linha aparece, não no toque');
   assert.match(tela, /const textoDaLinha = espera\.indice === null \? t\.escrevendoLicoes : t\.dicas\[espera\.indice\];/);
   assert.match(tela, /const placa = proposta \? t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\) : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/, 'a placa: sem frases, e com a faixa da proposta também na criação');
   assert.match(tela, /<PlacaDaGeracao texto=\{placa\} anunciado=\{placaAnunciada\} \/>/);
   assert.match(tela, /const placaAnunciada = proposta \? `\$\{t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\)\} \$\{t\.comecarLicao1\}\.` : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/);
   assert.match(tela, /<p className="previa-espera" data-visivel=\{linhaDaEspera \|\| undefined\}>\s*<span className="previa-espera__linha" data-saindo=\{espera\.saindo \|\| undefined\}>\{textoDaLinha\}<\/span>\s*<\/p>/, 'a linha não é região viva (sem role): a troca a cada 5 s não é anunciada');
-  assert.match(tela, /className="previa-comecar" aria-disabled=\{salvando\} aria-busy=\{salvando \|\| undefined\}/, 'o botão fica ocupado enquanto a trilha é criada');
+  assert.match(tela, /className="previa-comecar" aria-disabled=\{ocupado\} aria-busy=\{iniciando \|\| undefined\}/, 'o botão fica ocupado enquanto a trilha é criada');
   const regras = ler('src/app/previa-trilha-regras.ts');
   assert.match(regras, /import \{ ESPERA_DA_GERACAO, faltaParaTrocarADica \} from '@studoo\/contratos';/, 'o relógio é o do contrato, o mesmo do app');
   assert.doesNotMatch(tela, /setInterval/, 'um temporizador por troca, que dorme o tempo certo (não acorda a cada quadro)');
