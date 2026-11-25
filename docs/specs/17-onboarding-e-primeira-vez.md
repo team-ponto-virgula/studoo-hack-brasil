@@ -39,7 +39,7 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 |---|---|---|---|---|---|---|---|
 | J1 | Entrada (web `00-entrada-390`; iPhone `01`) | Título, frase, "Ver como funciona", "Experimentar sem conta" em destaque, Google, e-mail e senha | ~70 | 0 | P1: sem o Stu no celular (spec 16, item 10). O resto está certo: valor antes da conta, uma ação principal | Mascote acenando e um botão principal grande, com "Já tenho conta" embaixo (de memória) | Manter a ordem. Entrar o `stu-acolhida` de 72 (item 10) |
 | J2 | Tour "Ver como funciona", 4 passos (web `01-tour-1` a `4`) | Uma arte e um texto por passo, "Pular", "Passo n de 4" | 22 a 64 | 4 | P1: os textos descrevem recursos com palavras de dentro ("citação do trecho original", "ponte", "quatro cartões objetivos"). P1 (defeito B1): o selo "Modo demonstração" na arte | Mostra o valor fazendo, não explicando; texto curto | Textos da mudança 2. Sem o selo (B1) |
-| J3 | Nova trilha (web `02-nova-trilha-390`; iPhone `90`) | "O que você quer aprender?", campo, "Montar minha trilha", "Tenho um material", ideias | ~40 | 2 | Nenhum: uma pergunta, uma ação, ideias de um toque, e o Stu reage ao texto ("Isso! Conte um pouco mais…") | Várias perguntas (motivo, nível, objetivo) antes da lição | Manter. Não acrescentar perguntas (seção 4) |
+| J3 | Nova trilha (web `02-nova-trilha-390`; iPhone `90`) | "O que você quer aprender?", campo, "Montar minha trilha", "Tenho um material", ideias | ~40 | 2 | Nenhum: uma pergunta, uma ação, ideias de um toque, e o Stu reage ao texto ("Isso! Conte um pouco mais…") | Várias perguntas (motivo, nível, objetivo) antes da lição | Na revisão de 22/11, manter uma pergunta. Para o pedido atual, vale a seção 7. |
 | J4 | Aceite de IA, primeira vez (site `consentimento-ia`, Mobile & QA) | "Usar a IA para montar e corrigir seus estudos?", texto, a lista de quem recebe e dois botões | 138 (medido) | 1 | P1: é a tela mais longa do primeiro caminho. Ela é obrigatória (regra 5.1.2 da Apple). Em 390, abre rolada e corta o título (defeito B3) | Não tem | Mudança 5 (adiada) e defeito B3 |
 | J5 | Geração da proposta, de 2,5 a 3,6 s (iPhone `91`; site `geracao-02s`, Mobile & QA) | "Montando sua trilha", o título e as lições surgindo uma a uma | 5 a 56 (medido) | 0 | Nenhum: é rápida e mostra as lições nascendo | — | Manter, sem frases (mudança 1) |
 | J5b | Criação da trilha, depois de "Começar a lição 1", de 12,8 a 21,4 s (medição do Mobile & QA e do Lead; sem captura) | O botão afundado com o giro "Criando sua trilha…" e, aos 1,5 s, "Escrevendo suas lições…" | ~5 | 0 | **P0:** a espera mais longa do primeiro caminho, sem nada para ler | Dicas e animação do mascote no carregamento (de memória) | Mudança 1 |
@@ -169,14 +169,14 @@ O item 1 (a proposta pronta mostra a lição 1), o item 10 (o Stu na entrada do 
 **Regra geral para os textos do produto** (vale daqui para frente): nenhum texto afirma número, prazo ou promessa que não medimos ou garantimos ("leva 3 minutos", "fica salvo para sempre"). O que depende de conta ou de visitante é dito de um jeito verdadeiro para os dois, ou separado por estado.
 
 
-- **Perguntas antes da primeira lição** (motivo, nível, meta diária, como o Duolingo faz): o Studoo pergunta uma coisa só e abre a primeira lição em 9 toques (medido). Cada pergunta a mais atrasa o valor, e a regra do dono pede a tela direto no conteúdo.
-- **Sequência de dias e meta diária agora** (de memória, no Duolingo): é pressão de compromisso, e não há tempo para fazer direito até 30/11. A conclusão já diz "Vale rever esta lição amanhã", que é o compromisso leve. Fica para depois, se o dono quiser.
+- **Perguntas antes da primeira lição** (motivo, nível, meta diária, como o Duolingo faz): o Studoo pergunta uma coisa só e abre a primeira lição em 9 toques (medido). Cada pergunta a mais atrasa o valor. A seção 7 define a exceção pulável para ajustar o ponto de partida na criação por pedido.
+- **Sequência de dias e meta diária agora** (de memória, no Duolingo): é pressão de compromisso, e não há tempo para fazer direito até 30/11. A conclusão sugere o que rever. A sequência pedida em 25/11 é informativa e privada, conforme a seção 7. Meta diária segue adiada.
 - **Pedido de notificação:** o app não pede, e não deve pedir antes de mostrar valor. Não entra neste ciclo.
 - **Tom de culpa do mascote** (Appcues chama a coruja de "guilt-tripping"): o Stu fica encorajador (spec 13).
 - **Retomar a lição pelo mapa em 2 toques** (o nó e depois "Continuar" no balão): é o balão decidido para todos os nós (spec 01). Ele mostra o que a lição é antes de abrir e evita abrir uma lição por um toque sem querer.
 - **O tour obrigatório:** fica opcional ("Ver como funciona" e "Pular"). Quem quer começar já começa.
 - **O aceite de IA:** não sai nem vai para depois da primeira trilha, porque a trilha já usa a IA (regra 5.1.2 da Apple). Só fica mais curto (mudança 5).
-- **A ponte e o "Explique com suas palavras":** são os diferenciais da demo e já foram refinados. Mexer agora traz risco sem retorno.
+- **A ponte e o "Explique com suas palavras":** continuam como diferenciais da demo. A seção 7 move a explicação opcional para uma etapa própria, mantendo a ponte do exercício.
 
 ## 5. Defeitos (não são questão de gosto)
 
@@ -235,3 +235,43 @@ Já decidido na spec 16, item 14, e ainda não publicado.
 - **O tour no site:** os passos estão sem selo (mudança 4). O passo 4 já tem o texto novo ("Seu caminho fica no mapa"). O aviso de música fica no alto e não cobre nada que se toque (`cobre: 0` no relatório do Lead), como pede a spec 16, item 14.
 
 Acessibilidade: na banca do Mobile & QA, o primeiro contato no site publicado com texto a 150% e 200%, nos 3 motores e nas 3 larguras, não sai da tela. Os textos novos das mudanças 1 e 2 cabem em 2 linhas a 390 e precisam ser conferidos a 200%. O anúncio da espera (mudança 1) foi pensado para não repetir a cada troca.
+
+## 7. Do primeiro pedido à retomada (25/11)
+
+Escopo comum para Web, Android e iPhone. Os textos de interface vêm do contrato compartilhado. Esta seção atualiza a criação por pedido da spec 03 e o lugar de **Ensine ao Stu** das specs 02 e 05. Nova trilha a partir de material segue sua entrada atual.
+
+### Pedido e ponto de partida
+
+- **Até quatro perguntas no total por pedido.** Conte “O que você quer aprender?” quando o pedido começa vazio e qualquer escolha de recorte, objetivo, profundidade ou verificação. Mostre uma por vez e encerre assim que houver informação suficiente. Voltar e corrigir uma resposta ou recuperar uma falha preserva as respostas e o limite.
+- Toda pergunta complementar aceita **“Ainda não sei”**. **“Pular perguntas”** ignora as perguntas restantes e monta com o objetivo já informado e as respostas disponíveis. Se o pedido vem vazio, começa pelo campo ou por uma sugestão. Consentimento de IA continua antes de qualquer envio ao provedor.
+- A pergunta **“Onde você quer chegar?”** ou as opções de profundidade definem a meta desejada. Use uma amostra curta do assunto quando ela puder mudar a primeira lição. Uma preferência ou autodeclaração é uma indicação. Só uma resposta que demonstra uma habilidade sustenta uma afirmação de que a pessoa já a mostrou. Na prévia, **“Ponto de partida”** descreve onde a trilha vai começar e **“Você vai aprender”** descreve a meta. “Ainda não sei” e perguntas puladas levam a um começo acessível, sem feedback de erro.
+- Um pedido estreito já traz o recorte. Um pedido amplo pode oferecer poucas escolhas relevantes, incluindo uma visão geral. Se a pessoa já demonstrou a introdução, comece no próximo pré-requisito ou aplicação útil e deixe a introdução como revisão opcional.
+
+### Salvar e começar depois
+
+- Na prévia, **“Começar a lição 1”** é a ação principal e **“Salvar para depois”** é a ação secundária. Ambas aceitam a mesma proposta. A segunda mantém a pessoa fora da aula e anuncia **“Trilha salva em Minhas trilhas.”** após confirmação, com **“Ver em Minhas trilhas”**. Enquanto aguarda, **“Salvando trilha…”**. Se a operação falhar, informar **“Não deu para salvar. Tente de novo.”** e preservar a prévia e as respostas enquanto forem válidas.
+- A trilha aceita aparece em **Minhas trilhas** com **0 de N lições concluídas** e **“Começar”**, mesmo depois de reabrir. Quando uma lição tiver andamento recuperável, **“Continuar”** volta ao ponto salvo. Repetir o aceite da mesma proposta devolve a mesma trilha. Para visitante, mostrar **“Disponível por até 24 h a partir da entrada neste navegador”**, com **“neste aparelho”** no app. O aviso de saída segue o contrato da sessão temporária.
+
+### Lição e fim de trilha
+
+- Ordem compartilhada: conceito → exemplo → exercícios → revisão rápida dos exercícios pendentes, quando houver → **Ensine ao Stu** → prática, quando prevista → conclusão. A ponte de reforço volta ao exercício de origem. **Ensine ao Stu** é uma etapa opcional própria, com título, **“Explique a ideia com suas palavras.”**, **“Enviar minha explicação”** e **“Pular”**, ou **“Pular e concluir”** se a conclusão vier a seguir. Depois do retorno, a ação é **“Ir para a prática”** ou **“Concluir lição”**, conforme a próxima etapa. Os limites e o retorno da spec 05 continuam. Enviar ou pular a explicação mantém os acertos dos exercícios e não conclui nenhuma lição por si só.
+- O Web & API acrescenta `{ tipo: 'ensino' }` à função compartilhada `etapasDaLicao`. Os dois clientes preservam a retomada de lições gravadas na ordem antiga, inclusive quando o índice que antes representava Prática passa a representar Ensine. A etapa em foco e o aviso de envio ficam visíveis com o teclado aberto.
+- Só após o servidor confirmar a última lição, mostrar **“Trilha concluída!”**, título e **N de N lições concluídas**, com uma reação do Stu compatível com movimento reduzido. A ação principal é **“Rever uma lição”** se o mapa indica revisão, com destino na lição indicada. Nas demais, **“Começar outra trilha”** abre o pedido. **“Ver mapa da trilha”** é a alternativa.
+
+### Perfil e sequência
+
+- No Perfil privado, usar **“Trilhas concluídas”** (`trilhasConcluidas`), **“Dias seguidos”** (`diasSeguidos`) e **“Dias de estudo”** (`diasDeEstudo`). O último é o total de datas distintas com ao menos uma primeira conclusão de lição confirmada. A sequência conta datas consecutivas até hoje ou ontem no fuso da pessoa gravado pelo servidor. Se o intervalo for maior, a sequência fica em zero e o total histórico permanece. Duas primeiras conclusões na mesma data contam um dia. Reenvio, reabertura ou refazer uma lição preservam a data da primeira conclusão.
+- Usar os campos do servidor. Zero confirmado aparece como zero. Campo ausente em servidor antigo fica oculto. A sequência é privada e informativa, sem meta, ranking, alerta de perda ou calendário novo. Se já houver datas no histórico visível, o servidor entrega datas locais numa janela limitada. A retomada continua em **Minhas trilhas**, com **“Continuar”** para a próxima ação recuperável.
+
+### Aceite com dados sintéticos
+
+| Percurso | Conferir |
+| --- | --- |
+| **Equação do primeiro grau.** Pedido simples, amostra “Quanto vale x em 2x + 3 = 11?” | Sem pedir recorte novamente. “Ainda não sei” inicia pelo básico. A prévia distingue o começo da meta “Resolver equações do primeiro grau”. |
+| **Sistema solar e seus astros.** Pedido amplo, “Planetas e suas luas”, “Quero me aprofundar”, amostra observável como “Qual astro a Lua orbita?” | Pode escolher também “Visão geral do Sistema Solar”. O recorte e a profundidade escolhidos aparecem na meta. A amostra ajusta o início, sem inferir que a pessoa conhece todo o assunto. O percurso completo cabe em quatro perguntas, contando o pedido. |
+| **Introdução já demonstrada.** Em equações, marcar que quer avançar e responder `x = 4` a `2x + 3 = 11`. | “Ponto de partida” reconhece apenas a habilidade demonstrada. A primeira lição traz um passo novo, como equações com parênteses. A introdução pode ser revista. |
+| **Pular, voltar e salvar.** Pular perguntas em pedido amplo, voltar de outra pergunta já respondida e salvar para depois, inclusive com repetição ou falha do aceite. | Gera com as informações dadas, sem quinta pergunta. O aviso de salvo só aparece após sucesso. Reabrir mantém exatamente uma trilha em zero lições, com “Começar”. Visitante vê a duração da sessão. |
+| **Aula com reforço, revisão e prática.** Errar no último exercício, fazer a ponte, realizar a revisão rápida, entrar em Ensine e pular ou enviar. Reabrir também uma lição antiga gravada na prática. | A ponte retorna ao exercício original. Ensine aparece uma vez depois dos exercícios pendentes e antes da prática. Salvar e retomar preservam a etapa correta, inclusive a prática antiga e seu cronômetro. O teclado e as barras deixam envio e saída ao alcance. |
+| **Última lição e Perfil.** Concluir com e sem revisão indicada. Simular duas lições no mesmo dia, conclusão no dia seguinte, fuso cruzando meia-noite, intervalo e servidor sem o novo campo. | Celebração, próximo passo e contagens seguem a confirmação do servidor. Dias seguidos e dias de estudo divergem depois da pausa. Refazer e reenviar uma conclusão não duplicam contagens. Campo ausente não vira zero. |
+
+Teste nas duas larguras de paridade, 390×844 e 360×800. Conferir no navegador com teclado e, quando houver prévia nativa, em Android e iPhone com teclado, leitor e área segura. A revisão de uma prévia web do app cobre o renderer, com evidência nativa separada.
