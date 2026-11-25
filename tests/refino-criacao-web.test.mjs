@@ -56,7 +56,8 @@ test('item 1: a tela da proposta vai ao nó 1 (e não mais ao troféu), com o St
   const trechoPronta = tela.slice(tela.indexOf('propostaApresentada.current = proposta.token;'), tela.indexOf('painel.current?.querySelector<HTMLButtonElement>(\'.previa-comecar\')'));
   assert.ok(trechoPronta.length > 200 && !/trofeu\.current/.test(trechoPronta), 'o troféu não é mais o destino da proposta pronta');
   // O Stu (stu-feliz) fica no nó 1 enquanto a tela vai para lá, e só vai para o troféu quando a pessoa chega nele.
-  assert.match(tela, /const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;/);
+  assert.match(tela, /const ocupado = iniciando \|\| salvando;/);
+  assert.match(tela, /const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !ocupado && !falhou;/);
   assert.match(tela, /const comStu = proposta \? i === 0 && !stuNoTrofeu : i === nos\.length - 1;/);
   assert.match(tela, /proposta \? 'stu-feliz'/);
   // O troféu continua a uma rolagem de distância: "Ver o fim da trilha" rola até ele.
