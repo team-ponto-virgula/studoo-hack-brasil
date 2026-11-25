@@ -12,6 +12,7 @@ export default function Layout() {
   const [carregadas, erro] = useFonts({
     [fontes.titulo]: require('../assets/fontes/Quicksand.ttf'),
     [fontes.corpo]: require('../assets/fontes/Nunito.ttf'),
+    Inter: require('../assets/fontes/Inter.ttf'),
   });
 
   // No iPhone, o gesto de voltar da borda esquerda envolve o app todo (borda-voltar.ios.tsx); no Android e na web, nada muda.
