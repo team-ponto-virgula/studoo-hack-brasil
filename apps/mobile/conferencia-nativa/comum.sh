@@ -216,7 +216,12 @@ servidor() {
     mostrar_registro "$REGISTROS/build.log" 120
     erro "O build da web (\`npm run build\`) falhou; sem ele não há API para o app."
   fi
-  EMAIL=resend nohup npm start > "$REGISTROS/servidor.log" 2>&1 < /dev/null &
+  if [ "${CONFERENCIA_RASTREAR_API:-}" = "1" ]; then
+    EMAIL=resend CONFERENCIA_RASTREAR_ORIGEM_API=1 NODE_OPTIONS="${NODE_OPTIONS:-} --import=\"$AQUI/servidor/rastreio-api.mjs\"" \
+      nohup npm start > "$REGISTROS/servidor.log" 2>&1 < /dev/null &
+  else
+    EMAIL=resend nohup npm start > "$REGISTROS/servidor.log" 2>&1 < /dev/null &
+  fi
   if ! esperar_http "http://localhost:$PORTA_WEB/api/saude" 120; then
     mostrar_registro "$REGISTROS/servidor.log"
     erro "O servidor (\`npm start\`) não respondeu em /api/saude em 2 minutos."

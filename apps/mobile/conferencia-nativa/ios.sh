@@ -407,7 +407,7 @@ coletar() {
 case "${1:-}" in
   sonda) sonda ;;
   ligar) ligar ;;
-  servidor) servidor ;;
+  servidor) CONFERENCIA_RASTREAR_API=1 servidor ;;
   simulador) simulador ;;
   maestro) instalar_maestro ;;
   metro) metro ;;
