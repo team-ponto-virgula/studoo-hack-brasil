@@ -14,10 +14,10 @@
     "predev": "npm run db:generate",
     "dev": "next dev --hostname localhost",
     "demo:zerar": "node --env-file=.env --import tsx scripts/zerar-demo.ts",
-    "prebuild": "npm run db:generate",
+    "prebuild": "npm run ui:conferir && npm run db:generate",
     "build": "next build",
     "start": "next start --hostname localhost",
-    "pretypecheck": "npm run db:generate",
+    "pretypecheck": "npm run ui:conferir && npm run db:generate",
     "typecheck": "next typegen && tsc --noEmit",
     "test:marco": "node --env-file=.env --test tests/marco-local.test.mjs",
     "test:dominio": "node --env-file=.env --import tsx --test tests/dominio-geracao.test.mjs tests/ponte-reaberta.test.mjs",
@@ -51,7 +51,9 @@
     "beta:conferir": "node --use-env-proxy scripts/conferir-beta-externo.mjs",
     "test:beta": "node --test tests/beta-externo.test.mjs tests/revisao-beta-apple.test.mjs",
     "beta:revisao": "node --use-env-proxy scripts/revisar-beta-apple.mjs",
-    "test:abertura": "node --import tsx --test tests/abertura.test.mjs tests/abertura-inicializacao-mobile.test.mjs"
+    "test:abertura": "node --import tsx --test tests/abertura.test.mjs tests/abertura-inicializacao-mobile.test.mjs",
+    "ui:tokens": "node scripts/gerar-tokens-interface.mjs",
+    "ui:conferir": "node scripts/gerar-tokens-interface.mjs --check"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",

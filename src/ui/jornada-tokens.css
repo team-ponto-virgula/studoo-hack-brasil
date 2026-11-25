@@ -1,0 +1,36 @@
+/* Gerado por scripts/gerar-tokens-interface.mjs. Edite jornada-azul.ts. */
+:root {
+  --fundo: #FFFFFF;
+  --nevoa: #EDF3FF;
+  --gelo: #DFE7F2;
+  --texto: #15275B;
+  --texto2: #50607A;
+  --acao: #2457DD;
+  --acao-escura: #173B9C;
+  --sucesso: #1F7A5A;
+  --sucesso-claro: #2F9E6F;
+  --sucesso-fundo: #EEFAF3;
+  --alerta: #9A5B00;
+  --alerta-fundo: #FFF6EA;
+  --alerta-borda: #EBC58A;
+  --erro: #C23B4E;
+  --erro-fundo: #FFF2F4;
+  --ouro: #FBBF24;
+  --ouro-escuro: #E0A92E;
+  --ouro-texto: #7A4A00;
+  --ceu: #E9E7FF;
+  --borda-campo: #7B8AAF;
+  --labio-neutro: #CDD9EE;
+  --face-neutra: #EDF3FF;
+  --tinta-neutra: #50607A;
+  --superficie-sutil: #F7F9FF;
+  --destaque-borda: #CEDDFF;
+  --raio-campo: 16px;
+  --raio-bloco: 24px;
+  --jornada-pagina: 20px;
+  --jornada-grupo: 24px;
+  --jornada-acao: 52px;
+  --jornada-alvo: 44px;
+  --jornada-degrau: 4px;
+  --jornada-micro: 160ms;
+}
