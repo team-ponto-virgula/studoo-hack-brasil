@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { provedoresDaIa, VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
-import { provedorIaAtivo } from '@/servidor/ia/gerador';
+import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
+import { provedoresConfiguradosIa } from '@/servidor/privacidade/consentimento';
 import { VoltarDaPagina } from '../comunidade';
 import { PaginaPublica, usuarioDaPagina } from '../publico';
 import '../privacidade.css';
@@ -19,9 +19,7 @@ export const metadata: Metadata = {
  * O contato vem de `STUDOO_CONTATO_PRIVACIDADE` (e-mail ou endereço), configurado no servidor.
  */
 export default async function PaginaPrivacidade() {
-  const ia = provedorIaAtivo();
-  // A política descreve todos os provedores que o Studoo pode usar, não só o ligado agora.
-  const provedores = provedoresDaIa(ia === 'falsa' ? 'deepseek' : ia, true);
+  const provedores = provedoresConfiguradosIa();
   const contato = process.env.STUDOO_CONTATO_PRIVACIDADE?.trim();
   const contatoHref = contato && (contato.includes('@') && !contato.includes('://') ? `mailto:${contato}` : contato);
   const logado = Boolean(await usuarioDaPagina());
@@ -49,8 +47,10 @@ export default async function PaginaPrivacidade() {
           <tr><td>Identificador da conta Apple, e-mail compartilhado (que pode ser um endereço privado da Apple) e autorização de acesso</td><td>Reconhecer sua conta quando você voltar e revogar o acesso na Apple. Guardamos o token de renovação cifrado. O nome recebido da Apple não é guardado.</td><td>O identificador fica até a exclusão da conta. O token é removido quando recebemos a revogação ou quando você exclui a conta.</td></tr>
           <tr><td>Verificação por código no e-mail</td><td>Confirmar que o endereço é seu no cadastro ou na troca de senha</td><td>O código vale por 15 minutos e só pode ser usado uma vez.</td></tr>
           <tr><td>Sessões de login (web e app)</td><td>Manter você conectado</td><td>Até você sair, a sessão vencer ou a conta ser excluída</td></tr>
+          <tr><td>Datas com lições concluídas</td><td>Mostrar seus dias de estudo, sem guardar respostas nesse indicador</td><td>Até você excluir a conta</td></tr>
           <tr><td>Fuso horário</td><td>Contar seus dias de estudo</td><td>Até você excluir a conta</td></tr>
           <tr><td>O que você pede para aprender, trilhas, lições, respostas, progresso e tempo de estudo</td><td>Montar e acompanhar seus estudos</td><td>Até você apagar a trilha ou excluir a conta</td></tr>
+          <tr><td>Diagnóstico opcional da trilha</td><td>Adaptar o começo e o escopo do estudo</td><td>A sessão de perguntas vale por 30 minutos. O resumo permanece com a trilha salva.</td></tr>
           <tr><td>Materiais enviados (texto lido de fotos, PDFs, DOCX ou CSV)</td><td>Montar uma trilha a partir do material</td><td>24 horas, ou até você excluir</td></tr>
           <tr><td>Gravação da sua explicação por voz</td><td>Transformar a fala em texto</td><td>Não é guardada: só o texto resultante, quando você o envia</td></tr>
           <tr><td>Perfil público opcional: nome, cor, foto, resumo e interesses</td><td>Mostrar quem compartilhou uma trilha</td><td>Até você mudar ou excluir a conta</td></tr>
@@ -69,7 +69,7 @@ export default async function PaginaPrivacidade() {
         Só depois que você permite o uso de IA, e só o necessário para cada função. Qual serviço é usado depende da
         configuração do servidor; a tela de permissão mostra quais estão ligados agora.
       </p>
-      <ul>
+      {provedores.length === 0 ? <p>A IA está em modo de demonstração. Nenhum provedor de IA recebe seus dados nesta configuração.</p> : <ul>
         {provedores.map((provedor) => (
           <li key={provedor.id}>
             <strong>{provedor.nome}</strong>: {provedor.usos.join('; ')}.{' '}
@@ -77,10 +77,10 @@ export default async function PaginaPrivacidade() {
             <a href={provedor.politica} target="_blank" rel="noopener noreferrer">política de privacidade da {provedor.nome}</a>.
           </li>
         ))}
-      </ul>
+      </ul>}
       <p>
-        Esses serviços ficam fora do Brasil (a DeepSeek, na China; a OpenAI, nos Estados Unidos), e os dados enviados a
-        eles são tratados lá. Sem a permissão, nada vai para esses serviços: as respostas são corrigidas no próprio Studoo e as funções que
+        {provedores.length > 0 && 'Os provedores de IA listados tratam dados fora do Brasil. '}
+        Sem a permissão, nada vai para esses serviços: as respostas são corrigidas no próprio Studoo e as funções que
         dependem da IA pedem a permissão antes. No cadastro e na recuperação, o serviço de e-mail recebe o endereço e a
         mensagem com o código ou o aviso sobre uma conta existente. Se escolher entrar com Google ou Apple, o provedor
         participa da autenticação. Com a Apple, você pode ocultar seu e-mail.

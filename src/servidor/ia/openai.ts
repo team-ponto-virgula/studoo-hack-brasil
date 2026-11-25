@@ -1,3 +1,5 @@
+import type { PerfilDiagnostico } from '@studoo/contratos';
+import { contextoDiagnostico, instrucoesDaEstruturaAdaptada, maximoDeLicoesDiagnostico } from './comum';
 import type { MetaPlano } from "./gerador";
 import type { GeradorTrilha } from "./gerador";
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
@@ -11,7 +13,6 @@ import {
   criarMontador,
   esquemaDaLicao,
   esquemaDaLicaoDeMatematica,
-  instrucoesDaEstrutura,
   instrucoesDaLicao,
   instrucoesDaLicaoDeMatematica,
   lerLinha,
@@ -167,10 +168,10 @@ async function* textoDoStreaming(resposta: Response, sinal: AbortSignal): AsyncG
 }
 
 /** Pedido da estrutura: só o objetivo vai para a IA. */
-function corpoDaEstrutura(objetivo: string) {
+function corpoDaEstrutura(objetivo: string, diagnostico?: PerfilDiagnostico) {
   return {
     input: [
-      { role: "system", content: instrucoesDaEstrutura },
+      { role: "system", content: instrucoesDaEstruturaAdaptada(diagnostico) },
       { role: "user", content: `Objetivo de estudo: ${objetivo}` },
     ],
     stream: true,
@@ -206,11 +207,12 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
   const origem = ORIGEM_GERADA;
 
   return {
-    async *gerarEstrutura(objetivo, sinal) {
+    async *gerarEstrutura(pedido, sinal, { diagnostico }) {
+      const objetivo = pedido + contextoDiagnostico(diagnostico);
       const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_ESTRUTURA_MS);
-      const montador = criarMontador(objetivo);
+      const montador = criarMontador(pedido, maximoDeLicoesDiagnostico(diagnostico));
       try {
-        const resposta = await pedir(config, corpoDaEstrutura(objetivo), comPrazo);
+        const resposta = await pedir(config, corpoDaEstrutura(objetivo, diagnostico), comPrazo);
         let resto = "";
         for await (const pedaco of textoDoStreaming(resposta, comPrazo)) {
           resto += pedaco;

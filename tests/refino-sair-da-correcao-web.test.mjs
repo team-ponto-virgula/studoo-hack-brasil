@@ -92,7 +92,7 @@ test('a lição: o X e o voltar usam a regra (livres na correção, travados na 
   assert.match(aula, /<Botao type="submit" form="resposta-licao" disabled=\{ocupado \|\| !respostaCompleta\(exercicio, resposta, iniciais\[indice\]\)\} aria-busy=\{pendente === 'avaliar' \|\| undefined\}>/);
   assert.match(aula, /<button type="button" className="aula-voltar-etapa" disabled=\{ocupado\}/);
   // A resposta digitada já fica no andamento guardado a cada tecla (passo > 0), que é o que a volta usa para corrigir de novo.
-  assert.match(aula, /if \(passo === 0 && tentativas === 0\) return;[\s\S]*?guardarAndamento\(licao\.id, \{\s*passo, respostas, avaliacoes,/);
+  assert.match(aula, /if \(passo === 0 && tentativas === 0\) return;[\s\S]*?guardarAndamento\(licao\.id, \{\s*passo, versaoEtapas: VERSAO_ETAPAS_AULA, respostas, avaliacoes,/);
   // A resposta de uma correção abandonada, se chegar depois, não mexe na lição que saiu: o envio é abortado quando ela desmonta.
   assert.match(aula, /useEffect\(\(\) => \(\) => \{\s*envioAtual\.current\?\.abort\(\);\s*envioAtual\.current = null;\s*\}, \[passo, licao\.id\]\);/);
   assert.match(aula, /if \(!resultado \|\| envio\.signal\.aborted\) return;/);

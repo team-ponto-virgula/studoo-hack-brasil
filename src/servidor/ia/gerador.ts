@@ -1,4 +1,4 @@
-import type { EventoGeracao } from "@studoo/contratos";
+import type { EventoGeracao, PerfilDiagnostico } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { criarGeradorFalso } from "./falsa";
@@ -28,7 +28,7 @@ export interface GeradorTrilha {
   gerarEstrutura(
     objetivo: string,
     sinal: AbortSignal,
-    opcoes: { aoVivo: boolean },
+    opcoes: { aoVivo: boolean; diagnostico?: PerfilDiagnostico },
   ): AsyncGenerator<EventoEstrutura, MetaPlano | undefined>;
   /** Cria o conteúdo de uma lição do esqueleto aceito. Recusa (`proposta_invalida`) um esqueleto de outro gerador. */
   gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;

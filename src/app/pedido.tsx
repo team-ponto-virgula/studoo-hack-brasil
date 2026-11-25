@@ -8,6 +8,7 @@ import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui'
 import './pedido.css';
 import { pedirAceiteIa } from './aceite-ia';
 import { MaterialParaTrilha } from './estudio';
+import { DiagnosticoDoPedido } from './diagnostico';
 import type { PropostaPlano } from '@studoo/contratos';
 
 type Tema = (typeof mensagens.pedido.temas)[number];
@@ -57,10 +58,12 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   temPlanos: boolean;
   aoMudar: (texto: string) => void;
   anunciar: (texto: string) => void;
-  gerar: (texto: string) => void;
+  gerar: (texto: string, diagnosticoId?: string) => void;
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
+  const [pedidoDiagnostico, setPedidoDiagnostico] = useState<string | null>(null);
+  const [diagnosticoAberto, setDiagnosticoAberto] = useState(false);
   const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
@@ -129,7 +132,8 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       campo.current?.focus();
       return;
     }
-    gerar(texto);
+    setPedidoDiagnostico(texto);
+    setDiagnosticoAberto(true);
   }
 
   function enviar(evento: FormEvent<HTMLFormElement>) {
@@ -152,7 +156,15 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   }
 
   return (
-    <section className="painel painel--pedido pedido-novo" data-modo={modo}>
+    <>
+    {pedidoDiagnostico && <div hidden={!diagnosticoAberto}>
+      <DiagnosticoDoPedido key={pedidoDiagnostico} objetivo={pedidoDiagnostico} ativo={diagnosticoAberto}
+        continuar={id => gerar(pedidoDiagnostico, id)} cancelar={() => {
+          setDiagnosticoAberto(false);
+          window.requestAnimationFrame(() => campo.current?.focus());
+        }} aoDesconectar={aoDesconectar} />
+    </div>}
+    <div hidden={diagnosticoAberto}><section className="painel painel--pedido pedido-novo" data-modo={modo}>
       <header className="pedido-heroi">
         <div className="pedido-heroi__stu" aria-hidden="true">
           <span className="pedido-heroi__halo" />
@@ -225,6 +237,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       )}
       {porLink}
       <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}</button>
-    </section>
+    </section></div>
+    </>
   );
 }

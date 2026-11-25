@@ -43,6 +43,7 @@
     "codigo:studoo:prova": "node --import tsx scripts/codigo-studoo-prova.mjs",
     "test:cadastro-apple": "node --env-file=.env --import tsx --test tests/acesso-cadastro-apple.test.mjs",
     "test:privacidade": "node --env-file=.env --import tsx --test tests/privacidade.test.mjs",
+    "test:feedback-aluno": "node --env-file=.env --import tsx --test tests/feedback-aluno-web.test.mjs",
     "test:email": "node --import tsx --test tests/email-resend.test.mjs tests/email-millionsend.test.mjs",
     "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs tests/voz-ao-vivo.test.mjs tests/compartilhar.test.mjs tests/perfil-rico.test.mjs tests/comunidade.test.mjs tests/codigo-e-demonstracao.test.mjs tests/codigo-folga.test.mjs tests/seguir.test.mjs tests/configuracoes-trilha.test.mjs tests/apoio-matematica-ia.test.mjs && node --env-file=.env --import tsx --test tests/explorar-busca-retorno.test.mjs",
     "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",

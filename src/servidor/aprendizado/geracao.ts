@@ -1,6 +1,6 @@
 import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomUUID } from "node:crypto";
-import { LIMITES_GERACAO, type EventoGeracao } from "@studoo/contratos";
+import { LIMITES_GERACAO, type EventoGeracao, type PerfilDiagnostico } from "@studoo/contratos";
 import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { obterGerador, type GeradorTrilha, type MetaPlano } from "@/servidor/ia/gerador";
@@ -21,7 +21,7 @@ export interface Geracao {
 export function iniciarGeracao(
   usuarioId: string,
   objetivo: string,
-  opcoes?: { verificarLimite?: boolean },
+  opcoes?: { verificarLimite?: boolean; diagnostico?: PerfilDiagnostico },
 ): Geracao {
   const texto = objetivo.trim();
   if (texto.length < LIMITES_GERACAO.objetivoMin || texto.length > LIMITES_GERACAO.objetivoMax) {
@@ -32,7 +32,8 @@ export function iniciarGeracao(
     throw new FalhaApi("limite_geracoes");
   }
 
-  return { eventos: (sinal, opcoes) => emitirEventos(gerador, usuarioId, texto, sinal, opcoes?.aoVivo ?? true) };
+  const diagnostico = opcoes?.diagnostico;
+  return { eventos: (sinal, opcoes) => emitirEventos(gerador, usuarioId, texto, sinal, opcoes?.aoVivo ?? true, diagnostico) };
 }
 
 /** Confere que cada evento segue o anterior: plano, fluxo 0, suas lições, fluxo 1, e assim por diante. */
@@ -61,8 +62,9 @@ async function* emitirEventos(
   objetivo: string,
   sinal: AbortSignal,
   aoVivo: boolean,
+  diagnostico?: PerfilDiagnostico,
 ): AsyncGenerator<EventoGeracao> {
-  const estrutura = gerador.gerarEstrutura(objetivo, sinal, { aoVivo });
+  const estrutura = gerador.gerarEstrutura(objetivo, sinal, { aoVivo, diagnostico });
   try {
     let plano: { titulo: string; objetivo: string } | undefined;
     const acumulado = { fluxos: [] as EsqueletoPlano["fluxos"], tem: false };
@@ -76,14 +78,14 @@ async function* emitirEventos(
       }
       seguirEstrutura(acumulado, passo.value);
       if (passo.value.tipo === "plano") {
-        plano = { titulo: passo.value.titulo, objetivo: passo.value.objetivo };
+        plano = { titulo: passo.value.titulo, objetivo: diagnostico ? objetivo : passo.value.objetivo };
       }
-      yield passo.value;
+      yield passo.value.tipo === "plano" && diagnostico ? { ...passo.value, objetivo } : passo.value;
     }
     if (sinal.aborted) return;
 
     if (!meta) throw new FalhaApi("falha");
-    const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, fluxos: acumulado.fluxos };
+    const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, ...(diagnostico && { diagnostico }), fluxos: acumulado.fluxos };
     if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
     }
@@ -105,6 +107,7 @@ async function* emitirEventos(
         objetivo: esqueleto.objetivo,
         origem: esqueleto.origem,
         fluxos: esqueleto.fluxos,
+        ...(diagnostico && { diagnostico }),
       },
     };
   } catch (erro) {

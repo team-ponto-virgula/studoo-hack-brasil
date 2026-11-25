@@ -64,6 +64,7 @@ import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
 import './aula.css';
 import './trilha.css';
 import './clareza.css';
+import { ResumoDiagnostico } from './diagnostico';
 
 type Tela =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
@@ -145,6 +146,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   filtroExplorarRef.current = filtroExplorar;
   const navegandoPorHistorico = useRef(false);
   const ultimaUrlSincronizada = useRef('');
+  const listaVersao = useRef(0);
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
   const [puloVazio, setPuloVazio] = useState(0);
@@ -363,11 +365,14 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     if (tela.tipo !== 'planos' && tela.tipo !== 'plano') return;
     if (Date.now() - ultimaBusca.current < 5_000) return;
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
+    const versao = ++listaVersao.current;
     try {
       const ativos = await cliente.listarPlanos();
+      if (!montado.current || versao !== listaVersao.current) return;
       setPlanos(ativos);
       if (tela.tipo === 'plano') {
         const atualizado = await cliente.obterPlano(tela.plano.id);
+        if (!montado.current || versao !== listaVersao.current) return;
         setTela((atual) => (atual.tipo === 'plano' && atual.plano.id === atualizado.id ? { ...atual, plano: atualizado } : atual));
       }
       const momento = Date.now();
@@ -375,7 +380,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       setAgora(momento);
       setSincronia({ estado: 'atualizado', em: momento });
     } catch {
-      setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
+      if (versao === listaVersao.current) setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
     }
   }, [inicio, tela]);
 
@@ -613,6 +618,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
         const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
         if (!resultado.ok) return;
         void tocaSons.tocarEfeito('apagar');
+        listaVersao.current++;
         setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
         anunciar(mensagens.planos.apagada(plano.titulo));
         depois?.();
@@ -621,6 +627,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   }
 
   function atualizarPlano(plano: PlanoDetalhe) {
+    listaVersao.current++;
     setPlanos((anteriores) => {
       const resumo: PlanoResumo = {
         id: plano.id, titulo: plano.titulo, progresso: plano.progresso,
@@ -637,16 +644,16 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
    * Geração ao vivo: a tela troca para a trilha vazia e cada evento do fluxo entra no caminho assim que chega.
    * Um erro, antes ou durante a geração, volta ao pedido com o texto mantido e a mensagem do código.
    */
-  async function gerar(texto: string) {
+  async function gerar(texto: string, diagnosticoId?: string) {
     if (emExecucao.current || geracaoAtiva.current) return;
     const controle = new AbortController();
     geracaoAtiva.current = controle;
-    let trilha: TrilhaEmGeracao = { objetivo: texto, titulo: null, fluxos: [], proposta: null };
+    let trilha: TrilhaEmGeracao = { objetivo: texto, diagnosticoId, titulo: null, fluxos: [], proposta: null };
     navegar({ tipo: 'geracao' });
     setGeracao(trilha);
 
     try {
-      for await (const evento of gerarTrilhaAoVivo(texto, controle.signal)) {
+      for await (const evento of gerarTrilhaAoVivo(texto, controle.signal, diagnosticoId)) {
         if (controle.signal.aborted) return;
         if (evento.tipo === 'erro') throw new ErroStudoo(evento.codigo);
         trilha = aplicarEvento(trilha, evento);
@@ -676,7 +683,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   }
 
   /** O token identifica o aceite no servidor, inclusive se a resposta se perder e houver nova tentativa. */
-  async function comecar(painel: HTMLElement) {
+  async function comecar(painel: HTMLElement, iniciar = true) {
     if (aceiteAtual.current || !geracao?.proposta) return;
     const tentativa = new AbortController();
     const somDoAceite = tocaSons.sinalDosEfeitos;
@@ -698,7 +705,17 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     }
     if (!montado.current) return;
     atualizarPlano(plano);
+    const salvoEm = Date.now();
+    ultimaBusca.current = salvoEm;
+    setSincronia({ estado: 'atualizado', em: salvoEm });
     if (tentativa.signal.aborted) return;
+    if (!iniciar) {
+      navegar({ tipo: 'planos' });
+      setObjetivo('');
+      setAviso('Trilha salva em Minhas trilhas. Comece quando quiser.');
+      anunciar('Trilha salva em Minhas trilhas.');
+      return;
+    }
     const primeira = proximaDoCaminho(plano);
     if (!primeira) { navegar({ tipo: 'plano', plano }); return; }
     const busca = obterLicaoComCache(primeira);
@@ -746,7 +763,9 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   /** Trilha adicionada pelo link (ou já tinha): abre o mapa dela, com o aviso de quem compartilhou. */
   async function aoAdicionarPorLink(planoId: string, nomeDono: string, jaTinha: boolean) {
     try {
-      setPlanos(await cliente.listarPlanos());
+      const versao = ++listaVersao.current;
+      const atual = await cliente.listarPlanos();
+      if (montado.current && versao === listaVersao.current) setPlanos(atual);
     } catch { /* A lista se atualiza na próxima sincronia. */ }
     void abrirPlano(planoId, undefined, jaTinha ? undefined : mensagens.compartilhar.adicionada(nomeDono));
   }
@@ -908,7 +927,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           )}
           {visivel && tela.tipo === 'objetivo' && (
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
-              focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
+              focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto, id) => void gerar(texto, id)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
               aoDesconectar={() => irParaLogin(true)}
@@ -943,6 +962,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                   </Botao>
                 </div>
                 <p className="introducao">{mensagens.planos.subtitulo}</p>
+                {aviso && <p role="status">{aviso}</p>}
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
                     ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => apagarPlano(destaque)}
@@ -970,7 +990,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           {previa && (
             <PreviaTrilha geracao={previa} aceite={aceite} passagem={passagem}
               cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
-              aceitar={painel => void comecar(painel)} remontar={() => void gerar(objetivo || previa.objetivo)}
+              aceitar={painel => void comecar(painel)} salvar={painel => void comecar(painel, false)}
+              visitante={visitante} remontar={() => void gerar(previa.objetivo, previa.diagnosticoId)}
               existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo)) : undefined}
               abrirExistente={id => void abrirPlano(id)} />
           )}
@@ -1364,6 +1385,7 @@ function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, nov
 
   return (
     <section className="painel painel--trilha">
+      {plano.diagnostico && <ResumoDiagnostico perfil={plano.diagnostico} />}
       {plano.capa && <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="trilha-capa" grande />}
       <header className="trilha-topo" ref={topoDoMapa}>
         <div className="trilha-topo__texto">
@@ -1514,6 +1536,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
   const textos = mensagens.licao.resumo;
   // A última lição fecha a trilha: a comemoração é da trilha inteira.
   const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
+  const paraRever = trilhaFeita ? plano.fluxos.flatMap(fluxo => fluxo.licoes).find(item => item.rever) : undefined;
 
   return (
     <section className="painel painel--concluida">
@@ -1595,8 +1618,12 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
         <AcaoPrincipal>
           {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
           {proxima && <Botao disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
-          <Botao variante={proxima ? 'secundario' : 'primario'} disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
-          {trilhaFeita && <Botao variante="secundario" disabled={ocupado} onClick={novoAssunto}>{mensagens.licao.novoAssunto}</Botao>}
+          {trilhaFeita && <Botao disabled={ocupado} onClick={paraRever ? () => abrirLicao(paraRever.id) : novoAssunto}>
+            {paraRever ? 'Rever uma lição' : 'Começar outra trilha'}
+          </Botao>}
+          <Botao variante={proxima || trilhaFeita ? 'secundario' : 'primario'} disabled={ocupado} onClick={voltar}>
+            {trilhaFeita ? 'Ver mapa da trilha' : mensagens.licao.voltar}
+          </Botao>
         </AcaoPrincipal>
       </div>
     </section>

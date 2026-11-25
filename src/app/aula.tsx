@@ -8,6 +8,8 @@ import {
   conferirFala,
   embaralharExercicioDaRodada,
   etapasDaLicao,
+  migrarPassoAula,
+  VERSAO_ETAPAS_AULA,
   faltaParaVerificar,
   ordemInicial,
   exerciciosDaLicao,
@@ -76,6 +78,7 @@ export type ResumoLicao = {
 /** O andamento de uma lição, guardado no navegador para a pessoa continuar de onde parou. */
 type Andamento = {
   passo: number;
+  versaoEtapas?: number;
   respostas: string[];
   avaliacoes: (Avaliacao | null)[];
   primeiras: (boolean | null)[];
@@ -83,6 +86,7 @@ type Andamento = {
   comprovante: string | null;
   autoAvaliacao: AutoAvaliacao | null;
   revisao: number[] | null;
+  revisaoFeita?: boolean;
   /** Segundos já estudados nesta lição, para o tempo do resumo seguir de onde parou. */
   segundos?: number;
   /** O que faltava no cronômetro da prática, para ele seguir de onde parou. */
@@ -130,13 +134,13 @@ function respostaRetomada(exercicio: ExercicioPublico, guardada: string): string
 }
 
 /** O andamento guardado desta lição, se ainda servir (mesmo número de etapas e exercícios, menos de um dia). */
-function lerAndamento(licao: LicaoDetalhe, etapas: number, exercicios: number): Andamento | null {
+function lerAndamento(licao: LicaoDetalhe, etapas: EtapaAula[], exercicios: number): Andamento | null {
   if (licao.concluida || typeof window === 'undefined') return null;
   try {
     const salvo = JSON.parse(window.localStorage.getItem(chaveDoAndamento(licao.id)) ?? 'null') as (Andamento & { salvoEm: number }) | null;
-    if (!salvo || Date.now() - salvo.salvoEm > 86_400_000 || salvo.passo <= 0 || salvo.passo >= etapas) return null;
+    if (!salvo || Date.now() - salvo.salvoEm > 86_400_000 || salvo.passo <= 0 || salvo.passo >= etapas.length) return null;
     if ([salvo.respostas, salvo.avaliacoes, salvo.primeiras].some((lista) => !Array.isArray(lista) || lista.length !== exercicios)) return null;
-    return salvo;
+    return { ...salvo, passo: migrarPassoAula(etapas, salvo.passo, salvo.versaoEtapas) };
   } catch {
     return null;
   }
@@ -151,7 +155,7 @@ function guardarAndamento(id: string, andamento: Andamento | null) {
   }
 }
 
-const iconesDaEtapa: Record<EtapaAula['tipo'], NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo', pratica: 'relogio' };
+const iconesDaEtapa: Record<EtapaAula['tipo'], NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo', ensino: 'lapis', pratica: 'relogio' };
 
 /** O título sem quebra no meio de uma palavra com hífen (“check-” numa linha e “in” na outra). */
 function semQuebrarHifen(texto: string): ReactNode {
@@ -235,7 +239,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
     [licao, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou (o andamento fica no navegador por um dia).
-  const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
+  const [retomada] = useState(() => lerAndamento(licao, etapas, exercicios.length));
   const [passo, setPasso] = useState(retomada?.passo ?? 0);
   const [respostas, setRespostas] = useState<string[]>(() => (retomada
     ? retomada.respostas.map((guardada, numero) => respostaRetomada(exercicios[numero], guardada))
@@ -249,6 +253,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   const [autoAvaliacao, setAutoAvaliacao] = useState<AutoAvaliacao | null>(retomada?.autoAvaliacao ?? null);
   /** Revisão antes de concluir: os exercícios que ficaram sem acerto voltam uma vez, nesta ordem. */
   const [revisao, setRevisao] = useState<number[] | null>(retomada?.revisao ?? null);
+  const [revisaoFeita, setRevisaoFeita] = useState(retomada?.revisaoFeita ?? false);
   const [avisoRetomada, setAvisoRetomada] = useState(retomada !== null);
   /** A última correção errada de cada exercício: a dica fica à vista embaixo do campo na nova tentativa. */
   const [errosAnteriores, setErrosAnteriores] = useState<(Avaliacao | null)[]>(() => exercicios.map(() => null));
@@ -271,7 +276,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   /** O "Explique com suas palavras" já foi enviado: o convite no acerto do último exercício sai. */
   const [ensinou, setEnsinou] = useState(() => retomada?.ensinou ?? false);
   /** O "Explique com suas palavras" está aberto: o rodapé fica só com as ações. */
-  const [expliqueAberto, setExpliqueAberto] = useState(false);
   const [confirmandoRecomeco, setConfirmandoRecomeco] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
@@ -352,12 +356,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   const total = etapas.length;
   const ultima = passo === total - 1;
   // O último exercício é o único sem acerto: pular leva direto à revisão rápida, com ele mesmo.
-  const soEsteFalta = ultima && exercicios.every((_, numero) => numero === indice || avaliacoes[numero]?.correta);
+  const ultimoExercicioDaVez = etapa.tipo === 'exercicio' && etapas[passo + 1]?.tipo === 'ensino';
+  const soEsteFalta = ultimoExercicioDaVez && exercicios.every((_, numero) => numero === indice || avaliacoes[numero]?.correta);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
   // Na revisão, o contador de etapas voltaria para trás: o topo diz "Revisão rápida" e a barra fica cheia.
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
+  else if (etapa.tipo === 'ensino') nomeEtapa = 'Ensine ao Stu';
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     // Na revisão, o contador é o da revisão ("Revisão 1 de 1"), não o dos exercícios da lição.
@@ -412,7 +418,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   // cronômetro e o "Como foi?" ficam abaixo da tarefa), um aviso discreto leva até ele: nada mostrava que havia mais.
   const [temAbaixo, setTemAbaixo] = useState(false);
   useEffect(() => {
-    if (etapa.tipo !== 'exercicio' && etapa.tipo !== 'pratica') {
+    if (etapa.tipo !== 'exercicio' && etapa.tipo !== 'ensino' && etapa.tipo !== 'pratica') {
       setTemAbaixo(false);
       return;
     }
@@ -452,13 +458,13 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
       // Sem armazenamento: o cartão da trilha só não diz Continuar.
     }
     guardarAndamento(licao.id, {
-      passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
+      passo, versaoEtapas: VERSAO_ETAPAS_AULA, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao, revisaoFeita,
       segundos: Math.round((Date.now() - inicio) / 1000),
       pontes: pontesPorExercicio,
       ensinou,
       ...(praticaRestante.current !== undefined ? { praticaRestante: praticaRestante.current } : {}),
     });
-  }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao, pontesPorExercicio, ensinou]);
+  }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao, revisaoFeita, pontesPorExercicio, ensinou]);
 
   useEffect(() => {
     if (!avaliacao) return;
@@ -609,7 +615,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   async function avancar() {
     if (ocupado) return;
     posicoesDasEtapas.current[passo] = window.scrollY;
-    // Na revisão, segue para o próximo exercício que ficou para trás; acabou a fila, conclui.
+    const passoEnsino = etapas.findIndex(item => item.tipo === 'ensino');
     if (revisao) {
       const resto = revisao.filter((numero) => numero !== indice);
       if (resto.length > 0) {
@@ -617,15 +623,21 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         setPasso(etapaDoExercicio(resto[0]));
         return;
       }
-    } else if (!ultima) {
-      setPasso((atual) => atual + 1);
+      setRevisao(null);
+      setRevisaoFeita(true);
+      setPasso(passoEnsino);
       return;
-    } else {
+    }
+    if (!revisaoFeita && (ultimoExercicioDaVez || etapa.tipo === 'pratica')) {
       const pendentes = exercicios.map((_, numero) => numero).filter((numero) => !avaliacoes[numero]?.correta);
       if (pendentes.length > 0) {
         revisar(pendentes);
         return;
       }
+    }
+    if (!ultima && !(etapa.tipo === 'ensino' && autoAvaliacao)) {
+      setPasso(passo + 1);
+      return;
     }
     if (!comprovante) return;
     const acertos = avaliacoes.filter((item) => item?.correta).length;
@@ -667,21 +679,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
     setComprovante(null);
     setAutoAvaliacao(null);
     setRevisao(null);
+    setRevisaoFeita(false);
     setAvisoRetomada(false);
     setErrosAnteriores(exercicios.map(() => null));
     setPontesPorExercicio({});
     setEnsinou(false);
-  }
-
-  /** Abre o "Explique com suas palavras" (no pé da página) e leva até ele. */
-  function abrirExplique() {
-    const caixas = document.querySelectorAll<HTMLDetailsElement>('.estudio-apoio details.estudio-card');
-    const caixa = caixas[caixas.length - 1];
-    if (!caixa) return;
-    caixa.open = true;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    caixa.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
-    caixa.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
   }
 
   /** Concluir sem contar como foi: a tela leva até a pergunta, em vez de um botão apagado sem explicação. */
@@ -724,6 +726,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         {pendente === 'avaliar' ? t.avaliando : t.avaliar}
       </Botao>
     );
+  } else if (etapa.tipo === 'ensino') {
+    const vaiPraticar = Boolean(licao.pratica && !autoAvaliacao);
+    acao = <Botao variante={ensinou ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()}>
+      {ensinou ? (vaiPraticar ? 'Ir para a prática' : 'Concluir lição') : (vaiPraticar ? 'Pular' : 'Pular e concluir')}
+    </Botao>;
   } else if (etapa.tipo === 'pratica') {
     acao = (
       <>
@@ -752,7 +759,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   }
 
   const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0);
-  const compacto = Boolean((avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao));
+  const compacto = Boolean((avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita));
   // Acerto: feliz; de primeira: comemorando (com o pulo); depois da ponte: animado; erro: encorajador.
   const expressaoDaReacao = !avaliacao?.correta ? 'stu-encorajador'
     : pontesPorExercicio[indice] ? 'stu-animado' : primeiras[indice] === true ? 'stu-comemorando' : 'stu-feliz';
@@ -873,6 +880,12 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             </>
           );
         })()}
+        {etapa.tipo === 'ensino' && (
+          <div className="aula-quadro" data-etapa="ensino">
+            <h2 tabIndex={-1} ref={tituloEtapa}>Ensine ao Stu</h2>
+            <p>Explique a ideia com suas palavras. Esta etapa é opcional.</p>
+          </div>
+        )}
         {etapa.tipo === 'pratica' && licao.pratica && (
           <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao} reinicio={voltasPratica}
             restanteInicial={praticaRestante.current} aoMudarRestante={(valor) => { praticaRestante.current = valor; }}
@@ -880,11 +893,15 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         )}
       </div>
       {exercicio && (
-        <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
+        <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={false}
           ultimaResposta={exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar' ? '' : respostaLegivel(exercicio, resposta)}
           aoVoltarExercicio={tentarDeNovo}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
-          aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} aoDesconectar={aoDesconectar} />
+          aoDesconectar={aoDesconectar} />
+      )}
+      {etapa.tipo === 'ensino' && (
+        <ApoioDaLicao key="ensino" licao={licao} avaliacao={null} ensinoDireto
+          aoEnsinar={() => setEnsinou(true)} aoDesconectar={aoDesconectar} />
       )}
       <footer className="aula-rodape" data-retorno={retorno} data-compacto={compacto || undefined} data-resolva={etapa.tipo === 'exemplo' && resolva.ativo ? '' : undefined}>
         {temAbaixo && (
@@ -908,11 +925,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
                 <div className="aula-retorno__corpo" ref={corpoRetorno} data-rola={corpoRola || undefined}>
                 {pedidoPonte === 0 && <TextoComFormulas como="p" texto={avaliacao.feedback} />}
                 {pedidoPonte === 0 && avaliacao.observacao && <TextoComFormulas como="p" className="aula-retorno__observacao" texto={avaliacao.observacao} />}
-                {avaliacao.correta && indice === exercicios.length - 1 && !ensinou && (
-                  <span className="aula-retorno__link">
-                    <Botao variante="texto" onClick={abrirExplique}>{t.expliqueConvite}</Botao>
-                  </span>
-                )}
                 {pedidoPonte === 0 && !avaliacao.correta && avaliacao.certos && exercicio && (exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar') && (
                   <p className="aula-retorno__observacao">
                     {exercicio.tipo === 'ordenar'

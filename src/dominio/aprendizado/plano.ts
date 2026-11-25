@@ -1,3 +1,4 @@
+import { perfilDiagnosticoValido, type PerfilDiagnostico } from '@studoo/contratos';
 import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, ResolucaoGuardada, Visual } from "@studoo/contratos";
 import { LIMITES_RESPOSTA, TIPOS_TRECHO, frasesDoConceito, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
@@ -828,6 +829,7 @@ export function calcularProgresso(concluidas: number, total: number): Progresso 
 /** Estrutura de uma proposta: títulos, sem o conteúdo das lições. É o que o token da proposta carrega. */
 export type EsqueletoPlano = {
   materialId?: string;
+  diagnostico?: PerfilDiagnostico;
   gerador: string;
   titulo: string;
   objetivo: string;
@@ -841,6 +843,7 @@ export const LIMITES_ESQUELETO = { fluxos: 8, licoesPorFluxo: 8, titulo: 200, ob
 export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
   if (!objeto(valor) || !textoAte(valor.gerador, 40) || !textoAte(valor.titulo, LIMITES_ESQUELETO.titulo) ||
       !textoAte(valor.objetivo, LIMITES_ESQUELETO.objetivo) || !textoAte(valor.origem, LIMITES_ESQUELETO.titulo) ||
+      !opcional(valor.diagnostico, perfilDiagnosticoValido) ||
       !Array.isArray(valor.fluxos) || valor.fluxos.length === 0 || valor.fluxos.length > LIMITES_ESQUELETO.fluxos) {
     return false;
   }

@@ -75,15 +75,12 @@ test('item 24: com o "Explique" aberto, o rodapé do acerto é UMA linha de 64 p
   assert.match(css, /\.aula-rodape\[data-retorno='certa'\] \{ --fundo-rodape: #e3f6ea; --linha-rodape: #e3f6ea; \}/, 'o mesmo verde claro');
 });
 
-test('item 24: o texto do retorno, o convite e a nota saem do rodapé compacto, e a linha só vale no acerto com o "Explique" aberto (ao fechar, o rodapé volta ao normal)', () => {
-  const css = ler('src/app/aula.css');
-  assert.match(css, /\.aula-rodape\[data-compacto\] \.aula-retorno p, \.aula-rodape\[data-compacto\] \.aula-retorno__link,\s*\.aula-rodape\[data-compacto\] \.aula-rodape__nota \{ display: none; \}/, 'o texto do retorno sai (já foi lido)');
-  // Só no acerto: o erro com o reforço aberto não ganha a linha.
-  assert.doesNotMatch(css, /\.aula-rodape\[data-retorno='errada'\]\[data-compacto\]/);
+test('a explicação tem etapa própria e o reforço mantém o rodapé compacto', () => {
   const aula = ler('src/app/aula.tsx');
-  assert.match(aula, /const compacto = Boolean\(\(avaliacao && !avaliacao\.correta && pedidoPonte > 0 && !ponteFeita\) \|\| \(expliqueAberto && avaliacao\)\);/, 'a linha acompanha o "Explique" aberto: ao fechar, `expliqueAberto` volta a falso e o rodapé ao normal');
+  assert.match(aula, /const compacto = Boolean\(\(avaliacao && !avaliacao\.correta && pedidoPonte > 0 && !ponteFeita\)\);/);
   assert.match(aula, /<footer className="aula-rodape" data-retorno=\{retorno\} data-compacto=\{compacto \|\| undefined\}/);
-  assert.match(aula, /aoAbrirExplique=\{setExpliqueAberto\}/);
-  assert.match(ler('src/app/estudio.tsx'), /aoAbrirExplique\?\.\(e\.currentTarget\.open\);/, 'abrir e fechar o "Explique" avisa a aula');
-  assert.match(aula, /\{!compacto && \(\s*<Mascote expressao=\{expressaoDaReacao\}/, 'no compacto o Stu da reação sai (o "Explique" já tem o dele)');
+  assert.match(aula, /etapa\.tipo === 'ensino'[\s\S]*?<ApoioDaLicao key="ensino"[^>]*ensinoDireto/);
+  assert.match(aula, /Pular e concluir/);
+  assert.match(ler('src/app/estudio.tsx'), /open=\{ensinoDireto \|\| undefined\}/);
+  assert.match(aula, /\{!compacto && \(\s*<Mascote expressao=\{expressaoDaReacao\}/);
 });

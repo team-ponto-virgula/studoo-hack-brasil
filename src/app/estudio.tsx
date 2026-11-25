@@ -352,6 +352,7 @@ export function ApoioDaLicao({
   avaliacao,
   pedidoPonte = 0,
   ultimo = true,
+  ensinoDireto = false,
   ultimaResposta = '',
   aoVoltarExercicio,
   aoConcluirPonte,
@@ -365,6 +366,7 @@ export function ApoioDaLicao({
   pedidoPonte?: number;
   /** Último exercício da lição: só nele aparece o "Ensine ao Stu", quando a pessoa já viu a lição toda. */
   ultimo?: boolean;
+  ensinoDireto?: boolean;
   /** Resposta que gerou o erro, exibida na 1ª tábua da ponte. */
   ultimaResposta?: string;
   /** Volta ao exercício recolhido quando a ponte está em tela cheia. */
@@ -785,10 +787,11 @@ export function ApoioDaLicao({
       {cartaoOrigem}
       {ultimo && <details
         className="estudio-card estudio-ensino"
+        open={ensinoDireto || undefined}
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
           if (e.currentTarget.open) {
-            garantirAcoesEnsinoVisiveis();
+            if (!ensinoDireto) garantirAcoesEnsinoVisiveis();
           } else {
             if (recorder.current?.state === 'recording') recorder.current.stop();
             controladorVozRef.current?.descartar();
@@ -797,7 +800,7 @@ export function ApoioDaLicao({
           }
         }}
       >
-        <summary>{m.ensinar}</summary>
+        <summary hidden={ensinoDireto}>{m.ensinar}</summary>
         <div
           className="ensino-stu"
           data-gravando={gravando || (etapaVoz === 'ativa' && estadoVoz.estado === 'ouvindo') || undefined}

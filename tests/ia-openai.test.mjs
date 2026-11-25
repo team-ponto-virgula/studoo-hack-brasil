@@ -590,3 +590,25 @@ test("OpenAI: se a leitura estoura nas duas tentativas, o erro é ia_indisponive
   assert.equal(erro.motivo, "formato");
   assert.equal(pedidosDeLicao, 2);
 });
+
+test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega ao prompt da lição', async () => {
+  const diagnostico = {
+    nivel: 'basico', escopo: 'Equação do primeiro grau',
+    demonstrados: ['Isolar a incógnita', 'Resolver equações com x dos dois lados'],
+    lacunas: [],
+  };
+  const eventos = await coletar(iniciarGeracao('teste-diagnostico', 'Equação do primeiro grau', { diagnostico }));
+  const p = eventos.at(-1).proposta;
+  assert.equal(p.objetivo, 'Equação do primeiro grau');
+  assert.deepEqual(p.diagnostico, diagnostico);
+  assert.equal(p.fluxos.flatMap(f => f.licoes).length, 2);
+  assert.match(pedidos[0].dados.input[0].content, /até 2 lições/);
+  assert.match(pedidos[0].dados.input[1].content, /Isolar a incógnita/);
+
+  const conteudo = await obterGerador().gerarConteudo({
+    ...p, gerador: GERADOR_OPENAI, diagnostico,
+  }, 0, 0, new AbortController().signal);
+  assert.ok(conteudoValido(conteudo));
+  assert.match(pedidos.at(-1).dados.input[1].content, /Use apenas demonstrados como evidência/);
+  assert.match(pedidos.at(-1).dados.input[1].content, /Resolver equações com x dos dois lados/);
+});
