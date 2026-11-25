@@ -10,6 +10,7 @@ process.env.DATABASE_URL ??= "postgresql://teste:teste@127.0.0.1:5432/teste";
 // A proposta pronta sai com um token assinado; sem o .env, uma chave fictícia de teste.
 process.env.STUDOO_CHAVE_ASSINATURA ??= "0123456789abcdef".repeat(4);
 const { iniciarGeracao } = await import("../src/servidor/aprendizado/geracao.ts");
+const { lerComprovante } = await import("../src/servidor/aprendizado/comprovantes.ts");
 const { obterGerador } = await import("../src/servidor/ia/gerador.ts");
 const { GERADOR_OPENAI, MODELO_PADRAO, normalizarConteudo } = await import("../src/servidor/ia/openai.ts");
 const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.ts");
@@ -49,6 +50,19 @@ const licaoDeEscolha = {
     gabarito: ["Na cabeça"],
     feedbackCorreto: "Isso: as tarraxas ficam na cabeça do violão.",
     feedbackIncorreto: "As tarraxas ficam na cabeça, a ponta do braço.",
+  },
+};
+const desafioDaEquacao = 'Escolher a equação que representa uma taxa fixa mais um preço por unidade.';
+const licaoComDiagnostico = {
+  objetivo: desafioDaEquacao,
+  conceito: 'Uma taxa fixa é somada ao custo por unidade multiplicado pela quantidade.',
+  exemplo: 'Um total de R$ 18 com entrada de R$ 8 e R$ 2 por quilo se escreve como 8 + 2k = 18.',
+  exercicio: {
+    ...licaoDeEscolha.exercicio,
+    enunciado: 'Uma corrida custa R$ 5 fixos e R$ 3 por quilômetro. Qual equação representa o total de R$ 20?',
+    opcoes: [{ id: 'a', texto: '5 + 3k = 20' }, { id: 'b', texto: '3 + 5k = 20' }, { id: 'c', texto: '5k + 3k = 20' }],
+    gabarito: ['a'], feedbackCorreto: 'Some a taxa fixa ao preço por quilômetro vezes a distância.',
+    feedbackIncorreto: 'Separe o valor inicial do valor por quilômetro.',
   },
 };
 
@@ -117,6 +131,11 @@ before(async () => {
       // Correções durante a aula: cada pedido diz o seu formato pelo nome do esquema.
       const formato = dados.text?.format?.name;
       let saida = licaoDeEscolha;
+      if (modo === 'diagnostico') {
+        if (formato === 'diagnostico_abertura') saida = { titulo: 'Traduzir uma situação em equação', desafio: desafioDaEquacao };
+        else if (formato === 'diagnostico_verificar_licao') saida = { resultado: 'avanca' };
+        else saida = licaoComDiagnostico;
+      }
       if (formato === "correcao_aberta") saida = { criterios: [{ atendido: true }, { atendido: false }], correta: true, feedback: "Boa ideia, faltou o exemplo." };
       if (formato === "desempate_lacuna") saida = { equivalente: dados.input[1].content.includes("dois") };
       resposta.writeHead(200, { "Content-Type": "application/json" });
@@ -592,6 +611,7 @@ test("OpenAI: se a leitura estoura nas duas tentativas, o erro é ia_indisponive
 });
 
 test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega ao prompt da lição', async () => {
+  modo = 'diagnostico';
   const diagnostico = {
     nivel: 'basico', escopo: 'Equação do primeiro grau',
     demonstrados: ['Isolar a incógnita', 'Resolver equações com x dos dois lados'],
@@ -605,10 +625,14 @@ test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega
   assert.match(pedidos[0].dados.input[0].content, /até 2 lições/);
   assert.match(pedidos[0].dados.input[1].content, /Isolar a incógnita/);
 
-  const conteudo = await obterGerador().gerarConteudo({
-    ...p, gerador: GERADOR_OPENAI, diagnostico,
-  }, 0, 0, new AbortController().signal);
+  const plano = lerComprovante('proposta', 'teste-diagnostico', p.token).plano;
+  assert.equal(plano.desafioInicial, desafioDaEquacao);
+  const conteudo = await obterGerador().gerarConteudo(plano, 0, 0, new AbortController().signal);
   assert.ok(conteudoValido(conteudo));
-  assert.match(pedidos.at(-1).dados.input[1].content, /Use apenas demonstrados como evidência/);
-  assert.match(pedidos.at(-1).dados.input[1].content, /Resolver equações com x dos dois lados/);
+  const pedidoDaLicao = pedidos.find(pedido => pedido.dados.input[1]?.content.includes('Desafio inicial'));
+  assert.match(pedidoDaLicao.dados.input[1].content, /Use apenas demonstrados como evidência/);
+  assert.match(pedidoDaLicao.dados.input[1].content, /Resolver equações com x dos dois lados/);
+  const verificacao = pedidos.at(-1).dados;
+  assert.equal(verificacao.text.format.name, 'diagnostico_verificar_licao');
+  assert.match(JSON.parse(verificacao.input[0].content[0].text).licao.exercicio.enunciado, /Qual equação representa/);
 });

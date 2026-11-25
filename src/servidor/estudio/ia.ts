@@ -102,7 +102,8 @@ export async function pedirJson(
   if (process.env.IA !== 'openai' || !config)
     throw new FalhaApi('ia_indisponivel');
   try {
-    const sinal = AbortSignal.timeout(opcoes.prazoMs ?? 60_000);
+    const prazo = AbortSignal.timeout(opcoes.prazoMs ?? 60_000);
+    const sinal = opcoes.sinal ? AbortSignal.any([opcoes.sinal, prazo]) : prazo;
     const resposta = await comNovasTentativas(() => fetch(`${config.base}/responses`, {
       method: 'POST',
       redirect: 'error',
