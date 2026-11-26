@@ -34,14 +34,17 @@ test('as frases da espera: as três da spec 17 (revista em 23/11), em ordem, ver
   assert.equal(g.aguardandoLicao, 'Ainda montando a próxima lição…', 'a espera longa da geração não muda');
 });
 
-test('a faixa da proposta: "Sua trilha está pronta: N lições curtas em M partes.", sem "em M partes" com uma parte só e "1 lição curta" com uma só', () => {
-  assert.equal(g.propostaPronta(10, 3), 'Sua trilha está pronta: 10 lições curtas em 3 partes.');
-  assert.equal(g.propostaPronta(6, 3), 'Sua trilha está pronta: 6 lições curtas em 3 partes.');
-  assert.equal(g.propostaPronta(7, 2), 'Sua trilha está pronta: 7 lições curtas em 2 partes.');
-  assert.equal(g.propostaPronta(4, 1), 'Sua trilha está pronta: 4 lições curtas.');
-  assert.equal(g.propostaPronta(2, 1), 'Sua trilha está pronta: 2 lições curtas.');
-  assert.equal(g.propostaPronta(1, 1), 'Sua trilha está pronta: 1 lição curta.');
-  assert.doesNotMatch(g.propostaPronta(10, 3), /Proposta/, '"proposta" é palavra de dentro do produto');
+test('a faixa da proposta (spec 04, Retomada da criação): "Sua proposta tem N lições em M partes.", sem "em M partes" com uma parte só e "1 lição" com uma só; "pronta" só depois de salva', () => {
+  assert.equal(g.propostaPronta(10, 3), 'Sua proposta tem 10 lições em 3 partes.');
+  assert.equal(g.propostaPronta(6, 3), 'Sua proposta tem 6 lições em 3 partes.');
+  assert.equal(g.propostaPronta(7, 2), 'Sua proposta tem 7 lições em 2 partes.');
+  assert.equal(g.propostaPronta(4, 1), 'Sua proposta tem 4 lições.');
+  assert.equal(g.propostaPronta(2, 1), 'Sua proposta tem 2 lições.');
+  assert.equal(g.propostaPronta(1, 1), 'Sua proposta tem 1 lição.');
+  assert.equal(g.propostaResumo(10, 3), g.propostaPronta(10, 3), 'o nome certo e o antigo dizem a mesma frase');
+  assert.doesNotMatch(g.propostaPronta(10, 3), /pronta/i, 'a proposta ainda não é uma trilha pronta: "pronta" só depois de salva');
+  assert.equal(g.trilhaPronta, 'Sua trilha está pronta.');
+  assert.equal(g.abrirLicao1, 'Abrir lição 1');
 });
 
 test('o tour: os passos 1 a 4 da spec 17, sem palavras de dentro do produto; o 5º (só com sessão) não mudou', () => {
