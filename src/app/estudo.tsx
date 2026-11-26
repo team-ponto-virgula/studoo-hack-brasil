@@ -1260,7 +1260,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
               aceitar={painel => void comecar(painel)} salvar={painel => void comecar(painel, false)}
               visitante={visitante} remontar={() => { if (pedidoDaPrevia) controlador.current?.descartar(pedidoDaPrevia); void gerar(previa.objetivo, previa.diagnosticoId); }}
-              existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo) && mesmoDiagnostico(plano.diagnostico, previa.proposta!.diagnostico)) : undefined}
+              existente={previa.proposta ? planos.find(plano => plano.id !== previa.proposta!.pedidoId && trilhaRepetida(plano.titulo, previa.proposta!.titulo) && mesmoDiagnostico(plano.diagnostico, previa.proposta!.diagnostico)) : undefined}
               abrirExistente={id => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (
