@@ -13,6 +13,7 @@ export type TrilhaEmGeracao = {
   /** `resumos[i]`: o que a lição i ensina, quando o gerador diz (aparece na prévia). */
   fluxos: { titulo: string; licoes: string[]; resumos?: (string | undefined)[] }[];
   proposta: PropostaPlano | null;
+  propostaExpiraEm?: number;
   deMaterial?: boolean;
 };
 
@@ -82,11 +83,18 @@ export function aplicarEvento(trilha: TrilhaEmGeracao, evento: EventoGeracao): T
           resumos: fluxo.licoes.map((licao) => licao.resumo),
         })),
         proposta,
+        propostaExpiraEm: expiraEmDaProposta(proposta),
       };
     }
     case 'erro':
       return trilha;
   }
+}
+
+export function expiraEmDaProposta(proposta: PropostaPlano): number | undefined {
+  const { validaPorMs } = proposta;
+  return typeof validaPorMs === 'number' && Number.isSafeInteger(validaPorMs) && validaPorMs >= 0
+    ? Date.now() + validaPorMs : undefined;
 }
 
 /** Nós da prévia, num caminho único na ordem da trilha; o trecho só posiciona o marco. */

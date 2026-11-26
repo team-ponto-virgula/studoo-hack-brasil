@@ -38,11 +38,12 @@ test('nenhuma tela entre a prévia e a etapa 1: "Escrevendo suas lições" saiu'
   assert.match(estudo, /if \(pendente === 'abrir' && etapa\.tipo !== 'plano'\) return <SkeletonLicao texto=\{mensagens\.licao\.carregando\} \/>;/);
 });
 
-test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro), "Ajustar pedido" sai e o leitor de tela ouve', () => {
-  assert.match(comecar, /setPendente\('aceitar'\);\n\s*setErro\(null\);\n\s*setMensagemDoAceite\(null\);\n\s*setCriacao\(abrirPrimeira \? 'criando' : 'guardando'\);\n\s*\/\/[^\n]*\n\s*anunciar\(abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
+test('o toque: o botão anuncia o preparo, mantém o giro e recolhe "Ajustar pedido"', () => {
+  assert.match(comecar, /setPendente\('aceitar'\);\s*setErro\(null\);\s*setMensagemDoAceite\(null\);\s*setCriacao\(abrirPrimeira \? 'criando' : 'guardando'\)/);
+  assert.match(comecar, /anunciar\(pedido\s*\? abrirPrimeira \? mensagens\.geracao\.anuncioPreparando : mensagens\.geracao\.anuncioSalvandoSuaTrilha/);
   assert.doesNotMatch(comecar, /toque_opcao/, 'o toque em "Começar a lição 1" não tem som: o de conclusão fica sozinho');
   assert.match(geracao, /testID=\{expirada \? 'montar-de-novo' : 'comecar-trilha'\}/);
-  assert.match(geracao, /rotulo=\{iniciando \? mensagens\.geracao\.criandoTrilha : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
+  assert.match(geracao, /rotulo=\{iniciando \? \(proposta\.pedidoId \? mensagens\.geracao\.preparandoTrilha : mensagens\.geracao\.criandoTrilha\) : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
   assert.match(geracao, /ocupado=\{iniciando\} afundado=\{iniciando\} giro=\{iniciando\}/);
   assert.match(geracao, /const secundaria = \(empilhar \|\| !ajustarFora\) && \(/, '"Ajustar pedido" mantém a medida só no rodapé empilhado');
   assert.match(geracao, /duration: RITMO_DA_GERACAO\.ajustarSaiMs/);
@@ -75,7 +76,7 @@ test('erro e proposta expirada: o botão volta, a linha diz o motivo e o novo to
   assert.match(comecar, /setCriacao\(expirada \? 'expirada' : abrirPrimeira \? 'erro' : 'erro-salvar'\);/);
   assert.match(geracao, /testID="criacao-erro"/);
   assert.match(geracao, /\{expirada \? mensagens\.geracao\.propostaExpirada : \(mensagemDoAceite \?\? mensagens\.geracao\.erroCriacao\)\}/);
-  assert.match(geracao, /guardando \? mensagens\.geracao\.salvandoTrilha : mensagens\.geracao\.salvarParaDepois/);
+  assert.match(geracao, /guardando \? \(proposta\.pedidoId \? mensagens\.geracao\.salvandoSuaTrilha : mensagens\.geracao\.salvandoTrilha\) : mensagens\.geracao\.salvarParaDepois/);
   assert.match(geracao, /testID="salvar-trilha-depois"[^\n]+acao=\{\(\) => salvar\(proposta\)\}/);
   assert.match(geracao, /testID="salvar-trilha-erro" role="alert"[\s\S]+?mensagens\.geracao\.erroSalvar/);
   assert.match(geracao, /acao=\{\(\) => \(expirada \? remontar\(\) : comecar\(proposta\)\)\}/);
@@ -101,7 +102,7 @@ test('sair durante "Criando sua trilha…": sem cancelar no servidor, a resposta
   assert.match(estudo, /if \(criacaoAtual\.current === 'criando' \|\| criacaoAtual\.current === 'guardando'\) \{\n\s*sairDaCriacao\(\);\n\s*return true;\n\s*\}\n\s*\/\/[^\n]*\n\s*if \(emCurso\.current && !\(etapa\.tipo === 'licao' && abandonarCorrecao\(\)\)\) return true;/);
   assert.match(estudo, /desativado=\{ocupado && !aceitandoAgora\} acao=\{aceitandoAgora \? sairDaCriacao : tocarMinhasTrilhas\}/);
   const depois = comecar.slice(comecar.indexOf('// A trilha existe no servidor'));
-  assert.match(depois, /atualizarPlano\(plano\);[\s\S]+?if \(aceiteAtual\.current !== vez \|\| etapaAtual\.current\.tipo !== 'geracao'\) return;\n\s*setObjetivo\(''\);/,
+  assert.match(depois, /atualizarPlano\(plano\);[\s\S]+?if \(aceiteAtual\.current !== vez\) return;\s*if \(etapaAtual\.current\.tipo !== 'geracao' \|\| vez\.retomar\) \{[^}]*return;\s*\}\s*setObjetivo\(''\);/,
     'a trilha entra na lista, mas só a criação ativa pode limpar o pedido');
   assert.doesNotMatch(trecho(estudo, 'function sairDaCriacao()', '\n  }\n'), /cliente\./, 'nenhuma chamada ao servidor ao sair');
   const editar = trecho(estudo, 'function atualizarObjetivo(', 'function atualizarPlano(');
@@ -117,7 +118,7 @@ test('salvar para depois confirma uma vez e atualiza a lista sem abrir a primeir
   const salvar = comecar.indexOf("navegar({ tipo: 'planos' });");
   const abrir = comecar.indexOf('cliente.obterLicao(primeira)');
   assert.ok(confirmar > 0 && confirmar < salvar && salvar < abrir);
-  assert.match(comecar, /if \(!abrirPrimeira\) \{\s*terminarCriacao\(\);\s*navegar\(\{ tipo: 'planos' \}\);\s*return;/);
+  assert.match(comecar, /if \(!abrirPrimeira\) \{\s*if \(pedido\) void criacoes\.esquecer\(pedido\.pedidoId\).+\s*terminarCriacao\(\);\s*navegar\(\{ tipo: 'planos' \}\);\s*return;/);
   assert.match(estudo, /const vez = \+\+versaoPlanos\.current;[\s\S]+if \(vez !== versaoPlanos\.current\) return;\s*setPlanos\(lista\);/);
 });
 

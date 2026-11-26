@@ -21,6 +21,7 @@ import { SkeletonTrilha } from './caminho';
 import { NavegacaoContexto } from './navegacao';
 import { apagarPreferenciasDaConta, apagarTinhaTrilhas, guardarRetornoDaTrilha, lerTinhaTrilhas } from './preferencias';
 import { ConsentimentoIa } from './consentimento-ia';
+import { apagarCriacoesNoAparelho } from './criacoes-no-aparelho';
 import { tomarRascunho } from './rascunho';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
@@ -208,6 +209,8 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
   limparAndamentosDaSessao();
   // Como a web ao sair ou com a sessão vencida: some a marca de "tinha trilhas" (o próximo esqueleto fica sem abas).
   await Promise.all([apagarTinhaTrilhas(), guardarRetornoDaTrilha(null)]);
+  // A expiração permite entrar de novo na mesma conta. A saída voluntária e a exclusão esquecem os pedidos.
+  if (!erro) await apagarCriacoesNoAparelho().catch(() => undefined);
   try {
     await apagarToken();
     return { tipo: 'entrada', erro };
