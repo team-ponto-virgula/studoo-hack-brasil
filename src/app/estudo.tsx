@@ -17,6 +17,7 @@ import {
   type PlanoDetalhe,
   type PlanoResumo,
   type Progresso,
+  type PropostaPlano,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente, responderSuaVez } from '../contratos/cliente-web';
 import { invalidarElegibilidadeVozAoVivo } from './estudio';
@@ -42,6 +43,9 @@ import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geraca
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
+import { criarControladorDeCriacoes, type ControladorDeCriacoes, type CriacaoEmCurso } from './criacao-retomada';
+import { apresentarCriacao, type AcaoDaCriacaoNaTela } from './criacao-textos';
+import { CriacoesEmCurso } from './criacoes-em-curso';
 import { ACAO_ABANDONAVEL, criarVezes } from './pedido-em-curso';
 import { Pedido, type IdTema } from './pedido';
 import { useCabecalhoPreso } from './cabecalho-preso';
@@ -157,9 +161,21 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   const [pendente, setPendente] = useState<Acao | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [geracao, setGeracao] = useState<TrilhaEmGeracao | null>(null);
+  const geracaoRef = useRef<TrilhaEmGeracao | null>(null);
+  geracaoRef.current = geracao;
   const [aceite, setAceite] = useState<EstadoAceite>('livre');
   const [passagem, setPassagem] = useState<PassagemCriada | null>(null);
   const aceiteAtual = useRef<AbortController | null>(null);
+  // A retomada da criação (spec 04, Retomada da criação): o controlador guarda, envia e consulta o pedido; o que muda na tela vem dele. Os ganchos passam por uma ref para não ficarem velhos.
+  const [criacoes, setCriacoes] = useState<CriacaoEmCurso[]>([]);
+  const [online, setOnline] = useState(true);
+  const controlador = useRef<ControladorDeCriacoes | null>(null);
+  const painelDaPrevia = useRef<HTMLElement | null>(null);
+  const sinalDoSomDoAceite = useRef<AbortSignal | undefined>(undefined);
+  const fasesAnunciadas = useRef(new Map<string, string>());
+  const ganchosDaCriacao = useRef<{ aoMudar: (lista: readonly CriacaoEmCurso[]) => void; aoPronta: (c: CriacaoEmCurso) => void; aoRecusada: (c: CriacaoEmCurso) => void }>({
+    aoMudar: () => undefined, aoPronta: () => undefined, aoRecusada: () => undefined,
+  });
   const montado = useRef(true);
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
   const [aviso, setAviso] = useState<{ texto: string; trilhaId?: string } | null>(null);
@@ -232,6 +248,21 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     router.refresh();
   }, [router]);
 
+  /** Com a conta da sessão, nasce o controlador da retomada e os pedidos guardados no aparelho (desta conta) voltam a ser acompanhados, sem enviar nada. */
+  const iniciarControlador = useCallback((conta: string | undefined) => {
+    if (!conta || controlador.current) return;
+    let armazenamento: Storage | null = null;
+    try { armazenamento = window.localStorage; } catch { armazenamento = null; }
+    controlador.current = criarControladorDeCriacoes({
+      cliente, conta, armazenamento, estaOnline: () => navigator.onLine,
+      aoMudar: (lista) => ganchosDaCriacao.current.aoMudar(lista),
+      aoPronta: (criacao) => ganchosDaCriacao.current.aoPronta(criacao),
+      aoRecusada: (criacao) => ganchosDaCriacao.current.aoRecusada(criacao),
+      aoSessaoVencida: () => irParaLogin(true),
+    });
+    controlador.current.retomar();
+  }, [irParaLogin]);
+
   const carregar = useCallback(async (cancelado: () => boolean) => {
     invalidarElegibilidadeVozAoVivo();
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
@@ -247,6 +278,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       if (cancelado()) return;
       setPlanos(ativos);
       setVisitante(Boolean(sessao.visitante));
+      // Só agora: a trilha que a retomada confirmar entra numa lista que já está carregada (e não é apagada por ela).
+      iniciarControlador(sessao.conta);
       const comCompartilhar = Boolean(config?.compartilhar);
       setCompartilhar(comCompartilhar);
       setComunidade(comCompartilhar && Boolean(config?.comunidade));
@@ -360,7 +393,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
       setInicio('falha');
     }
-  }, [abrirNoExplorar, filtroExplorarInicial, irParaLogin, router]);
+  }, [abrirNoExplorar, filtroExplorarInicial, irParaLogin, iniciarControlador, router]);
 
   const sincronizarAgora = useCallback(async () => {
     if (emExecucao.current || inicio !== 'pronto') return;
@@ -409,6 +442,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
 
     function aoExibir(evento: PageTransitionEvent) {
       if (!evento.persisted) return;
+      controlador.current?.acordar();
       geracaoAtiva.current?.abort();
       geracaoAtiva.current = null;
       aceiteAtual.current?.abort();
@@ -527,7 +561,22 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       aceiteAtual.current?.abort();
     }
     window.addEventListener('pagehide', abandonar);
-    return () => { montado.current = false; abandonar(); window.removeEventListener('pagehide', abandonar); };
+    return () => { montado.current = false; abandonar(); window.removeEventListener('pagehide', abandonar); controlador.current?.parar(); controlador.current = null; };
+  }, []);
+  // A rede volta ou a página reaparece: os pedidos que esperam consultam já (não esperam o próximo intervalo).
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const aoVoltar = () => { setOnline(true); controlador.current?.acordar(); };
+    const aoCair = () => setOnline(false);
+    const aoVisivel = () => { if (document.visibilityState === 'visible') controlador.current?.acordar(); };
+    window.addEventListener('online', aoVoltar);
+    window.addEventListener('offline', aoCair);
+    document.addEventListener('visibilitychange', aoVisivel);
+    return () => {
+      window.removeEventListener('online', aoVoltar);
+      window.removeEventListener('offline', aoCair);
+      document.removeEventListener('visibilitychange', aoVisivel);
+    };
   }, []);
   useEffect(() => {
     if (!passagem) return;
@@ -691,8 +740,92 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     anunciar(mensagens.pedido.cancelada);
   }
 
-  /** O token identifica o aceite no servidor, inclusive se a resposta se perder e houver nova tentativa. */
+  /**
+   * "Começar a lição 1" e "Salvar para depois" (spec 04, Retomada da criação): o pedido é guardado por conta ANTES de o aceite sair, e o controlador o envia e o acompanha. Se a resposta se perder
+   * (rede, segundo plano, página fechada), o servidor é consultado sem IA, sem erro prematuro e sem reenviar sozinho. Sem `pedidoId` na proposta, ou sem `conta` na sessão, vale o aceite de sempre.
+   */
   async function comecar(painel: HTMLElement, iniciar = true) {
+    const proposta = geracao?.proposta;
+    if (proposta?.pedidoId && controlador.current) {
+      if (criacoes.some((c) => c.pendente.pedidoId === proposta.pedidoId && (c.fase === 'enviando' || c.fase === 'em_preparo'))) return;
+      painelDaPrevia.current = painel;
+      sinalDoSomDoAceite.current = tocaSons.sinalDosEfeitos;
+      anunciar(iniciar ? mensagens.geracao.anuncioPreparando : mensagens.geracao.anuncioSalvandoSuaTrilha);
+      controlador.current.iniciar(proposta, iniciar ? 'comecar' : 'salvar');
+      return;
+    }
+    return comecarDireto(painel, iniciar);
+  }
+
+  /** O fim de um aceite que a pessoa acompanhou na própria prévia: leva a Minhas trilhas (salvar) ou abre a lição 1, com a passagem (começar). */
+  async function finalizarAceite(plano: PlanoDetalhe, iniciar: boolean, painel: HTMLElement) {
+    const somDoAceite = sinalDoSomDoAceite.current;
+    if (!iniciar) {
+      navegar({ tipo: 'planos' });
+      setObjetivo('');
+      const texto = visitante
+        ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste navegador.'
+        : 'Trilha salva em Minhas trilhas. Comece quando quiser.';
+      setAviso({ texto, trilhaId: plano.id });
+      anunciar('Trilha salva em Minhas trilhas.');
+      return;
+    }
+    const primeira = proximaDoCaminho(plano);
+    const atual = geracaoRef.current;
+    if (!primeira || !atual) { navegar({ tipo: 'plano', plano }); return; }
+    const busca = obterLicaoComCache(primeira);
+    void tocaSons.tocarEfeito('geracao_pronta', somDoAceite);
+    setPassagem(medirPassagem(atual, painel));
+    setGeracao(null);
+    setObjetivo('');
+    setTela({ tipo: 'abrindo-criada', plano });
+    voltarAoTopo();
+    try {
+      const licao = await busca;
+      if (!montado.current || telaRef.current.tipo !== 'abrindo-criada') return;
+      setTela({ tipo: 'licao', plano, licao });
+      anunciar(mensagens.geracao.anuncioCriada(licao.titulo));
+    } catch (falha) {
+      if (!montado.current || telaRef.current.tipo !== 'abrindo-criada') return;
+      const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
+      if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
+      // A trilha JÁ está salva: só a lição não abriu. O mapa dela abre com o aviso, e tocar na lição 1 tenta abrir de novo (não recria nada).
+      navegar({ tipo: 'plano', plano, aviso: mensagens.geracao.licaoNaoAbriu });
+      anunciar(mensagens.geracao.licaoNaoAbriu);
+    }
+  }
+
+  /** O controlador confirmou a trilha (pela resposta do envio ou pela consulta). Na prévia que a pessoa acompanha, o fluxo segue como no toque original; fora dela, o aviso espera a pessoa. */
+  function concluirCriacao(criacao: CriacaoEmCurso) {
+    const plano = criacao.plano;
+    if (!plano || !montado.current) return;
+    atualizarPlano(plano);
+    const momento = Date.now();
+    ultimaBusca.current = momento;
+    setSincronia({ estado: 'atualizado', em: momento });
+    const pedidoId = criacao.pendente.pedidoId;
+    const painel = painelDaPrevia.current;
+    const naPrevia = telaRef.current.tipo === 'geracao' && geracaoRef.current?.proposta?.pedidoId === pedidoId && !!painel?.isConnected;
+    if (!naPrevia || !painel) return;
+    controlador.current?.descartar(pedidoId);
+    void finalizarAceite(plano, criacao.pendente.intencao === 'comecar', painel);
+  }
+
+  /** A triagem de segurança recusou o pedido: na prévia, volta ao pedido com o texto mantido, como sempre; fora dela, o aviso fica com o motivo. */
+  function recusarCriacao(criacao: CriacaoEmCurso) {
+    const pedidoId = criacao.pendente.pedidoId;
+    const naPrevia = telaRef.current.tipo === 'geracao' && geracaoRef.current?.proposta?.pedidoId === pedidoId;
+    if (!montado.current || !naPrevia) return;
+    controlador.current?.descartar(pedidoId);
+    navegar({ tipo: 'objetivo' });
+    setFalhaGeracao('conteudo_nocivo');
+  }
+
+  /**
+   * O aceite SEM a retomada: a proposta de um servidor que ainda não manda o `pedidoId` (ou uma sessão sem `conta`). O token identifica o aceite no servidor, inclusive se a resposta se perder
+   * e houver nova tentativa, mas aqui o cliente não sabe consultar o que houve.
+   */
+  async function comecarDireto(painel: HTMLElement, iniciar = true) {
     if (aceiteAtual.current || !geracao?.proposta) return;
     const tentativa = new AbortController();
     const somDoAceite = tocaSons.sinalDosEfeitos;
@@ -835,9 +968,86 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       cancelarRotulo: mensagens.ficar,
       aoConfirmar: async () => {
         const resultado = await executar('sair', () => cliente.logout());
-        if (resultado.ok) irParaLogin();
+        if (resultado.ok) { controlador.current?.esquecerTudo(); irParaLogin(); }
       },
     });
+  }
+
+  /** A prévia de um pedido está na tela agora (a pessoa o acompanha ali)? */
+  function estaNaPrevia(pedidoId: string) {
+    return telaRef.current.tipo === 'geracao' && geracaoRef.current?.proposta?.pedidoId === pedidoId;
+  }
+
+  /** O controlador mudou algo: a lista vai para a tela, e cada fase nova é anunciada UMA vez (sem mover o foco). Na prévia que a pessoa acompanha, o fim é anunciado pelo próprio fluxo. */
+  function aoMudarCriacoes(lista: readonly CriacaoEmCurso[]) {
+    if (!montado.current) return;
+    setCriacoes([...lista]);
+    const vistos = new Set<string>();
+    for (const criacao of lista) {
+      const id = criacao.pendente.pedidoId;
+      vistos.add(id);
+      if (fasesAnunciadas.current.get(id) === criacao.fase) continue;
+      fasesAnunciadas.current.set(id, criacao.fase);
+      if (criacao.fase === 'pronta' && estaNaPrevia(id)) continue;
+      const anuncio = apresentarCriacao(criacao, { agora: Date.now(), online: navigator.onLine }).anuncio;
+      if (anuncio) anunciar(anuncio);
+    }
+    for (const id of [...fasesAnunciadas.current.keys()]) if (!vistos.has(id)) fasesAnunciadas.current.delete(id);
+  }
+  ganchosDaCriacao.current = { aoMudar: aoMudarCriacoes, aoPronta: concluirCriacao, aoRecusada: recusarCriacao };
+
+  /** A prévia de um pedido guardado, redesenhada do que ficou no aparelho: a mesma proposta (mesmo token e mesmo pedidoId). */
+  function propostaDoPedido(criacao: CriacaoEmCurso): PropostaPlano | null {
+    const { pendente } = criacao;
+    if (!pendente.previa) return null;
+    return {
+      token: pendente.token, pedidoId: pendente.pedidoId, titulo: pendente.titulo, objetivo: pendente.previa.objetivo, origem: pendente.previa.origem, fluxos: pendente.previa.fluxos,
+      ...(pendente.previa.diagnostico ? { diagnostico: pendente.previa.diagnostico } : {}),
+    };
+  }
+
+  /** O que cada botão de um aviso de criação faz. Nenhum deles inicia geração nova: verificar consulta, reenviar repete o MESMO pedido, e o resto só leva a pessoa ao que já existe. */
+  function aoAcionarCriacao(pedidoId: string, acao: AcaoDaCriacaoNaTela) {
+    const criacao = criacoes.find((item) => item.pendente.pedidoId === pedidoId);
+    const ctl = controlador.current;
+    if (!criacao || !ctl) return;
+    if (acao === 'verificar') { ctl.verificar(pedidoId); return; }
+    if (acao === 'reenviar') {
+      sinalDoSomDoAceite.current = tocaSons.sinalDosEfeitos;
+      anunciar(criacao.pendente.intencao === 'salvar' ? mensagens.geracao.anuncioSalvandoSuaTrilha : mensagens.geracao.anuncioPreparando);
+      ctl.reenviar(pedidoId);
+      return;
+    }
+    if (acao === 'fechar') { ctl.descartar(pedidoId); return; }
+    if (acao === 'montar') {
+      const objetivo = criacao.pendente.previa?.objetivo;
+      ctl.descartar(pedidoId);
+      if (objetivo) void gerar(objetivo);
+      return;
+    }
+    if (acao === 'ver') {
+      if (criacao.fase === 'pronta') {
+        ctl.descartar(pedidoId);
+        if (criacao.plano) navegar({ tipo: 'planos' });
+        if (criacao.plano) setAviso({ texto: visitante ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste navegador.' : 'Trilha salva em Minhas trilhas. Comece quando quiser.', trilhaId: criacao.plano.id });
+        return;
+      }
+      const proposta = propostaDoPedido(criacao);
+      if (!proposta) { navegar({ tipo: 'planos' }); return; }
+      painelDaPrevia.current = null;
+      navegar({ tipo: 'geracao' });
+      setGeracao(aplicarEvento({ objetivo: proposta.objetivo, titulo: null, fluxos: [], proposta: null }, { tipo: 'pronto', proposta }));
+      return;
+    }
+    if (acao === 'abrir' && criacao.plano) {
+      const plano = criacao.plano;
+      ctl.descartar(pedidoId);
+      const painel = principal.current?.querySelector<HTMLElement>('section.painel--geracao') ?? null;
+      if (estaNaPrevia(pedidoId) && painel) { void finalizarAceite(plano, true, painel); return; }
+      const primeira = proximaDoCaminho(plano);
+      if (primeira) void abrirLicao(plano, primeira);
+      else navegar({ tipo: 'plano', plano });
+    }
   }
 
   /** Fim da apresentação (concluída ou pulada): não aparece mais neste navegador e o pedido abre. */
@@ -852,6 +1062,30 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
   const carregandoTrilha = pendente === 'plano';
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || tela.tipo === 'abrindo-criada';
   const previa = passagem?.geracao ?? (tela.tipo === 'geracao' ? geracao : null);
+  // A criação do pedido que a prévia mostra (spec 04, Retomada da criação): o estado "preparando" usa o visual de sempre; os outros (sem conexão, sem confirmação, não chegou, pronta, falha)
+  // aparecem como texto e ação principal perto do botão.
+  const pedidoDaPrevia = previa?.proposta?.pedidoId;
+  const criacaoDaPrevia = pedidoDaPrevia ? criacoes.find((item) => item.pendente.pedidoId === pedidoDaPrevia) : undefined;
+  const preparandoNaPrevia = !!criacaoDaPrevia && (criacaoDaPrevia.fase === 'enviando' || criacaoDaPrevia.fase === 'em_preparo');
+  const propostaVencida = criacaoDaPrevia?.fase === 'falha' && criacaoDaPrevia.falha?.causa === 'proposta_expirada';
+  const aceiteDaPrevia: EstadoAceite = !criacaoDaPrevia ? aceite
+    : preparandoNaPrevia ? (criacaoDaPrevia.pendente.intencao === 'salvar' ? 'salvando' : 'iniciando')
+      : propostaVencida ? 'expirada' : 'livre';
+  const apresentacaoDaPrevia = criacaoDaPrevia && !preparandoNaPrevia && !propostaVencida
+    ? apresentarCriacao(criacaoDaPrevia, { agora: Date.now(), online }) : null;
+  const retomadaDaPrevia = apresentacaoDaPrevia && criacaoDaPrevia ? {
+    texto: apresentacaoDaPrevia.texto, tom: apresentacaoDaPrevia.tom,
+    ...(apresentacaoDaPrevia.acoes[0] && apresentacaoDaPrevia.acoes[0].id !== 'fechar'
+      ? { acao: { rotulo: apresentacaoDaPrevia.acoes[0].rotulo, ...(apresentacaoDaPrevia.acoes[0].desabilitada ? { desabilitada: true } : {}) } } : {}),
+    aoAcionar: () => { const id = apresentacaoDaPrevia.acoes[0]?.id; if (id) aoAcionarCriacao(criacaoDaPrevia.pendente.pedidoId, id); },
+  } : undefined;
+  const dicaDaPrevia = criacaoDaPrevia && preparandoNaPrevia ? apresentarCriacao(criacaoDaPrevia, { agora: Date.now(), online }).dica : undefined;
+  // Os avisos de criação: todos os pedidos, menos o que a prévia da tela já mostra, e nunca dentro da aula.
+  const avisosDeCriacao = tela.tipo === 'licao' || tela.tipo === 'abrindo-criada' ? [] : criacoes.filter((item) => item.pendente.pedidoId !== pedidoDaPrevia);
+  // Uma trilha confirmada que ainda espera a pessoa no aviso ("Abrir lição 1", "Ver em Minhas trilhas") tem UMA entrada só: o aviso. Enquanto ele existe, ela não repete na lista nem no menu; depois de
+  // aberta ou fechada, volta à lista normal, uma vez.
+  const idsComAvisoPronto = new Set(avisosDeCriacao.filter((item) => item.fase === 'pronta').map((item) => item.pendente.pedidoId));
+  const planosNaLista = idsComAvisoPronto.size > 0 ? planos.filter((plano) => !idsComAvisoPronto.has(plano.id)) : planos;
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (inicio === 'pronto' && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo))) && visivel;
   const abaNovaTrilha = tela.tipo === 'objetivo';
@@ -883,8 +1117,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
             <Icone nome="livro" />{mensagens.planos.titulo}
           </Botao>
-          {planos.length > 0 && <ul className="navegacao-planos">
-            {planos.slice(0, 5).map((plano) => (
+          {planosNaLista.length > 0 && <ul className="navegacao-planos">
+            {planosNaLista.slice(0, 5).map((plano) => (
               <li key={plano.id}>
                 <Botao variante="texto" className="navegacao-plano" onClick={() => void abrirPlano(plano.id)} disabled={ocupado} aria-current={plano.id === planoAtual ? 'page' : undefined}>
                   {plano.titulo}
@@ -936,6 +1170,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           <p className="somente-leitor" role="status">{anuncio}</p>
           {erro && <EstadoErro codigo={erro}>{acaoDoErro(erro)}</EstadoErro>}
+          {inicio === 'pronto' && tela.tipo !== 'planos' && <CriacoesEmCurso criacoes={avisosDeCriacao} agora={agora} online={online} aoAcionar={aoAcionarCriacao} />}
           {inicio === 'carregando' && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoTrilha && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoLicao && <SkeletonLicao texto={mensagens.licao.carregando} />}
@@ -957,6 +1192,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           {inicio === 'pronto' && visivel && tela.tipo === 'planos' && planos.length === 0 && (
             <section className="painel planos-sem-trilhas" aria-labelledby="planos-vazio-titulo">
               <h1 tabIndex={-1} id="planos-vazio-titulo">{mensagens.planos.titulo}</h1>
+              <CriacoesEmCurso criacoes={avisosDeCriacao} agora={agora} online={online} aoAcionar={aoAcionarCriacao} />
               <div className="planos-vazio" data-testid="planos-vazio">
                 <div className="planos-vazio__halo" aria-hidden="true">
                   <span key={puloVazio} data-pular={puloVazio > 0 || undefined}><Mascote expressao="stu-curioso" tamanho={96} /></span>
@@ -969,9 +1205,9 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           )}
           {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
           {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
-            const salvo = aviso?.trilhaId ? planos.find(p => p.id === aviso.trilhaId) : undefined;
-            const destaque = salvo ?? planoInicial(planos);
-            const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
+            const salvo = aviso?.trilhaId ? planosNaLista.find(p => p.id === aviso.trilhaId) : undefined;
+            const destaque = salvo ?? planoInicial(planosNaLista);
+            const restantes = destaque ? planosNaLista.filter((item) => item.id !== destaque.id) : planosNaLista;
             return (
               <section className="painel painel--planos">
                 <div className="planos-cabeca">
@@ -980,6 +1216,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                     <span aria-hidden="true">+</span> {mensagens.planos.novo}
                   </Botao>
                 </div>
+                <CriacoesEmCurso criacoes={avisosDeCriacao} agora={agora} online={online} aoAcionar={aoAcionarCriacao} />
                 {salvo && aviso ? <p className="trilha-aviso" role="status">{aviso.texto}</p>
                   : <p className="introducao">{mensagens.planos.subtitulo}</p>}
                 {destaque && (
@@ -1007,10 +1244,10 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
             );
           })()}
           {previa && (
-            <PreviaTrilha geracao={previa} aceite={aceite} passagem={passagem}
+            <PreviaTrilha geracao={previa} aceite={aceiteDaPrevia} passagem={passagem} retomada={retomadaDaPrevia} dica={dicaDaPrevia}
               cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
               aceitar={painel => void comecar(painel)} salvar={painel => void comecar(painel, false)}
-              visitante={visitante} remontar={() => void gerar(previa.objetivo, previa.diagnosticoId)}
+              visitante={visitante} remontar={() => { if (pedidoDaPrevia) controlador.current?.descartar(pedidoDaPrevia); void gerar(previa.objetivo, previa.diagnosticoId); }}
               existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo) && mesmoDiagnostico(plano.diagnostico, previa.proposta!.diagnostico)) : undefined}
               abrirExistente={id => void abrirPlano(id)} />
           )}

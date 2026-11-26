@@ -168,7 +168,7 @@ test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta c
   const criando = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'iniciando' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
   assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua proposta tem 6 lições em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua proposta tem 6 lições em 3 partes\.<\/span><\/p>/);
   assert.match(criando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>|<button[^>]*aria-busy="true"[^>]*class="[^"]*previa-comecar/);
-  assert.match(criando, /previa-giro[\s\S]*?Criando sua trilha…/);
+  assert.match(criando, /previa-giro[\s\S]*?Preparando sua trilha…/);
   // Se a criação falha, a placa continua com a faixa, o erro de sempre aparece e a linha de espera sai.
   const erro = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'erro' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
   assert.match(erro, /aria-hidden="true">Sua proposta tem 6 lições em 3 partes\.<\/span>/);
@@ -183,9 +183,9 @@ test('Salvar para depois tem espera e erro próprios e mantém a ação para ten
     ...parametros({ aceite, salvar() {} }), geracao: trilhaEmGeracao([{ ...fluxos[0], licoes: ['Probabilidade'] }], proposta),
   }));
   const salvando = renderizar('salvando');
-  assert.match(salvando, /<button[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>Salvando trilha…<\/button>/);
+  assert.match(salvando, /<button[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>Salvando sua trilha…<\/button>/);
   assert.match(salvando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*>Começar a lição 1<\/button>/);
-  assert.doesNotMatch(salvando, /Criando sua trilha|previa-giro|previa-espera" data-visivel/);
+  assert.doesNotMatch(salvando, /Criando sua trilha|Preparando sua trilha|previa-giro|previa-espera" data-visivel/);
   const erro = renderizar('erro-salvar');
   assert.match(erro, /aria-disabled="false"[^>]*>Salvar para depois<\/button>/);
   assert.match(erro, /role="alert">Não deu para salvar\. Tente de novo\.<\/p>/);
@@ -199,10 +199,10 @@ test('o fonte da tela: só a criação tem frases, o relógio liga quando a linh
   assert.match(tela, /const linhaDaEspera = !!proposta && demorou && aceite === 'iniciando' && !passagem;/, 'a linha entra 1,5 s depois do toque (demorou) e sai com a troca de tela ou com o erro');
   assert.match(tela, /const espera = useDicaDaEspera\(linhaDaEspera\);/, 'o relógio das frases liga quando a linha aparece, não no toque');
   assert.match(tela, /const textoDaLinha = espera\.indice === null \? t\.escrevendoLicoes : t\.dicas\[espera\.indice\];/);
-  assert.match(tela, /const placa = proposta \? t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\) : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/, 'a placa: sem frases, e com a faixa da proposta também na criação');
+  assert.match(tela, /const placa = proposta \? t\.propostaResumo\(nos\.length, proposta\.fluxos\.length\) : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/, 'a placa: sem frases, e com a contagem da proposta também na criação');
   assert.match(tela, /<PlacaDaGeracao texto=\{placa\} anunciado=\{placaAnunciada\} \/>/);
-  assert.match(tela, /const placaAnunciada = proposta \? `\$\{t\.propostaPronta\(nos\.length, proposta\.fluxos\.length\)\} \$\{t\.comecarLicao1\}\.` : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/);
-  assert.match(tela, /<p className="previa-espera" data-visivel=\{linhaDaEspera \|\| undefined\}>\s*<span className="previa-espera__linha" data-saindo=\{espera\.saindo \|\| undefined\}>\{textoDaLinha\}<\/span>\s*<\/p>/, 'a linha não é região viva (sem role): a troca a cada 5 s não é anunciada');
+  assert.match(tela, /const placaAnunciada = proposta \? `\$\{t\.propostaResumo\(nos\.length, proposta\.fluxos\.length\)\} \$\{t\.comecarLicao1\}\.` : semNovidade \? t\.aguardandoLicao : t\.montandoTitulo;/);
+  assert.match(tela, /<p className="previa-espera" data-visivel=\{linhaDaEspera \|\| \(!!dica && aceite === 'iniciando'\) \|\| undefined\}>\s*<span className="previa-espera__linha" data-saindo=\{espera\.saindo \|\| undefined\}>\{textoDaLinha\}<\/span>\s*\{dica && aceite === 'iniciando' && <span className="previa-espera__dica">\{dica\}<\/span>\}\s*<\/p>/, 'a linha não é região viva (sem role): a troca a cada 5 s não é anunciada');
   assert.match(tela, /className="previa-comecar" aria-disabled=\{ocupado\} aria-busy=\{iniciando \|\| undefined\}/, 'o botão fica ocupado enquanto a trilha é criada');
   const regras = ler('src/app/previa-trilha-regras.ts');
   assert.match(regras, /import \{ ESPERA_DA_GERACAO, faltaParaTrocarADica \} from '@studoo\/contratos';/, 'o relógio é o do contrato, o mesmo do app');

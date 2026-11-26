@@ -370,6 +370,8 @@ test('limite do provedor com Retry-After real: a falha guarda o prazo RESTANTE (
   const liberada = await servico.consultarCriacao(conta.id, id);
   assert.equal(liberada.repetivel, true);
   assert.equal('aguardarSegundos' in liberada, false, 'passado o prazo, nenhuma espera é prometida');
+  assert.equal(liberada.tentativas, 1, 'terminar a espera e consultar não começa outra geração...');
+  assert.equal(provedor.licoes, chamadas, '...nem chama o provedor');
   assert.equal((await servico.aceitarProposta(conta.id, token)).id, id);
   assert.equal((await servico.consultarCriacao(conta.id, id)).tentativas, 2);
 });

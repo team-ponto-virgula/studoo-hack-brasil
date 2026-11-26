@@ -93,6 +93,10 @@
 .previa-espera__linha[data-saindo] { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .previa-espera__linha { transition: none; } }
 .previa-erro { color: #c23b4e; }
+/* Retomada da criação (spec 04): o estado perto da ação. Sem conexão e sem confirmação não são erro: ficam no cinza do texto de espera; pronta é verde. */
+.previa-erro[data-tom='neutro'] { color: #5e6a85; }
+.previa-erro[data-tom='ok'] { color: #14513b; font-weight: 800; }
+.previa-espera__dica { display: block; margin-top: 4px; }
 .previa-giro { width: 16px; height: 16px; border: 2px solid #ffffff70; border-top-color: white; border-radius: 50%; animation: previa-girar .8s linear infinite; }
 [data-fase='montando'] .previa-ligacao { animation: previa-desenhar 300ms ease-out both; }
 [data-fase='montando'] .previa-no__face { animation: previa-pousar 380ms 180ms both; }

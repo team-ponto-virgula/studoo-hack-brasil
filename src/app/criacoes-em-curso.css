@@ -1,0 +1,20 @@
+/* Avisos de criação de trilha (spec 04, Retomada da criação): a faixa de um pedido que segue em curso, precisa de confirmação, falhou ou ficou pronto, em qualquer tela menos a aula. */
+.criacoes-em-curso { display: grid; gap: 10px; margin: 0 0 14px; }
+.criacao-aviso { display: grid; gap: 6px; padding: 12px 14px; border: 2px solid #e8d3a8; border-radius: 16px; background: #fff9ec; color: #2b3552; }
+.criacao-aviso[data-tom='erro'] { border-color: #f0b5be; background: #fff5f6; }
+.criacao-aviso[data-tom='ok'] { border-color: #a9dcc1; background: #e3f6ea; }
+.criacao-aviso__titulo { margin: 0; font-size: 1rem; font-weight: 800; overflow-wrap: anywhere; }
+.criacao-aviso__texto, .criacao-aviso__dica { margin: 0; font-size: .9375rem; line-height: 1.35; overflow-wrap: anywhere; }
+.criacao-aviso[data-tom='erro'] .criacao-aviso__texto { color: #c23b4e; }
+.criacao-aviso[data-tom='ok'] .criacao-aviso__texto { color: #14513b; font-weight: 800; }
+.criacao-aviso__dica { color: #5e6a85; font-size: .875rem; }
+.criacao-aviso__acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.criacao-aviso__acoes > .botao { min-height: 44px; flex: 1 1 9rem; max-width: 100%; }
+.criacao-aviso[data-fase='enviando'], .criacao-aviso[data-fase='em_preparo'] { position: relative; padding-left: 44px; }
+.criacao-aviso[data-fase='enviando']::before, .criacao-aviso[data-fase='em_preparo']::before {
+  content: ''; position: absolute; left: 14px; top: 14px; width: 18px; height: 18px; border: 3px solid #e8d3a8; border-top-color: var(--acao-escura, #1d4ed8); border-radius: 50%; animation: criacao-girar .9s linear infinite;
+}
+@keyframes criacao-girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .criacao-aviso[data-fase='enviando']::before, .criacao-aviso[data-fase='em_preparo']::before { animation: none; border-top-color: #e8d3a8; border-right-color: var(--acao-escura, #1d4ed8); }
+}
