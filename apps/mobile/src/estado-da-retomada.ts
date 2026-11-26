@@ -10,7 +10,7 @@ type Acao =
 
 type Apresentacao = { texto: string; acao: Acao; consultarEmMs?: number };
 
-export function apresentarRetomada({ pedido, estado, semRespostaSeguidas }: CriacaoAcompanhada,
+export function apresentarRetomada({ pedido, estado, semRespostaSeguidas, esperaDoLimite }: CriacaoAcompanhada,
   agora = Date.now()): Apresentacao {
   const semConfirmacao = { texto: t.semConfirmacao, acao: { tipo: 'consultar' } } as const;
   if (!estado) return { ...semConfirmacao, consultarEmMs: 0 };
@@ -40,13 +40,21 @@ export function apresentarRetomada({ pedido, estado, semRespostaSeguidas }: Cria
       }
       return { texto: t.pedidoNaoChegou, acao: { tipo: 'reenviar' } };
     case 'falhou': {
-      const { causa, repetivel, aguardarSegundos } = decisao.falha;
-      if (causa === 'limite' && aguardarSegundos !== undefined && aguardarSegundos > 0) {
-        return {
-          texto: t.falhaDaCriacao.limiteComEspera(aguardarSegundos),
-          acao: { tipo: 'consultar' },
-          consultarEmMs: aguardarSegundos * 1_000,
-        };
+      const { causa, repetivel, aguardarSegundos, tentativas } = decisao.falha;
+      if (causa === 'limite') {
+        const espera = esperaDoLimite?.tentativas === tentativas ? esperaDoLimite : undefined;
+        if (repetivel && espera) {
+          return { texto: t.falhaDaCriacao.limiteLiberado, acao: { tipo: 'tentar' } };
+        }
+        if (!repetivel && aguardarSegundos !== undefined && aguardarSegundos > 0) {
+          const terminaEm = espera?.terminaEm ?? agora + aguardarSegundos * 1_000;
+          const restanteMs = Math.max(0, terminaEm - agora);
+          return {
+            texto: restanteMs > 0 ? t.falhaDaCriacao.limiteComEspera(Math.ceil(restanteMs / 1_000)) : t.falhaDaCriacao.limite,
+            acao: { tipo: 'consultar' },
+            consultarEmMs: restanteMs,
+          };
+        }
       }
       const tipo = causa === 'seguranca' ? 'editar' : causa === 'proposta_expirada' ? 'remontar'
         : repetivel ? 'tentar' : 'consultar';

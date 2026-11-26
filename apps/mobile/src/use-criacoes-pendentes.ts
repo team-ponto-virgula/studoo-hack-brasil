@@ -10,6 +10,7 @@ export type CriacaoAcompanhada = {
   pedido: CriacaoPendente;
   estado: EstadoCriacaoNoCliente | null;
   semRespostaSeguidas: number;
+  esperaDoLimite?: { tentativas: number; terminaEm: number };
 };
 
 const acompanhar = (pedido: CriacaoPendente): CriacaoAcompanhada => ({ pedido, estado: null, semRespostaSeguidas: 0 });
@@ -65,7 +66,12 @@ export function useCriacoesPendentes(cliente: ClienteNativo, montado: RefObject<
       const estado = aplicarConsultaDaCriacao(item.estado, recebido);
       if (estado === item.estado) return item;
       const semRespostaSeguidas = estado.estado === 'desconhecido' ? item.semRespostaSeguidas + 1 : 0;
-      return { ...item, estado, semRespostaSeguidas };
+      let esperaDoLimite = item.esperaDoLimite;
+      if (estado.estado === 'falha' && estado.causa === 'limite' && !estado.repetivel &&
+          estado.aguardarSegundos !== undefined && estado.aguardarSegundos > 0) {
+        esperaDoLimite = { tentativas: estado.tentativas, terminaEm: Date.now() + estado.aguardarSegundos * 1_000 };
+      }
+      return { ...item, estado, semRespostaSeguidas, esperaDoLimite };
     }));
   }, [atualizar]);
 

@@ -33,7 +33,18 @@ test('limite conhecido conserva a proposta e consulta de novo antes de liberar a
   assert.equal(vista.consultarEmMs, 32_000);
   assert.equal(vista.acao.tipo, 'consultar');
   assert.deepEqual(apresentarRetomada(item(limite), agora), { texto: t.falhaDaCriacao.limite, acao: { tipo: 'consultar' } });
-  assert.equal(apresentarRetomada(item({ ...limite, repetivel: true }), agora + 32_000).acao.tipo, 'tentar');
+  const esperaDoLimite = { tentativas: 1, terminaEm: agora + 32_000 };
+  const aguardando = { ...item({ ...limite, aguardarSegundos: 32 }), esperaDoLimite };
+  assert.equal(apresentarRetomada(aguardando, agora + 10_000).consultarEmMs, 22_000);
+  assert.deepEqual(apresentarRetomada(aguardando, esperaDoLimite.terminaEm), {
+    texto: t.falhaDaCriacao.limite, acao: { tipo: 'consultar' }, consultarEmMs: 0,
+  });
+  const liberada = { ...item({ ...limite, repetivel: true }), esperaDoLimite };
+  assert.deepEqual(apresentarRetomada(liberada, esperaDoLimite.terminaEm), {
+    texto: t.falhaDaCriacao.limiteLiberado, acao: { tipo: 'tentar' },
+  });
+  const outraTentativa = { ...item({ ...limite, tentativas: 2, repetivel: true }), esperaDoLimite };
+  assert.equal(apresentarRetomada(outraTentativa, esperaDoLimite.terminaEm).texto, t.falhaDaCriacao.limite);
 });
 
 test('preparo e gravação preservam a intenção de salvar e a confirmação vem com o plano', () => {
