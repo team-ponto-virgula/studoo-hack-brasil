@@ -293,16 +293,21 @@ test('limite com prazo conhecido: a falha fica com o prazo RESTANTE, o laço dor
   assert.equal(pronta.chamadas.envios.length, 1);
   assert.equal(pronta.eventos.prontas[0].porConsulta, true);
 
-  // 3) O limite continua: usa o RESTANTE que o servidor devolveu (não repete o prazo cheio), segue dormindo e ainda não envia nada.
-  const segue = montar({ envio: () => { throw new ErroStudoo('limite_geracoes'); }, consulta: [limite(600), limite(120), liberada] });
+  // 3) O limite continua: usa o RESTANTE que o servidor devolveu (não repete o prazo cheio), segue dormindo, o botão segue desativado (repetível falso) e ainda não envia nada.
+  const esperas = [];
+  const seguintes = [];
+  const segue = montar({
+    envio: () => { throw new ErroStudoo('limite_geracoes'); }, consulta: [limite(600), limite(120), liberada],
+    extra: { dormir: async (ms, sinal) => { if (sinal.aborted) return; esperas.push(ms); segue.relogio.t += ms; await imediato(); }, aoMudar: (lista) => { seguintes.push(lista[0]?.falha ? { repetivel: lista[0].falha.repetivel, restam: lista[0].falha.aguardarSegundos } : null); } },
+  });
   segue.controlador.iniciar(proposta(A), 'salvar');
-  await ate(() => segue.eventos.ultima?.[0]?.falha?.repetivel === true);
+  await ate(() => seguintes.at(-1)?.repetivel === true);
   assert.equal(segue.chamadas.envios.length, 1);
-  const restantes = segue.fases.length;
-  assert.ok(restantes >= 3);
+  assert.deepEqual(esperas.filter((ms) => ms > 100_000), [600_500, 120_500], 'dormiu o prazo que o servidor deu e, na consulta seguinte, só o que ele disse que restava');
+  assert.deepEqual(seguintes.filter((f) => f && f.repetivel === false).map((f) => f.restam), [600, 120], 'em toda a espera o servidor não permitiu: a tela mostra o botão desativado');
 });
 
-test('"Verificar status" durante a espera do limite consulta já (sem esperar o prazo) e mostra o restante devolvido; a espera longa acorda quando a página reaparece', async () => {
+test('a espera do limite: a página que reaparece (ou a rede que volta) acorda o laço, que consulta já o mesmo pedido, sem esperar o prazo, e mostra o restante devolvido; nada é enviado', async () => {
   const limite = (aguardarSegundos) => falha(A, { causa: 'limite', repetivel: false, aguardarSegundos });
   const esperas = [];
   let liberar;
@@ -316,12 +321,66 @@ test('"Verificar status" durante a espera do limite consulta já (sem esperar o 
   await ate(() => m.eventos.ultima?.[0]?.fase === 'falha' && m.chamadas.consultas.length === 1);
   assert.deepEqual(esperas.at(-1), 900_500, 'dorme até o prazo (+0,5 s), não menos');
   const antes = m.chamadas.consultas.length;
-  m.controlador.verificar(A); // toque em "Verificar status": acorda o laço, que consulta o mesmo pedido já
+  m.controlador.acordar(); // a página reapareceu: o laço acorda e consulta o mesmo pedido já
   await ate(() => m.chamadas.consultas.length > antes);
   assert.equal(m.eventos.ultima[0].falha.aguardarSegundos, 840, 'o restante devolvido pelo servidor, não o prazo cheio de antes');
-  assert.equal(m.chamadas.envios.length, 1, 'verificar não envia');
-  m.controlador.acordar(); // a página reapareceu: o laço que dorme também consulta
+  assert.equal(m.eventos.ultima[0].falha.repetivel, false, 'o servidor ainda não permitiu: nada se habilita pelo relógio do aparelho');
+  assert.equal(m.chamadas.envios.length, 1, 'acordar não envia');
+  m.controlador.acordar(); // outra vez: o laço que dorme o resto do prazo também consulta
   liberar();
   await ate(() => m.eventos.prontas.length === 1);
   assert.equal(m.chamadas.envios.length, 1);
+  assert.equal(m.eventos.prontas[0].porConsulta, true, '"pronto" na consulta do fim da espera: "Abrir lição 1", sem enviar nada');
+});
+
+test('limite com prazo: se a consulta do FIM do prazo perde a resposta, a dúvida (com "Verificar status") aparece NA HORA; a verificação consulta o mesmo pedido e só o servidor libera; nada é enviado sozinho', async () => {
+  // 6 s, como o Retry-After real da OpenAI: a espera é curta (menos que o tempo comum até a dúvida), e mesmo assim a consulta perdida no fim dela já é dúvida.
+  const limite = falha(A, { causa: 'limite', codigo: 'limite_geracoes', repetivel: false, aguardarSegundos: 6 });
+  const liberada = falha(A, { causa: 'limite', codigo: 'limite_geracoes', repetivel: true });
+  const duvida = (extra = {}) => {
+    const m = montar({
+      envio: [() => { throw new ErroStudoo('limite_geracoes'); }, () => plano(A)],
+      consulta: [limite, rede, liberada],
+      extra: {
+        // O prazo passa no relógio de mentira; a espera DEPOIS da dúvida fica parada até alguém acordar o laço (o toque em "Verificar status").
+        dormir: async (ms, sinal) => {
+          if (sinal.aborted) return;
+          if (/:(sem_confirmacao|sem_conexao)$/.test(m.fases.at(-1) ?? '')) { await new Promise((resolver) => { sinal.addEventListener('abort', resolver, { once: true }); }); return; }
+          m.relogio.t += ms; await imediato();
+        },
+        ...extra,
+      },
+    });
+    return m;
+  };
+
+  // Com rede: dúvida na primeira consulta perdida (sem esperar uma segunda nem 10 s), ainda guardando o pedido.
+  const m = duvida();
+  m.controlador.iniciar(proposta(A), 'comecar');
+  await ate(() => faseDe(m, A) === 'sem_confirmacao');
+  assert.equal(m.chamadas.consultas.length, 2, 'uma consulta com o limite e UMA perdida no fim do prazo: já é dúvida');
+  assert.equal(m.chamadas.envios.length, 1, 'nada foi enviado');
+  assert.equal(guardado(m).length, 1, 'o pedido segue guardado');
+  assert.ok(m.fases.some((f) => f.endsWith(':falha')), 'antes da dúvida a falha com prazo estava na tela');
+  m.controlador.verificar(A); // "Verificar status": consulta o mesmo pedido
+  await ate(() => faseDe(m, A) === 'falha');
+  const f = m.eventos.ultima[0].falha;
+  assert.deepEqual([f.causa, f.repetivel, f.liberadaAposEspera, 'aguardarSegundos' in f], ['limite', true, true, false], 'o servidor liberou depois da espera: só agora o botão se habilita');
+  assert.equal(m.chamadas.envios.length, 1, 'liberar não envia: a geração só começa por toque explícito');
+  m.controlador.reenviar(A);
+  await ate(() => m.eventos.prontas.length === 1);
+  assert.equal(m.chamadas.envios.length, 2);
+  assert.equal(m.chamadas.envios[1].token, m.chamadas.envios[0].token, 'o mesmo pedido, o mesmo comprovante');
+
+  // Sem rede identificada no fim do prazo: "sem conexão" (com "Verificar status"), não "ausência".
+  let conectado = false;
+  const sem = duvida({ estaOnline: () => conectado });
+  sem.controlador.iniciar(proposta(A), 'salvar');
+  await ate(() => faseDe(sem, A) === 'sem_conexao');
+  assert.equal(sem.chamadas.envios.length, 1);
+  conectado = true;
+  sem.controlador.acordar(); // a rede voltou: consulta já
+  await ate(() => faseDe(sem, A) === 'falha');
+  assert.equal(sem.eventos.ultima[0].falha.repetivel, true);
+  assert.equal(sem.chamadas.envios.length, 1);
 });

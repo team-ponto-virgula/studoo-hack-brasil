@@ -70,9 +70,9 @@ export function apresentarCriacao(c: CriacaoEmCurso, contexto: { agora: number; 
       const anuncio = texto;
       if (falha.causa === 'proposta_expirada') return { texto, anuncio, tom: 'erro', acoes: [{ id: 'montar', rotulo: t.montarDeNovo }, fechar] };
       if (falha.causa === 'seguranca') return { texto, anuncio, tom: 'erro', acoes: [fechar] };
-      // "Tentar de novo" só aparece quando o SERVIDOR liberou (`repetivel`): o relógio do aparelho não libera nada. No limite que ainda não liberou, a ação é "Verificar status", que consulta o mesmo
-      // pedido (o laço também consulta sozinho quando o prazo acaba); se o servidor disser que sim, o botão vira "Tentar de novo".
-      if (!falha.repetivel) return { texto, anuncio, tom: 'erro', acoes: falha.causa === 'limite' ? [{ id: 'verificar', rotulo: t.verificarStatus }, fechar] : [fechar] };
+      // "Tentar de novo" fica SEMPRE visível na falha que pode ser repetida e só se habilita quando o SERVIDOR permite (`repetivel`): o relógio do aparelho não libera nada. No limite confirmado
+      // ele aparece desativado; ao fim do prazo o laço consulta o mesmo pedido sozinho (sem botão para isso), e é a resposta que o habilita. Sem prazo conhecido, vale o campo que a API devolveu.
+      if (!falha.repetivel) return { texto, anuncio, tom: 'erro', acoes: falha.causa === 'limite' ? [{ id: 'reenviar', rotulo: t.tentarDeNovo, desabilitada: true }, fechar] : [fechar] };
       return { texto, anuncio, tom: 'erro', acoes: [{ id: 'reenviar', rotulo: t.tentarDeNovo }, fechar] };
     }
   }
