@@ -3,7 +3,7 @@ import type { GeradorTrilha, MetaPlano } from "./gerador";
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
-import { comNovasTentativas } from "./novas-tentativas";
+import { comNovasTentativas, esperaPedida } from "./novas-tentativas";
 import {
   TEMPO_CONTEUDO_DE_MATEMATICA_MS,
   TEMPO_CONTEUDO_MS,
@@ -74,8 +74,10 @@ export async function pedirRespostaOpenAi(config: ConfiguracaoOpenAi, corpo: Rec
   });
   const resposta = await (repetir429 ? comNovasTentativas(enviar, { rota: "ia-openai", sinal }) : enviar());
   if (!resposta.ok) {
-    registrar("ia_indisponivel", { status: resposta.status });
-    throw new FalhaApi("ia_indisponivel");
+    // Limite do provedor (429) que ficou depois das novas tentativas: guarda o que ele pediu para esperar, se pediu (spec 04, Retomada da criação).
+    const espera = resposta.status === 429 ? esperaPedida(resposta.headers) : null;
+    registrar("ia_indisponivel", { status: resposta.status, ...(espera ? { espera_ms: espera } : {}) });
+    throw new FalhaApi("ia_indisponivel", undefined, resposta.status === 429 ? "limite_provedor" : undefined, espera && espera > 0 ? espera : undefined);
   }
   return resposta;
 }

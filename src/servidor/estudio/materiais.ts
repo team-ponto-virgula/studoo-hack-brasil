@@ -270,10 +270,14 @@ async function criarProposta(
       licoes: f.licoes.map((l) => ({ titulo: l.titulo })),
     })),
   };
+  // O id do comprovante é o do pedido de criação (spec 04, Retomada da criação), como na proposta por tema.
+  const pedidoId = randomUUID();
   return {
     ...esqueleto,
+    pedidoId,
+    validaPorMs: Math.max(0, rascunho.expiraEm.getTime() - Date.now()),
     token: emitirComprovante('proposta', usuarioId, {
-      id: randomUUID(),
+      id: pedidoId,
       expiraEm: rascunho.expiraEm.getTime(),
       plano: esqueleto,
     }),

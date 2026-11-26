@@ -33,13 +33,17 @@ export async function exigirTrilhaSegura(dados: unknown, opcoes: { anexos?: unkn
 
   const config = configuracaoOpenAi();
   if (!config) throw new FalhaApi('ia_indisponivel');
+  let limiteDoProvedor: FalhaApi | undefined;
   const resposta = await pedirJsonOpenAi(config, 'triagem_trilha', esquema, instrucao, dados, opcoes.anexos, {
     prazoMs: 25_000, maxTokens: 4096, tentativas: 1, sinal: opcoes.sinal,
-  }).catch(() => null);
+  }).catch((erro) => {
+    if (erro instanceof FalhaApi && erro.motivo === 'limite_provedor') limiteDoProvedor = erro;
+    return null;
+  });
   const decisao = resposta && typeof resposta === 'object' && Object.keys(resposta).length === 1 && 'decisao' in resposta
     ? resposta.decisao : null;
   if (decisao === 'recusar') throw new FalhaApi('conteudo_nocivo');
-  if (decisao !== 'permitir') throw new FalhaApi('ia_indisponivel', undefined, 'triagem');
+  if (decisao !== 'permitir') throw new FalhaApi('ia_indisponivel', undefined, limiteDoProvedor ? 'limite_provedor' : 'triagem', limiteDoProvedor?.esperaMs);
 }
 
 /** Revisa os campos exibidos e os privados que só aparecem após responder, incluindo as imagens das fontes. */
