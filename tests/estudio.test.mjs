@@ -106,6 +106,9 @@ test('material → proposta → lição → reforço → explicação; progresso
     codigo('nao_encontrado'),
   );
   const p = await proporMaterial(u, material.id, 'Aprender frações');
+  // A proposta do material também sai com o pedidoId (o id do comprovante) e a validade, para a retomada da criação (spec 04, Retomada da criação).
+  assert.match(p.pedidoId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  assert.ok(p.validaPorMs > 0 && p.validaPorMs <= 30 * 60_000);
   assert.equal(p.fluxos.flatMap((f) => f.licoes).length, 3);
   assert.equal(JSON.stringify(p).includes('gabarito'), false);
   await assert.rejects(

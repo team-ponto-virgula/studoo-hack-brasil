@@ -575,6 +575,27 @@ test('o envio que assume um lote parado confere o prazo NA HORA da troca: uma re
   assert.equal(await pedidos.avancarEtapa(conta.id, id, 1, 'gravacao'), false, 'e o dono antigo já não renova nada');
 });
 
+test('a proposta por tema sai com o pedidoId (o id do comprovante, que vira o id do plano) e com a validade; a conta nunca aparece nela', async () => {
+  const conta = await novaConta();
+  const antes = process.env.IA;
+  process.env.IA = 'falsa';
+  try {
+    const { iniciarGeracao } = await import('../src/servidor/aprendizado/geracao.ts');
+    const { lerComprovante } = await import('../src/servidor/aprendizado/comprovantes.ts');
+    let proposta;
+    for await (const evento of iniciarGeracao(conta.id, 'Quero aprender violão do zero', { verificarLimite: false }).eventos(new AbortController().signal, { aoVivo: false })) {
+      if (evento.tipo === 'pronto') proposta = evento.proposta;
+    }
+    assert.ok(proposta, 'a geração termina em "pronto"');
+    assert.match(proposta.pedidoId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    assert.equal(lerComprovante('proposta', conta.id, proposta.token).id, proposta.pedidoId, 'o id exposto é o do comprovante assinado');
+    assert.ok(proposta.validaPorMs > 29 * 60_000 && proposta.validaPorMs <= 30 * 60_000, `validade da proposta: ${proposta.validaPorMs}`);
+    assert.ok(!JSON.stringify(proposta).includes(conta.id), 'a proposta não traz o id da conta');
+  } finally {
+    process.env.IA = antes;
+  }
+});
+
 test('GET /api/sessao devolve a "conta" opaca: estável, diferente por conta e que não é o id', async () => {
   const a = await novaConta();
   const b = await novaConta();
