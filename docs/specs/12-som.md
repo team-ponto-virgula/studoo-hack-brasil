@@ -133,7 +133,7 @@ Tabela fechada com os IDs já existentes em `packages/contratos/src/catalogo-son
 | Área | Momento | Efeito (`IdEfeitoSonoro`) | Vol. relativo | Regra para não empilhar / quando NÃO tocar |
 |---|---|---|---|---|
 | **Geração que se acompanha** (spec 04) | Cada lição nova, quando o nó pousa no mapa (o evento visível, não a chegada do pacote) | `geracao_licao` | `0.58` | No máximo um a cada `400 ms`; nunca depois da proposta pronta; não toca se a geração foi cancelada |
-| **Geração que se acompanha** (spec 04) | Trilha pronta ("Sua trilha está pronta: N lições curtas em M partes.", o troféu entra) | nenhum | — | A trilha ainda não existe; o som de conclusão fica para o aceite |
+| **Geração que se acompanha** (spec 04) | A prévia mostra a contagem da proposta e o troféu entra | nenhum | — | O som de conclusão fica para o aceite |
 | **Criar a trilha** (spec 04) | O aceite voltou: a trilha passou a existir, o nó 1 pulsa e vira a aula | `geracao_pronta` | `0.95` | O único som de conclusão do fluxo: uma vez por trilha criada, aquecido ao abrir a geração; não toca no erro nem se a pessoa saiu antes de o aceite voltar |
 | **Geração que se acompanha** (spec 04) | Foco automático no botão "Começar a lição 1" | nenhum | — | Foco programático nunca dispara som |
 | **Ordenar em lista única** (spec 08) | Escolher um item da lista | `toque_opcao` | `0.76` | Cooldown `45 ms` |

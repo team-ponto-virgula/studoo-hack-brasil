@@ -29,7 +29,7 @@ A interface funcionava, mas era plana: a entrada não dizia o que o Studoo faz, 
    - **Ao abrir**, os nós caem no lugar em sequência e o cenário brota logo depois.
    - **Na volta de uma lição concluída**, o nó comemora com um pulo e confete, a linha até o próximo se desenha e só então o próximo nó se abre.
    - **Na geração ao vivo**, cada nó cai no lugar assim que chega, sobre o caminho em rascunho, e o esqueleto do próximo gira. Quando a proposta fica pronta, o troféu entra, sem confete ("Geração que se acompanha" e "Criar a trilha", abaixo).
-   - **Ao Começar**, um toque salva a trilha e abre a etapa 1 da lição 1, sem tela no meio: o botão mostra "Criando sua trilha…" enquanto a IA escreve as lições, e o nó 1 vira a aula quando o aceite volta ("Criar a trilha", abaixo).
+   - **Ao Começar**, um toque solicita o salvamento e mostra “Preparando sua trilha…”. Com a tela ativa, o nó 1 vira a aula quando o servidor confirma. Se a conexão cair, vale a regra de [retomada](#retomada-da-criacao).
 6. **Aula.** A aula por etapas da [spec 02](02-aula-web.md) vale na web e no app. A barra de andamento é grossa e avança com uma mola; cada etapa entra deslizando. O conceito vem num balão do Stu. No exercício de escolha, as opções são cartões com relevo, com as teclas 1, 2, 3… na web e as letras A, B, C… no app; na web, Enter verifica e continua. Depois de **Verificar**, o rodapé vira o painel de retorno: sobe verde no acerto ("Mandou bem!", com confete) ou âmbar no erro ("Quase lá!", e o exercício treme). O Stu reage no próprio painel, na ponta direita da linha do título (spec 13, emenda de 19/11: a reação mora no painel de retorno). No erro, **Tentar de novo** volta ao exercício e **Continuar** segue, como antes.
 7. **Conclusão e trilhas.** A lição concluída tem chuva de confete (que some antes dos números e dos botões), raios girando atrás do Stu, que pula, e o resumo da lição: tempo, acertos (de primeira ou quantos exercícios de quantos) e etapas. Se ficou exercício sem acerto, ou a prática em “ainda não”, não há chuva: a conclusão sugere rever a lição. A barra da trilha enche a partir de onde estava. Minhas trilhas mostra cartões com uma faixa do mundo, que entram em sequência, e a ação que cabe: começar, continuar ou rever a trilha. As telas entram com uma subida curta, e os esqueletos brilham enquanto carregam.
 
@@ -114,7 +114,7 @@ Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam (
 - A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade, sem dicas que se revezam:
   - "Montando sua trilha" (`montandoTitulo`) enquanto chegam lições;
   - "Ainda montando a próxima lição…" (`aguardandoLicao`) depois de 12 s sem lição nova;
-  - "Sua trilha está pronta: 9 lições curtas em 3 partes." (`propostaPronta`) no fim.
+  - “Sua proposta tem 10 lições em 3 partes.” (`propostaPronta`) no fim. Use “lição” no singular e omita “em 1 parte” quando houver uma única parte.
 
   A exceção de 23/11 à regra "sem dicas que se revezam" vale só na espera depois de "Começar a lição 1", na linha "Escrevendo suas lições…" (spec 17, mudança 1), e não nesta placa. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
 - O rodapé: "Cancelar" e "Montando a trilha", sem a contagem de lições.
@@ -135,7 +135,7 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 - Rolar para baixo não desliga o acompanhamento.
 
 **Quando a proposta fica pronta.**
-- Se a tela está acompanhando, ela rola até a lição 1 inteira no alto da área (spec 16, item 1), e "Ver o fim da trilha" leva ao troféu. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), sem confete e sem som. A placa vira "Sua trilha está pronta: 9 lições curtas em 3 partes.". Por dentro ainda é uma proposta: a trilha só existe depois do toque. O Stu faz um ciclo de `stu-feliz` ao lado do troféu. O rodapé mostra "Começar a lição 1" (`comecarLicao1`) e "Ajustar pedido", com a ordem abaixo para telas estreitas. A entrada desliza 12 px em 220 ms e é imediata com movimento reduzido. O foco vai para "Começar a lição 1".
+- Se a tela está acompanhando, ela rola até a lição 1 inteira no alto da área (spec 16, item 1), e "Ver o fim da trilha" leva ao troféu. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), sem confete e sem som. A placa mostra a contagem da proposta e a trilha só é salva após a confirmação do servidor. O Stu faz um ciclo de `stu-feliz` ao lado do troféu. O rodapé mostra "Começar a lição 1" (`comecarLicao1`) e "Ajustar pedido", com a ordem abaixo para telas estreitas. A entrada desliza 12 px em 220 ms e é imediata com movimento reduzido. O foco vai para "Começar a lição 1".
 - Se não está acompanhando, a pílula vira “Ver o fim da trilha”. O resto acontece igual.
 - Ao subir até o começo do mapa, a faixa volta a ser o cartão do título.
 
@@ -143,7 +143,7 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 
 **Movimento reduzido.** A tela continua acompanhando, mas pula direto, sem rolagem animada. Nada cai, pula, brota ou chove: o nó, o nome e o cenário aparecem juntos, com 150 ms de opacidade; o troféu aparece sem escala, e o Stu fica parado. A informação é a mesma.
 
-**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Sua trilha está pronta: 9 lições curtas em 3 partes. Começar a lição 1.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
+**Leitor de tela.** Cada lição nova é anunciada (`aria-live="polite"` na web e `announceForAccessibility` no app). No fim, o leitor anuncia “Sua proposta tem 10 lições em 3 partes. Começar a lição 1.” Durante a geração, o foco fica onde a pessoa estiver.
 
 **Espera longa.** Com a IA real, uma lição pode demorar. Depois de 12 s sem lição nova, a placa diz “Ainda montando a próxima lição…”, sem barra de progresso inventada.
 
@@ -165,11 +165,11 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - O botão principal da prévia pronta diz "Começar a lição 1" (`comecarLicao1`). Até 600 px, ele fica no alto do rodapé, ocupa toda a largura útil e aparece sem rolar. A face tem pelo menos 48 px de altura. Abaixo, a 8 px, "Ajustar pedido" é um botão de texto sem relevo, centralizado, com alvo de pelo menos 44 × 44 px. A ordem de foco segue a ordem visual. O rodapé respeita as áreas seguras e tem margens laterais de pelo menos 16 px. Acima de 600 px, as duas ações podem ficar lado a lado.
 
 **O toque (0 ms).**
-- Em até 100 ms do toque, o botão afunda (o lábio some), mostra o giro de 16 px e "Criando sua trilha…" (`criandoTrilha`).
+- Em até 100 ms do toque, o botão afunda (o lábio some), mostra o giro de 16 px e “Preparando sua trilha…”.
 - Até 600 px, "Ajustar pedido" sai na hora e o botão principal mantém o lugar e a largura. A faixa abaixo reserva a altura mínima da ação secundária enquanto o aceite está em andamento. Ela não recebe foco e pode crescer se a mensagem de espera precisar quebrar linha. No arranjo lado a lado, "Ajustar pedido" sai e o botão ocupa a largura toda em 200 ms, ou na hora com movimento reduzido.
 - A prévia rola até o nó 1 (240 ms). O alvo é a área visível entre a base da placa e o topo do rodapé, não a tela toda: o nó 1, o rótulo dele e o Stu ficam inteiros nessa área, com o centro do nó a 40% da altura dela. Atrás da placa, o Stu estudando e o começo do círculo não aparecem; era o que acontecia na primeira captura do app, com o círculo à vista só perto de 377 ms.
 - O Stu anda até o nó 1 (400 ms) e passa a `stu-estudando`, em laço, no tamanho do guia do mapa. O anel do nó 1 respira. O resto da tela não muda.
-- Leitor de tela: "Criando sua trilha." (`anuncioCriando`, educado). O foco fica no botão.
+- O leitor de tela anuncia “Preparando sua trilha.” uma vez. O foco fica no botão.
 
 **Enquanto o aceite não volta.**
 - Sem pausa mínima: o aceite não espera nada além da resposta. Saem a `pausa(ESCRITA_MINIMA_MS)`, de 1.200 ms, e a `pausa(PAUSA_LICOES_PRONTAS_MS)`, de 900 ms, nos dois clientes.
@@ -178,7 +178,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
 **A trilha passa a existir (o aceite volta ok).** A passagem começa no aceite, sem espera, e cabe em até 470 ms contados dele. Se o aceite volta antes de a rolagem do toque até o nó 1 acabar, a rolagem que falta termina até t = 120 ms, com saída suave, e o círculo nasce do nó 1 já no lugar. Se faltar mais que uma altura de tela, ou com movimento reduzido, o nó vai para o lugar na hora, no t = 0. Na referência rápida do app, o aceite voltou em 71 ms, antes do fim da rolagem, e no quadro de 220 ms o nó 1 estava acima da tela. A passagem é a própria navegação para a aula, em até 470 ms:
-- t = 0: toca `geracao_pronta`. A placa "Sua trilha está pronta…" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
+- t = 0: toca `geracao_pronta`. A placa da proposta sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido). O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
 - A busca da lição (`obterLicao`) começa no instante em que o aceite volta, junto com a passagem, e não depois dela.
@@ -190,11 +190,21 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 
 **Som.** O único som de conclusão é `geracao_pronta`, no t = 0 da passagem. O toque em "Começar a lição 1" não toca `toque_opcao`, para a confirmação ser ouvida sozinha. Ele é aquecido ao abrir a geração, para tocar sem atraso. O fim da proposta (troféu) não tem som. `geracao_licao` segue a spec 12.
 
-**Erro, tentar de novo e sair.**
-- **O aceite falhou:** nada da tela some nem remonta. A prévia fica onde estava, sem quadro em branco e sem a entrada da tela. A camada da passagem, se chegou a montar, sai sem aparecer. Só o rodapé e o Stu mudam: o botão volta a "Começar a lição 1" e "Ajustar pedido" volta. A linha embaixo, em `#C23B4E`, diz "Não deu para criar a trilha. Confira a conexão e tente de novo." (`erroCriacao`). Até 600 px, a mensagem entra entre a ação principal e "Ajustar pedido". O Stu fica ao lado do nó 1, parado, em `stu-encorajador`. O novo toque usa o mesmo token, e o servidor devolve a trilha já criada para esse token (`aceitarProposta`, em `src/servidor/aprendizado/servico.ts`), então nada duplica.
-- **Proposta expirada (`proposta_invalida`):** a linha diz "Esta proposta expirou. Monte de novo." (`propostaExpirada`), e o botão vira "Montar de novo" (`montarDeNovo`), que refaz a geração com o mesmo pedido. Em telas estreitas, vale a mesma ordem da falha de aceite: ação principal, mensagem e "Ajustar pedido".
-- **Sair durante "Criando sua trilha…"** (voltar, gesto ou outra aba): não cancela no servidor. O cliente ignora a resposta e não abre a aula, e a trilha aparece em Minhas trilhas.
-- Cancelar durante a geração continua como hoje (P17 da spec 07).
+<a id="retomada-da-criacao"></a>
+### Retomada da criação
+
+Preserve a proposta, o pedido e a ação escolhida até confirmar o resultado. Web, Android e iPhone consultam o mesmo pedido ao reconectar ou reabrir a sessão. Um novo toque para o mesmo pedido mantém uma única trilha.
+
+| Estado | O que aparece e o que a pessoa pode fazer |
+| --- | --- |
+| Preparando | “Preparando sua trilha…” após **Começar a lição 1** ou “Salvando sua trilha…” após **Salvar para depois**. A pessoa pode sair da tela. |
+| Sem confirmação | Quando estiver offline, “Sem conexão. Vamos verificar o status quando a conexão voltar.” Se houve demora sem confirmação com rede disponível, “Ainda não conseguimos confirmar se sua trilha foi salva.” **Verificar status** consulta o mesmo pedido quando houver rede. |
+| Confirmada | Na retomada de **Começar a lição 1**, “Sua trilha está pronta.” e **Abrir lição 1**. Se a trilha foi salva e só a lição falhou ao abrir, informe isso e permita tentar abrir a lição novamente. **Salvar para depois** confirma em Minhas trilhas, com 0 de N lições, **Começar** e o aviso de até 24 h para visitantes. |
+| Falha confirmada | Explique o motivo em linguagem simples e informe um prazo apenas quando conhecido. Mantenha a prévia e ofereça **Tentar de novo** se o mesmo pedido puder ser retomado. Com expiração confirmada da proposta, **Montar de novo** é uma escolha explícita e aproveita o pedido. |
+
+Se a pessoa permaneceu no fluxo, mantenha a abertura da aula ou da biblioteca no toque original. Se saiu da tela, voltou de outro contexto ou abriu outro pedido, mantenha sua tela e ofereça acesso ao resultado em Minhas trilhas ou à retomada pela criação. Cancelar a geração da prévia antes do aceite segue P17 da spec 07.
+
+Mostre o status perto da ação e anuncie cada mudança relevante uma vez. O foco acompanha a navegação intencional e permanece onde está quando o resultado chega em segundo plano.
 
 **Critérios observáveis.**
 - C1: do toque até o botão mudar, no máximo 100 ms (6 quadros numa gravação a 60 fps).
@@ -210,11 +220,11 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta. Com a música ligada, o Lo-fi continua por baixo (spec 12): não baixa, não para e não recomeça, também na passagem para a aula.
 - C5: sem confete, sem dicas que se revezam na placa, sem "Mais uma!", sem contagens, sem barra e sem visto por lição. A troca de frases só existe na espera depois de "Começar a lição 1" (spec 17, mudança 1).
   - **Teste do app** (`tests/criacao-trilha-mobile.test.mjs`, perto das linhas 120 a 122, do Mobile 2): a `PlacaDaGeracao` continua sem `dicas` e sem `setInterval`. A troca das frases (`mensagens.geracao.dicas`, sem troca com movimento reduzido) é testada na espera do aceite, onde a linha "Escrevendo suas lições…" é desenhada.
-  - **Durante a criação** (depois de "Começar a lição 1"), a pílula "Ver o fim da trilha" não aparece, nem na web nem no app. A faixa "Sua trilha está pronta…" fica. O Stu com o notebook fica ao lado do nó 1, e o botão afundado fica com o giro até a lição abrir (conferência de 23/11, spec 17, seção 6).
-- C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
+  - **Durante a criação**, a faixa da proposta continua à vista e o giro só aparece enquanto há espera ativa. O Stu com o notebook fica ao lado do nó 1. A ação “Ver o fim da trilha” some durante a espera.
+- C6. Corte a rede depois de tocar na ação da proposta. Reconecte na mesma tela e repita fechando e reabrindo o app ou a página. Ao confirmar, Minhas trilhas tem uma única cópia e voltar da aula leva ao mapa salvo. Repita com falha confirmada e com **Salvar para depois**. Se a pessoa começou outro pedido, ele permanece intacto e a tela fica onde ela deixou.
 - C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
-- C8: com tamanho de texto padrão, "Criando sua trilha…" fica numa linha em 320, 360 e 390. Em 360×800 e 390×844, conferir que a ação principal aparece na largura toda sem rolar, antes de "Ajustar pedido", também com fonte grande do sistema no Android e no iPhone e com ampliação de texto a 200% na web. O botão e as mensagens podem ganhar linhas para exibir o texto inteiro. O rodapé acompanha a altura medida do conteúdo e da área segura para manter o fim do mapa acessível, inclusive sob o vidro no iPhone. Conferir a prévia pronta, a espera depois de 1,5 s, a falha e a expiração. Em 600 px, vale a pilha; em 601 px, verificar que os controles continuam legíveis.
-- C9: no erro e na proposta expirada, nenhum quadro em branco: a prévia continua à vista do erro em diante. Depois de "Montar de novo", a linha de erro some na hora, a placa volta a "Montando sua trilha" e termina em "Sua trilha está pronta…", com "Começar a lição 1" ligado. Se já existe uma trilha com o mesmo nome, aparece o aviso "Abrir a que já existe" (spec 05). O teste observa essa proposta nova e o botão ligado; com a IA falsa, a faixa da geração pode nem chegar a aparecer.
+- C8. Com texto padrão, “Preparando sua trilha…” cabe em uma linha em 320, 360 e 390 px. Em 360×800 e 390×844, confira ação e status inteiros acima da área segura, com fonte grande no app e texto ampliado a 200% na web. A ação principal aparece sem rolar e antes de **Ajustar pedido** quando disponível. O rodapé cresce com o conteúdo e mantém o fim do mapa acessível. Confira prévia, espera, perda de conexão, confirmação, falha e expiração. Em 600 px, vale a pilha. Em 601 px, confira se os controles continuam legíveis.
+- C9. A prévia permanece à vista em caso de falha ou expiração. Depois de **Montar de novo**, a placa volta a “Montando sua trilha” e termina com a contagem da proposta e **Começar a lição 1**. Se já existe uma trilha com o mesmo nome, aparece **Abrir a que já existe** (spec 05).
 
 **Paridade.** Igual na web, no Android e no iPhone, com os mesmos tempos e os mesmos textos.
 

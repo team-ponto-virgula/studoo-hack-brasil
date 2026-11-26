@@ -57,6 +57,8 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 
 ### Mudança 1 (P0): a espera da criação da trilha ensina o produto
 Revista em 23/11 com a medição do Mobile & QA e do Lead (IA real): a proposta fica pronta em 2,5 a 3,6 s, e a criação da trilha, depois de "Começar a lição 1", leva de 12,8 a 21,4 s.
+
+Para os textos e estados atuais da espera, perda de conexão e falha, vale a [retomada da criação na spec 04](04-experiencia-ilustrada.md#retomada-da-criacao).
 - **Antes:**
   - no toque em "Começar a lição 1", o botão afunda com o giro e "Criando sua trilha…" (`geracao.criandoTrilha`);
   - depois de 1,5 s, entra embaixo dele a linha "Escrevendo suas lições…" (`geracao.escrevendoLicoes`, na `.previa-espera` da web e no equivalente do app);
@@ -89,11 +91,7 @@ Revista em 23/11 com a medição do Mobile & QA e do Lead (IA real): a proposta 
 - **Onde:** web e app, iguais.
 
 ### Mudança 2 (P1): textos do primeiro caminho sem palavras de dentro
-- **Faixa da proposta** (`geracao.propostaPronta(licoes, partes)`, em `experiencia.ts`, linha 1036; também vai para o anúncio do leitor de tela do app, `estudo.tsx`, linha 1401):
-  - antes: "Proposta pronta: N lições em M partes.";
-  - depois: "Sua trilha está pronta: N lições curtas em M partes.";
-  - com uma parte só: "Sua trilha está pronta: N lições curtas.";
-  - com uma lição só: "Sua trilha está pronta: 1 lição curta."
+- **Faixa da proposta** (`geracao.propostaPronta(licoes, partes)`). O texto e o anúncio seguem a contagem da proposta na spec 04.
 - **Tour "Ver como funciona"** (`apresentacao.passos[0..3]`, campos `titulo` e `texto`, em `experiencia.ts`, linhas 292 a 312; o título fica acima e o texto embaixo):
   1. "Seu material vira lição" / "Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia."
   2. "Errou? Tem outro jeito" / "O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo."
@@ -249,7 +247,7 @@ Escopo comum para Web, Android e iPhone. Os textos de interface vêm do contrato
 
 ### Salvar e começar depois
 
-- Na prévia, **“Começar a lição 1”** é a ação principal e **“Salvar para depois”** é a ação secundária. Ambas aceitam a mesma proposta. Ao tocar em **“Salvar para depois”**, a confirmação do servidor leva direto a **Minhas trilhas**, sem abrir a aula. Na lista, mostrar e anunciar **“Trilha salva em Minhas trilhas.”**. Para visitante, o aviso inclui o limite da sessão. Enquanto aguarda, **“Salvando trilha…”**. Se a operação falhar, informar **“Não deu para salvar. Tente de novo.”** e preservar a prévia e as respostas enquanto forem válidas.
+- Na prévia, **“Começar a lição 1”** é a ação principal e **“Salvar para depois”** é a ação secundária. Ambas aceitam a mesma proposta. Ao tocar em **“Salvar para depois”**, a confirmação do servidor leva direto a **Minhas trilhas** quando a pessoa permanece no fluxo. Na lista, mostrar e anunciar **“Trilha salva em Minhas trilhas.”**. Para visitante, o aviso inclui o limite da sessão. A espera, a recuperação de conexão e a falha seguem a [spec 04](04-experiencia-ilustrada.md#retomada-da-criacao).
 - A trilha aceita aparece em **Minhas trilhas** com **0 de N lições concluídas** e **“Começar”**, mesmo depois de reabrir. Quando uma lição tiver andamento recuperável, **“Continuar”** volta ao ponto salvo. Repetir o aceite da mesma proposta devolve a mesma trilha. Para visitante, mostrar **“Disponível por até 24 h a partir da entrada neste navegador”**, com **“neste aparelho”** no app. O aviso de saída segue o contrato da sessão temporária.
 
 ### Lição e fim de trilha

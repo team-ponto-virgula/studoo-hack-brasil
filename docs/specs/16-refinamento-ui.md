@@ -331,7 +331,7 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 - **Regra:** nas três plataformas, como a web:
   - o botão de voltar ao pedido, de 44 px, à esquerda;
   - o nome da trilha em 17/22 800 `#0B1B5C`, até 2 linhas e sem reticências (com 3 linhas ou mais, o tamanho cai para 15/20);
-  - embaixo, a faixa "Proposta pronta: N lições em M partes".
+  - embaixo, a faixa com a contagem da proposta conforme a spec 04.
   O objetivo do pedido não aparece no alto.
 - **Onde:** o app, para igualar a web. Substitui o item 12.
 
