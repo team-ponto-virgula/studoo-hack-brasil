@@ -23,13 +23,14 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
   const { pedido, estado } = item;
   const [verificando, setVerificando] = useState(false);
   const { texto, acao, consultarEmMs } = apresentarRetomada(item);
+  const aguardandoLimite = acao.tipo === 'tentar' && acao.desativada === true;
 
   useEffect(() => {
     if (acao.tipo === 'entrar') aoExpirarSessao();
   }, [acao.tipo, aoExpirarSessao]);
 
   useEffect(() => {
-    if (consultarEmMs === undefined || ocupado) return;
+    if (ocupado || (consultarEmMs === undefined && !aguardandoLimite)) return;
     let relogio: ReturnType<typeof setTimeout> | undefined;
     function emPrimeiroPlano() {
       return AppState.currentState !== 'inactive' && AppState.currentState !== 'background';
@@ -38,13 +39,13 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
       clearTimeout(relogio);
       if (emPrimeiroPlano()) relogio = setTimeout(() => void consultar(pedido), ms);
     }
-    agendar(consultarEmMs);
+    if (consultarEmMs !== undefined) agendar(consultarEmMs);
     const evento = AppState.addEventListener('change', atual => {
       if (atual === 'active') agendar(0);
       else clearTimeout(relogio);
     });
     return () => { clearTimeout(relogio); evento.remove(); };
-  }, [consultarEmMs, consultar, estado, ocupado, pedido]);
+  }, [aguardandoLimite, consultarEmMs, consultar, estado, ocupado, pedido]);
 
   async function verificar() {
     setVerificando(true);
@@ -65,7 +66,10 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
   } else if (acao.tipo === 'remontar') {
     botao = { testID: 'criacao-montar-de-novo', rotulo: t.montarDeNovo, acao: () => ajustar(pedido, false) };
   } else if (acao.tipo === 'reenviar' || acao.tipo === 'tentar') {
-    botao = { testID: 'criacao-reenviar', rotulo: acao.tipo === 'reenviar' ? t.reenviarPedido : t.tentarDeNovo, acao: () => reenviar(pedido) };
+    botao = {
+      testID: 'criacao-reenviar', rotulo: acao.tipo === 'reenviar' ? t.reenviarPedido : t.tentarDeNovo,
+      acao: () => { if (!aguardandoLimite) reenviar(pedido); },
+    };
   }
 
   const anunciou = estado !== null;
@@ -83,7 +87,7 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
       {estado?.estado === 'em_preparo' && estado.decorridoMs >= 10_000 && !mostrarTitulo &&
         <Text style={estilos.legenda}>Você pode sair. Quando estiver pronta, a trilha aparece em Minhas trilhas.</Text>}
       <Botao plano variante={estado?.estado === 'pronto' && pedido.intencao === 'comecar' ? 'primario' : 'secundario'}
-        {...botao} desativado={ocupado || verificando} />
+        {...botao} desativado={ocupado || verificando || aguardandoLimite} />
       {sairParaLista && botao.testID !== 'criacao-ver-trilha' &&
         <Botao compacto variante="texto" testID="criacao-minhas-trilhas" rotulo={mensagens.planos.titulo}
           desativado={ocupado} acao={sairParaLista} />}

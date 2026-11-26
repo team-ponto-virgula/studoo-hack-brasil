@@ -26,23 +26,32 @@ test('a perda de resposta sem evidência de offline mantém consulta neutra e nu
   assert.equal(apresentarRetomada(item(ausente, { propostaExpiraEm: agora + 20_000 }), agora + 20_000).acao.tipo, 'remontar');
 });
 
-test('limite conhecido conserva a proposta e consulta de novo antes de liberar a mesma tentativa', () => {
+test('limite confirmado mantém Tentar de novo desativado até consultar e receber permissão do servidor', () => {
   const limite = { estado: 'falha', causa: 'limite', codigo: 'limite_geracoes', tentativas: 1, repetivel: false };
+  const desativada = { tipo: 'tentar', desativada: true };
   const vista = apresentarRetomada(item({ ...limite, aguardarSegundos: 32 }), agora);
   assert.equal(vista.texto, t.falhaDaCriacao.limiteComEspera(32));
   assert.equal(vista.consultarEmMs, 32_000);
-  assert.equal(vista.acao.tipo, 'consultar');
-  assert.deepEqual(apresentarRetomada(item(limite), agora), { texto: t.falhaDaCriacao.limite, acao: { tipo: 'consultar' } });
+  assert.deepEqual(vista.acao, desativada);
+  assert.deepEqual(apresentarRetomada(item(limite), agora), { texto: t.falhaDaCriacao.limite, acao: desativada });
+  assert.deepEqual(apresentarRetomada(item({ ...limite, repetivel: true }), agora).acao, { tipo: 'tentar' });
   const esperaDoLimite = { tentativas: 1, terminaEm: agora + 32_000 };
   const aguardando = { ...item({ ...limite, aguardarSegundos: 32 }), esperaDoLimite };
   assert.equal(apresentarRetomada(aguardando, agora + 10_000).consultarEmMs, 22_000);
   assert.deepEqual(apresentarRetomada(aguardando, esperaDoLimite.terminaEm), {
-    texto: t.falhaDaCriacao.limite, acao: { tipo: 'consultar' }, consultarEmMs: 0,
+    texto: t.falhaDaCriacao.limite, acao: desativada, consultarEmMs: 0,
+  });
+  const semResposta = { ...item({ estado: 'desconhecido', motivo: 'rede' }), esperaDoLimite };
+  assert.deepEqual(apresentarRetomada(semResposta, esperaDoLimite.terminaEm), {
+    texto: t.semConfirmacao, acao: { tipo: 'consultar' }, consultarEmMs: 2_000,
   });
   const liberada = { ...item({ ...limite, repetivel: true }), esperaDoLimite };
   assert.deepEqual(apresentarRetomada(liberada, esperaDoLimite.terminaEm), {
     texto: t.falhaDaCriacao.limiteLiberado, acao: { tipo: 'tentar' },
   });
+  const plano = { id: pedidoId };
+  const pronta = { ...item({ estado: 'pronto', tentativas: 1, plano }), esperaDoLimite };
+  assert.deepEqual(apresentarRetomada(pronta, esperaDoLimite.terminaEm).acao, { tipo: 'abrir', plano });
   const outraTentativa = { ...item({ ...limite, tentativas: 2, repetivel: true }), esperaDoLimite };
   assert.equal(apresentarRetomada(outraTentativa, esperaDoLimite.terminaEm).texto, t.falhaDaCriacao.limite);
 });

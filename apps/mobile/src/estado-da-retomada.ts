@@ -5,7 +5,8 @@ import type { CriacaoAcompanhada } from './use-criacoes-pendentes';
 const t = mensagens.geracao;
 
 type Acao =
-  | { tipo: 'consultar' | 'entrar' | 'reenviar' | 'tentar' | 'editar' | 'remontar' }
+  | { tipo: 'consultar' | 'entrar' | 'reenviar' | 'editar' | 'remontar' }
+  | { tipo: 'tentar'; desativada?: true }
   | { tipo: 'abrir'; plano: PlanoDetalhe };
 
 type Apresentacao = { texto: string; acao: Acao; consultarEmMs?: number };
@@ -43,18 +44,21 @@ export function apresentarRetomada({ pedido, estado, semRespostaSeguidas, espera
       const { causa, repetivel, aguardarSegundos, tentativas } = decisao.falha;
       if (causa === 'limite') {
         const espera = esperaDoLimite?.tentativas === tentativas ? esperaDoLimite : undefined;
-        if (repetivel && espera) {
-          return { texto: t.falhaDaCriacao.limiteLiberado, acao: { tipo: 'tentar' } };
+        if (repetivel === true) {
+          const texto = espera ? t.falhaDaCriacao.limiteLiberado : t.falhaDaCriacao.limite;
+          return { texto, acao: { tipo: 'tentar' } };
         }
-        if (!repetivel && aguardarSegundos !== undefined && aguardarSegundos > 0) {
-          const terminaEm = espera?.terminaEm ?? agora + aguardarSegundos * 1_000;
-          const restanteMs = Math.max(0, terminaEm - agora);
-          return {
-            texto: restanteMs > 0 ? t.falhaDaCriacao.limiteComEspera(Math.ceil(restanteMs / 1_000)) : t.falhaDaCriacao.limite,
-            acao: { tipo: 'consultar' },
-            consultarEmMs: restanteMs,
-          };
+        const acao = { tipo: 'tentar', desativada: true } as const;
+        if (aguardarSegundos === undefined || aguardarSegundos <= 0) {
+          return { texto: t.falhaDaCriacao.limite, acao };
         }
+        const terminaEm = espera?.terminaEm ?? agora + aguardarSegundos * 1_000;
+        const restanteMs = Math.max(0, terminaEm - agora);
+        return {
+          texto: restanteMs > 0 ? t.falhaDaCriacao.limiteComEspera(Math.ceil(restanteMs / 1_000)) : t.falhaDaCriacao.limite,
+          acao,
+          consultarEmMs: restanteMs,
+        };
       }
       const tipo = causa === 'seguranca' ? 'editar' : causa === 'proposta_expirada' ? 'remontar'
         : repetivel ? 'tentar' : 'consultar';
