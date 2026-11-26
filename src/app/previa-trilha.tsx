@@ -363,8 +363,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
           {dica && salvando && <p>{dica}</p>}
         </div>}
         {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || (!!dica && aceite === 'iniciando') || undefined}>
-          <span className="previa-espera__linha" data-saindo={espera.saindo || undefined}>{textoDaLinha}</span>
-          {dica && aceite === 'iniciando' && <span className="previa-espera__dica">{dica}</span>}
+          {dica && aceite === 'iniciando'
+            ? <span className="previa-espera__dica">{dica}</span>
+            : <span className="previa-espera__linha" data-saindo={espera.saindo || undefined}>{textoDaLinha}</span>}
         </p>}
       </div>
     </footer>

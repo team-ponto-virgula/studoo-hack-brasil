@@ -137,6 +137,9 @@ test('a prévia, durante o preparo: o botão diz "Preparando sua trilha…" (ocu
   assert.match(preparando, /previa-giro[\s\S]*?Preparando sua trilha…/);
   assert.match(preparando, /<span class="previa-espera__dica">Você pode sair\. Quando estiver pronta, a trilha aparece em Minhas trilhas\.<\/span>/);
   assert.match(preparando, /<p class="previa-espera" data-visivel="true">/, 'a dica faz a linha aparecer mesmo antes de a linha de frases entrar');
+  assert.doesNotMatch(preparando, /previa-espera__linha/, 'com a dica, as frases que se revezam saem: o rodapé não cresce com duas linhas de espera');
+  const css = ler('src/app/previa-trilha.css');
+  assert.match(css, /\.previa-rodape \{[^}]*max-height: 55dvh; overflow-y: auto; overscroll-behavior: contain;/, 'texto a 200% numa janela baixa: o rodapé rola por dentro e o mapa mantém área (spec 04, C8)');
 
   const semConexao = ap(criacao('sem_conexao'), T0 + 1, false);
   const html = previa({ retomada: { texto: semConexao.texto, tom: semConexao.tom, acao: { rotulo: semConexao.acoes[0].rotulo, desabilitada: true }, aoAcionar() {} } });
