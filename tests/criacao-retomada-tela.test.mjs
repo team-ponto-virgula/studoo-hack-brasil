@@ -90,31 +90,37 @@ test('falha confirmada: o motivo em linguagem simples, anunciado como aparece; "
   assert.deepEqual(segura.acoes.map((x) => x.rotulo), ['Fechar'], 'o mesmo token não se repete');
 });
 
-test('limite com prazo: mostra o que RESTA (cai com o tempo, não volta cheio) e oferece "Verificar status"; "Tentar de novo" só aparece quando o SERVIDOR liberou, nunca pelo relógio do aparelho', () => {
+test('limite com prazo: mostra o que RESTA (cai com o tempo, não volta cheio) e o botão «Tentar de novo» fica visível e DESATIVADO; só o SERVIDOR o habilita, nunca o relógio do aparelho', () => {
   const limite = criacao('falha', { falha: falha({ causa: 'limite', repetivel: false, aguardarSegundos: 600 }) });
   const agora = ap(limite, T0 + 1000);
   assert.equal(agora.texto, 'Chegamos ao limite de criações por agora. Tente de novo em 10 minutos.');
   assert.equal(agora.anuncio, agora.texto, 'o prazo vai junto no que o leitor ouve');
-  assert.deepEqual(agora.acoes.map((a) => [a.id, a.rotulo, !!a.desabilitada]), [['verificar', 'Verificar status', false], ['fechar', 'Fechar', false]]);
+  assert.deepEqual(agora.acoes.map((a) => [a.id, a.rotulo, !!a.desabilitada]), [['reenviar', 'Tentar de novo', true], ['fechar', 'Fechar', false]], 'visível e desativado; sem "Verificar status" aqui');
+  assert.ok(!agora.acoes.some((a) => a.id === 'verificar'), 'a consulta do fim do prazo é do laço, não de um botão');
   assert.equal(ap(limite, T0 + 5 * 60_000).texto, 'Chegamos ao limite de criações por agora. Tente de novo em 5 minutos.', 'cinco minutos depois, restam cinco');
   assert.equal(ap(limite, T0 + 9.5 * 60_000).texto, 'Chegamos ao limite de criações por agora. Tente de novo em 1 minuto.');
   const depois = ap(limite, T0 + 10 * 60_000 + 1);
   assert.equal(depois.texto, 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.', 'passado o prazo, nenhuma espera é prometida');
-  assert.deepEqual(depois.acoes.map((a) => a.id), ['verificar', 'fechar'], 'o prazo acabou no relógio, mas quem libera é o servidor: ainda não há "Tentar de novo"');
+  assert.deepEqual(depois.acoes.map((a) => [a.id, !!a.desabilitada]), [['reenviar', true], ['fechar', false]], 'o prazo acabou no relógio, mas quem libera é o servidor: o botão continua desativado até a consulta dizer que pode');
   // O servidor liberou depois da espera (a consulta do mesmo pedido devolveu repetível, sem prazo): agora sim, e a frase combina com o botão (não diz "mais tarde").
   const liberada = criacao('falha', { falha: falha({ causa: 'limite', repetivel: true, liberadaAposEspera: true }) });
   const aberta = ap(liberada, T0 + 11 * 60_000);
-  assert.deepEqual(aberta.acoes.map((a) => [a.id, a.rotulo]), [['reenviar', 'Tentar de novo'], ['fechar', 'Fechar']]);
+  assert.deepEqual(aberta.acoes.map((a) => [a.id, a.rotulo, !!a.desabilitada]), [['reenviar', 'Tentar de novo', false], ['fechar', 'Fechar', false]]);
   assert.equal(aberta.texto, 'O limite acabou. Você já pode tentar de novo.');
   assert.equal(aberta.anuncio, aberta.texto);
-  // Sem prazo conhecido desde o começo (o provedor não disse quanto), "mais tarde" continua certo, e o botão já existe.
+  // Sem prazo conhecido desde o começo, vale o campo de permissão que a API devolveu: repetível, o botão já está ativo; não repetível, fica visível e desativado.
   const semPrazo = ap(criacao('falha', { falha: falha({ causa: 'limite', repetivel: true }) }), T0 + 1000);
   assert.equal(semPrazo.texto, 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.');
-  assert.deepEqual(semPrazo.acoes.map((a) => a.id), ['reenviar', 'fechar']);
+  assert.deepEqual(semPrazo.acoes.map((a) => [a.id, !!a.desabilitada]), [['reenviar', false], ['fechar', false]]);
+  const semPrazoBloqueado = ap(criacao('falha', { falha: falha({ causa: 'limite', repetivel: false }) }), T0 + 1000);
+  assert.deepEqual(semPrazoBloqueado.acoes.map((a) => [a.id, !!a.desabilitada]), [['reenviar', true], ['fechar', false]], 'a permissão manda, sem prazo ou com ele');
   assert.equal(segundosRestantes({ aguardarSegundos: 90, recebidaEm: T0 }, T0 + 30_000), 60);
   assert.equal(segundosRestantes({ recebidaEm: T0 }, T0), 0);
   assert.equal(textoDaFalha(falha({ causa: 'limite' }), T0), 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.', 'sem prazo conhecido, sem prazo na frase');
   assert.equal(mensagens.geracao.falhaDaCriacao.limiteComEspera(3600), 'Chegamos ao limite de criações por agora. Tente de novo em 1 hora.');
+  // A consulta que perde a resposta cai no estado de dúvida, com "Verificar status" (o botão volta a ser o de verificar).
+  const duvida = ap(criacao('sem_confirmacao'));
+  assert.deepEqual(duvida.acoes.map((a) => [a.id, a.rotulo]), [['verificar', 'Verificar status']]);
 });
 
 const trilhaDaPrevia = (proposta) => ({

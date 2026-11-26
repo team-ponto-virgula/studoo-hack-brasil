@@ -212,7 +212,8 @@ export function criarControladorDeCriacoes(dependencias: DependenciasDaCriacao) 
             ...(eraEspera && f.causa === 'limite' && f.repetivel ? { liberadaAposEspera: true } : {}),
           };
           // Limite com prazo conhecido: a falha fica na tela com o prazo RESTANTE, e este laço dorme até o prazo e CONSULTA O MESMO PEDIDO de novo (nunca envia nada): o servidor diz se liberou
-          // (repetível, sem prazo), se a trilha ficou pronta ou se o limite continua (com o prazo que sobrou). "Verificar status" acorda o laço antes.
+          // (repetível, sem prazo), se a trilha ficou pronta ou se o limite continua (com o prazo que sobrou). A tela mostra "Tentar de novo" DESATIVADO até lá (sem outro botão): só esta resposta o habilita.
+          // A página que reaparece (ou a rede que volta) acorda o laço antes do prazo e consulta já; se a consulta do fim do prazo perde a resposta, entra a dúvida, com "Verificar status".
           if (!f.repetivel && f.aguardarSegundos && f.aguardarSegundos > 0) {
             mudar(item, { fase: 'falha', etapa: null, falha: { ...falha, recebidaEm: agora() } });
             await dormirDoLaco(item, parar, Math.min(f.aguardarSegundos * 1000 + 500, PADRAO.esperaMaximaDoLimiteMs));
@@ -236,8 +237,11 @@ export function criarControladorDeCriacoes(dependencias: DependenciasDaCriacao) 
           await dormirDoLaco(item, parar, acao.emMs);
           continue;
         }
-        // Sem resposta do servidor: o estado é desconhecido. Sem rede identificada, "sem conexão"; com rede, só depois de um tempo "ainda não conseguimos confirmar".
-        const semConfirmar = item.semResposta >= semConfirmacaoApos.consultas || agora() - item.ultimaConfirmacao >= semConfirmacaoApos.ms;
+        // Sem resposta do servidor: o estado é desconhecido. Sem rede identificada, "sem conexão"; com rede, só depois de um tempo "ainda não conseguimos confirmar". A consulta do FIM do prazo de um
+        // limite que perde a resposta não espera esse tempo: a pessoa olhava um "Tentar de novo" desativado à espera dela, então a dúvida (com "Verificar status") aparece na hora.
+        const vista = item.c.falha;
+        const fimDaEsperaDoLimite = item.c.fase === 'falha' && vista?.causa === 'limite' && !vista.repetivel && (vista.aguardarSegundos ?? 0) > 0 && agora() - vista.recebidaEm >= (vista.aguardarSegundos ?? 0) * 1000;
+        const semConfirmar = fimDaEsperaDoLimite || item.semResposta >= semConfirmacaoApos.consultas || agora() - item.ultimaConfirmacao >= semConfirmacaoApos.ms;
         if (!estaOnline()) mudar(item, { fase: 'sem_conexao' });
         else if (semConfirmar) mudar(item, { fase: 'sem_confirmacao' });
         await dormirDoLaco(item, parar, acao.emMs);
