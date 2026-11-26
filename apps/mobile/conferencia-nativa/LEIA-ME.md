@@ -21,6 +21,22 @@ cinco de entrada. O procedimento confere a conta antes de cada caso e remove ape
 pela comparação da lista. Com o ambiente nativo de teste já preparado, o seletor local é
 `CONFERENCIA_TELAS=feedback-aluno` no passo `ios.sh fluxo-telas` ou `android.sh no-emulador`.
 
+## Retomada após perda da resposta
+
+No disparo manual, selecione `retomada_criacao=true`. Use `so_iphone=true` para a primeira conferência do simulador de
+iPhone ou `so_android=true` para a conferência do emulador de Android. O seletor local equivalente é
+`CONFERENCIA_TELAS=retomada-criacao` em todos os passos.
+
+A mesma conta sintética faz um pedido de astronomia. Um serviço local substitui a IA por respostas determinísticas e
+segura as dez escritas de lição até a retomada. O proxy encaminha o POST inteiro à API do repositório e derruba somente
+o socket do app. Também descarta as primeiras respostas de consulta para verificar a mensagem de confirmação pendente
+com a rede ativa. O Maestro encerra e relança o processo, vê o preparo, aguarda a gravação e abre a lição 1.
+
+As capturas 86 a 89 mostram proposta, situação indeterminada, preparo recuperado, trilha confirmada e aula. O arquivo
+`retomada-veredito.json` reúne o que os registros e a API confirmaram: um POST, um lote, uma chamada de escrita por
+lição, uma trilha nova e consultas ao mesmo pedido. O roteiro remove só a trilha sintética identificada pelo título
+e pela comparação com a lista inicial. O ambiente, o commit e a plataforma constam de `ORIGEM.txt`.
+
 ## De onde vêm os dados
 
 Da API do próprio repositório, rodando na mesma máquina, com `IA=falsa`. Nenhum segredo e nada do site publicado.

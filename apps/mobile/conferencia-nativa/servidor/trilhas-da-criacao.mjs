@@ -31,6 +31,7 @@ const { values: opcoes, positionals } = parseArgs({
     antes: { type: 'string' },
     saida: { type: 'string' },
     apagar: { type: 'boolean', default: false },
+    'titulo-esperado': { type: 'string' },
   },
 });
 const modo = positionals[0];
@@ -135,6 +136,9 @@ const nova = detalhes[0];
 if (nova.erro) {
   terminar(7, `Depois da criação: uma trilha nova, "${nova.titulo}" (${nova.id}), mas o detalhe dela não respondeu (${nova.erro}); nada foi apagado.`,
     { caso: 'detalhe-falhou', ...registro });
+}
+if (opcoes['titulo-esperado'] && nova.titulo !== opcoes['titulo-esperado']) {
+  terminar(7, 'Depois da criação: a trilha nova não tem o título esperado da prova. Nada foi apagado.', { caso: 'titulo-divergente', ...registro });
 }
 if (!opcoes.apagar) {
   terminar(0, `Depois da criação: uma trilha nova, "${nova.titulo}" (${nova.id}); não apagada (sem --apagar).`, { caso: 'uma-nova', ...registro });

@@ -24,7 +24,7 @@ MAESTRO="$FERRAMENTAS/maestro/bin/maestro"
 
 API="https://127.0.0.1:3443"
 PORTA_API=3443
-PORTA_WEB=3000
+PORTA_WEB="${CONFERENCIA_PORTA_WEB:-3000}"
 # O app abre o Metro pela porta 8081, onde fica a cache dos pacotes (servidor/cache-do-metro.mjs); o Metro fica na 8082.
 PORTA_METRO=8081
 PORTA_METRO_INTERNA=8082
@@ -53,8 +53,14 @@ CAPTURAS_FEEDBACK_ALUNO="
 84-equacao-inicial-caderno-do-stu 84-equacao-inicial-conclusao
 85-equacao-demonstrada-salva 85-equacao-demonstrada-exercicio
 "
+CAPTURAS_RETOMADA="
+86-retomada-proposta 87-retomada-sem-confirmacao 88-retomada-preparando 88-retomada-pronta 89-retomada-licao-1
+"
+PROVA_RETOMADA="$SAIDA/retomada"
 if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
   CAPTURAS_ESPERADAS="$CAPTURAS_FEEDBACK_ALUNO"
+elif [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
+  CAPTURAS_ESPERADAS="$CAPTURAS_RETOMADA"
 fi
 CAPTURAS_ESPERADAS="$CAPTURAS_ENTRADA $CAPTURAS_ESPERADAS"
 
@@ -157,7 +163,8 @@ gerar_certificado() {
 }
 
 servidor() {
-  local senha_banco senha_conta pid passados=0
+  local senha_banco senha_conta pid pid_web passados=0
+  local opcoes_proxy=()
   cd "$RAIZ"
 
   # 1. Ambiente do piloto local, como o `db:local` espera, mais o que o app pede (sessão do app, compartilhar, comunidade).
@@ -216,15 +223,20 @@ servidor() {
     mostrar_registro "$REGISTROS/build.log" 120
     erro "O build da web (\`npm run build\`) falhou; sem ele não há API para o app."
   fi
-  EMAIL=resend nohup npm start > "$REGISTROS/servidor.log" 2>&1 < /dev/null &
+  EMAIL=resend nohup node node_modules/next/dist/bin/next start --hostname localhost --port "$PORTA_WEB" > "$REGISTROS/servidor.log" 2>&1 < /dev/null &
+  pid_web=$!
   if ! esperar_http "http://localhost:$PORTA_WEB/api/saude" 120; then
     mostrar_registro "$REGISTROS/servidor.log"
     erro "O servidor (\`npm start\`) não respondeu em /api/saude em 2 minutos."
   fi
 
   # 5. HTTPS na frente do servidor: o app só aceita API em HTTPS.
+  if [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
+    mkdir -p "$PROVA_RETOMADA"
+    opcoes_proxy=(--retomada "$PROVA_RETOMADA")
+  fi
   nohup node "$AQUI/servidor/proxy-https.mjs" --cert "$TLS/local.crt" --chave "$TLS/local.key" \
-    --porta "$PORTA_API" --destino "http://localhost:$PORTA_WEB" > "$REGISTROS/proxy.log" 2>&1 < /dev/null &
+    --porta "$PORTA_API" --destino "http://localhost:$PORTA_WEB" "${opcoes_proxy[@]}" > "$REGISTROS/proxy.log" 2>&1 < /dev/null &
   if ! esperar_http "$API/api/auth/config" 30 --cacert "$TLS/ca.crt"; then
     mostrar_registro "$REGISTROS/proxy.log"
     erro "O proxy HTTPS não respondeu em $API."
@@ -242,6 +254,26 @@ servidor() {
     erro "O preparo dos dados falhou: $(tail -n 1 "$REGISTROS/preparar-dados.log")"
   fi
   cat "$REGISTROS/preparar-dados.log"
+
+  if [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
+    local porta_ia=3451
+    nohup node "$AQUI/servidor/ia-da-retomada.mjs" "$porta_ia" "$PROVA_RETOMADA/geracao-liberada" \
+      > "$REGISTROS/ia-retomada.log" 2>&1 < /dev/null &
+    local esperou=0
+    until grep -q '"etapa":"escutando"' "$REGISTROS/ia-retomada.log"; do
+      [ "$esperou" -lt 15 ] || erro "A IA de teste da retomada não iniciou."
+      sleep 1
+      esperou=$((esperou + 1))
+    done
+    kill -TERM "$pid_web"
+    wait "$pid_web" || true
+    IA=openai OPENAI_API_KEY=chave-sintetica OPENAI_BASE_URL="http://127.0.0.1:$porta_ia/v1" EMAIL=resend \
+      nohup node node_modules/next/dist/bin/next start --hostname localhost --port "$PORTA_WEB" > "$REGISTROS/servidor-retomada.log" 2>&1 < /dev/null &
+    esperar_http "http://localhost:$PORTA_WEB/api/saude" 90 || erro "O servidor local da retomada não reiniciou."
+    curl -fsS --max-time 20 --cacert "$TLS/ca.crt" "$API/api/auth/config" \
+      | node -e 'process.exit(JSON.parse(require("node:fs").readFileSync(0, "utf8")).ia === "openai" ? 0 : 1)' \
+      || erro "A API local não está usando a IA de teste da retomada."
+  fi
 
   resumo "**Dados da conta sintética** (trilha de cada formato de exercício e a lição em que ela está):"
   resumo ""
@@ -517,8 +549,37 @@ fluxo_feedback_aluno() {
   resumo "✅ Feedback do aluno: exercícios distintos após salvar e reabrir nos dois perfis de equação. No caso inicial, Ensine ao Stu, retorno e lição concluída em 1/3."
 }
 
+fluxo_retomada() {
+  local antes="$REGISTROS/retomada-antes.json" depois="$REGISTROS/retomada-depois.json"
+  trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$antes" \
+    || erro "A conta sintética não corresponde ao preparo antes da prova de retomada."
+  : > "$PROVA_RETOMADA/armada"
+  if ! rodar_maestro retomada-interromper "$PASTA_DOS_FLUXOS/retomada/retomada-interromper.yaml"; then
+    : > "$PROVA_RETOMADA/geracao-liberada"
+    erro "A prova parou antes de fechar o app. Veja as capturas e os registros do aceite e da consulta."
+  fi
+  node -p 'Date.now()' > "$REGISTROS/retomada-processo-fechado.txt"
+  : > "$PROVA_RETOMADA/consultas-liberadas"
+  if ! rodar_maestro retomada-reabrir "$PASTA_DOS_FLUXOS/retomada/retomada-reabrir.yaml"; then
+    : > "$PROVA_RETOMADA/geracao-liberada"
+    erro "O processo relançado não mostrou que recuperou a criação em preparo."
+  fi
+  : > "$PROVA_RETOMADA/geracao-liberada"
+  rodar_maestro retomada-abrir "$PASTA_DOS_FLUXOS/retomada/retomada-abrir.yaml" \
+    || erro "O app não abriu a lição 1 da trilha recuperada."
+  trilhas_da_criacao depois --antes "$antes" --saida "$depois" --titulo-esperado "Observar o céu noturno" --apagar \
+    || erro "A conferência da conta sintética encontrou divergência na trilha recuperada."
+  node "$AQUI/servidor/conferir-retomada.mjs" "$REGISTROS" \
+    || erro "Os registros da retomada não confirmaram um único lote, uma única trilha e a lição 1."
+  resumo "✅ Retomada: perdeu a resposta, verificou o mesmo pedido, fechou e reabriu o app e abriu a lição 1. Uma trilha, um lote e dez lições. Veja retomada-veredito.json."
+}
+
 fluxo_telas() {
   local falhas
+  if [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
+    fluxo_retomada
+    return
+  fi
   if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
     fluxo_feedback_aluno
     return

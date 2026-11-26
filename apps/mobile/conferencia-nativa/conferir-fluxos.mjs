@@ -45,6 +45,7 @@ for (const arquivo of arquivosDe(pastaApp, (nome) => /\.tsx?$/.test(nome))) {
   }
   // Um `testID` que chega por propriedade e é escolhido entre dois literais: testID={a ? 'x' : 'y'}.
   for (const [, a, b] of codigo.matchAll(/testID=\{[^}]*\?\s*'([^']+)'\s*:\s*'([^']+)'\s*\}/g)) { literais.add(a); literais.add(b); }
+  for (const [, a, b] of codigo.matchAll(/testID:\s*[^\n?]*\?\s*'([^']+)'\s*:\s*'([^']+)'/g)) { literais.add(a); literais.add(b); }
 }
 // Ids do próprio Expo Go, que os fluxos usam para sair do menu de desenvolvedor: não são testID do app. São os nomes dos
 // símbolos que o menu desenha (pacote expo-dev-menu): o "X" do menu e a engrenagem do botão flutuante.
@@ -100,7 +101,7 @@ for (const arquivo of fluxos) {
 }
 
 const script = readFileSync(join(aqui, 'comum.sh'), 'utf8');
-const esperadas = new Set([...script.matchAll(/^CAPTURAS_(?:ENTRADA|ESPERADAS|FEEDBACK_ALUNO)="\n([^"]*)"/gm)]
+const esperadas = new Set([...script.matchAll(/^CAPTURAS_(?:ENTRADA|ESPERADAS|FEEDBACK_ALUNO|RETOMADA)="\n([^"]*)"/gm)]
   .flatMap(([, lista]) => lista.split(/\s+/).filter(Boolean)));
 if (esperadas.size === 0) problemas.push('comum.sh: não achei a lista CAPTURAS_ESPERADAS.');
 for (const nome of esperadas) if (!capturas.has(nome)) problemas.push(`comum.sh espera a captura "${nome}", mas nenhum fluxo a tira.`);
