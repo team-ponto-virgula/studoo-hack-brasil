@@ -986,8 +986,10 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     for (const criacao of lista) {
       const id = criacao.pendente.pedidoId;
       vistos.add(id);
-      if (fasesAnunciadas.current.get(id) === criacao.fase) continue;
-      fasesAnunciadas.current.set(id, criacao.fase);
+      // A mesma situação não é anunciada duas vezes (o prazo que cai a cada consulta não conta); a falha que o servidor liberou é uma situação nova (o botão vira "Tentar de novo").
+      const situacao = criacao.fase === 'falha' ? `falha:${criacao.falha?.causa}:${criacao.falha?.repetivel ? 'liberada' : 'bloqueada'}` : criacao.fase;
+      if (fasesAnunciadas.current.get(id) === situacao) continue;
+      fasesAnunciadas.current.set(id, situacao);
       if (criacao.fase === 'pronta' && estaNaPrevia(id)) continue;
       const anuncio = apresentarCriacao(criacao, { agora: Date.now(), online: navigator.onLine }).anuncio;
       if (anuncio) anunciar(anuncio);
