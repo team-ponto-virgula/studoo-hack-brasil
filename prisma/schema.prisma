@@ -40,6 +40,7 @@ model Usuario {
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
   diagnosticos DiagnosticoAprendizado[]
+  pedidosCriacao PedidoCriacao[]
   diasDeEstudo DiaDeEstudo[]
   materiais MaterialEstudo[]
   /// Perfil leve (spec 09): nome e cor do avatar; o id público (aleatório) é o da página /p/<id>.
@@ -358,6 +359,37 @@ model DiagnosticoAprendizado {
   @@index([expiraEm])
 }
 
+
+/// O pedido de criação de uma trilha (spec 04, Retomada da criação): um por conta e proposta (o id é o da proposta e o do plano), registrado ANTES de gerar, para o
+/// cliente recuperar o resultado se a resposta se perder. Só estado, etapa, resultado e tempos: sem token, tema, e-mail nem conteúdo.
+/// `validoAte` é o prazo do dono do lote (ele renova a cada poucos segundos); vencido, o lote foi abandonado (reinício ou queda) e o pedido vira falha `interrompida`.
+model PedidoCriacao {
+  usuarioId String
+  id        String
+  /// em_preparo | pronto | falha
+  estado    String
+  /// triagem | licoes | revisao | gravacao, enquanto em preparo
+  etapa     String?
+  /// Quantos lotes foram iniciados para este pedido (1 no normal).
+  tentativas   Int      @default(1)
+  iniciadoEm   DateTime @default(now()) @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @db.Timestamptz(3)
+  validoAte    DateTime? @db.Timestamptz(3)
+  /// Até quando o comprovante da proposta vale (30 min); depois, não dá para repetir com o mesmo token.
+  propostaExpiraEm DateTime @db.Timestamptz(3)
+  concluidoEm DateTime? @db.Timestamptz(3)
+  duracaoMs   Int?
+  /// Na falha: o código de erro devolvido, a causa que o cliente diferencia e o motivo curto (só do servidor).
+  codigo String?
+  causa  String?
+  motivo String?
+  /// Na falha por limite: quando o limite acaba, se o servidor souber (o cliente recebe só o prazo restante).
+  aguardarAte DateTime? @db.Timestamptz(3)
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, id])
+  @@index([atualizadoEm])
+}
 
 model DiaDeEstudo {
   usuarioId String

@@ -52,9 +52,9 @@ const statusErros: Record<CodigoErro, number> = {
 
 export class FalhaApi extends Error {
   /**
-   * `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). `motivo`: o porquê curto ("formato", "tempo"…), só para o registro do servidor (nunca vai na resposta).
+   * `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). `motivo`: o porquê curto ("formato", "tempo"…), só para o registro do servidor (nunca vai na resposta). `esperaMs`: quanto falta para um limite acabar, quando o provedor disse (o Retry-After real), também só do servidor.
    */
-  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>, public readonly motivo?: string) {
+  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>, public readonly motivo?: string, public readonly esperaMs?: number) {
     super(codigo);
   }
 }

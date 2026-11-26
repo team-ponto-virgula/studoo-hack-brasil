@@ -12,7 +12,7 @@ import type {
   PlanoResumo,
   PropostaPlano,
 } from "@studoo/contratos";
-import { motivoParaRever, normalizarResolucao, responderSuaVez, type Capacidades, type EscolhaNoSuaVez, type RespostaDoSuaVez } from "@studoo/contratos";
+import { motivoParaRever, normalizarResolucao, responderSuaVez, type Capacidades, type EscolhaNoSuaVez, type EstadoCriacao, type EtapaDaCriacao, type RespostaDoSuaVez, pedidoIdValido } from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,
@@ -34,6 +34,10 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import {
+  aguardarLoteAlheio, avancarEtapa, concluirPedido, consultarPedido, descreverFalha, esperaDoLimiteDoStudoo, falharPedido, manterDono, registrarCriacao, registrarPedido, tomarAVezDeGravar,
+  type FalhaDescrita,
+} from "./pedidos";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, semCifraoSolto, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
@@ -177,6 +181,8 @@ export async function apagarPlano(usuarioId: string, id: string): Promise<void> 
     await tx.licao.deleteMany({ where: { usuarioId, id: { in: licoes } } });
     await tx.fluxo.deleteMany({ where: { usuarioId, planoId: id } });
     await tx.planoAprendizado.delete({ where: { usuarioId_id: { usuarioId, id } } });
+    // O pedido de criação da trilha (spec 04, Retomada da criação) acaba com ela: depois, quem pergunta por ele recebe "não recebido".
+    await tx.pedidoCriacao.deleteMany({ where: { usuarioId, id } });
   });
 }
 
@@ -195,40 +201,54 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 }
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
-async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano, aoEtapa: (etapa: EtapaDaCriacao) => void = () => undefined): Promise<ConteudoLicao[][]> {
   const pedido = {
     titulo: plano.titulo, objetivo: plano.objetivo, diagnostico: plano.diagnostico,
     amostrasDemonstradas: plano.amostrasDemonstradas, fluxos: plano.fluxos,
   };
   if (plano.gerador === "material-v1" && plano.materialId) {
     const conteudos = await conteudosDoMaterial(usuarioId, plano.materialId);
+    aoEtapa("revisao");
     await exigirLicoesSeguras(pedido, conteudos.flat());
     return conteudos;
   }
   await exigirTrilhaSegura({ plano: pedido });
+  aoEtapa("licoes");
   const gerador = obterGerador();
   // Uma chamada por lição, no máximo `geracaoParalela()` em andamento. Contas com limite baixo por minuto (a OpenAI do
   // dono: 10 mil tokens/min) usam 1 ou 2; com todas juntas, as chamadas estouram o limite ao mesmo tempo (429 em todas).
   // Cada chamada mantém as novas tentativas do 429 (`comNovasTentativas`). Na primeira falha, nenhuma nova começa.
   const tarefas = plano.fluxos.flatMap((fluxo, indiceFluxo) => fluxo.licoes.map((_licao, indiceLicao) => ({ indiceFluxo, indiceLicao })));
   const paralelas = geracaoParalela();
-  const sinal = AbortSignal.timeout(tempoDoAceite(tarefas.length, paralelas));
+  // Na primeira falha, as chamadas que ainda estão no ar também param: um lote que falhou não deixa pedidos soltos ao provedor (nem esperas de novas tentativas) por trás, para
+  // não somar com o lote seguinte nem gastar o limite à toa.
+  const cancelar = new AbortController();
+  const sinal = AbortSignal.any([AbortSignal.timeout(tempoDoAceite(tarefas.length, paralelas)), cancelar.signal]);
   const conteudos: ConteudoLicao[][] = plano.fluxos.map(() => []);
   let proxima = 0;
   let falhou = false;
+  let primeiraFalha: unknown;
   async function trabalhar() {
     while (!falhou && !sinal.aborted && proxima < tarefas.length) {
       const { indiceFluxo, indiceLicao } = tarefas[proxima++];
       try {
         conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal, { prazoCompartilhado: true });
       } catch (erro) {
+        // A causa que vale é a da PRIMEIRA falha: as outras chamadas, paradas por ela, só dizem "tempo".
+        if (!falhou) primeiraFalha = erro;
         falhou = true;
+        cancelar.abort();
         throw erro;
       }
     }
   }
-  await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
+  try {
+    await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
+  } catch (erro) {
+    throw falhou ? primeiraFalha : erro;
+  }
   if (sinal.aborted) throw new FalhaApi("ia_indisponivel", undefined, "tempo");
+  aoEtapa("revisao");
   const revisados = gerador.revisarConteudos ? await gerador.revisarConteudos(plano, conteudos, sinal) : conteudos;
   if (!revisados.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel", undefined, "conteudo_invalido");
@@ -252,6 +272,7 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
   const id = proposta.id;
   const existente = await lerPlano(usuarioId, id);
   if (existente) {
+    void concluirPedido(usuarioId, id).catch(() => undefined);
     return apresentarPlano(existente);
   }
   if (proposta.expiraEm <= Date.now()) {
@@ -261,60 +282,158 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
   const chave = `${usuarioId}:${id}`;
   const emAndamento = aceitesEmAndamento.get(chave);
   if (emAndamento) return emAndamento;
-  const aceite = criarPlanoAceito(usuarioId, id, proposta.plano).finally(() => aceitesEmAndamento.delete(chave));
+  const aceite = executarAceite(usuarioId, id, proposta.plano, new Date(proposta.expiraEm)).finally(() => aceitesEmAndamento.delete(chave));
   aceitesEmAndamento.set(chave, aceite);
   return aceite;
 }
 
-async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoPlano): Promise<PlanoDetalhe> {
-  if (provedorIaAtivo() === "openai") {
-    const permitido = await banco.$transaction(tx => consumirLimite(tx, `ia:aceite:${usuarioId}`, 20, 60 * 60_000));
-    if (!permitido) throw new FalhaApi("limite_geracoes");
-    // O token preserva a proposta; a origem e o adaptador refletem quem realmente escreve as lições no aceite.
-    if (plano.gerador !== "material-v1") plano = { ...plano, gerador: GERADOR_OPENAI, origem: ORIGEM_GERADA };
+/**
+ * O aceite com o pedido registrado (spec 04, Retomada da criação): um só lote por conta e proposta, em qualquer instância. Quem chega com um lote vivo de outra instância espera o
+ * resultado dele; só um lote que falhou ou foi abandonado deixa outro começar, e só por este POST (a consulta nunca começa nada).
+ */
+async function executarAceite(usuarioId: string, id: string, plano: EsqueletoPlano, propostaExpiraEm: Date): Promise<PlanoDetalhe> {
+  for (let volta = 0; volta < 4; volta += 1) {
+    const posicao = await registrarPedido(usuarioId, id, propostaExpiraEm);
+    if (posicao.acao === "pronto") {
+      const existente = await lerPlano(usuarioId, id);
+      if (existente) return apresentarPlano(existente);
+      // Pedido pronto sem plano: a trilha foi apagada. O registro acaba e o aceite recomeça como um pedido novo.
+      await banco.pedidoCriacao.deleteMany({ where: { usuarioId, id, estado: "pronto" } });
+      continue;
+    }
+    if (posicao.acao === "recusar") {
+      throw new FalhaApi(posicao.falha.codigo, undefined, posicao.falha.motivo, posicao.falha.esperaMs);
+    }
+    if (posicao.acao === "aguardar") {
+      registrarCriacao(id, { evento: "entrou_no_lote" });
+      const resultado = await aguardarLoteAlheio(usuarioId, id, async () => (await lerPlano(usuarioId, id)) !== null);
+      if (resultado === "pronto") {
+        const pronto = await lerPlano(usuarioId, id);
+        if (pronto) return apresentarPlano(pronto);
+        continue;
+      }
+      if (resultado === "abandonado") continue;
+      throw new FalhaApi(resultado.falha.codigo, undefined, resultado.falha.motivo);
+    }
+    return criarPlanoAceito(usuarioId, id, plano, posicao.tentativa, posicao.origem);
   }
-  const conteudos = await gerarConteudos(usuarioId, plano);
-  const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
-    usuarioId,
-    id: `${id}-${indice + 1}`,
-    planoId: id,
-    titulo,
-    ordem: indice + 1,
-  }));
-  const licoes = plano.fluxos.flatMap((fluxo, indiceFluxo) => {
-    const fluxoId = fluxos[indiceFluxo].id;
-    return fluxo.licoes.map(({ titulo }, indiceLicao) => ({
-      usuarioId,
-      id: `${fluxoId}-${indiceLicao + 1}`,
-      fluxoId,
-      titulo,
-      ordem: indiceLicao + 1,
-      // Cópia JSON pura: campos opcionais ausentes não viram `undefined` no banco.
-      conteudo: JSON.parse(JSON.stringify(conteudos[indiceFluxo][indiceLicao])) as Prisma.InputJsonValue,
-    }));
+  throw new FalhaApi("ia_indisponivel", undefined, "tempo");
+}
+
+/**
+ * O que houve com o aceite de uma proposta (GET /api/aprendizado/pedidos/{pedidoId}). Só lê: nunca chama a IA nem começa lote, e o id de outra conta responde "não recebido".
+ * O plano salvo manda sobre o registro.
+ */
+export async function consultarCriacao(usuarioId: string, pedidoId: string): Promise<EstadoCriacao> {
+  if (!pedidoIdValido(pedidoId)) throw new FalhaApi("invalido");
+  return consultarPedido(usuarioId, pedidoId, async (conta, id) => {
+    const plano = await lerPlano(conta, id);
+    if (!plano) return null;
+    const marcas = await marcasDasTrilhas(conta, [plano]);
+    return { ...apresentarPlano(plano), ...marcas.get(plano.id) };
   });
+}
 
-  try {
-    await banco.$transaction([
-      banco.planoAprendizado.create({
-        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem),
-          ...(plano.diagnostico && { diagnostico: plano.diagnostico as unknown as Prisma.InputJsonValue }) },
-      }),
-      banco.fluxo.createMany({ data: fluxos }),
-      banco.licao.createMany({ data: licoes }),
-    ]);
-  } catch (erro) {
-    if (typeof erro !== "object" || erro === null || !("code" in erro) || erro.code !== "P2002") {
-      throw erro;
-    }
-    const simultaneo = await lerPlano(usuarioId, id);
-    if (!simultaneo) {
-      throw erro;
-    }
-    return apresentarPlano(simultaneo);
+/** O lote perdeu a vez de gravar: outro lote assumiu o pedido (ou ele acabou) enquanto este escrevia. */
+class PerdeuAVez extends Error {}
+
+async function descricaoDaFalha(usuarioId: string, erro: unknown): Promise<FalhaDescrita> {
+  const descricao = descreverFalha(erro);
+  if (descricao.causa === "limite" && descricao.esperaMs === undefined && descricao.codigo === "limite_geracoes") {
+    // O limite do Studoo por conta: o prazo é conhecido (o fim da janela da conta). O do provedor só tem prazo se ele disse (Retry-After).
+    const espera = await esperaDoLimiteDoStudoo(`ia:aceite:${usuarioId}`, 60 * 60_000).catch(() => null);
+    if (espera) return { ...descricao, esperaMs: espera };
   }
+  return descricao;
+}
 
-  return buscarPlano(usuarioId, id);
+async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoPlano, tentativa: number, origemDoLote: "novo" | "reenvio" | "assumido"): Promise<PlanoDetalhe> {
+  const inicio = Date.now();
+  const decorrido = () => Date.now() - inicio;
+  let etapaAtual: EtapaDaCriacao = "triagem";
+  const etapa = (nova: EtapaDaCriacao) => {
+    etapaAtual = nova;
+    registrarCriacao(id, { evento: "etapa", etapa: nova, tentativa, decorridoMs: decorrido() });
+    void avancarEtapa(usuarioId, id, tentativa, nova).catch(() => undefined);
+  };
+  registrarCriacao(id, { evento: "lote", origem: origemDoLote, tentativa, material: plano.gerador === "material-v1" });
+  const pararRenovacao = manterDono(usuarioId, id, tentativa);
+  try {
+    etapa("triagem");
+    if (provedorIaAtivo() === "openai") {
+      const permitido = await banco.$transaction(tx => consumirLimite(tx, `ia:aceite:${usuarioId}`, 20, 60 * 60_000));
+      if (!permitido) throw new FalhaApi("limite_geracoes");
+      // O token preserva a proposta; a origem e o adaptador refletem quem realmente escreve as lições no aceite.
+      if (plano.gerador !== "material-v1") plano = { ...plano, gerador: GERADOR_OPENAI, origem: ORIGEM_GERADA };
+    }
+    const conteudos = await gerarConteudos(usuarioId, plano, etapa);
+    etapa("gravacao");
+    const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
+      usuarioId,
+      id: `${id}-${indice + 1}`,
+      planoId: id,
+      titulo,
+      ordem: indice + 1,
+    }));
+    const licoes = plano.fluxos.flatMap((fluxo, indiceFluxo) => {
+      const fluxoId = fluxos[indiceFluxo].id;
+      return fluxo.licoes.map(({ titulo }, indiceLicao) => ({
+        usuarioId,
+        id: `${fluxoId}-${indiceLicao + 1}`,
+        fluxoId,
+        titulo,
+        ordem: indiceLicao + 1,
+        // Cópia JSON pura: campos opcionais ausentes não viram `undefined` no banco.
+        conteudo: JSON.parse(JSON.stringify(conteudos[indiceFluxo][indiceLicao])) as Prisma.InputJsonValue,
+      }));
+    });
+
+    try {
+      // O plano e o pedido pronto andam juntos, e só quem ainda é o dono do lote grava: se outro lote assumiu (ou o pedido acabou), esta transação não publica nada.
+      await banco.$transaction(async (tx) => {
+        if (!await tomarAVezDeGravar(tx, usuarioId, id, tentativa, decorrido())) throw new PerdeuAVez();
+        await tx.planoAprendizado.create({
+          data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem),
+            ...(plano.diagnostico && { diagnostico: plano.diagnostico as unknown as Prisma.InputJsonValue }) },
+        });
+        await tx.fluxo.createMany({ data: fluxos });
+        await tx.licao.createMany({ data: licoes });
+      }, { maxWait: 10_000, timeout: 30_000 });
+    } catch (erro) {
+      if (erro instanceof PerdeuAVez) {
+        // Outro lote assumiu o pedido enquanto este escrevia: a trilha é a dele (se já saiu); este lote não grava nada.
+        registrarCriacao(id, { evento: "resultado", resultado: "perdeu_a_vez", tentativa, duracaoMs: decorrido() }, true);
+        const dele = await lerPlano(usuarioId, id);
+        if (dele) return apresentarPlano(dele);
+        throw new FalhaApi("ia_indisponivel", undefined, "interrompida");
+      }
+      if (typeof erro !== "object" || erro === null || !("code" in erro) || erro.code !== "P2002") {
+        throw erro;
+      }
+      const simultaneo = await lerPlano(usuarioId, id);
+      if (!simultaneo) {
+        throw erro;
+      }
+      await concluirPedido(usuarioId, id, decorrido()).catch(() => undefined);
+      registrarCriacao(id, { evento: "resultado", resultado: "pronto", origem: "plano_ja_existia", tentativa, duracaoMs: decorrido() });
+      return apresentarPlano(simultaneo);
+    }
+
+    // Se a consulta já tinha dado o lote por falho (passou do teto) mas o plano foi salvo, o pedido fecha como pronto.
+    void concluirPedido(usuarioId, id, decorrido()).catch(() => undefined);
+    registrarCriacao(id, { evento: "resultado", resultado: "pronto", tentativa, duracaoMs: decorrido(), licoes: licoes.length, fluxos: fluxos.length });
+    return await buscarPlano(usuarioId, id);
+  } catch (erro) {
+    const descricao = await descricaoDaFalha(usuarioId, erro);
+    registrarCriacao(id, {
+      evento: "resultado", resultado: "falha", causa: descricao.causa, codigo: descricao.codigo, etapa: etapaAtual, tentativa, duracaoMs: decorrido(),
+      ...(descricao.motivo ? { motivo: descricao.motivo } : {}), ...(descricao.esperaMs ? { espera_ms: descricao.esperaMs } : {}),
+    }, true);
+    await falharPedido(usuarioId, id, tentativa, descricao, decorrido()).catch(() => undefined);
+    throw erro;
+  } finally {
+    pararRenovacao();
+  }
 }
 
 async function lerLicao(usuarioId: string, id: string) {
