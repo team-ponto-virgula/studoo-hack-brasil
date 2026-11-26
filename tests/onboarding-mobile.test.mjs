@@ -84,7 +84,7 @@ test('mudança 1 (revisão 04fe621): a placa da geração sem frases; as frases 
   assert.match(linha, /const metade = ESPERA_DA_GERACAO\.efeitoMs \/ 2;/);
   // Sem anúncio a cada troca; o leitor ouve "Criando sua trilha." uma vez e o botão fica ocupado.
   assert.match(linha, /accessibilityLiveRegion="none"/);
-  assert.match(estudo, /anunciar\(abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
+  assert.match(estudo, /anunciar\(pedido\s*\? abrirPrimeira \? mensagens\.geracao\.anuncioPreparando : mensagens\.geracao\.anuncioSalvandoSuaTrilha\s*:\s*abrirPrimeira \? mensagens\.geracao\.anuncioCriando : mensagens\.geracao\.anuncioSalvando\);/);
   assert.match(estudo, /ocupado=\{iniciando\} afundado=\{iniciando\} giro=\{iniciando\}/);
   assert.match(estudo, /const espera = criacao === 'criando' && esperaReal && <LinhaDaEspera reduzir=\{reduzir\} \/>;/);
   // A placa da geração não usa mais as frases nem o relógio.

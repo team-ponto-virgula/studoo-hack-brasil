@@ -64,7 +64,7 @@ const servidor = createServer(async (requisicao, resposta) => {
       const numero = Number(trecho.match(/Escreva a lição (\d+):/)?.[1]);
       if (!Number.isInteger(numero) || numero < 1 || numero > licoes.length) throw new Error('licao');
       registrar('licao', { numero });
-      const limite = Date.now() + 150_000;
+      const limite = Date.now() + 190_000;
       while (!existsSync(liberar) && Date.now() < limite && !resposta.destroyed) await esperar(150);
       if (resposta.destroyed) return;
       if (!existsSync(liberar)) throw new Error('liberacao');
