@@ -18,23 +18,18 @@ name: retomada-interromper
     waitToSettleTimeoutMs: 1500
 - extendedWaitUntil:
     visible:
-      id: consentimento-ia-titulo|diagnostico-pular
-    timeout: 30000
-- runFlow:
-    when:
-      visible:
-        id: consentimento-ia-titulo
-    commands:
-      - tapOn:
-          id: confirmacao-confirmar
-          waitToSettleTimeoutMs: 1500
-- evalScript: ${output.esperaDoDiagnostico = true}
-- extendedWaitUntil:
-    visible:
       id: diagnostico-pular
     timeout: 30000
 - tapOn:
     id: diagnostico-pular
+    waitToSettleTimeoutMs: 1500
+# O formulário de entrada no diagnóstico é local. A primeira chamada à IA, neste fluxo, é depois de pular.
+- extendedWaitUntil:
+    visible:
+      id: consentimento-ia-titulo
+    timeout: 30000
+- tapOn:
+    id: confirmacao-confirmar
     waitToSettleTimeoutMs: 1500
 - extendedWaitUntil:
     visible:
