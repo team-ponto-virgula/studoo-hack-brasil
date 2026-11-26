@@ -107,3 +107,10 @@ test('o POST aguarda o registro durável e uma montagem não reenvia por conta p
   assert.doesNotMatch(cartao, /cliente\.aceitarProposta|await reenviar/);
   assert.match(cartao, /AppState\.addEventListener\('change'/);
 });
+
+test('o cartão de retomada é a única entrada visível da trilha confirmada na lista', () => {
+  const fonte = readFileSync(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
+  assert.match(fonte, /planos\?\.filter\(plano => criacoes\.obter\(plano\.id\)\?\.estado\?\.estado !== 'pronto'\)/);
+  assert.match(fonte, /guardada \?\? planoInicial\(planosSemRetomada\)/);
+  assert.match(fonte, /restantes = planosSemRetomada\.filter/);
+});

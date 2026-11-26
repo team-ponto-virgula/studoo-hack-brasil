@@ -905,6 +905,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   async function apagarPlano(plano: PlanoResumo) {
     const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
     if (!resultado.ok) return;
+    if (criacoes.obter(plano.id)) void criacoes.esquecer(plano.id).catch(() => undefined);
     if (plano.id === trilhaGuardada) {
       setTrilhaGuardada(null);
       void guardarRetornoDaTrilha(null);
@@ -992,6 +993,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       void guardarRetornoDaTrilha(null);
     }
     navegar({ tipo: 'licao', plano, licao: resultado.dados });
+    if (criacoes.obter(plano.id)) void criacoes.esquecer(plano.id).catch(() => undefined);
     return true;
   }
 
@@ -1005,13 +1007,14 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       navegar({ tipo: 'planos' });
     } else {
       const primeira = plano.fluxos.find(parte => parte.licoes.length > 0)?.licoes[0];
-      if (primeira && !await abrirLicao(plano, primeira.id)) {
-        if (montado.current && etapaAtual.current === etapaDeOrigem) {
+      if (primeira) {
+        const abriu = await abrirLicao(plano, primeira.id);
+        if (!abriu && montado.current && etapaAtual.current === etapaDeOrigem) {
           setErro(AVISO_DA_LICAO_NAO_ABERTA);
         }
         return;
       }
-      if (!primeira) navegar({ tipo: 'plano', plano });
+      navegar({ tipo: 'plano', plano });
     }
     void criacoes.esquecer(pedido.pedidoId).catch(() => undefined);
   }
@@ -1268,7 +1271,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     // Como na web (rodada 4F): enquanto as trilhas chegam, o esqueleto do mapa (quem tem trilha cai no mapa logo depois).
     if (!planos && !erro && criacoes.itens.length === 0) return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
 
-    const guardada = planos?.find(item => item.id === trilhaGuardada && item.progresso.concluidas === 0);
+    // O cartão de retomada já é a entrada da trilha confirmada. Uma trilha salva ocupa um só cartão.
+    const planosSemRetomada = planos?.filter(plano => criacoes.obter(plano.id)?.estado?.estado !== 'pronto');
+    const guardada = planosSemRetomada?.find(item => item.id === trilhaGuardada && item.progresso.concluidas === 0);
     return (
       <Tela pagina="planos" avisoNoFluxo acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}
         estiloConteudo={estudoEstilos.fimQuarenta}>
@@ -1279,7 +1284,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
         {planos && planos.length === 0 ? (
           <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
-        ) : !guardada && (
+        ) : !guardada && Boolean(planosSemRetomada?.length) && (
           /* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */
           <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
         )}
@@ -1289,14 +1294,14 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
               ? 'Trilha salva em Minhas trilhas. Disponível por até 24 h a partir da entrada neste aparelho.'
               : 'Trilha salva em Minhas trilhas. Comece quando quiser.'}
           </Text>}
-        {planos && planos.length > 0 && (() => {
+        {planosSemRetomada && planosSemRetomada.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
-          const destaque = guardada ?? planoInicial(planos);
-          const restantes = planos.filter((plano) => plano.id !== destaque?.id);
+          const destaque = guardada ?? planoInicial(planosSemRetomada);
+          const restantes = planosSemRetomada.filter((plano) => plano.id !== destaque?.id);
           return (
             <>
               {destaque && (
-                <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
+                <CartaoDestaque plano={destaque} indice={planosSemRetomada.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
                   abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)}
                   configurar={() => abrir({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })}
                   compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} postar={postarDe(destaque)} />
@@ -1307,7 +1312,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
               {/* .planos-ativos: 20 em cima (mais o vão de 12 da página) e 16 entre os cartões. */}
               {restantes.length > 0 && <View style={estudoEstilos.outrasTrilhas}>
               {restantes.map((plano) => (
-                <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
+                <CartaoPlano key={plano.id} plano={plano} indice={planosSemRetomada.indexOf(plano)} ocupado={ocupado} secundario
                   abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)}
                   configurar={() => abrir({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })}
                   compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} postar={postarDe(plano)} />
