@@ -46,6 +46,8 @@ name: retomada-interromper
     timeout: 30000
 - assertVisible: 'Ainda não conseguimos confirmar se sua trilha foi salva\.'
 - assertNotVisible: 'Sem conexão.*'
+- assertVisible:
+    id: criacao-minhas-trilhas
 - tapOn:
     id: criacao-verificar
     waitToSettleTimeoutMs: 1500

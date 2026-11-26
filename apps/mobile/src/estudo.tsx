@@ -1043,7 +1043,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
       consultar={criacoes.consultar} aoExpirarSessao={expirarGuardando}
       abrir={(pedido, plano) => void abrirCriacaoRecuperada(pedido, plano)}
       reenviar={(pedido) => void comecar(pedido, pedido.intencao === 'comecar')}
-      ajustar={(pedido, editar) => void ajustarCriacaoRecuperada(pedido, editar)} />;
+      ajustar={(pedido, editar) => void ajustarCriacaoRecuperada(pedido, editar)}
+      sairParaLista={mostrarTitulo ? undefined : tocarMinhasTrilhas} />;
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
@@ -1066,6 +1067,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   // Como a web: a barra de baixo nas telas de seção com trilhas salvas e, com a comunidade, sempre no Explorar (e no perfil ou
   // na prévia abertos dele).
   const aceitandoAgora = criacao === 'criando' || criacao === 'guardando';
+  const idDaPrevia = etapa.tipo === 'geracao' ? geracao?.proposta?.pedidoId : undefined;
+  const retomadaDaPrevia = idDaPrevia && !criacao ? criacoes.obter(idDaPrevia) : undefined;
+  const saidaNoRodape = pedidoIdValido(idDaPrevia) && (aceitandoAgora || Boolean(retomadaDaPrevia));
   const aba = abaDe(etapa);
   // Spec 04 (item 5) e spec 05 (d8df51c): a barra aparece também sem trilhas, senão não há "Minhas trilhas" para tocar.
   // Com um pedido em andamento, ela continua à vista e só desliga (spec 05: "com uma ação em andamento, as abas ficam
@@ -1075,7 +1079,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const acoes = (
     <>
       {/* Durante "Criando sua trilha…", Minhas trilhas é a saída: o aceite segue no servidor e a trilha aparece na lista. */}
-      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
+      {!saidaNoRodape && etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado && !aceitandoAgora} acao={aceitandoAgora ? sairDaCriacao : tocarMinhasTrilhas} />}
       {/* Como a web: "Sair" fica no Perfil, que existe com ou sem o compartilhar (Som, Privacidade e dados e Conta valem
           para toda conta e visitante); no alto, "Perfil" só onde não há a barra de baixo. */}
@@ -1201,12 +1205,11 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     }
 
     if (etapa.tipo === 'geracao' && geracao) {
-      const pedido = geracao.proposta?.pedidoId;
-      const retomada = pedido && !criacao ? criacoes.obter(pedido) : undefined;
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} salvar={(proposta) => void comecar(proposta, false)} ajustar={() => abrir({ tipo: 'objetivo' })}
         criacao={criacao} mensagemDoAceite={mensagemDoAceite}
-        retomada={retomada ? cartaoDaCriacao(retomada) : undefined}
+        retomada={retomadaDaPrevia ? cartaoDaCriacao(retomadaDaPrevia) : undefined}
+        sairDuranteAceite={saidaNoRodape && aceitandoAgora ? sairDaCriacao : undefined}
         remontar={() => void gerar(geracao.objetivo, diagnosticoAtual.current?.objetivo === geracao.objetivo ? diagnosticoAtual.current.resultadoId : undefined)}
         guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
         rolagemDoNo1={rolagemDoNo1}
@@ -1788,13 +1791,14 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
  * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
  * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, salvar, ajustar, existente, abrirExistente, criacao, mensagemDoAceite, retomada, remontar, guardarNo1, rolagemDoNo1 }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, salvar, ajustar, existente, abrirExistente, criacao, mensagemDoAceite, retomada, sairDuranteAceite, remontar, guardarNo1, rolagemDoNo1 }: {
   /** Para a passagem fazer a rolagem do toque até o nó 1 terminar até o círculo começar. */
   rolagemDoNo1: { current: { terminar: (prazoMs: number) => void } | null };
   /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
   criacao: FaseDaCriacao | null;
   mensagemDoAceite: string | null;
   retomada?: ReactNode;
+  sairDuranteAceite?: () => void;
   /** "Montar de novo", com a proposta expirada: a geração de novo, com o mesmo pedido. */
   remontar: () => void;
   /** A lente do nó 1, de onde o círculo da passagem cresce. */
@@ -2270,6 +2274,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         </>}
       {!empilhar && espera}
       {!empilhar && erroDaCriacao}
+      {sairDuranteAceite && <Botao compacto variante="texto" testID="criacao-sair-aceite" rotulo={mensagens.planos.titulo} acao={sairDuranteAceite} />}
       </>}
     </Animated.View>
   );

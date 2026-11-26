@@ -114,3 +114,12 @@ test('o cartão de retomada é a única entrada visível da trilha confirmada na
   assert.match(fonte, /guardada \?\? planoInicial\(planosSemRetomada\)/);
   assert.match(fonte, /restantes = planosSemRetomada\.filter/);
 });
+
+test('preparo e confirmação pendente têm saída no rodapé sem cancelar o aceite', () => {
+  const fonte = readFileSync(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
+  const cartao = readFileSync(new URL('../apps/mobile/src/acompanhar-criacao.tsx', import.meta.url), 'utf8');
+  assert.match(fonte, /sairDuranteAceite=\{saidaNoRodape && aceitandoAgora \? sairDaCriacao : undefined\}/);
+  assert.match(fonte, /testID="criacao-sair-aceite"[^>]+acao=\{sairDuranteAceite\}/);
+  assert.match(fonte, /sairParaLista=\{mostrarTitulo \? undefined : tocarMinhasTrilhas\}/);
+  assert.match(cartao, /testID="criacao-minhas-trilhas"[^>]+acao=\{sairParaLista\}/);
+});
