@@ -49,6 +49,8 @@ export interface CriacaoEmCurso {
   falha?: FalhaDaCriacao;
   /** A trilha foi confirmada pela consulta (a resposta do envio se perdeu), não pela resposta do envio. */
   porConsulta?: boolean;
+  /** A pessoa já tinha visto uma falha confirmada (o limite com prazo, por exemplo) quando a trilha ficou pronta: a tela mostra "Abrir lição 1" e espera o toque, em vez de abrir a aula sozinha. */
+  aposFalha?: boolean;
 }
 
 export interface ArmazenamentoDaCriacao {
@@ -159,7 +161,8 @@ export function criarControladorDeCriacoes(dependencias: DependenciasDaCriacao) 
     item.final = true;
     item.parar.abort();
     esquecer(item.c.pendente.pedidoId);
-    mudar(item, { fase: 'pronta', plano, etapa: null, falha: undefined, porConsulta });
+    const aposFalha = item.c.falha !== undefined; // a falha só fica na criação até o próximo envio (enviar() a limpa)
+    mudar(item, { fase: 'pronta', plano, etapa: null, falha: undefined, porConsulta, ...(aposFalha ? { aposFalha: true } : {}) });
     d.aoPronta?.(item.c);
   }
   function falhar(item: Item, falha: Omit<FalhaDaCriacao, 'recebidaEm'>, opcoes: { guardar: boolean }) {

@@ -66,6 +66,7 @@ test('o pedido é guardado ANTES de o aceite sair (com a prévia, para redesenh�
   assert.equal(naHora[0].token.includes('Aprender'), false);
   assert.equal(guardado(m).length, 0, 'terminou: nada fica guardado');
   assert.equal(m.eventos.prontas[0].porConsulta, false);
+  assert.equal(m.eventos.prontas[0].aposFalha, undefined, 'nenhuma falha foi vista: a aula abre como no toque original');
   assert.equal(m.eventos.prontas[0].plano.id, A);
   assert.equal(m.chamadas.consultas.length, 0, 'sem corte nenhum, ninguém precisou consultar');
 });
@@ -79,6 +80,7 @@ test('a resposta do envio se perde (rede): o servidor é CONSULTADO, em preparo 
   assert.equal(m.eventos.prontas[0].porConsulta, true);
   assert.ok(m.fases.some((f) => f.endsWith(':em_preparo')), 'passou por em preparo');
   assert.ok(!m.fases.some((f) => /falha|nao_chegou|sem_/.test(f)), 'sem erro prematuro');
+  assert.equal(m.eventos.prontas[0].aposFalha, undefined, 'em preparo, sem falha vista: a aula abre como no toque original');
   assert.equal(guardado(m).length, 0);
 });
 
@@ -285,6 +287,7 @@ test('limite com prazo conhecido: a falha fica com o prazo RESTANTE, o laço dor
   await ate(() => m.eventos.prontas.length === 1);
   assert.equal(m.chamadas.envios.length, 2, 'o segundo envio só saiu no toque');
   assert.equal(m.chamadas.envios[1].token, m.chamadas.envios[0].token);
+  assert.equal(m.eventos.prontas[0].aposFalha, undefined, 'a pessoa tocou em "Tentar de novo": o fluxo volta a ser o do toque, e a aula abre');
 
   // 2) No fim do prazo a trilha já estava pronta (outro aparelho, ou o envio anterior terminou): "pronta", com "Abrir lição 1", sem enviar nada.
   const pronta = montar({ envio: () => { throw new ErroStudoo('limite_geracoes'); }, consulta: [limite(30), pronto(A)] });
@@ -292,6 +295,7 @@ test('limite com prazo conhecido: a falha fica com o prazo RESTANTE, o laço dor
   await ate(() => pronta.eventos.prontas.length === 1);
   assert.equal(pronta.chamadas.envios.length, 1);
   assert.equal(pronta.eventos.prontas[0].porConsulta, true);
+  assert.equal(pronta.eventos.prontas[0].aposFalha, true, 'a pessoa viu o limite: a tela mostra "Abrir lição 1" e espera o toque (a aula não abre sozinha)');
 
   // 3) O limite continua: usa o RESTANTE que o servidor devolveu (não repete o prazo cheio), segue dormindo, o botão segue desativado (repetível falso) e ainda não envia nada.
   const esperas = [];
@@ -331,6 +335,7 @@ test('a espera do limite: a página que reaparece (ou a rede que volta) acorda o
   await ate(() => m.eventos.prontas.length === 1);
   assert.equal(m.chamadas.envios.length, 1);
   assert.equal(m.eventos.prontas[0].porConsulta, true, '"pronto" na consulta do fim da espera: "Abrir lição 1", sem enviar nada');
+  assert.equal(m.eventos.prontas[0].aposFalha, true);
 });
 
 test('limite com prazo: se a consulta do FIM do prazo perde a resposta, a dúvida (com "Verificar status") aparece NA HORA; a verificação consulta o mesmo pedido e só o servidor libera; nada é enviado sozinho', async () => {
@@ -371,6 +376,7 @@ test('limite com prazo: se a consulta do FIM do prazo perde a resposta, a dúvid
   await ate(() => m.eventos.prontas.length === 1);
   assert.equal(m.chamadas.envios.length, 2);
   assert.equal(m.chamadas.envios[1].token, m.chamadas.envios[0].token, 'o mesmo pedido, o mesmo comprovante');
+  assert.equal(m.eventos.prontas[0].aposFalha, undefined, 'depois do toque em "Tentar de novo", a conclusão segue o toque');
 
   // Sem rede identificada no fim do prazo: "sem conexão" (com "Verificar status"), não "ausência".
   let conectado = false;

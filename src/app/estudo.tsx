@@ -796,7 +796,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     }
   }
 
-  /** O controlador confirmou a trilha (pela resposta do envio ou pela consulta). Na prévia que a pessoa acompanha, o fluxo segue como no toque original; fora dela, o aviso espera a pessoa. */
+  /** O controlador confirmou a trilha (pela resposta do envio ou pela consulta). Na prévia que a pessoa acompanha, o fluxo segue como no toque original; fora dela, ou depois de uma falha que ela viu, o aviso espera a pessoa. */
   function concluirCriacao(criacao: CriacaoEmCurso) {
     const plano = criacao.plano;
     if (!plano || !montado.current) return;
@@ -808,6 +808,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     const painel = painelDaPrevia.current;
     const naPrevia = telaRef.current.tipo === 'geracao' && geracaoRef.current?.proposta?.pedidoId === pedidoId && !!painel?.isConnected;
     if (!naPrevia || !painel) return;
+    // Depois de uma falha que a pessoa viu (o limite com prazo), a aula não abre sozinha: a prévia mostra "Abrir lição 1" e o anúncio de "pronta" sai de aoMudarCriacoes.
+    if (criacao.aposFalha) return;
     controlador.current?.descartar(pedidoId);
     void finalizarAceite(plano, criacao.pendente.intencao === 'comecar', painel);
   }
@@ -992,7 +994,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       const anterior = fasesAnunciadas.current.get(id);
       if (anterior === situacao) continue;
       fasesAnunciadas.current.set(id, situacao);
-      if (criacao.fase === 'pronta' && estaNaPrevia(id)) continue;
+      if (criacao.fase === 'pronta' && estaNaPrevia(id) && !criacao.aposFalha) continue;
       let anuncio = apresentarCriacao(criacao, { agora: Date.now(), online: navigator.onLine }).anuncio;
       // Voltou a preparar depois de uma dúvida ou de uma falha (a conexão voltou, o pedido foi reenviado): a mudança é dita uma vez, em vez de deixar na região viva o texto antigo.
       const preparando = criacao.fase === 'enviando' || criacao.fase === 'em_preparo';

@@ -66,6 +66,7 @@ Uma falha de limite do provedor registra também `espera_ms` (o `Retry-After` re
 - «Tentar de novo» fica visível e **desativado** (`aria-disabled`) enquanto o servidor não permitir (`repetivel: false`). Não há «Verificar status» nesse estado; a mensagem mostra o prazo que resta, que cai com o tempo.
 - Com prazo conhecido (`aguardarSegundos`), o cliente espera o fim e **consulta o mesmo pedido** (`GET .../pedidos/{pedidoId}`, sem IA). O que o servidor responder manda: `pronto` → «Abrir lição 1»;
   `falha` com `repetivel: true` → «O limite acabou. Você já pode tentar de novo.» e o botão se habilita; `falha` ainda com prazo → segue desativado com o que resta e espera de novo.
+  Depois de uma falha que a pessoa viu, a trilha pronta **não abre a aula sozinha**: a tela mostra «Sua trilha está pronta.» e «Abrir lição 1» (em «Salvar para depois», «Ver em Minhas trilhas») e espera o toque.
 - O relógio do aparelho nunca habilita o botão. Sem prazo conhecido, vale o campo `repetivel` da resposta.
 - Se a consulta do fim do prazo perde a resposta, entra na hora o estado de dúvida, com «Verificar status» (sem rede identificada, «Sem conexão»); a página que reaparece ou a rede que volta consultam de novo.
 - A geração só começa por toque explícito em «Tentar de novo» (o mesmo `token` e o mesmo `pedidoId`); nada é enviado sozinho.
