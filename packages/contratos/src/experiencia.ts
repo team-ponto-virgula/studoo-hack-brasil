@@ -1099,6 +1099,7 @@ export const mensagens = {
         /** Houve demora e a rede está disponível, mas o servidor ainda não confirmou: "Verificar status" consulta o mesmo pedido. */
         semConfirmacao: 'Ainda não conseguimos confirmar se sua trilha foi salva.',
         verificarStatus: 'Verificar status',
+        verificandoStatus: 'Verificando…',
         /** Só depois de confirmar que o servidor não tem o pedido (a primeira ausência pode ser trânsito): reenvia a MESMA proposta. */
         pedidoNaoChegou: 'Seu pedido não chegou ao servidor.',
         reenviarPedido: 'Reenviar pedido',
