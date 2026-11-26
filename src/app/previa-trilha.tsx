@@ -14,6 +14,11 @@ import { ResumoDiagnostico } from './diagnostico';
 
 export type EstadoAceite = 'livre' | 'iniciando' | 'salvando' | 'erro' | 'erro-salvar' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
+/**
+ * O estado de uma criação que não está em curso normal (spec 04, Retomada da criação): sem conexão, sem confirmação, pedido que não chegou, trilha pronta ou falha confirmada. O texto vai perto da
+ * ação, e a ação (se houver) é a principal do rodapé; quem desenha o estado e decide o que cada toque faz é o estudo.tsx, a partir do controlador da retomada.
+ */
+export type RetomadaNaPrevia = { texto: string; tom: 'neutro' | 'erro' | 'ok'; acao?: { rotulo: string; desabilitada?: boolean }; aoAcionar: () => void };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -79,11 +84,15 @@ export function PlacaDaGeracao({ texto, anunciado }: { texto: string; anunciado:
   );
 }
 
-export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, salvar, visitante, remontar, existente, abrirExistente }: {
+export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, salvar, visitante, remontar, existente, abrirExistente, retomada, dica }: {
   geracao: TrilhaEmGeracao; aceite: EstadoAceite; passagem: PassagemCriada | null;
   sair: () => void; cancelar: () => void; ajustar: () => void; aceitar: (painel: HTMLElement) => void;
   salvar?: (painel: HTMLElement) => void; visitante?: boolean;
   remontar: () => void; existente?: PlanoResumo; abrirExistente: (id: string) => void;
+  /** Uma criação fora do curso normal (sem conexão, sem confirmação, não chegou, pronta, falha): o texto e a ação principal vêm daqui. */
+  retomada?: RetomadaNaPrevia;
+  /** Depois de um tempo em preparo, a linha que diz que a pessoa pode sair (sem prometer sucesso). */
+  dica?: string;
 }) {
   const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
   const { proposta } = geracao;
@@ -115,10 +124,10 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const linhaDaEspera = !!proposta && demorou && aceite === 'iniciando' && !passagem;
   const espera = useDicaDaEspera(linhaDaEspera);
   const textoDaLinha = espera.indice === null ? t.escrevendoLicoes : t.dicas[espera.indice];
-  const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
+  const placa = proposta ? t.propostaResumo(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
   // O leitor de tela ouve só "Montando sua trilha", a espera longa e a proposta pronta; a criação da trilha é anunciada uma vez por `anuncioCriando` (em estudo.tsx, no toque em "Começar a lição 1"),
   // e a linha de espera, com as frases, não é região viva: a troca a cada 5 s não é anunciada.
-  const placaAnunciada = proposta ? `${t.propostaPronta(nos.length, proposta.fluxos.length)} ${t.comecarLicao1}.` : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
+  const placaAnunciada = proposta ? `${t.propostaResumo(nos.length, proposta.fluxos.length)} ${t.comecarLicao1}.` : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
   useLayoutEffect(() => {
     const largura = window.matchMedia('(max-width: 600px)');
@@ -240,22 +249,29 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     void tocaSons.tocarEfeito('geracao_licao');
   }
 
-  const acaoPrincipal = proposta && (
+  const acaoPrincipal = proposta && (retomada ? retomada.acao && (
+    <Botao key="principal" className="previa-comecar" aria-disabled={retomada.acao.desabilitada || undefined} onClick={() => { if (!retomada.acao?.desabilitada) retomada.aoAcionar(); }}>
+      {retomada.acao.rotulo}
+    </Botao>
+  ) : (
     <Botao key="principal" className="previa-comecar" aria-disabled={ocupado} aria-busy={iniciando || undefined} onClick={() => {
       if (!painel.current || ocupado) return;
       if (aceite === 'expirada') { remontar(); return; }
       aceitar(painel.current);
     }}>
       {iniciando && <span className="previa-giro" aria-hidden="true" />}
-      {iniciando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
+      {iniciando ? t.preparandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
     </Botao>
-  );
+  ));
   const acaoSecundaria = (
     <Botao key="secundaria" className="previa-ajustar" variante="secundario" disabled={ocupado} onClick={proposta ? ajustar : cancelar}>
       {proposta ? t.ajustar : t.cancelar}
     </Botao>
   );
-  const erroDoAceite = falhou && (
+  // O que a pessoa lê é o que o leitor de tela ouve, uma vez, pela região viva do estudo (sem `role` aqui, para não repetir).
+  const erroDoAceite = retomada ? (
+    <p key="erro" className="previa-erro" data-tom={retomada.tom}>{retomada.texto}</p>
+  ) : falhou && (
     <p key="erro" className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>
   );
 
@@ -334,19 +350,21 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
       )}
     </div>
     {proposta?.diagnostico && <div className="previa-diagnostico"><ResumoDiagnostico perfil={proposta.diagnostico} /></div>}
-    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={iniciando || undefined} data-falha={falhou || undefined}>
+    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={iniciando || undefined} data-falha={falhou || !!retomada || undefined}>
       <div className="previa-botoes">
         {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
-        {proposta && salvar && !iniciando && aceite !== 'expirada' && <div className="previa-salvar">
+        {proposta && salvar && !iniciando && !retomada && aceite !== 'expirada' && <div className="previa-salvar">
           <Botao variante="texto" aria-disabled={salvando} aria-busy={salvando || undefined}
             onClick={() => { if (painel.current && !ocupado) salvar(painel.current); }}>
-            {salvando ? t.salvandoTrilha : t.salvarParaDepois}
+            {salvando ? t.salvandoSuaTrilha : t.salvarParaDepois}
           </Botao>
           {aceite === 'erro-salvar' && <p className="previa-erro" role="alert">{t.erroSalvar}</p>}
           <p>{visitante ? 'Depois de salvar, disponível por até 24 h a partir da entrada neste navegador.' : 'A proposta entra em Minhas trilhas ao salvar ou começar.'}</p>
+          {dica && salvando && <p>{dica}</p>}
         </div>}
-        {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || undefined}>
+        {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || (!!dica && aceite === 'iniciando') || undefined}>
           <span className="previa-espera__linha" data-saindo={espera.saindo || undefined}>{textoDaLinha}</span>
+          {dica && aceite === 'iniciando' && <span className="previa-espera__dica">{dica}</span>}
         </p>}
       </div>
     </footer>

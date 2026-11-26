@@ -1094,37 +1094,39 @@ export const mensagens = {
         anuncioPreparando: 'Preparando sua trilha.',
         anuncioSalvandoSuaTrilha: 'Salvando sua trilha.',
         /** Depois de um tempo em preparo, sem erro: a pessoa pode sair, e o pedido continua. */
-        aindaPreparando: 'Ainda preparando. Você pode sair desta tela: o pedido continua e a trilha aparece em Minhas trilhas.',
+        aindaPreparando: 'Você pode sair. Quando estiver pronta, a trilha aparece em Minhas trilhas.',
         semConexaoVerificar: 'Sem conexão. Vamos verificar o status quando a conexão voltar.',
         /** Houve demora e a rede está disponível, mas o servidor ainda não confirmou: "Verificar status" consulta o mesmo pedido. */
         semConfirmacao: 'Ainda não conseguimos confirmar se sua trilha foi salva.',
         verificarStatus: 'Verificar status',
-        verificandoStatus: 'Verificando…',
-        anuncioSemConexao: 'Sem conexão. Vamos verificar o status quando a conexão voltar.',
         /** Só depois de confirmar que o servidor não tem o pedido (a primeira ausência pode ser trânsito): reenvia a MESMA proposta. */
         pedidoNaoChegou: 'Seu pedido não chegou ao servidor.',
         reenviarPedido: 'Reenviar pedido',
         trilhaPronta: 'Sua trilha está pronta.',
+        /** A trilha já foi salva e só a lição 1 não abriu: nada é recriado, e tocar na lição tenta abrir de novo. */
+        licaoNaoAbriu: 'Sua trilha foi salva, mas não deu para abrir a lição 1. Toque na lição para tentar de novo.',
         trilhaSalvaPronta: 'Sua trilha foi salva em Minhas trilhas.',
         abrirLicao1: 'Abrir lição 1',
         anuncioTrilhaPronta: 'Sua trilha está pronta. Abrir lição 1.',
-        anuncioTrilhaSalva: 'Sua trilha foi salva em Minhas trilhas.',
         tentarDeNovo: 'Tentar de novo',
         /** A falha confirmada pelo servidor, pela causa (`CausaDeFalhaDaCriacao`). O prazo do limite só entra quando o servidor o conhece. Sem diagnóstico inventado. */
         falhaDaCriacao: {
             resposta_ia: 'A IA não conseguiu escrever as lições desta vez.',
             limite: 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.',
             limiteComEspera: (segundos: number) => `Chegamos ao limite de criações por agora. Tente de novo em ${esperaEmPalavras(segundos)}.`,
+            /** O prazo conhecido acabou e o servidor, ao ser consultado, liberou: a frase combina com o botão "Tentar de novo" que volta a existir. */
+            limiteLiberado: 'O limite acabou. Você já pode tentar de novo.',
             tempo: 'A criação demorou mais do que o esperado e foi interrompida.',
             interrompida: 'A criação foi interrompida antes de terminar.',
             seguranca: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
             proposta_expirada: 'Esta proposta expirou. Monte de novo.',
             outra: 'Não deu para criar a trilha.',
         },
-        anuncioFalhaCriacao: 'Não deu para criar a trilha. Veja o aviso na tela.',
-        /** O aviso da lista de trilhas enquanto um pedido segue em preparo e a pessoa está em outra tela. */
-        criacaoEmCurso: (titulo: string) => `Preparando “${titulo}”`,
-        verCriacao: 'Ver',
+        /** Os avisos de criação (uma trilha que segue sendo criada, ou terminou, enquanto a pessoa está em outra tela). */
+        criacoesEmCurso: 'Criação de trilhas',
+        verCriacao: 'Ver a prévia',
+        abrirMinhasTrilhas: 'Ver em Minhas trilhas',
+        fecharAviso: 'Fechar',
         montando: 'Montando a trilha',
         pronta: 'Trilha pronta',
         contagem: (total: number) => total === 0

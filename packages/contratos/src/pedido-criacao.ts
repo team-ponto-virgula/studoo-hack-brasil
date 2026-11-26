@@ -1,4 +1,5 @@
-import type { CodigoErro, PlanoDetalhe } from './aprendizado';
+import type { CodigoErro, PlanoDetalhe, PropostaPlano } from './aprendizado';
+import { perfilDiagnosticoValido } from './diagnostico';
 
 /*
  * Retomada da criação da trilha (spec 04, Retomada da criação). "Começar a lição 1" e "Salvar para depois" mandam o aceite da proposta (POST /api/aprendizado/planos), que escreve
@@ -168,6 +169,34 @@ export interface CriacaoPendente {
   enviadoEm: number;
   /** Epoch ms em que a proposta vence, se o servidor informou. */
   propostaExpiraEm?: number;
+  /** O que a prévia mostrava (sem o token), para a retomada redesenhar a MESMA proposta depois de fechar e reabrir. */
+  previa?: PreviaDaCriacaoPendente;
+}
+
+export type PreviaDaCriacaoPendente = Pick<PropostaPlano, 'objetivo' | 'origem' | 'fluxos'> & Partial<Pick<PropostaPlano, 'diagnostico'>>;
+
+const TEXTO_CURTO = 300;
+function previaValida(valor: unknown): PreviaDaCriacaoPendente | null {
+  if (typeof valor !== 'object' || valor === null) return null;
+  const x = valor as Record<string, unknown>;
+  const texto = (v: unknown, max: number): v is string => typeof v === 'string' && v.length > 0 && v.length <= max;
+  if (!texto(x.objetivo, 500) || !texto(x.origem, TEXTO_CURTO) || !Array.isArray(x.fluxos) || x.fluxos.length === 0 || x.fluxos.length > 12) return null;
+  const fluxos: PreviaDaCriacaoPendente['fluxos'] = [];
+  for (const fluxo of x.fluxos) {
+    if (typeof fluxo !== 'object' || fluxo === null) return null;
+    const f = fluxo as Record<string, unknown>;
+    if (!texto(f.titulo, TEXTO_CURTO) || !Array.isArray(f.licoes) || f.licoes.length === 0 || f.licoes.length > 20) return null;
+    const licoes: { titulo: string; resumo?: string }[] = [];
+    for (const licao of f.licoes) {
+      if (typeof licao !== 'object' || licao === null) return null;
+      const l = licao as Record<string, unknown>;
+      if (!texto(l.titulo, TEXTO_CURTO) || (l.resumo !== undefined && !texto(l.resumo, 200))) return null;
+      licoes.push({ titulo: l.titulo, ...(l.resumo !== undefined ? { resumo: l.resumo as string } : {}) });
+    }
+    fluxos.push({ titulo: f.titulo, licoes });
+  }
+  if (x.diagnostico !== undefined && !perfilDiagnosticoValido(x.diagnostico)) return null;
+  return { objetivo: x.objetivo, origem: x.origem, fluxos, ...(x.diagnostico !== undefined ? { diagnostico: x.diagnostico as NonNullable<PreviaDaCriacaoPendente['diagnostico']> } : {}) };
 }
 
 const ID_DO_PEDIDO = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -185,6 +214,8 @@ export function criacaoPendenteValida(dado: unknown): CriacaoPendente | null {
   if (x.intencao !== 'comecar' && x.intencao !== 'salvar') return null;
   if (typeof x.titulo !== 'string' || !inteiro(x.licoes) || !inteiro(x.partes) || !inteiro(x.enviadoEm)) return null;
   if (x.propostaExpiraEm !== undefined && !inteiro(x.propostaExpiraEm)) return null;
+  const previa = x.previa === undefined ? undefined : previaValida(x.previa);
+  if (x.previa !== undefined && !previa) return null;
   return {
     versao: 1,
     pedidoId: x.pedidoId,
@@ -195,6 +226,7 @@ export function criacaoPendenteValida(dado: unknown): CriacaoPendente | null {
     partes: x.partes,
     enviadoEm: x.enviadoEm,
     ...(x.propostaExpiraEm !== undefined ? { propostaExpiraEm: x.propostaExpiraEm } : {}),
+    ...(previa ? { previa } : {}),
   };
 }
 

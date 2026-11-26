@@ -100,3 +100,17 @@ test('os pedidos pendentes guardados no aparelho: ida e volta, vários ao mesmo 
   assert.ok(pedidoIdValido(ID));
   assert.ok(!pedidoIdValido('../planos') && !pedidoIdValido('') && !pedidoIdValido(42));
 });
+
+test('o pedido pendente leva a prévia (sem o token) para redesenhar a MESMA proposta depois de reabrir; prévia estragada derruba só o item', () => {
+  const previa = { objetivo: 'Aprender Python', origem: 'Conteúdo gerado pelo Studoo', fluxos: [{ titulo: 'Base', licoes: [{ titulo: 'Tipos' }, { titulo: 'Coleções', resumo: 'Listas e mapas.' }] }] };
+  const pendente = { versao: 1, pedidoId: ID, token: 'abc.def', intencao: 'salvar', titulo: 'Python', licoes: 2, partes: 1, enviadoEm: 1_764_000_000_000, previa };
+  assert.deepEqual(lerCriacoesPendentes(textoDasCriacoesPendentes([pendente])), [pendente]);
+  assert.equal(JSON.stringify(previa).includes('abc.def'), false, 'a prévia não carrega o token');
+  const sem = { ...pendente }; delete sem.previa;
+  assert.deepEqual(lerCriacoesPendentes(textoDasCriacoesPendentes([sem])), [sem], 'sem prévia (versão anterior) continua valendo');
+  const outro = { ...pendente, pedidoId: OUTRO };
+  for (const ruim of [{ ...previa, fluxos: [] }, { ...previa, objetivo: '' }, { ...previa, fluxos: [{ titulo: 'Base', licoes: [] }] }, { ...previa, fluxos: [{ titulo: 'x'.repeat(301), licoes: [{ titulo: 'a' }] }] },
+    { ...previa, diagnostico: { nivel: 'inventado' } }, 'texto', 7]) {
+    assert.deepEqual(lerCriacoesPendentes(textoDasCriacoesPendentes([{ ...pendente, previa: ruim }, outro])).map((p) => p.pedidoId), [OUTRO], 'só o item com a prévia ruim sai');
+  }
+});
