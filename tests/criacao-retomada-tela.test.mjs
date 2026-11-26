@@ -194,7 +194,9 @@ test('o fonte do estudo: o aceite passa pelo controlador (o pedido é guardado a
   assert.match(corpo('aoMudarCriacoes'), /const anterior = fasesAnunciadas\.current\.get\(id\);\s*if \(anterior === situacao\) continue;/, 'a mesma situação não é anunciada duas vezes');
   assert.match(corpo('aoMudarCriacoes'), /criacao\.fase === 'falha' \? `falha:\$\{criacao\.falha\?\.causa\}:\$\{criacao\.falha\?\.repetivel \? 'liberada' : 'bloqueada'\}` : criacao\.fase;/,
     'o prazo que cai não é uma situação nova, mas a falha que o servidor liberou é (o leitor ouve a mudança)');
-  assert.match(corpo('aoMudarCriacoes'), /if \(criacao\.fase === 'pronta' && estaNaPrevia\(id\)\) continue;/, 'na prévia que a pessoa acompanha, o fim é anunciado pelo fluxo (não duas vezes)');
+  assert.match(corpo('aoMudarCriacoes'), /if \(criacao\.fase === 'pronta' && estaNaPrevia\(id\) && !criacao\.aposFalha\) continue;/, 'na prévia que a pessoa acompanha, o fim é anunciado pelo fluxo (não duas vezes); depois de uma falha vista, o fluxo não abre a aula e quem anuncia é esta função');
+  assert.match(corpo('concluirCriacao'), /if \(!naPrevia \|\| !painel\) return;\s*\/\/[^\n]*\n\s*if \(criacao\.aposFalha\) return;\s*controlador\.current\?\.descartar\(pedidoId\);\s*void finalizarAceite\(/,
+    'depois de uma falha que a pessoa viu (o limite com prazo), a aula não abre sozinha: a prévia fica com "Abrir lição 1" até o toque');
   assert.match(corpo('aoMudarCriacoes'), /if \(!anuncio && preparando && anterior !== undefined && anterior !== 'enviando' && anterior !== 'em_preparo'\) \{\s*anuncio = criacao\.pendente\.intencao === 'salvar' \? mensagens\.geracao\.anuncioSalvandoSuaTrilha : mensagens\.geracao\.anuncioPreparando;/,
     'voltar a preparar depois de dúvida ou falha (rede que voltou, reenvio) é dito uma vez, sem deixar o texto antigo na região viva');
   assert.doesNotMatch(corpo('aoAcionarCriacao'), /anunciar\(/, 'reenviar não anuncia por conta própria: o anúncio de "preparando" sai da mudança de fase, uma vez');
