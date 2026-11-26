@@ -27,6 +27,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets, type EdgeInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
+import { registrarToqueDaRetomada } from './registro-da-retomada';
 import { useDepoisDeSair } from './janelas';
 import { useMovimentoReduzido } from './movimento';
 import { useVidroPermitido } from './transparencia';
@@ -1649,6 +1650,10 @@ function NavegacaoInferior({ base, lados, aoMedir }: {
   aoMedir: (altura: number) => void;
 }) {
   const nav = useContext(NavegacaoContexto);
+  const objetivoHabilitadoNoMapa = nav?.atual === 'plano' && !nav.ocupado;
+  useEffect(() => {
+    if (objetivoHabilitadoNoMapa) registrarToqueDaRetomada('nova-trilha-aba-habilitada-no-mapa');
+  }, [objetivoHabilitadoNoMapa]);
   const material = useMaterialFlutuante();
   if (!nav) return null;
   // As abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
@@ -1673,6 +1678,7 @@ function NavegacaoInferior({ base, lados, aoMedir }: {
         const toque = { top: 4, bottom: 4, left: posicao === 0 ? 4 : 0, right: posicao === itens.length - 1 ? 4 : 0 };
         return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
           aria-selected={selecionado} aria-disabled={nav.ocupado}
+          onPressIn={item.id === 'objetivo' ? () => registrarToqueDaRetomada('nova-trilha-press-in') : undefined}
           accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao} hitSlop={toque}
           style={[navegacaoEstilos.aba, umaPalavra && navegacaoEstilos.abaUmaPalavra, selecionado && navegacaoEstilos.ativa]}>
           {({ pressed }) => <>

@@ -159,6 +159,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (planos) void guardarTinhaTrilhas(planos.length > 0);
   }, [planos]);
   const [etapa, setEtapa] = useState<Etapa>(() => destino ? { ...destino, voltar: { tipo: 'explorar' } } : { tipo: 'planos' });
+  useEffect(() => {
+    if (etapa.tipo === 'objetivo') registrarToqueDaRetomada('nova-trilha-etapa-objetivo');
+  }, [etapa.tipo]);
   // O pedido guardado quando a sessão terminou no meio volta para o campo (rodada 4 da web).
   const [objetivo, setObjetivo] = useState(() => tomarRascunho());
   const objetivoAtual = useRef(objetivo);
@@ -456,7 +459,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
   /** Troca de etapa por um toque: espera a ação em andamento terminar. */
   function abrir(destino: Etapa) {
-    if (emCurso.current) return;
+    if (emCurso.current) {
+      if (destino.tipo === 'objetivo') registrarToqueDaRetomada('nova-trilha-navegacao-bloqueada');
+      return;
+    }
     navegar(destino);
   }
 
@@ -1107,7 +1113,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
   return <AvisoDoApp.Provider value={avisoDoApp}><ProvedorBloqueio cliente={cliente}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
-    planos: tocarMinhasTrilhas, criar: () => abrir({ tipo: 'objetivo' }),
+    planos: tocarMinhasTrilhas, criar: () => {
+      registrarToqueDaRetomada('nova-trilha-press');
+      abrir({ tipo: 'objetivo' });
+    },
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
     // O Perfil (com Privacidade e dados e "Excluir conta") nunca depende do compartilhar.
     perfil: () => abrir({ tipo: 'perfil' }),
