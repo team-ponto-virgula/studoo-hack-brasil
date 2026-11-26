@@ -62,6 +62,7 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
   cabecalhos['x-forwarded-proto'] = 'https';
   cabecalhos['x-forwarded-host'] = pedido.headers.host ?? `127.0.0.1:${porta}`;
   cabecalhos['x-forwarded-for'] = '127.0.0.1';
+  if (idConsultado) cabecalhos['accept-encoding'] = 'identity';
 
   const adiante = http.request({
     hostname: destino.hostname.replace(/^\[|\]$/g, ''),
@@ -71,12 +72,11 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
     headers: cabecalhos,
   }, (origem) => {
     if (idConsultado) {
-      let texto = '';
-      origem.setEncoding('utf8');
-      origem.on('data', parte => { texto += parte; });
+      const partes = [];
+      origem.on('data', parte => { partes.push(parte); });
       origem.once('end', () => {
         let dados;
-        try { dados = JSON.parse(texto); } catch { dados = {}; }
+        try { dados = JSON.parse(Buffer.concat(partes).toString('utf8')); } catch { dados = {}; }
         const plano = dados?.plano;
         registrarProva('consulta', {
           pedidoId: idConsultado, status: origem.statusCode, estado: dados?.estado,
