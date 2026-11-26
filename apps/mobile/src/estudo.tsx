@@ -1218,7 +1218,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
         rolagemDoNo1={rolagemDoNo1}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
-        existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '') &&
+        existente={geracao.proposta ? planos?.find((plano) => plano.id !== geracao.proposta?.pedidoId &&
+          trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '') &&
           mesmoDiagnostico(plano.diagnostico, geracao.proposta?.diagnostico)) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
     }

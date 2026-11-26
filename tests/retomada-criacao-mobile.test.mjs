@@ -128,6 +128,24 @@ test('o POST aguarda o registro durável e uma montagem não reenvia por conta p
   assert.match(cartao, /AppState\.addEventListener\('change'/);
 });
 
+test('a prévia oferece abrir outra trilha equivalente, excluindo o próprio pedido', () => {
+  const fonte = readFileSync(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
+  const busca = fonte.match(/existente=\{(geracao\.proposta[^}]+)\}/)?.[1];
+  assert.ok(busca);
+
+  const propria = { id: pedidoId, titulo: 'Astronomia: observação' };
+  const outra = { id: 'anterior', titulo: 'Astronomia: prática' };
+  const proposta = { pedidoId, titulo: 'Astronomia: o céu noturno' };
+  const encontrar = (planos, proposta) => runInNewContext(busca, {
+    planos, geracao: { proposta },
+    trilhaRepetida: contratos.trilhaRepetida, mesmoDiagnostico: contratos.mesmoDiagnostico,
+  });
+
+  assert.equal(encontrar([propria], proposta), undefined);
+  assert.equal(encontrar([propria, outra], proposta), outra);
+  assert.equal(encontrar([outra], { titulo: proposta.titulo }), outra);
+});
+
 test('o cartão de retomada é a única entrada visível da trilha confirmada na lista', () => {
   const fonte = readFileSync(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
   assert.match(fonte, /planos\?\.filter\(plano => criacoes\.obter\(plano\.id\)\?\.estado\?\.estado !== 'pronto'\)/);
