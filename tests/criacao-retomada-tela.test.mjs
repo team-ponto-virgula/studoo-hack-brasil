@@ -101,9 +101,16 @@ test('limite com prazo: mostra o que RESTA (cai com o tempo, não volta cheio) e
   const depois = ap(limite, T0 + 10 * 60_000 + 1);
   assert.equal(depois.texto, 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.', 'passado o prazo, nenhuma espera é prometida');
   assert.deepEqual(depois.acoes.map((a) => a.id), ['verificar', 'fechar'], 'o prazo acabou no relógio, mas quem libera é o servidor: ainda não há "Tentar de novo"');
-  // O servidor liberou (a consulta do mesmo pedido devolveu repetível, sem prazo): agora sim.
-  const liberada = criacao('falha', { falha: falha({ causa: 'limite', repetivel: true }) });
-  assert.deepEqual(ap(liberada, T0 + 11 * 60_000).acoes.map((a) => [a.id, a.rotulo]), [['reenviar', 'Tentar de novo'], ['fechar', 'Fechar']]);
+  // O servidor liberou depois da espera (a consulta do mesmo pedido devolveu repetível, sem prazo): agora sim, e a frase combina com o botão (não diz "mais tarde").
+  const liberada = criacao('falha', { falha: falha({ causa: 'limite', repetivel: true, liberadaAposEspera: true }) });
+  const aberta = ap(liberada, T0 + 11 * 60_000);
+  assert.deepEqual(aberta.acoes.map((a) => [a.id, a.rotulo]), [['reenviar', 'Tentar de novo'], ['fechar', 'Fechar']]);
+  assert.equal(aberta.texto, 'O limite acabou. Você já pode tentar de novo.');
+  assert.equal(aberta.anuncio, aberta.texto);
+  // Sem prazo conhecido desde o começo (o provedor não disse quanto), "mais tarde" continua certo, e o botão já existe.
+  const semPrazo = ap(criacao('falha', { falha: falha({ causa: 'limite', repetivel: true }) }), T0 + 1000);
+  assert.equal(semPrazo.texto, 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.');
+  assert.deepEqual(semPrazo.acoes.map((a) => a.id), ['reenviar', 'fechar']);
   assert.equal(segundosRestantes({ aguardarSegundos: 90, recebidaEm: T0 }, T0 + 30_000), 60);
   assert.equal(segundosRestantes({ recebidaEm: T0 }, T0), 0);
   assert.equal(textoDaFalha(falha({ causa: 'limite' }), T0), 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.', 'sem prazo conhecido, sem prazo na frase');

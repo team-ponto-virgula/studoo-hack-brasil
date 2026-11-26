@@ -37,6 +37,8 @@ export interface FalhaDaCriacao {
   aguardarSegundos?: number;
   tentativas: number;
   recebidaEm: number;
+  /** Só no cliente: o limite tinha prazo conhecido, o prazo acabou e o servidor, ao ser consultado, liberou (a frase deixa de dizer "mais tarde"). */
+  liberadaAposEspera?: boolean;
 }
 
 export interface CriacaoEmCurso {
@@ -204,7 +206,11 @@ export function criarControladorDeCriacoes(dependencias: DependenciasDaCriacao) 
         if (acao.acao === 'concluir') { concluir(item, acao.plano, true); return; }
         if (acao.acao === 'falhou') {
           const f = acao.falha;
-          const falha = { codigo: f.codigo, causa: f.causa, repetivel: f.repetivel, tentativas: f.tentativas, ...(f.aguardarSegundos ? { aguardarSegundos: f.aguardarSegundos } : {}) };
+          const eraEspera = item.c.falha?.causa === 'limite' && !item.c.falha.repetivel && (item.c.falha.aguardarSegundos ?? 0) > 0;
+          const falha = {
+            codigo: f.codigo, causa: f.causa, repetivel: f.repetivel, tentativas: f.tentativas, ...(f.aguardarSegundos ? { aguardarSegundos: f.aguardarSegundos } : {}),
+            ...(eraEspera && f.causa === 'limite' && f.repetivel ? { liberadaAposEspera: true } : {}),
+          };
           // Limite com prazo conhecido: a falha fica na tela com o prazo RESTANTE, e este laço dorme até o prazo e CONSULTA O MESMO PEDIDO de novo (nunca envia nada): o servidor diz se liberou
           // (repetível, sem prazo), se a trilha ficou pronta ou se o limite continua (com o prazo que sobrou). "Verificar status" acorda o laço antes.
           if (!f.repetivel && f.aguardarSegundos && f.aguardarSegundos > 0) {

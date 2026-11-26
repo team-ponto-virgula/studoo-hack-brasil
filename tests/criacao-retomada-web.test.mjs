@@ -278,6 +278,7 @@ test('limite com prazo conhecido: a falha fica com o prazo RESTANTE, o laço dor
   await ate(() => m.eventos.ultima?.[0]?.falha?.repetivel === true);
   assert.equal(m.chamadas.envios.length, 1, 'terminar a espera não inicia outra geração');
   assert.equal('aguardarSegundos' in m.eventos.ultima[0].falha, false, 'liberada: nenhum prazo');
+  assert.equal(m.eventos.ultima[0].falha.liberadaAposEspera, true, 'a tela sabe que o limite acabou (a frase deixa de dizer "mais tarde")');
   assert.ok(m.chamadas.consultas.length >= 2, 'consultou o mesmo pedido no fim do prazo');
   assert.ok(m.fases.filter((f) => f.endsWith(':falha')).length >= 2, 'a falha com prazo ficou na tela até o servidor liberar');
   m.controlador.reenviar(A);

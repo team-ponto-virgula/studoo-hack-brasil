@@ -32,6 +32,7 @@ export function segundosRestantes(falha: Pick<FalhaDaCriacao, 'aguardarSegundos'
 export function textoDaFalha(falha: FalhaDaCriacao, agora: number): string {
   const f = t.falhaDaCriacao;
   if (falha.causa === 'limite') {
+    if (falha.liberadaAposEspera) return f.limiteLiberado;
     const restante = segundosRestantes(falha, agora);
     return restante > 0 ? f.limiteComEspera(restante) : f.limite;
   }

@@ -1114,6 +1114,8 @@ export const mensagens = {
             resposta_ia: 'A IA não conseguiu escrever as lições desta vez.',
             limite: 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.',
             limiteComEspera: (segundos: number) => `Chegamos ao limite de criações por agora. Tente de novo em ${esperaEmPalavras(segundos)}.`,
+            /** O prazo conhecido acabou e o servidor, ao ser consultado, liberou: a frase combina com o botão "Tentar de novo" que volta a existir. */
+            limiteLiberado: 'O limite acabou. Você já pode tentar de novo.',
             tempo: 'A criação demorou mais do que o esperado e foi interrompida.',
             interrompida: 'A criação foi interrompida antes de terminar.',
             seguranca: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
