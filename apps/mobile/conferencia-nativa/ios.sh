@@ -371,6 +371,18 @@ material_da_barra() {
   echo "Material calculado da barra (estimativa, não é o observado): $material"
 }
 
+# Registra ao vivo: o iOS pode não persistir as mensagens de console em nível info.
+fluxo_telas_iphone() (
+  if [ "${CONFERENCIA_TELAS:-}" = retomada-criacao ]; then
+    xcrun simctl spawn "$(udid)" log stream --level debug --style compact \
+      --predicate 'process == "Expo Go" AND eventMessage CONTAINS "[retomada-app]"' \
+      > "$REGISTROS/retomada-app-ios.log" 2>&1 &
+    local pid_registro=$!
+    trap 'kill "$pid_registro" 2>/dev/null || true; wait "$pid_registro" 2>/dev/null || true' EXIT
+  fi
+  fluxo_telas
+)
+
 coletar() {
   local dados
   # A leitura do Expo Go e do simulador roda à parte: uma falha dela vira "desconhecido" e não para a coleta das capturas.
@@ -399,6 +411,11 @@ coletar() {
   com_limite 120 xcrun simctl spawn "$(udid)" log show --last 30m --style compact --predicate 'process == "Expo Go"' \
     > "$REGISTROS/simulador-expo-go.log" 2> /dev/null || true
 
+  if [ "${CONFERENCIA_TELAS:-}" = retomada-criacao ] &&
+     ! grep -qF '[retomada-app] botao-habilitado' "$REGISTROS/retomada-app-ios.log" "$REGISTROS/metro.log" 2>/dev/null; then
+    aviso "Retomada no iPhone: sem o marcador do botão habilitado. A ausência de onPress nos registros é inconclusiva."
+  fi
+
   coletar_fim
 }
 
@@ -414,7 +431,7 @@ case "${1:-}" in
   fluxo-entrada) fluxo_entrada ;;
   sem-preenchimento) sem_preenchimento ;;
   fluxo-entrar) fluxo_entrar ;;
-  fluxo-telas) fluxo_telas ;;
+  fluxo-telas) fluxo_telas_iphone ;;
   coletar) coletar ;;
   *)
     echo "Uso: $0 sonda|ligar|servidor|simulador|maestro|metro|fluxo-entrada|sem-preenchimento|fluxo-entrar|fluxo-telas|coletar" >&2

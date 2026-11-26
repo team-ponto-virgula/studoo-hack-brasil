@@ -302,7 +302,10 @@ instalar_maestro() {
 # metro: serve o app e compila o pacote antes de o aparelho pedir. Uso: iniciar_metro <ios|android> <--go|--dev-client>
 
 iniciar_metro() {
-  local plataforma="$1" modo="$2" manifesto pacote medida
+  local plataforma="$1" modo="$2" manifesto pacote medida registro_retomada=0
+  if [ "$plataforma" = ios ] && [ "${CONFERENCIA_TELAS:-}" = retomada-criacao ]; then
+    registro_retomada=1
+  fi
   cd "$RAIZ/apps/mobile"
   # O Expo embute as variáveis EXPO_PUBLIC_ no pacote. O .env.local é ignorado pelo Git. EXPO_PUBLIC_STUDOO_REGISTRO_SOM
   # pede ao app, se ele souber, que registre cada som ("[som] comando <id> <ms>" e "[som] reproducao <id> <ms>"), para a
@@ -313,6 +316,7 @@ iniciar_metro() {
   # desenvolvimento por cima das telas. EXPO_PACKAGER_PROXY_URL faz o manifesto apontar para a cache, e não para o Metro.
   CI=1 EXPO_NO_TELEMETRY=1 EXPO_PACKAGER_PROXY_URL="http://127.0.0.1:$PORTA_METRO" \
     EXPO_PUBLIC_STUDOO_API_URL="$API" EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI="studoo-dev://auth/google" EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1 \
+    EXPO_PUBLIC_STUDOO_REGISTRO_RETOMADA="$registro_retomada" \
     nohup npx expo start "$modo" --localhost --port "$PORTA_METRO_INTERNA" --no-dev --minify --max-workers 2 > "$REGISTROS/metro.log" 2>&1 < /dev/null &
   if ! esperar_http "http://127.0.0.1:$PORTA_METRO_INTERNA/status" 180; then
     mostrar_registro "$REGISTROS/metro.log"

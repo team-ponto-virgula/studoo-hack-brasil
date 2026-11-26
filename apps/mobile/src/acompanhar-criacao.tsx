@@ -5,6 +5,7 @@ import { Botao, estilos } from './interface';
 import { apresentarRetomada } from './estado-da-retomada';
 import { mensagens } from './mensagens';
 import { cores } from './tema';
+import { registrarToqueDaRetomada } from './registro-da-retomada';
 import type { CriacaoAcompanhada } from './use-criacoes-pendentes';
 
 const t = mensagens.geracao;
@@ -24,6 +25,11 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
   const [verificando, setVerificando] = useState(false);
   const { texto, acao, consultarEmMs } = apresentarRetomada(item);
   const aguardandoLimite = acao.tipo === 'tentar' && acao.desativada === true;
+
+  const disponivelParaAbrir = acao.tipo === 'abrir' && pedido.intencao === 'comecar' && !ocupado && !verificando;
+  useEffect(() => {
+    if (disponivelParaAbrir) registrarToqueDaRetomada('botao-habilitado');
+  }, [disponivelParaAbrir]);
 
   useEffect(() => {
     if (acao.tipo === 'entrar') aoExpirarSessao();
@@ -59,7 +65,10 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
     botao = {
       testID: pedido.intencao === 'salvar' ? 'criacao-ver-trilha' : 'criacao-abrir-licao-1',
       rotulo: pedido.intencao === 'salvar' ? mensagens.planos.titulo : t.abrirLicao1,
-      acao: () => abrir(pedido, acao.plano),
+      acao: () => {
+        if (pedido.intencao === 'comecar') registrarToqueDaRetomada('onPress');
+        abrir(pedido, acao.plano);
+      },
     };
   } else if (acao.tipo === 'editar') {
     botao = { testID: 'criacao-editar-tema', rotulo: mensagens.pedido.editarTema, acao: () => ajustar(pedido, true) };

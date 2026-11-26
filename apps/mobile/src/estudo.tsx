@@ -1,5 +1,6 @@
 import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica, pedidoIdValido, type CriacaoPendente } from '@studoo/contratos';
 import { AcompanharCriacao } from './acompanhar-criacao';
+import { registrarToqueDaRetomada } from './registro-da-retomada';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { MaterialEstudo, ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, mesmoDiagnostico, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PassoDiagnostico, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
@@ -986,10 +987,13 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   }
 
   /** Abre a lição guardando qual nó está abrindo, para o caminho e o próximo passo mostrarem "Abrindo…". */
-  async function abrirLicao(plano: PlanoDetalhe, id: string) {
+  async function abrirLicao(plano: PlanoDetalhe, id: string, retomada = false) {
     if (emCurso.current) return false;
     setAbrindo(id);
-    const resultado = await executar('abrir', () => cliente.obterLicao(id));
+    const resultado = await executar('abrir', () => {
+      if (retomada) registrarToqueDaRetomada('obter-licao');
+      return cliente.obterLicao(id);
+    });
     setAbrindo(null);
     if (!resultado.ok) return false;
     if (plano.id === trilhaGuardada) {
@@ -1002,6 +1006,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   }
 
   async function abrirCriacaoRecuperada(pedido: CriacaoPendente, plano: PlanoDetalhe) {
+    if (pedido.intencao === 'comecar') {
+      registrarToqueDaRetomada(emCurso.current ? 'abertura-bloqueada' : 'iniciou-abertura');
+    }
     if (emCurso.current) return;
     const etapaDeOrigem = etapaAtual.current;
     atualizarPlano(plano);
@@ -1012,7 +1019,8 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     } else {
       const primeira = plano.fluxos.find(parte => parte.licoes.length > 0)?.licoes[0];
       if (primeira) {
-        const abriu = await abrirLicao(plano, primeira.id);
+        const abriu = await abrirLicao(plano, primeira.id, true);
+        registrarToqueDaRetomada(abriu ? 'licao-aberta' : 'falha-ao-abrir');
         if (!abriu && montado.current && etapaAtual.current === etapaDeOrigem) {
           setErro(AVISO_DA_LICAO_NAO_ABERTA);
         }
