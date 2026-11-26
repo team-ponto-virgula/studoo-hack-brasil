@@ -1,7 +1,8 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { normalizarEmailEntrada } from '@studoo/contratos/autenticacao';
+import { BENEFICIOS_ONBOARDING, VISUAL_ONBOARDING } from '@studoo/contratos/onboarding-visual';
 import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { ActivityIndicator, Animated, Easing, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle, type TextInputProps } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle, type TextStyle, type TextInputProps } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { criarClienteNativo } from './api-nativa';
@@ -12,7 +13,7 @@ import { Icone } from './icone';
 import { RolagemDaTela, Tela } from './interface';
 import { useMovimentoReduzido } from './movimento';
 import { focarSemRolar } from './foco';
-import { Stu } from './mascote';
+import { CenaStuOnboarding } from './onboarding-visual';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { abrirPaginaDoStudoo, enderecoDoStudoo } from './seguranca';
 import { ouvirVoltar } from './voltar';
@@ -72,11 +73,11 @@ export function TransicaoAcesso({ children, chave, estilo }: { children: ReactNo
   return <Animated.View style={[estilo, { opacity: progresso.interpolate({ inputRange: [0, 1], outputRange: [.35, 1] }), transform: [{ translateY: progresso.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }]}>{children}</Animated.View>;
 }
 
-export function TituloAcesso({ children, testID, centro = false, foco = false }: { children: ReactNode; testID?: string; centro?: boolean; foco?: boolean }) {
+export function TituloAcesso({ children, testID, centro = false, foco = false, estilo }: { children: ReactNode; testID?: string; centro?: boolean; foco?: boolean; estilo?: StyleProp<TextStyle> }) {
   const { width } = useWindowDimensions();
   const ref = useRef<ComponentRef<typeof Text>>(null);
   useEffect(() => { if (foco) { const timer = setTimeout(() => focarSemRolar(ref.current), 80); return () => clearTimeout(timer); } }, [foco, children]);
-  return <Text ref={ref} accessibilityRole="header" testID={testID} style={[s.titulo, width < 375 && { fontSize: 30, lineHeight: 36 }, centro && s.centro]}>{children}</Text>;
+  return <Text ref={ref} accessibilityRole="header" testID={testID} style={[s.titulo, width < 375 && { fontSize: 30, lineHeight: 36 }, centro && s.centro, estilo, Platform.OS === 'web' && { outlineStyle: 'solid', outlineWidth: 0 }]}>{children}</Text>;
 }
 
 export function BotaoAcesso({ rotulo, acao, desativado = false, ocupado = false, testID, secundario = false, seta = false }: { rotulo: string; acao: () => void; desativado?: boolean; ocupado?: boolean; testID?: string; secundario?: boolean; seta?: boolean }) {
@@ -216,16 +217,13 @@ export function EntradaMobile({ entrar, google, apple, criarConta, visitante, re
   </AcessoTela>;
 }
 
-const beneficios = [
-  { titulo: 'Seu assunto vira\numa trilha.', descricao: 'Conte o que quer aprender ou traga um material. O Studoo organiza o caminho para você.', stu: 'stu-acolhida' as const },
-  { titulo: 'Um erro abre\noutro caminho.', descricao: 'Errou uma resposta? Veja outra explicação e tente de novo.', stu: 'stu-feliz' as const },
-  { titulo: 'Continue de\nonde parou.', descricao: 'Na sua conta, veja o que já aprendeu e encontre seu próximo passo quando voltar.', stu: 'stu-celebrando' as const },
-];
+const beneficios = BENEFICIOS_ONBOARDING;
 
 export function BoasVindasMobile({ entrar, criarConta }: { entrar: () => void; criarConta: () => void }) {
   const [pagina, setPagina] = useState(0);
   const config = useConfigAcesso();
   const atual = beneficios[pagina];
+  const [primeiraLinha, segundaLinha] = atual.titulo.split('\n');
   const podeCriar = config.cadastro || config.google || config.apple;
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -234,13 +232,16 @@ export function BoasVindasMobile({ entrar, criarConta }: { entrar: () => void; c
   }, [pagina]);
   return <AcessoTela pagina="boas-vindas">
     <TransicaoAcesso chave={pagina} estilo={s.beneficio}>
-      <View style={s.stu}><Stu nome={atual.stu} tamanho={150} /></View>
-      <TituloAcesso testID="titulo-boas-vindas" centro foco>{atual.titulo}</TituloAcesso>
+      <TituloAcesso testID="titulo-boas-vindas" foco estilo={s.tituloBeneficio}>
+        {primeiraLinha}{'\n'}<Text style={s.tituloBeneficioAzul}>{segundaLinha}</Text>
+      </TituloAcesso>
       <Text style={[s.descricao, s.descricaoBeneficio]}>{atual.descricao}</Text>
+      <View style={s.cenaBeneficio}><CenaStuOnboarding nome={atual.stu}>
       <View style={s.exemplo}>
         <Text style={s.seloExemplo}>Exemplo</Text>
         {pagina === 0 ? <><View style={s.linhaExemplo}><Icone nome="livro" tamanho={20} cor={cor.secundario} /><Text style={s.exemploTexto}>Quero aprender SQL</Text></View><View style={s.linhaExemplo}><View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={20} cor={cor.azul} /></View><Text style={s.exemploResultado}>Sua trilha <Text style={s.exemploDetalhe}>· 5 lições</Text></Text></View></> : pagina === 1 ? <><Text style={[s.exemploTexto, { color: '#8f591b' }]}>↻  Ainda não foi dessa vez</Text><View style={s.linhaExemplo}><Text style={[s.exemploResultado, { flex: 1 }]}>Outro jeito de entender</Text><Icone nome="seta" tamanho={18} cor={cor.azul} /></View></> : <><View style={s.linhaExemplo}><Text style={[s.exemploTexto, { flex: 1 }]}>SQL para a prova</Text><Text style={s.exemploDetalhe}>1 de 5 lições</Text></View><View accessible accessibilityRole="progressbar" accessibilityLabel="Exemplo: 1 de 5 lições concluídas" accessibilityValue={{ min: 0, max: 5, now: 1 }} style={s.trilho}><View style={s.progresso} /></View><View style={s.linhaExemplo}><Text style={[s.exemploResultado, { flex: 1 }]}>Próximo: conectar tabelas</Text><Icone nome="seta" tamanho={18} cor={cor.azul} /></View></>}
       </View>
+      </CenaStuOnboarding></View>
     </TransicaoAcesso>
     <View style={s.acoesBeneficio}>
       <View style={s.paginas}>{beneficios.map((b, i) => <Pressable key={b.titulo} accessibilityRole="button" accessibilityLabel={b.titulo.replace('\n', ' ')} accessibilityState={{ selected: i === pagina }} onPress={() => setPagina(i)} testID={`boas-vindas-pagina-${i + 1}`} style={s.pontoAlvo}><View style={[s.ponto, i === pagina && s.pontoAtual]} /></Pressable>)}</View>
@@ -261,9 +262,15 @@ const s = StyleSheet.create({
   boas: { marginTop: 36, gap: 12 }, descricao: { color: cor.secundario, fontFamily: 'Inter', fontSize: 15, lineHeight: 24 }, formulario: { marginTop: 32, gap: 14 },
   campo: { gap: 10 }, rotulo: { color: cor.texto, fontFamily: 'Inter', fontSize: 14, lineHeight: 20, fontWeight: '600' }, caixaCampo: { borderWidth: 1, borderColor: '#8590a6', borderRadius: 12, backgroundColor: '#fafbfe' },
   entrada: { minHeight: 54, paddingVertical: 14, paddingHorizontal: 16, color: cor.texto, fontFamily: 'Inter', fontSize: 16, lineHeight: 24 }, acessorio: { position: 'absolute', right: 3, top: 0, bottom: 0, justifyContent: 'center' }, olho: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  botao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', minHeight: 56, paddingHorizontal: 18, paddingVertical: 16, backgroundColor: cor.azul, borderRadius: 12 }, botaoSecundario: { backgroundColor: '#fff', borderWidth: 1, borderColor: cor.borda }, botaoTexto: { flexShrink: 1, flexGrow: 1, textAlign: 'center', color: '#fff', fontFamily: 'Inter', fontSize: 16, lineHeight: 24, fontWeight: '600' },
+  botao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', minHeight: 56, paddingHorizontal: 18, paddingVertical: 16, backgroundColor: cor.azul, borderRadius: VISUAL_ONBOARDING.raio.botao, boxShadow: '0 4px 12px rgba(40, 84, 244, 0.14)' }, botaoSecundario: { backgroundColor: '#fff', boxShadow: [], borderWidth: 1, borderColor: cor.borda }, botaoTexto: { flexShrink: 1, flexGrow: 1, textAlign: 'center', color: '#fff', fontFamily: 'Inter', fontSize: 16, lineHeight: 24, fontWeight: '600' },
   erro: { color: cor.erro, fontFamily: 'Inter', fontSize: 13, lineHeight: 20 }, link: { minHeight: 44, paddingVertical: 10, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' }, linkTexto: { color: cor.azul, fontFamily: 'Inter', fontWeight: '600', fontSize: 14, lineHeight: 22, textAlign: 'center' },
   alternativas: { gap: 10 }, divisor: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10, marginBottom: 10 }, linha: { height: 1, flex: 1, backgroundColor: '#e8ebf1' }, ou: { color: '#70798a', fontFamily: 'Inter', fontSize: 13, lineHeight: 20 }, provedor: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 14, minHeight: 54, padding: 14, borderWidth: 1, borderColor: cor.borda, borderRadius: 12 }, provedorTexto: { color: cor.texto, fontFamily: 'Inter', fontSize: 15, lineHeight: 23, fontWeight: '500', flexShrink: 1 },
   outros: { marginTop: 22 }, cadastroLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', columnGap: 5 }, outrosTexto: { color: cor.secundario, fontFamily: 'Inter', fontSize: 14, lineHeight: 22 }, rodape: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 'auto', paddingTop: 28 }, emailContexto: { flexDirection: 'row', alignItems: 'center', gap: 12 }, emailTexto: { color: cor.secundario, fontFamily: 'Inter', fontSize: 14, lineHeight: 22, flex: 1 }, labelSenha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }, avisoVisitante: { padding: 14, borderRadius: 12, backgroundColor: '#f6f8fd', gap: 6 },
-  beneficio: { alignItems: 'stretch', marginTop: 12 }, stu: { alignItems: 'center', marginBottom: 16 }, descricaoBeneficio: { fontSize: 16, lineHeight: 24, minHeight: 72, marginTop: 12, textAlign: 'center' }, exemplo: { padding: 16, minHeight: 122, borderRadius: 16, backgroundColor: '#f6f8fd', gap: 9, marginTop: 18 }, seloExemplo: { color: cor.secundario, fontFamily: 'Inter', fontSize: 11, lineHeight: 17 }, linhaExemplo: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }, exemploTexto: { color: cor.texto, fontFamily: 'Inter', fontWeight: '500', fontSize: 14, lineHeight: 21 }, exemploResultado: { color: cor.azul, fontFamily: 'Inter', fontWeight: '500', fontSize: 14, lineHeight: 21 }, exemploDetalhe: { color: cor.secundario, fontFamily: 'Inter', fontSize: 13, lineHeight: 21, fontWeight: '400' }, trilho: { height: 6, borderRadius: 5, backgroundColor: '#dfe6f4', overflow: 'hidden' }, progresso: { height: 6, width: '20%', borderRadius: 5, backgroundColor: cor.azul }, acoesBeneficio: { marginTop: 'auto', paddingTop: 5 }, paginas: { flexDirection: 'row', justifyContent: 'center', minHeight: 44 }, pontoAlvo: { width: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }, ponto: { width: 6, height: 6, borderRadius: 5, backgroundColor: '#a1adc2' }, pontoAtual: { width: 18, backgroundColor: cor.azul },
+  beneficio: { alignItems: 'stretch', marginTop: 24 },
+  tituloBeneficio: { fontSize: VISUAL_ONBOARDING.titulo.tamanho, lineHeight: VISUAL_ONBOARDING.titulo.linha, fontWeight: VISUAL_ONBOARDING.titulo.peso, letterSpacing: VISUAL_ONBOARDING.titulo.entreletra },
+  tituloBeneficioAzul: { color: cor.azul },
+  descricaoBeneficio: { fontSize: VISUAL_ONBOARDING.descricao.tamanho, lineHeight: VISUAL_ONBOARDING.descricao.linha, minHeight: 69, marginTop: 12, textAlign: 'left' },
+  cenaBeneficio: { marginTop: 20 },
+  exemplo: { paddingVertical: 12, paddingHorizontal: 16, marginHorizontal: 12, minHeight: 108, borderRadius: VISUAL_ONBOARDING.raio.cartao, backgroundColor: '#fff', borderWidth: 1, borderColor: VISUAL_ONBOARDING.cores.borda, boxShadow: '0 8px 20px rgba(23, 33, 61, 0.06)', gap: 9, marginTop: -8 },
+  seloExemplo: { color: cor.secundario, fontFamily: 'Inter', fontSize: 11, lineHeight: 17 }, linhaExemplo: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }, exemploTexto: { color: cor.texto, fontFamily: 'Inter', fontWeight: '500', fontSize: 14, lineHeight: 21 }, exemploResultado: { color: cor.azul, fontFamily: 'Inter', fontWeight: '500', fontSize: 14, lineHeight: 21 }, exemploDetalhe: { color: cor.secundario, fontFamily: 'Inter', fontSize: 13, lineHeight: 21, fontWeight: '400' }, trilho: { height: 6, borderRadius: 5, backgroundColor: '#dfe6f4', overflow: 'hidden' }, progresso: { height: 6, width: '20%', borderRadius: 5, backgroundColor: cor.azul }, acoesBeneficio: { marginTop: 'auto', paddingTop: 5 }, paginas: { flexDirection: 'row', justifyContent: 'center', minHeight: 44 }, pontoAlvo: { width: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }, ponto: { width: 6, height: 6, borderRadius: 5, backgroundColor: '#a1adc2' }, pontoAtual: { width: 18, backgroundColor: cor.azul },
 });

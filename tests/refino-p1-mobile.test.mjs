@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import ts from 'typescript';
+import { VISUAL_ONBOARDING } from '../packages/contratos/src/onboarding-visual.ts';
+import { renderizarCenaStu, nosDaCena, estiloDaCena } from './auxiliares/render-cena-mobile.mjs';
 
 // Spec 16 (refinamento de UI), P1 do app, lotes 1 a 3: itens 5, 6, 8, 9 (com a apresentação sem selo), 16 e 17.
 const ler = (caminho) => readFile(new URL(`../apps/mobile/src/${caminho}`, import.meta.url), 'utf8');
@@ -148,10 +150,19 @@ test('item 4: com folga (regra do contrato), o Exemplo ganha o stu-feliz de 72 a
 
 test('item 10 atualizado: Stu expressivo nas boas-vindas, login limpo e animações breves respeitando movimento reduzido', async () => {
   const acesso = await ler('acesso-mobile.tsx');
-  const entrada = acesso.slice(acesso.indexOf('export function EntradaMobile'), acesso.indexOf('const beneficios'));
-  const boas = acesso.slice(acesso.indexOf('export function BoasVindasMobile'), acesso.indexOf('export const acessoEstilos'));
+  const ast = ts.createSourceFile('acesso.tsx', acesso, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const componente = nome => ast.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === nome)?.getText(ast);
+  const entrada = componente('EntradaMobile');
+  const boas = componente('BoasVindasMobile');
   assert.doesNotMatch(entrada, /<Stu\b|entrada-stu|STU_DO_TITULO/);
-  assert.match(boas, /<Stu nome=\{atual\.stu\} tamanho=\{150\} \/>/);
+  assert.match(boas, /<CenaStuOnboarding nome=\{atual\.stu\}/);
+  const vitoria = nosDaCena(renderizarCenaStu({ nome: 'stu-celebrando', compacto: true }));
+  const stuVitoria = vitoria.find(no => no.type === 'Stu');
+  const heroiVitoria = vitoria.find(no => no.props?.pointerEvents === 'none');
+  assert.equal(stuVitoria.props.nome, 'stu-celebrando');
+  assert.equal(stuVitoria.props.tamanho, VISUAL_ONBOARDING.vitoria.stu);
+  assert.equal(estiloDaCena(heroiVitoria.props.style).height, VISUAL_ONBOARDING.vitoria.altura);
+  assert.equal(stuVitoria.props.animado, undefined, 'a composição não adiciona um laço ao mascote aprovado');
   assert.match(boas, /<TransicaoAcesso chave=\{pagina\}/);
   const logo = acesso.slice(acesso.indexOf('export function LogoAcesso'), acesso.indexOf('export function AcessoTela'));
   const transicao = acesso.slice(acesso.indexOf('export function TransicaoAcesso'), acesso.indexOf('export function TituloAcesso'));

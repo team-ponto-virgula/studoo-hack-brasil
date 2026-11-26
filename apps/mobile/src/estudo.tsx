@@ -37,6 +37,8 @@ import { tocaSons } from './sons';
 import type { AcaoOnboarding, MetaLicoesDia, RespostaOnboarding } from '@studoo/contratos/onboarding';
 import { MetaDoDiaMobile, PrepararPrimeiroEstudo, type ModoPrimeiroEstudo } from './jornada-conta';
 import { BotaoAcesso, LinkAcesso } from './acesso-mobile';
+import { PRIMEIRA_VITORIA_VISUAL, VISUAL_ONBOARDING } from '@studoo/contratos/onboarding-visual';
+import { CenaStuOnboarding } from './onboarding-visual';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -3116,19 +3118,20 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
   if (primeiraVitoria) {
     const proxima = retencao?.proximoPasso?.planoId === plano.id ? retencao.proximoPasso.licaoTitulo
       : plano.fluxos.flatMap(fluxo => fluxo.licoes).find(item => !item.concluida)?.titulo;
-    return <Tela pagina="primeira-vitoria" semCabecalho estiloConteudo={primeiroPassoEstilos.pagina}>
+    return <Tela pagina="primeira-vitoria" semCabecalho avisoNoFluxo estiloConteudo={primeiroPassoEstilos.pagina}>
       <View style={primeiroPassoEstilos.heroi}>
-        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={primeiroPassoEstilos.stu}><Stu nome="stu-celebrando" tamanho={150} /></View>
-        <Titulo foco testID="titulo-conclusao" estilo={primeiroPassoEstilos.titulo}>Primeira lição concluída!</Titulo>
+        <CenaStuOnboarding nome="stu-celebrando" compacto />
+        <Titulo foco testID="titulo-conclusao" estilo={primeiroPassoEstilos.titulo}>{PRIMEIRA_VITORIA_VISUAL.titulo}</Titulo>
         <Text testID="primeira-vitoria" accessibilityLiveRegion="polite" style={primeiroPassoEstilos.texto}>
-          Uma lição concluída. Seu progresso está salvo.
+          {PRIMEIRA_VITORIA_VISUAL.descricao}
         </Text>
       </View>
-      <Text style={primeiroPassoEstilos.licao}>{licao.titulo}</Text>
+      <View style={primeiroPassoEstilos.painel}>
       {retencao && <View style={primeiroPassoEstilos.meta}><MetaDoDiaMobile resumo={retencao} compacto /></View>}
       <Text testID="primeira-vitoria-trilha" style={primeiroPassoEstilos.trilha}>
         Sua trilha · {plano.progresso.concluidas} de {plano.progresso.total} {plano.progresso.total === 1 ? 'lição concluída' : 'lições concluídas'}
       </Text>
+      </View>
       {proxima && <View style={primeiroPassoEstilos.proxima}>
         <Text style={primeiroPassoEstilos.rotulo}>Próxima lição</Text>
         <Text testID="primeira-vitoria-proxima" style={primeiroPassoEstilos.proximaTitulo}>{proxima}</Text>
@@ -3140,6 +3143,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
         <Text style={primeiroPassoEstilos.detalhesRotulo}>{mostrarDetalhes ? 'Ocultar detalhes' : 'O que você praticou'}</Text>
       </Pressable>
       {mostrarDetalhes && <View style={primeiroPassoEstilos.detalhes}>
+        <Text style={primeiroPassoEstilos.licao}>{licao.titulo}</Text>
         <TextoComFormulas texto={licao.objetivo} estilo={primeiroPassoEstilos.textoDetalhes} />
         {resumo?.rever && <Text style={primeiroPassoEstilos.textoDetalhes}>{textoParaRever(resumo)}</Text>}
         {resumo && <NumerosDaLicao resumo={resumo} />}
@@ -3210,13 +3214,14 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, visitante, com
 
 const primeiroPassoEstilos = StyleSheet.create({
   pagina: { paddingTop: 24, paddingHorizontal: 28, paddingBottom: 24, maxWidth: 620, gap: 0 },
-  heroi: { gap: 0 }, stu: { alignSelf: 'center', height: 150, marginBottom: 16 },
-  titulo: { fontFamily: 'Inter', fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -.99, color: '#17213d', marginTop: 0 },
-  texto: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, color: '#626b7e', marginTop: 12 },
-  licao: { fontFamily: 'Inter', fontSize: 15, lineHeight: 22.5, fontWeight: '600', color: '#17213d', marginVertical: 16 },
+  heroi: { gap: 0 },
+  titulo: { fontFamily: 'Inter', fontSize: 30, lineHeight: 36, fontWeight: '700', letterSpacing: -1.1, color: '#17213d', marginTop: 16, ...(Platform.OS === 'web' ? { outlineStyle: 'solid' as const, outlineWidth: 0 } : {}) },
+  texto: { fontFamily: 'Inter', fontSize: 15, lineHeight: 23, color: '#626b7e', marginTop: 10 },
+  licao: { fontFamily: 'Inter', fontSize: 15, lineHeight: 22, fontWeight: '600', color: '#17213d' },
+  painel: { marginTop: 20, padding: 16, borderWidth: 1, borderColor: VISUAL_ONBOARDING.cores.borda, backgroundColor: VISUAL_ONBOARDING.cores.superficie, borderRadius: VISUAL_ONBOARDING.raio.cartao },
   meta: { gap: 4 },
   trilha: { fontFamily: 'Inter', fontSize: 13, lineHeight: 20, color: '#626b7e', marginTop: 10 },
-  proxima: { marginTop: 24, marginBottom: 16, gap: 6 },
+  proxima: { marginTop: 20, marginBottom: 16, gap: 6 },
   acoes: { gap: 8 },
   rotulo: { fontFamily: 'Inter', fontSize: 13, lineHeight: 20, color: '#626b7e' },
   proximaTitulo: { fontFamily: 'Inter', fontSize: 18, lineHeight: 26, fontWeight: '600', color: '#17213d' },

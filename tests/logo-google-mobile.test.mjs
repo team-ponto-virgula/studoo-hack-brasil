@@ -64,7 +64,9 @@ test('o Google vem antes da Apple oficial; capacidades desligadas não expõem b
 test('entrada e cadastro usam o mesmo botão oficial de Google, sem uma segunda implementação', async () => {
   const acesso = await ler('apps/mobile/src/acesso-mobile.tsx');
   const cadastro = await ler('apps/mobile/src/cadastro.tsx');
-  const entrada = acesso.slice(acesso.indexOf('export function EntradaMobile'), acesso.indexOf('const beneficios'));
+  const acessoAst = ts.createSourceFile('acesso.tsx', acesso, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const entrada = acessoAst.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === 'EntradaMobile')?.getText(acessoAst);
+  assert.ok(entrada, 'o login continua definido como componente próprio');
   assert.match(entrada, /<ProvedoresAcesso config=\{config\} google=\{google\} apple=\{apple\}/);
   const ast = ts.createSourceFile('cadastro.tsx', cadastro, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   let compartilhado;

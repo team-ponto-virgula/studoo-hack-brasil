@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { BENEFICIOS_ONBOARDING } from '@studoo/contratos/onboarding-visual';
 import { EstruturaAcesso, SetaAcesso } from '../acesso/componentes';
+import { CenaStuOnboarding, estiloVisualOnboarding } from '../onboarding/visual';
 import './boas-vindas.css';
 
-const quadros = [
-  { titulo: <>Seu assunto vira<br />uma trilha.</>, rotulo: 'Seu assunto vira uma trilha', descricao: 'Conte o que quer aprender ou traga um material. O Studoo organiza o caminho para você.', stu: 'stu-acolhida' },
-  { titulo: <>Um erro abre<br />outro caminho.</>, rotulo: 'Um erro abre outro caminho', descricao: 'Errou uma resposta? Veja outra explicação e tente de novo.', stu: 'stu-feliz' },
-  { titulo: <>Continue de<br />onde parou.</>, rotulo: 'Continue de onde parou', descricao: 'Na sua conta, veja o que já aprendeu e encontre seu próximo passo quando voltar.', stu: 'stu-celebrando' },
-] as const;
+const quadros = BENEFICIOS_ONBOARDING;
 
 export function BoasVindas({ cadastroDisponivel }: { cadastroDisponivel: boolean }) {
   const [quadro, setQuadro] = useState(0);
@@ -23,11 +21,11 @@ export function BoasVindas({ cadastroDisponivel }: { cadastroDisponivel: boolean
   }
   const atual = quadros[quadro];
   return <EstruturaAcesso variante="boas-vindas" rodape={false} voltar={quadro > 0 ? () => mostrar(quadro - 1) : undefined}>
-    <section className="boas-vindas" aria-labelledby="boas-vindas-titulo">
+    <section className="boas-vindas" aria-labelledby="boas-vindas-titulo" style={estiloVisualOnboarding}>
       <div key={quadro} className="boas-vindas__quadro acesso__entrada-etapa">
-        <img className="boas-vindas__stu" src={`/marca/stu/${atual.stu}-320.webp`} width={320} height={320} alt="" />
-        <h1 id="boas-vindas-titulo" ref={titulo} tabIndex={-1} className="acesso__titulo">{atual.titulo}</h1>
+        <h1 id="boas-vindas-titulo" ref={titulo} tabIndex={-1} className="acesso__titulo">{atual.titulo.split('\n')[0]}<br /><span>{atual.titulo.split('\n')[1]}</span></h1>
         <p className="boas-vindas__descricao">{atual.descricao}</p>
+        <CenaStuOnboarding nome={atual.stu}>
         <figure className="boas-vindas__exemplo">
           <figcaption>Exemplo</figcaption>
           {quadro === 0 && <>
@@ -44,6 +42,7 @@ export function BoasVindas({ cadastroDisponivel }: { cadastroDisponivel: boolean
             <div className="boas-vindas__linha boas-vindas__linha--azul"><span>Próximo: conectar tabelas</span><SetaAcesso /></div>
           </>}
         </figure>
+        </CenaStuOnboarding>
       </div>
       <div className="boas-vindas__acoes">
         <nav className="boas-vindas__paginacao" aria-label="Conheça o Studoo">

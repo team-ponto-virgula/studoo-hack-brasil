@@ -3,27 +3,26 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { METAS_LICOES_DIA, type EstadoOnboarding, type MetaLicoesDia, type ResumoRetencao } from '@studoo/contratos/onboarding';
-import { Icone, Stu } from '../../ui';
+import { METAS_VISUAIS_ONBOARDING } from '@studoo/contratos/onboarding-visual';
+import { Icone } from '../../ui';
 import { SemMusica } from '../conheca/ilhas/sem-musica';
+import { estiloVisualOnboarding } from './visual';
 import './jornada.css';
 
-const metas = [
-  { valor: 1, titulo: 'Leve', descricao: '1 lição por dia' },
-  { valor: 2, titulo: 'Constante', descricao: '2 lições por dia' },
-  { valor: 3, titulo: 'Intenso', descricao: '3 lições por dia' },
-] as const;
+const metas = METAS_VISUAIS_ONBOARDING;
 export const OBJETIVO_MATERIAL_ONBOARDING = 'Quero estudar a partir de um material';
 export type PreparacaoPrimeiroEstudo = { objetivo: string; metaLicoesDia: MetaLicoesDia; material: boolean };
 
 export function MetasDoEstudo({ valor, mudar, desativado = false, prefixo = 'onboarding' }: {
   valor: MetaLicoesDia; mudar: (meta: MetaLicoesDia) => void; desativado?: boolean; prefixo?: string;
 }) {
-  return <fieldset className="jornada-metas" disabled={desativado}>
+  return <fieldset className="jornada-metas" disabled={desativado} style={estiloVisualOnboarding}>
     <legend className="somente-leitor">Sua meta diária</legend>
     {metas.map(meta => <label key={meta.valor} className="jornada-meta" data-selecionada={valor === meta.valor || undefined}>
+      <span className="jornada-meta__numero" aria-hidden="true">{meta.valor}</span>
+      <span className="jornada-meta__texto"><strong>{meta.titulo}</strong><span>{meta.descricao}</span></span>
       <input type="radio" name={`${prefixo}-meta`} value={meta.valor} checked={valor === meta.valor}
         data-testid={`${prefixo}-meta-${meta.valor}`} onChange={() => mudar(meta.valor)} />
-      <span><strong>{meta.titulo}</strong><span>{meta.descricao}</span></span>
     </label>)}
   </fieldset>;
 }
@@ -50,11 +49,11 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
     } else preparar({ objetivo: material ? objetivo.trim() || OBJETIVO_MATERIAL_ONBOARDING : objetivo.trim(), metaLicoesDia: meta, material });
   }
 
-  return <main className="jornada-preparo" id="conteudo-principal" aria-busy={ocupado} data-sem-musica>
+  return <main className="jornada-preparo" id="conteudo-principal" aria-busy={ocupado} data-sem-musica style={estiloVisualOnboarding}>
     <SemMusica />
     <header className="jornada-marca"><img src="/marca/logo-com-sorriso.png" alt="Studoo" width={144} height={47} /></header>
+    <div className="jornada-progresso" aria-hidden="true"><span data-ativo /><span data-ativo={passo === 'meta' || undefined} /></div>
     <section className="jornada-preparo__conteudo" aria-labelledby="jornada-titulo">
-      <div className="jornada-stu" aria-hidden="true"><Stu expressao={passo === 'meta' ? 'stu-encorajador' : 'stu-curioso'} tamanho={96} /></div>
       <p className="jornada-etapa">Seu primeiro estudo · {passo === 'objetivo' ? '1' : '2'} de 2</p>
       <h1 id="jornada-titulo" ref={titulo} tabIndex={-1}>{passo === 'objetivo' ? 'O que você quer aprender?' : 'Um passo por dia.'}</h1>
       <p className="jornada-introducao">{passo === 'objetivo'
@@ -71,6 +70,7 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
           {invalido && <p className="jornada-erro" role="alert" id="onboarding-objetivo-erro">Conte um pouco mais sobre o que quer aprender.</p>}
         </div> : <MetasDoEstudo valor={meta} mudar={setMeta} desativado={ocupado} />}
         {erro && <p role="alert" className="jornada-erro">{erro}</p>}
+        <div className="jornada-acoes">
         <button className="jornada-primario" type="submit" disabled={ocupado}
           data-testid={passo === 'objetivo' ? 'onboarding-continuar' : 'onboarding-preparar'}>
           {ocupado ? 'Salvando seu começo…' : passo === 'objetivo' ? 'Continuar' : 'Preparar meu estudo'}<Icone nome="seta" />
@@ -79,6 +79,7 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
           data-testid="onboarding-material" onClick={() => { setMaterial(true); setInvalido(false); setPasso('meta'); }}>Tenho um material</button>
           : <button className="jornada-texto" type="button" disabled={ocupado} data-testid="onboarding-voltar" onClick={() => setPasso('objetivo')}>Voltar</button>}
         <button className="jornada-texto jornada-texto--discreto" type="button" disabled={ocupado} data-testid="onboarding-adiar" onClick={adiar}>Mais tarde</button>
+        </div>
       </form>
     </section>
   </main>;

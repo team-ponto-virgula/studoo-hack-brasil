@@ -68,6 +68,8 @@ import './trilha.css';
 import './clareza.css';
 import { DiagnosticoDoPedido, ResumoDiagnostico } from './diagnostico';
 import { MetaDiariaDoEstudo, PrepararPrimeiroEstudo, type PreparacaoPrimeiroEstudo } from './onboarding/jornada';
+import { CenaStuOnboarding, estiloVisualOnboarding } from './onboarding/visual';
+import { PRIMEIRA_VITORIA_VISUAL } from '@studoo/contratos/onboarding-visual';
 import { SemMusica } from './conheca/ilhas/sem-musica';
 
 type Tela =
@@ -943,7 +945,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial, iniciar
       if (dados.onboarding?.concluidoEm) setOnboardingAtivo(false);
       const atual = telaRef.current;
       if (atual.tipo === 'concluida' && atual.primeiroEstudo && !atual.primeiraVitoria && dados.onboarding?.concluidoEm) {
-        anunciar('Primeira lição concluída! Uma lição concluída. Seu progresso está salvo.');
+        anunciar(`${PRIMEIRA_VITORIA_VISUAL.titulo} ${PRIMEIRA_VITORIA_VISUAL.descricao}`);
       }
       setTela(atual => atual.tipo === 'concluida'
         ? { ...atual, primeiraVitoria: Boolean(atual.primeiroEstudo && dados.onboarding?.concluidoEm), retencao: dados.retencao } : atual);
@@ -1831,14 +1833,14 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
 
   if (primeiraVitoria) {
     const tituloProxima = proxima ? plano.fluxos.flatMap(fluxo => fluxo.licoes).find(item => item.id === proxima)?.titulo : null;
-    return <section className="primeira-vitoria" data-testid="primeira-vitoria" aria-labelledby="primeira-vitoria-titulo">
-      <div className="primeira-vitoria__stu" aria-hidden="true"><Mascote expressao="stu-comemorando" tamanho={150}
-        prioridade animado="acontecimento" acontecimento={licao.id} ciclos={1} /></div>
-      <h1 tabIndex={-1} id="primeira-vitoria-titulo">Primeira lição concluída!</h1>
-      <p className="primeira-vitoria__introducao">Uma lição concluída. Seu progresso está salvo.</p>
-      <p className="primeira-vitoria__licao">{licao.titulo}</p>
-      {retencao && <MetaDiariaDoEstudo resumo={retencao} compacto />}
-      <p className="primeira-vitoria__trilha">Sua trilha · {mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)}</p>
+    return <section className="primeira-vitoria" data-testid="primeira-vitoria" aria-labelledby="primeira-vitoria-titulo" style={estiloVisualOnboarding}>
+      <CenaStuOnboarding nome="stu-celebrando" compacto />
+      <h1 tabIndex={-1} id="primeira-vitoria-titulo">{PRIMEIRA_VITORIA_VISUAL.titulo}</h1>
+      <p className="primeira-vitoria__introducao">{PRIMEIRA_VITORIA_VISUAL.descricao}</p>
+      <div className="primeira-vitoria__estado">
+        {retencao && <MetaDiariaDoEstudo resumo={retencao} compacto />}
+        <p className="primeira-vitoria__trilha">Sua trilha · {mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)}</p>
+      </div>
       {tituloProxima && <div className="primeira-vitoria__proxima"><p>Próxima lição</p><h2>{tituloProxima}</h2></div>}
       <div className="primeira-vitoria__acoes">
         <button type="button" className="jornada-primario" disabled={ocupado} onClick={proxima ? () => abrirLicao(proxima) : novoAssunto}>
@@ -1849,6 +1851,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
       </div>
       <details className="primeira-vitoria__detalhes">
         <summary>O que você praticou</summary>
+        <p className="primeira-vitoria__licao">{licao.titulo}</p>
         <TextoComFormulas como="p" texto={licao.objetivo} />
         {resumo && <p>{formatarTempo(resumo.segundos)} · {textos.acertos(resumo.acertosDePrimeira, resumo.exercicios)}</p>}
         {resumo?.rever && <p>{textoParaRever(resumo)}</p>}

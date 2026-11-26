@@ -1,0 +1,9 @@
+.cena-onboarding { width: 100%; }
+.cena-onboarding__heroi { position: relative; display: flex; align-items: center; justify-content: center; height: var(--cena-altura); isolation: isolate; }
+.cena-onboarding__heroi > img { position: relative; z-index: 1; display: block; width: var(--cena-stu); height: var(--cena-stu); object-fit: contain; }
+.cena-onboarding__lentes { position: absolute; top: 28px; left: calc(50% - 124px); width: 248px; height: 136px; }
+.cena-onboarding__lentes > span { position: absolute; top: 0; width: 136px; height: 136px; border: 1px solid var(--ob-azulLinha); border-radius: 50%; background: var(--ob-azulSuave); opacity: .75; }
+.cena-onboarding__lentes > span:first-child { left: 0; }
+.cena-onboarding__lentes > span:last-child { right: 0; }
+.cena-onboarding[data-compacta] .cena-onboarding__lentes { top: 20px; left: calc(50% - 94px); width: 188px; height: 103px; }
+.cena-onboarding[data-compacta] .cena-onboarding__lentes > span { width: 103px; height: 103px; }

@@ -32,7 +32,7 @@
 .acesso input:focus { border-color: var(--acesso-blue); background: #fff; box-shadow: 0 0 0 3px rgb(40 84 244 / .09); }
 .acesso input[aria-invalid="true"] { border-color: var(--acesso-error); }
 .acesso input:disabled { opacity: .75; }
-.acesso__principal { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 56px; margin: 14px 0 0; padding: 16px 48px; border: none; border-radius: 12px; background: var(--acesso-blue); color: #fff; font-size: 1rem; line-height: 1.4; font-weight: 600; letter-spacing: -.015em; text-decoration: none; text-align: center; transition: background 140ms ease, transform 140ms ease; }
+.acesso__principal { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 56px; margin: 14px 0 0; padding: 16px 48px; border: none; border-radius: 16px; background: var(--acesso-blue); box-shadow: 0 4px 12px rgb(40 84 244 / .14); color: #fff; font-size: 1rem; line-height: 1.4; font-weight: 600; letter-spacing: -.015em; text-decoration: none; text-align: center; transition: background 140ms ease, transform 140ms ease; }
 .acesso__principal:hover { background: #1e46d9; color: #fff; }
 .acesso__principal:active { transform: scale(.99); }
 .acesso__principal:disabled { opacity: .75; }
@@ -83,7 +83,7 @@
 .acesso__codigo input { text-align: center; letter-spacing: .35em; font-variant-numeric: tabular-nums; }
 .acesso--cadastro .acesso__privacidade-cadastro { margin: 20px 0 0; color: var(--acesso-muted); font-size: .75rem; line-height: 1.6; text-align: center; }
 .acesso__privacidade-cadastro a { color: var(--acesso-blue); }
-.acesso__entrada-etapa { animation: acesso-etapa 260ms cubic-bezier(.22,1,.36,1); }
+.acesso__entrada-etapa { animation: acesso-etapa 240ms cubic-bezier(.2,.7,.25,1); }
 @keyframes acesso-etapa { from { opacity: .35; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 374px) { .acesso__conteudo { padding-right: max(24px, env(safe-area-inset-right)); padding-left: max(24px, env(safe-area-inset-left)); } .acesso__titulo { font-size: 1.875rem; } .acesso__descricao { font-size: .875rem; } .acesso__provedor { font-size: .875rem; } }
 @media (prefers-reduced-motion: reduce) { .acesso *, .acesso *::before, .acesso *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }

@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./onboarding-visual": {
+      "types": "./src/onboarding-visual.ts",
+      "default": "./src/onboarding-visual.ts"
+    },
     "./onboarding": {
       "types": "./src/onboarding.ts",
       "default": "./src/onboarding.ts"

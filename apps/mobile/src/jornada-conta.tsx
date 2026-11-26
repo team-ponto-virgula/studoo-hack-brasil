@@ -1,26 +1,35 @@
 import type { EstadoOnboarding, MetaLicoesDia, ResumoRetencao } from '@studoo/contratos/onboarding';
 import { LIMITES_GERACAO } from '@studoo/contratos';
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { AccessibilityInfo, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Campo, Tela, Titulo } from './interface';
-import { Stu } from './mascote';
+import { METAS_VISUAIS_ONBOARDING, VISUAL_ONBOARDING } from '@studoo/contratos/onboarding-visual';
+import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { AccessibilityInfo, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Campo, Tela, TecladoAberto, Titulo } from './interface';
+import { Icone } from './icone';
 import { mensagemDeErro } from './mensagens';
 import { ouvirVoltar } from './voltar';
 
 export const OBJETIVO_MATERIAL_ONBOARDING = 'Quero estudar a partir de um material';
 export type ModoPrimeiroEstudo = 'assunto' | 'material';
-const METAS = [
-  { valor: 1 as const, titulo: 'Leve', texto: '1 lição por dia' },
-  { valor: 2 as const, titulo: 'Constante', texto: '2 lições por dia' },
-  { valor: 3 as const, titulo: 'Intenso', texto: '3 lições por dia' },
-];
+const METAS = METAS_VISUAIS_ONBOARDING;
+const MARGEM_VERTICAL_PAGINA = 24;
 
-function Acao({ children, acao, testID, secundaria = false, discreta = false, desativada = false }: {
-  children: ReactNode; acao: () => void; testID: string; secundaria?: boolean; discreta?: boolean; desativada?: boolean;
+/** A animação interna da Tela não estica os filhos; este corpo local sustenta o rodapé automático. */
+function CorpoPreparacao({ children }: { children: ReactNode }) {
+  const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const teclado = useContext(TecladoAberto);
+  const alturaLivre = Math.max(0, height - insets.top - insets.bottom - 2 * MARGEM_VERTICAL_PAGINA);
+  return <View style={{ minHeight: teclado ? 0 : alturaLivre }}>{children}</View>;
+}
+
+function Acao({ children, acao, testID, secundaria = false, discreta = false, desativada = false, seta = false }: {
+  children: ReactNode; acao: () => void; testID: string; secundaria?: boolean; discreta?: boolean; desativada?: boolean; seta?: boolean;
 }) {
   return <Pressable accessibilityRole="button" disabled={desativada} accessibilityState={{ disabled: desativada }}
     testID={testID} onPress={acao} style={({ pressed }) => [s.acao, secundaria && s.acaoSecundaria, pressed && !desativada && s.pressionada, desativada && s.desativada]}>
     <Text style={[s.acaoTexto, secundaria && s.acaoTextoSecundaria, discreta && s.acaoTextoDiscreta]}>{children}</Text>
+    {seta && <Icone nome="seta" tamanho={20} cor="#fff" />}
   </Pressable>;
 }
 
@@ -73,11 +82,14 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
   }
 
   return <Tela pagina={`onboarding-${passo}`} semCabecalho estiloConteudo={s.pagina}>
+    <CorpoPreparacao>
     <View style={s.topo}>
       <Image source={require('../assets/marca/logo-com-sorriso.png')} style={s.logo} resizeMode="contain" accessibilityLabel="Studoo" />
     </View>
+    <View style={s.passos} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View style={[s.passo, s.passoAtivo]} /><View style={[s.passo, passo === 'meta' && s.passoAtivo]} />
+    </View>
     <View style={s.introducao}>
-      <View style={s.stu} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Stu nome={passo === 'objetivo' ? 'stu-curioso' : 'stu-encorajador'} tamanho={96} /></View>
       <Text style={s.contexto}>Seu primeiro estudo · {passo === 'objetivo' ? '1' : '2'} de 2</Text>
       <Titulo foco key={passo} testID={`titulo-onboarding-${passo}`} estilo={s.titulo}>
         {passo === 'objetivo' ? 'O que você quer aprender?' : 'Um passo por dia.'}
@@ -94,15 +106,16 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
         erro={validacao ?? undefined} textAlignVertical="top" />
     </View> : <View style={s.conteudo} accessibilityRole="radiogroup" accessibilityLabel="Meta diária de lições">
       {METAS.map((item) => <Pressable key={item.valor} testID={`onboarding-meta-${item.valor}`} accessibilityRole="radio"
-        accessibilityLabel={`${item.titulo}, ${item.texto}`} accessibilityState={{ checked: meta === item.valor, disabled: ocupado }} disabled={ocupado}
+        accessibilityLabel={`${item.titulo}, ${item.descricao}`} accessibilityState={{ checked: meta === item.valor, disabled: ocupado }} disabled={ocupado}
         onPress={() => setMeta(item.valor)} style={({ pressed }) => [s.opcao, meta === item.valor && s.opcaoSelecionada, pressed && s.pressionada]}>
+        <View style={[s.numeroMeta, meta === item.valor && s.numeroMetaSelecionado]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Text style={[s.numeroMetaTexto, meta === item.valor && s.numeroMetaTextoSelecionado]}>{item.valor}</Text></View>
+        <View style={s.opcaoTextos}><Text style={s.opcaoTitulo}>{item.titulo}</Text><Text style={s.opcaoTexto}>{item.descricao}</Text></View>
         <View style={[s.radio, meta === item.valor && s.radioSelecionado]}>{meta === item.valor && <View style={s.radioCentro} />}</View>
-        <View style={s.opcaoTextos}><Text style={s.opcaoTitulo}>{item.titulo}</Text><Text style={s.opcaoTexto}>{item.texto}</Text></View>
       </Pressable>)}
     </View>}
     {erro && <Text accessibilityRole="alert" testID="onboarding-erro" style={s.erro}>{erro}</Text>}
     <View style={s.acoes}>
-      <Acao testID={passo === 'objetivo' ? 'onboarding-continuar' : 'onboarding-preparar'} desativada={ocupado}
+      <Acao testID={passo === 'objetivo' ? 'onboarding-continuar' : 'onboarding-preparar'} desativada={ocupado} seta
         acao={passo === 'objetivo' ? () => continuar() : () => void concluir()}>
         {ocupado ? 'Salvando seu começo…' : passo === 'objetivo' ? 'Continuar' : 'Preparar meu estudo'}
       </Acao>
@@ -111,6 +124,7 @@ export function PrepararPrimeiroEstudo({ estado, ocupado, erro, preparar, adiar 
         : <Acao testID="onboarding-voltar" secundaria desativada={ocupado} acao={() => setPasso('objetivo')}>Voltar</Acao>}
       <Acao testID="onboarding-adiar" secundaria discreta desativada={ocupado} acao={() => void adiar()}>Mais tarde</Acao>
     </View>
+    </CorpoPreparacao>
   </Tela>;
 }
 
@@ -150,10 +164,11 @@ export function MetaDoDiaMobile({ resumo, mudarMeta, compacto = false }: {
     {editando && <View style={s.editor}>
       <View style={s.conteudo} accessibilityRole="radiogroup" accessibilityLabel="Meta diária de lições">
         {METAS.map((item) => <Pressable key={item.valor} accessibilityRole="radio" testID={`editar-meta-${item.valor}`}
-          accessibilityLabel={`${item.titulo}, ${item.texto}`} accessibilityState={{ checked: meta === item.valor, disabled: ocupado }} disabled={ocupado}
+          accessibilityLabel={`${item.titulo}, ${item.descricao}`} accessibilityState={{ checked: meta === item.valor, disabled: ocupado }} disabled={ocupado}
           onPress={() => setMeta(item.valor)} style={[s.opcao, meta === item.valor && s.opcaoSelecionada]}>
+          <View style={[s.numeroMeta, meta === item.valor && s.numeroMetaSelecionado]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Text style={[s.numeroMetaTexto, meta === item.valor && s.numeroMetaTextoSelecionado]}>{item.valor}</Text></View>
+          <View style={s.opcaoTextos}><Text style={s.opcaoTitulo}>{item.titulo}</Text><Text style={s.opcaoTexto}>{item.descricao}</Text></View>
           <View style={[s.radio, meta === item.valor && s.radioSelecionado]}>{meta === item.valor && <View style={s.radioCentro} />}</View>
-          <View style={s.opcaoTextos}><Text style={s.opcaoTitulo}>{item.titulo}</Text><Text style={s.opcaoTexto}>{item.texto}</Text></View>
         </Pressable>)}
       </View>
       <Acao testID="salvar-meta" desativada={ocupado} acao={() => void salvar()}>{ocupado ? 'Salvando…' : 'Salvar meta'}</Acao>
@@ -163,31 +178,38 @@ export function MetaDoDiaMobile({ resumo, mudarMeta, compacto = false }: {
 }
 
 const s = StyleSheet.create({
-  pagina: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 24, gap: 0, maxWidth: 620 },
-  topo: { flexDirection: 'row', alignItems: 'center', minHeight: 47, marginBottom: 20 },
+  pagina: { flexGrow: 1, paddingHorizontal: 28, paddingTop: MARGEM_VERTICAL_PAGINA, paddingBottom: MARGEM_VERTICAL_PAGINA, gap: 0, maxWidth: 620 },
+  topo: { flexDirection: 'row', alignItems: 'center', minHeight: 47, marginBottom: 0 },
   logo: { width: 144, height: 47 },
-  introducao: { alignItems: 'flex-start' }, stu: { alignSelf: 'center', height: 96 },
-  contexto: { fontFamily: 'Inter', fontSize: 13, lineHeight: 19.5, color: '#626b7e', marginTop: 16, marginBottom: 10 },
-  titulo: { fontFamily: 'Inter', fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -1, color: '#17213d', marginTop: 0 },
-  descricao: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, color: '#626b7e', marginTop: 12, marginBottom: 24 },
-  conteudo: { gap: 10 },
+  passos: { flexDirection: 'row', gap: 6, marginTop: 20 },
+  passo: { flex: 1, height: 4, borderRadius: 3, backgroundColor: VISUAL_ONBOARDING.cores.borda },
+  passoAtivo: { backgroundColor: VISUAL_ONBOARDING.cores.azul },
+  introducao: { alignItems: 'flex-start', marginTop: 32 },
+  contexto: { fontFamily: 'Inter', fontSize: 13, lineHeight: 20, color: '#626b7e', marginTop: 0, marginBottom: 10 },
+  titulo: { fontFamily: 'Inter', fontSize: VISUAL_ONBOARDING.titulo.tamanho, lineHeight: VISUAL_ONBOARDING.titulo.linha, fontWeight: VISUAL_ONBOARDING.titulo.peso, letterSpacing: VISUAL_ONBOARDING.titulo.entreletra, color: '#17213d', marginTop: 0 },
+  descricao: { fontFamily: 'Inter', fontSize: VISUAL_ONBOARDING.descricao.tamanho, lineHeight: VISUAL_ONBOARDING.descricao.linha, color: '#626b7e', marginTop: 12, marginBottom: 28 },
+  conteudo: { gap: 12 },
   rotulo: { fontFamily: 'Inter', fontWeight: '600', fontSize: 14, lineHeight: 21, color: '#17213d' },
-  campo: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, minHeight: 88, borderWidth: 1, borderRadius: 12, borderColor: '#8590a6', color: '#17213d', backgroundColor: '#fafbfe', padding: 16 },
-  acoes: { gap: 10, marginTop: 14 },
-  acao: { minHeight: 56, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2854f4' },
-  acaoTexto: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, fontWeight: '600', color: '#fff', textAlign: 'center' },
-  acaoSecundaria: { backgroundColor: 'transparent', minHeight: 44, paddingVertical: 10 },
+  campo: { fontFamily: 'Inter', fontSize: 16, lineHeight: 24, minHeight: 120, borderWidth: 1, borderRadius: VISUAL_ONBOARDING.raio.campo, borderColor: '#8590a6', color: '#17213d', backgroundColor: '#fafbfe', padding: 16 },
+  acoes: { gap: 4, marginTop: 'auto', paddingTop: 24 },
+  acao: { minHeight: 56, borderRadius: VISUAL_ONBOARDING.raio.botao, boxShadow: '0 4px 12px rgba(40, 84, 244, 0.14)', paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', gap: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2854f4' },
+  acaoTexto: { flexShrink: 1, fontFamily: 'Inter', fontSize: 16, lineHeight: 24, fontWeight: '600', color: '#fff', textAlign: 'center' },
+  acaoSecundaria: { backgroundColor: 'transparent', boxShadow: [], minHeight: 44, paddingVertical: 10 },
   acaoTextoSecundaria: { color: '#2854f4', fontWeight: '600', fontSize: 14, lineHeight: 21 },
   acaoTextoDiscreta: { color: '#626b7e', fontWeight: '400' },
   pressionada: { opacity: .78 }, desativada: { opacity: .55 },
   erro: { color: '#b32735', fontFamily: 'Inter', fontSize: 14, lineHeight: 22, marginTop: 8 },
-  opcao: { minHeight: 70, paddingHorizontal: 16, paddingVertical: 13, borderWidth: 1, borderColor: '#dce0e8', borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  opcaoSelecionada: { borderColor: '#2854f4', backgroundColor: '#f6f8ff' },
+  opcao: { minHeight: 78, paddingHorizontal: 16, paddingVertical: 15, borderWidth: 1, borderColor: VISUAL_ONBOARDING.cores.borda, borderRadius: VISUAL_ONBOARDING.raio.cartao, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  opcaoSelecionada: { borderWidth: 2, borderColor: '#2854f4', backgroundColor: VISUAL_ONBOARDING.cores.superficie, paddingHorizontal: 15, paddingVertical: 14 },
+  numeroMeta: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: VISUAL_ONBOARDING.cores.azulSuave },
+  numeroMetaSelecionado: { backgroundColor: VISUAL_ONBOARDING.cores.azul },
+  numeroMetaTextoSelecionado: { color: '#fff' },
+  numeroMetaTexto: { fontFamily: 'Inter', fontSize: 22, lineHeight: 28, fontWeight: '700', color: VISUAL_ONBOARDING.cores.azul },
   opcaoTextos: { flex: 1, gap: 2 },
-  opcaoTitulo: { fontFamily: 'Inter', fontSize: 15, lineHeight: 22.5, fontWeight: '600', color: '#17213d' },
+  opcaoTitulo: { fontFamily: 'Inter', fontSize: 15, lineHeight: 22, fontWeight: '600', color: '#17213d' },
   opcaoTexto: { fontFamily: 'Inter', fontSize: 14, lineHeight: 21, color: '#626b7e' },
-  radio: { width: 18, height: 18, borderWidth: 1, borderRadius: 9, borderColor: '#8590a6', alignItems: 'center', justifyContent: 'center' },
-  radioSelecionado: { borderColor: '#2854f4' }, radioCentro: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#2854f4' },
+  radio: { width: 20, height: 20, borderWidth: 1, borderRadius: 10, borderColor: '#8590a6', alignItems: 'center', justifyContent: 'center' },
+  radioSelecionado: { borderWidth: 2, borderColor: '#2854f4' }, radioCentro: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#2854f4' },
   link: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   linkTexto: { fontFamily: 'Inter', fontSize: 14, lineHeight: 22, color: '#2854f4', fontWeight: '500' },
   meta: { gap: 4 }, metaCompacta: { paddingVertical: 4 },

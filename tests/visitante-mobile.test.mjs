@@ -79,6 +79,7 @@ test('visitante: falha ao guardar encerra no servidor a sessão recém-criada', 
 // montar a interface nativa; os toques e as atualizações assíncronas executam o código de produção.
 const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
 const { normalizarEmailEntrada } = await import('../packages/contratos/src/autenticacao.ts');
+const visualOnboarding = await import('../packages/contratos/src/onboarding-visual.ts');
 const acessoJs = ts.transpileModule(await readFile(new URL('../apps/mobile/src/acesso-mobile.tsx', import.meta.url), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
@@ -114,6 +115,9 @@ function entrada({ visitante, entrarVisitante = async () => {} } = {}) {
     'react-native-safe-area-context': {},
     '@studoo/contratos': { ErroStudoo },
     '@studoo/contratos/autenticacao': { normalizarEmailEntrada },
+    '@studoo/contratos/onboarding-visual': visualOnboarding,
+    // A unidade executa a entrada e seus controles, sem montar a cena decorativa das boas-vindas.
+    './onboarding-visual': {},
     './api-nativa': { criarClienteNativo: () => ({ configuracaoAcesso: async () => ({ visitante, google: false, apple: false, cadastro: false, recuperacao: false }) }) },
     './apple-nativo': { appleDisponivelNoAparelho: async () => false },
     './google-nativo': { googleNoAparelho: () => false },
