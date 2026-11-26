@@ -1,4 +1,5 @@
 import type { EstudoNoPerfil, PassoDiagnostico, PerfilDiagnostico } from './diagnostico';
+import type { EstadoCriacao } from './pedido-criacao';
 export * from './diagnostico';
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
@@ -32,6 +33,7 @@ export { perfilComLink, linksPublicosNoPerfil } from './perfil-estado';
 export * from './comunidade';
 export * from './codigo-studoo';
 export * from './espera-geracao';
+export * from './pedido-criacao';
 export * from './conceito';
 export * from './aula-regras';
 export * from './catalogo-mascote';
@@ -44,6 +46,13 @@ export interface Progresso {
 export interface PropostaPlano {
   diagnostico?: PerfilDiagnostico;
   token: string;
+  /**
+   * A identidade do aceite: o id que o `token` já carrega e que vira o id da trilha. Serve para consultar o que houve com o aceite (`consultarCriacao`) se a resposta se perder; sem a conta
+   * dona, não diz nada. Falta em propostas de servidores anteriores à retomada (spec 04, Retomada da criação): o cliente segue como antes, sem consulta.
+   */
+  pedidoId?: string;
+  /** Por quanto tempo, contado a partir de agora, o `token` ainda vale (o relógio do servidor não importa). Falta nas propostas de servidores anteriores. */
+  validaPorMs?: number;
   titulo: string;
   objetivo: string;
   origem: string;
@@ -351,7 +360,8 @@ export function interpretarEventoGeracao(linha: string): EventoGeracao | null {
   }
 }
 
-type Autenticacao = { autenticado: true; visitante?: boolean };
+/** `conta`: um identificador opaco e estável da conta (não é o id dela), para o aparelho guardar o que é de cada conta (a criação pendente). */
+type Autenticacao = { autenticado: true; visitante?: boolean; conta?: string };
 
 export interface SessaoNativa {
   token: string;
@@ -422,6 +432,11 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     logout: () => solicitar<null>("/sessao", "DELETE"),
     gerarProposta: (objetivo: string) => solicitar<PropostaPlano>("/aprendizado/propostas", "POST", { objetivo }),
     aceitarProposta: (token: string) => solicitar<PlanoDetalhe>("/aprendizado/planos", "POST", { token }),
+    /**
+     * O que houve com o aceite de uma proposta (spec 04, Retomada da criação): não recebido, em preparo, pronto (com o plano) ou falha confirmada. Nunca chama a IA nem inicia lote. Se a própria consulta falhar,
+     * o estado é desconhecido para o cliente (`estadoDaConsultaQueFalhou`), nunca "não recebido".
+     */
+    consultarCriacao: (pedidoId: string) => solicitar<EstadoCriacao>(`/aprendizado/pedidos/${encodeURIComponent(pedidoId)}`),
     listarPlanos: () => solicitar<PlanoResumo[]>("/aprendizado/planos"),
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
     /** Apaga a trilha, com as lições e o progresso dela. */

@@ -12,9 +12,9 @@ const estudo = await ler('estudo.tsx');
 const apresentacao = await ler('apresentacao.tsx');
 
 test('mudanças 1 e 2: os textos do contrato (frases da espera, faixa da proposta e tour) cabem na regra: sem número nem promessa', () => {
-  assert.equal(mensagens.geracao.propostaPronta(6, 3), 'Sua trilha está pronta: 6 lições curtas em 3 partes.');
-  assert.equal(mensagens.geracao.propostaPronta(4, 1), 'Sua trilha está pronta: 4 lições curtas.');
-  assert.equal(mensagens.geracao.propostaPronta(1, 1), 'Sua trilha está pronta: 1 lição curta.');
+  assert.equal(mensagens.geracao.propostaPronta(6, 3), 'Sua proposta tem 6 lições em 3 partes.');
+  assert.equal(mensagens.geracao.propostaPronta(4, 1), 'Sua proposta tem 4 lições.');
+  assert.equal(mensagens.geracao.propostaPronta(1, 1), 'Sua proposta tem 1 lição.');
   assert.equal(mensagens.apresentacao.passos[0].titulo, 'Seu material vira lição');
 });
 
