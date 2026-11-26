@@ -102,8 +102,10 @@ async function* emitirEventos(
     const esqueleto = !completo.curriculoAdaptado && Buffer.byteLength(JSON.stringify(completo)) > 3600
       ? { ...completo, fluxos: completo.fluxos.map((fluxo) => ({ ...fluxo, licoes: fluxo.licoes.map(({ titulo }) => ({ titulo })) })) }
       : completo;
+    // O id do comprovante é o do pedido (e o do plano): o cliente o usa para consultar o aceite se a resposta se perder (spec 04, Retomada da criação).
+    const pedidoId = randomUUID();
     const token = emitirComprovante("proposta", usuarioId, {
-      id: randomUUID(),
+      id: pedidoId,
       expiraEm: Date.now() + DURACAO_PROPOSTA,
       plano: esqueleto,
     });
@@ -120,6 +122,8 @@ async function* emitirEventos(
       tipo: "pronto",
       proposta: {
         token,
+        pedidoId,
+        validaPorMs: DURACAO_PROPOSTA,
         titulo: esqueleto.titulo,
         objetivo: esqueleto.objetivo,
         origem: esqueleto.origem,

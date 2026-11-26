@@ -210,7 +210,10 @@ test('login por senha, sessão, escritas do app e logout funcionam nas duas orig
 
     const resSessao = await lerSessao(reqWeb('/api/sessao', { metodo: 'GET', origem, cookie }));
     assert.equal(resSessao.status, 200);
-    assert.deepEqual(await resSessao.json(), { autenticado: true, visitante: false });
+    // `conta`: o identificador opaco da conta (spec 04, Retomada da criação), só para o aparelho guardar o que é dela.
+    const { conta, ...sessao } = await resSessao.json();
+    assert.deepEqual(sessao, { autenticado: true, visitante: false });
+    assert.match(conta, /^[\w-]{16,}$/);
 
     const resEscrita = await criarProposta(reqWeb('/api/aprendizado/propostas', {
       origem,
@@ -278,7 +281,9 @@ test('visitante funciona nas duas origens válidas, preserva cookie __Host- e re
 
     const resSessao = await lerSessao(reqWeb('/api/sessao', { metodo: 'GET', origem, cookie }));
     assert.equal(resSessao.status, 200);
-    assert.deepEqual(await resSessao.json(), { autenticado: true, visitante: true });
+    const { conta, ...sessaoVisitante } = await resSessao.json();
+    assert.deepEqual(sessaoVisitante, { autenticado: true, visitante: true });
+    assert.match(conta, /^[\w-]{16,}$/, 'o visitante também recebe a conta opaca');
 
     const resEscrita = await criarProposta(reqWeb('/api/aprendizado/propostas', {
       origem,
