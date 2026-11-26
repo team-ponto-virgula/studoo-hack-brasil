@@ -1201,14 +1201,15 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
             <section className="painel planos-sem-trilhas" aria-labelledby="planos-vazio-titulo">
               <h1 tabIndex={-1} id="planos-vazio-titulo">{mensagens.planos.titulo}</h1>
               <CriacoesEmCurso criacoes={avisosDeCriacao} agora={agora} online={online} aoAcionar={aoAcionarCriacao} />
-              <div className="planos-vazio" data-testid="planos-vazio">
+              {/* Com uma criação em curso, o convite "Nenhuma trilha ainda" sairia contraditório: só o título e o aviso. */}
+              {avisosDeCriacao.length === 0 && <div className="planos-vazio" data-testid="planos-vazio">
                 <div className="planos-vazio__halo" aria-hidden="true">
                   <span key={puloVazio} data-pular={puloVazio > 0 || undefined}><Mascote expressao="stu-curioso" tamanho={96} /></span>
                 </div>
                 <h2>{mensagens.planos.vazioTitulo}</h2>
                 <p>{mensagens.planos.vazioTexto}</p>
                 <Botao onClick={() => navegar({ tipo: 'objetivo', focarCampo: true })}>{mensagens.planos.vazioAcao}</Botao>
-              </div>
+              </div>}
             </section>
           )}
           {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}

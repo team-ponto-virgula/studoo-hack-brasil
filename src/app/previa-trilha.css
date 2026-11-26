@@ -25,7 +25,8 @@
   box-shadow: 0 3px 0 var(--acao-escura);
 }
 .previa-seguir .icone { width: 18px; height: 18px; transform: rotate(90deg); }
-.painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-mapa { overflow: hidden; }
+/* O mapa só trava na passagem para a aula (`criada`). Enquanto a trilha é preparada ele rola (mouse, teclado e toque): a espera pode levar minutos, e a pessoa precisa chegar ao fim do mapa (spec 04, C8). */
+.painel--geracao[data-fase=criada] .previa-mapa { overflow: hidden; }
 /* A altura do mapa já exclui a placa e o rodapé, inclusive quando entra a mensagem de espera. */
 .painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-percurso::before {
   content: ''; display: block; height: max(0px,calc(40cqh - var(--centro))); background: #e3f3e8;
