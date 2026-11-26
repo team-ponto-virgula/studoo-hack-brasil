@@ -1,3 +1,33 @@
+# Pausa de 26/11/2026 — criação e recuperação de trilhas
+
+**Recomeçar em `integracao/retomada-criacao`.** O último commit de código desta pausa é `3eeb5631482f5faccbfa67b8349e71f01e020ddd`. A cópia de trabalho é `/var/lib/openbot/OpenBot/Shared/studoo-worktrees/lead-retomada-criacao`. O ramo `teste/retomada-criacao` serve aos simuladores. Os ramos do site e da distribuição do app estavam em `675226c` ao pausar.
+
+## Primeira tarefa ao retomar
+
+No app, a prévia ainda pode sugerir **Abrir a que já existe** para a própria trilha recém-salva. Em `apps/mobile/src/estudo.tsx`, na busca que preenche `existente`, excluir o plano cujo `id` coincide com o `pedidoId` da proposta. A web já faz essa comparação em `43a3bfc`. Conferir na prévia do app que o próprio plano oferece **Abrir lição 1** uma vez e que outra trilha de mesmo assunto e diagnóstico continua disponível. Preservar o comportamento das propostas antigas sem `pedidoId`.
+
+## O que está guardado
+
+- **Servidor e banco.** O aceite registra o pedido antes de gerar as lições. A consulta por conta recupera o andamento e a trilha salva. O servidor informa o prazo restante quando conhece o limite. A migração aditiva `20261129090000_pedido_criacao` foi exercitada no banco de teste. [Contrato e migração](API-RETOMADA-DA-CRIACAO.md)
+- **Web e app.** Ambos guardam o pedido antes do envio e consultam o mesmo identificador ao reabrir. A proposta mostra a contagem de lições. **Tentar de novo** fica desativado até o servidor liberar. **Minhas trilhas** mostra um cartão para a trilha recuperada. [Regras de experiência](specs/04-experiencia-ilustrada.md)
+- **Frentes.** A web ficou em `feat/web-retomada-criacao` (`43a3bfc`), o último ajuste do app em `qa/mobile-repetir-limite` (`5ab2b1c`) e a especificação em `docs/retomada-criacao` (`1331ad0`). A branch de integração reúne essas entregas.
+
+## Provas e pendências
+
+- A prévia do app no Chromium, com IA simulada, perdeu a resposta e foi reaberta durante o preparo. Um único envio gerou dez lições e uma trilha. **Abrir lição 1** abriu **Encontrar o horizonte**. Em outro ensaio, a primeira tentativa atingiu um limite. Só houve um segundo envio depois da liberação do servidor e de um toque.
+- Na revisão `587b59d`, passaram as tipagens da raiz e do app e 736 testes de interface. Na revisão `8b395f1`, passaram 35 testes da API e do contrato. Para o ajuste posterior do limite foram conferidos os tipos e passaram 20 testes focados do app e 27 da web. Rodar novamente as verificações na revisão que trouxer a correção mobile.
+- **iPhone e Android.** O percurso nativo ainda precisa de execução. O GitHub recusou o disparo manual por falta de escrita em Actions. Quando o acesso ao repositório estiver liberado e o trabalho for retomado, usar `capturas-nativas.yml` no ramo de teste com `retomada_criacao=true`. Primeiro `so_iphone=true`, depois `so_android=true`. Conferir reabertura, uma trilha e a lição 1 em cada plataforma. VoiceOver e TalkBack também ficaram pendentes.
+
+Na próxima rodada, executar estes comandos na raiz da cópia de trabalho.
+
+```bash
+npm run typecheck
+npm run typecheck --workspace apps/mobile
+npm run test:estudio:interface
+```
+
+---
+
 # Retomada: pausa de 21/11/2026
 
 O dono pediu para parar por aqui ("termine o que está fazendo e os bots, depois commit e push"). Prazo do hackathon: **30/11/2026**.
