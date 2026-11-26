@@ -74,6 +74,8 @@
 .primeira-vitoria__proxima > p { margin: 0 0 6px; color: #626b7e; font-size: .8125rem; line-height: 1.5385; }
 .primeira-vitoria__proxima > h2 { margin: 0; color: #17213d; font-family: inherit; font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: 0; }
 .primeira-vitoria__acoes { display: flex; flex-direction: column; gap: 8px; }
+.primeira-vitoria__acoes .jornada-primario { position: relative; padding-right: 48px; padding-left: 48px; }
+.primeira-vitoria__acoes .jornada-primario > svg { position: absolute; right: 18px; }
 .primeira-vitoria__detalhes { margin-top: 12px; color: #626b7e; font-size: 15px; line-height: 24px; }
 .primeira-vitoria__detalhes > summary { display: flex; align-items: center; min-height: 44px; padding: 10px 0; cursor: pointer; color: #2854f4; font-size: 14px; line-height: 22px; font-weight: 500; }
 .primeira-vitoria__detalhes > p { margin: 8px 0; }
