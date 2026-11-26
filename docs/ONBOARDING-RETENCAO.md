@@ -1,5 +1,7 @@
 # Onboarding aplicado e base de retenção
 
+**Atualização visual de 26/11:** [acabamento de boas-vindas, preparação e primeira vitória, com antes/depois e estado da UI geral](ux/onboarding-acabamento-2026-11-26/README.md). O fluxo e a base de retenção abaixo continuam válidos; o refinamento não altera API ou migrações.
+
 Revisão de 25/11/2026, na integração `feat/onboarding-retencao`, a partir de `release/testflight-cloud` em `03a47be`. A release posterior `675226c` foi integrada em `22e8329`, preservando proteção de trilhas, novas tentativas e prazos de geração da equipe.
 
 O pedido explícito do dono passou a ser um fluxo aplicado, do cadastro à primeira lição, com uma base de retenção. Esta revisão substitui o adiamento de meta diária e o estado “só documentação” da [spec 17](specs/17-onboarding-e-primeira-vez.md), preservando o histórico daquela análise.

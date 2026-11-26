@@ -96,6 +96,12 @@ As capturas em React Native Web permitem conferir layout e fluxo do cliente, mas
 
 ## Como conferir
 
+### Acabamento do onboarding em 26/11/2026
+
+Textos e medidas de boas-vindas, metas e cenas usam `@studoo/contratos/onboarding-visual`. A mesma pose existente do Stu, a ordem dos benefícios, o radio único e a anatomia das ações são reproduzidos na web e no app. Provas e estado do restante da UI estão na [rodada visual](../ux/onboarding-acabamento-2026-11-26/README.md).
+
+O preparo nativo preenche a altura disponível com um contêiner local que desconta área segura e se adapta ao teclado (P4/P5). Na primeira vitória, a faixa nativa usa o mecanismo existente `avisoNoFluxo`; a web mantém a reserva do aviso medido no DOM. As duas preservam arte e ação visíveis. O anel de foco programático de títulos foi alinhado na prévia RN Web, preservando foco, anúncios e indicadores dos controles (P6). A conferência em aparelho continua separada da prévia de navegador (P11).
+
 - **Matemática (spec 15):** `npm run test:paridade` e `npm run test:estudio:interface` (inclui `tests/desenho-web.test.mjs`, `tests/casos-reais-web.test.mjs`, `tests/funcao-web.test.mjs`, `tests/formula-nos-formatos-web.test.mjs`); as capturas do navegador estão na pasta de trabalho de quem entrega (`matematica-fase2/capturas`, "web, navegador"). Uma figura ou fórmula nova entra primeiro no contrato (motor e testes) e depois nos dois lados; se o motor desenhar de um jeito, os dois desenham do mesmo.
 
 - Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, e as medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) de cada rodada ficam na pasta de trabalho de quem entrega, só até o Lead aceitar a entrega (regra de disco de 18/11). As pastas antigas de `studoo-ui-capturas/` (pares, medidas e o levantamento com as classes) foram apagadas na limpeza de disco de 18/11; esta tabela é o que vale.

@@ -1,0 +1,1370 @@
+{
+  "before": [
+    "01-boas-vindas.png",
+    "08-onboarding-meta.png",
+    "17-primeira-vitoria.png"
+  ],
+  "selected": [
+    {
+      "name": "01-welcome-assunto",
+      "width": 390,
+      "file": "app-rnweb/01-welcome-assunto-390x844-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 716,
+            "width": 334,
+            "height": 56,
+            "top": 716,
+            "right": 362,
+            "bottom": 772,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "05-meta",
+      "width": 390,
+      "file": "app-rnweb/05-meta-390x844-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "top": 668,
+            "right": 362,
+            "bottom": 724,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [],
+        "victoryHero": null,
+        "nextTitleTypography": null
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 390,
+      "file": "app-rnweb/06-primeira-vitoria-390x844-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 518,
+            "width": 334,
+            "height": 56,
+            "top": 518,
+            "right": 362,
+            "bottom": 574,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [
+          {
+            "testId": "aviso-app",
+            "role": null,
+            "text": "Música de fundo ligada.Desligar",
+            "rect": {
+              "x": 28,
+              "y": 24,
+              "width": 334,
+              "height": 46,
+              "top": 24,
+              "right": 362,
+              "bottom": 70,
+              "left": 28
+            }
+          }
+        ],
+        "victoryHero": {
+          "heroRect": {
+            "x": 28,
+            "y": 82,
+            "width": 334,
+            "height": 225,
+            "top": 82,
+            "right": 362,
+            "bottom": 307,
+            "left": 28
+          },
+          "sceneRect": {
+            "x": 28,
+            "y": 82,
+            "width": 334,
+            "height": 140,
+            "top": 82,
+            "right": 362,
+            "bottom": 222,
+            "left": 28
+          },
+          "titleRect": {
+            "x": 28,
+            "y": 238,
+            "width": 334,
+            "height": 36,
+            "top": 238,
+            "right": 362,
+            "bottom": 274,
+            "left": 28
+          },
+          "bannerRect": {
+            "x": 28,
+            "y": 24,
+            "width": 334,
+            "height": 46,
+            "top": 24,
+            "right": 362,
+            "bottom": 70,
+            "left": 28
+          },
+          "bannerOverlapsScene": false,
+          "verticalOverlap": 0
+        },
+        "nextTitleTypography": {
+          "text": "Relacionar tabelas com INNER JOIN",
+          "rect": {
+            "x": 28,
+            "y": 476,
+            "width": 334,
+            "height": 26,
+            "top": 476,
+            "right": 362,
+            "bottom": 502,
+            "left": 28
+          },
+          "clientWidth": 334,
+          "scrollWidth": 334,
+          "font": "600 18px / 26px Inter",
+          "fontFamily": "Inter",
+          "fontWeight": "600",
+          "fontSize": "18px",
+          "lineHeight": "26px",
+          "letterSpacing": "normal",
+          "fontSynthesis": "weight style small-caps",
+          "canvas": {
+            "computed": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter400": {
+              "font": "18px Inter",
+              "width": 299.744140625
+            },
+            "inter600": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter700": {
+              "font": "bold 18px Inter",
+              "width": 307.7808837890625
+            },
+            "system600": {
+              "font": "600 18px sans-serif",
+              "width": 309.1025390625
+            }
+          },
+          "fontCheck": {
+            "inter400": true,
+            "inter600": true,
+            "inter700": true
+          },
+          "fontFaces": [
+            {
+              "family": "StudooTitulo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "StudooCorpo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "Inter",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "selectedWeb": [
+    {
+      "name": "01-boas-vindas",
+      "width": 390,
+      "file": "web/01-boas-vindas-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 720,
+            "width": 334,
+            "height": 56,
+            "bottom": 776,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "05-onboarding-meta",
+      "width": 390,
+      "file": "web/05-onboarding-meta-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "bottom": 724,
+            "label": "Preparar meu estudo",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 390,
+      "file": "web/06-primeira-vitoria-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 515.984375,
+            "width": 334,
+            "height": 56,
+            "bottom": 571.984375,
+            "label": "Ir para a próxima lição",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "web",
+      "captures": [
+        {
+          "name": "01-boas-vindas",
+          "width": 390,
+          "file": "web/01-boas-vindas-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 720,
+                "width": 334,
+                "height": 56,
+                "bottom": 776,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "01-boas-vindas",
+          "width": 360,
+          "file": "web/01-boas-vindas-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 676,
+                "width": 312,
+                "height": 56,
+                "bottom": 732,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "02-boas-vindas-explicacao",
+          "width": 390,
+          "file": "web/02-boas-vindas-explicacao-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 720,
+                "width": 334,
+                "height": 56,
+                "bottom": 776,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "02-boas-vindas-explicacao",
+          "width": 360,
+          "file": "web/02-boas-vindas-explicacao-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 676,
+                "width": 312,
+                "height": 56,
+                "bottom": 732,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "03-boas-vindas-retomada",
+          "width": 390,
+          "file": "web/03-boas-vindas-retomada-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 720,
+                "width": 334,
+                "height": 56,
+                "bottom": 776,
+                "label": "Criar minha conta",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "03-boas-vindas-retomada",
+          "width": 360,
+          "file": "web/03-boas-vindas-retomada-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 676,
+                "width": 312,
+                "height": 56,
+                "bottom": 732,
+                "label": "Criar minha conta",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "04-onboarding-objetivo",
+          "width": 390,
+          "file": "web/04-onboarding-objetivo-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 668,
+                "width": 334,
+                "height": 56,
+                "bottom": 724,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "04-onboarding-objetivo",
+          "width": 360,
+          "file": "web/04-onboarding-objetivo-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 624,
+                "width": 304,
+                "height": 56,
+                "bottom": 680,
+                "label": "Continuar",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "05-onboarding-meta",
+          "width": 390,
+          "file": "web/05-onboarding-meta-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 668,
+                "width": 334,
+                "height": 56,
+                "bottom": 724,
+                "label": "Preparar meu estudo",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "05-onboarding-meta",
+          "width": 360,
+          "file": "web/05-onboarding-meta-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 624,
+                "width": 304,
+                "height": 56,
+                "bottom": 680,
+                "label": "Preparar meu estudo",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "06-primeira-vitoria",
+          "width": 390,
+          "file": "web/06-primeira-vitoria-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 515.984375,
+                "width": 334,
+                "height": 56,
+                "bottom": 571.984375,
+                "label": "Ir para a próxima lição",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "06-primeira-vitoria",
+          "width": 360,
+          "file": "web/06-primeira-vitoria-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 577.984375,
+                "width": 304,
+                "height": 56,
+                "bottom": 633.984375,
+                "label": "Ir para a próxima lição",
+                "hit": true,
+                "visibleWithoutScroll": true
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            }
+          }
+        },
+        {
+          "name": "07-retomada",
+          "width": 390,
+          "file": "web/07-retomada-390.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": null
+          }
+        },
+        {
+          "name": "07-retomada",
+          "width": 360,
+          "file": "web/07-retomada-360.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "app-rnweb",
+      "captures": [
+        {
+          "name": "01-welcome-assunto",
+          "width": 390,
+          "file": "app-rnweb/01-welcome-assunto-390x844-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 716,
+                "width": 334,
+                "height": 56,
+                "top": 716,
+                "right": 362,
+                "bottom": 772,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "01-welcome-assunto",
+          "width": 360,
+          "file": "app-rnweb/01-welcome-assunto-360x800-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 672,
+                "width": 312,
+                "height": 56,
+                "top": 672,
+                "right": 336,
+                "bottom": 728,
+                "left": 24
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "02-welcome-erro",
+          "width": 390,
+          "file": "app-rnweb/02-welcome-erro-390x844-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 716,
+                "width": 334,
+                "height": 56,
+                "top": 716,
+                "right": 362,
+                "bottom": 772,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "02-welcome-erro",
+          "width": 360,
+          "file": "app-rnweb/02-welcome-erro-360x800-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 672,
+                "width": 312,
+                "height": 56,
+                "top": 672,
+                "right": 336,
+                "bottom": 728,
+                "left": 24
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "03-welcome-retomada",
+          "width": 390,
+          "file": "app-rnweb/03-welcome-retomada-390x844-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 716,
+                "width": 334,
+                "height": 56,
+                "top": 716,
+                "right": 362,
+                "bottom": 772,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "03-welcome-retomada",
+          "width": 360,
+          "file": "app-rnweb/03-welcome-retomada-360x800-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 24,
+                "y": 672,
+                "width": 312,
+                "height": 56,
+                "top": 672,
+                "right": 336,
+                "bottom": 728,
+                "left": 24
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": []
+          }
+        },
+        {
+          "name": "04-objetivo",
+          "width": 390,
+          "file": "app-rnweb/04-objetivo-390x844-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 668,
+                "width": 334,
+                "height": 56,
+                "top": 668,
+                "right": 362,
+                "bottom": 724,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [],
+            "victoryHero": null,
+            "nextTitleTypography": null
+          }
+        },
+        {
+          "name": "04-objetivo",
+          "width": 360,
+          "file": "app-rnweb/04-objetivo-360x800-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 624,
+                "width": 304,
+                "height": 56,
+                "top": 624,
+                "right": 332,
+                "bottom": 680,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [],
+            "victoryHero": null,
+            "nextTitleTypography": null
+          }
+        },
+        {
+          "name": "05-meta",
+          "width": 390,
+          "file": "app-rnweb/05-meta-390x844-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 668,
+                "width": 334,
+                "height": 56,
+                "top": 668,
+                "right": 362,
+                "bottom": 724,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [],
+            "victoryHero": null,
+            "nextTitleTypography": null
+          }
+        },
+        {
+          "name": "05-meta",
+          "width": 360,
+          "file": "app-rnweb/05-meta-360x800-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 624,
+                "width": 304,
+                "height": 56,
+                "top": 624,
+                "right": 332,
+                "bottom": 680,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [],
+            "victoryHero": null,
+            "nextTitleTypography": null
+          }
+        },
+        {
+          "name": "06-primeira-vitoria",
+          "width": 390,
+          "file": "app-rnweb/06-primeira-vitoria-390x844-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 518,
+                "width": 334,
+                "height": 56,
+                "top": 518,
+                "right": 362,
+                "bottom": 574,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [
+              {
+                "testId": "aviso-app",
+                "role": null,
+                "text": "Música de fundo ligada.Desligar",
+                "rect": {
+                  "x": 28,
+                  "y": 24,
+                  "width": 334,
+                  "height": 46,
+                  "top": 24,
+                  "right": 362,
+                  "bottom": 70,
+                  "left": 28
+                }
+              }
+            ],
+            "victoryHero": {
+              "heroRect": {
+                "x": 28,
+                "y": 82,
+                "width": 334,
+                "height": 225,
+                "top": 82,
+                "right": 362,
+                "bottom": 307,
+                "left": 28
+              },
+              "sceneRect": {
+                "x": 28,
+                "y": 82,
+                "width": 334,
+                "height": 140,
+                "top": 82,
+                "right": 362,
+                "bottom": 222,
+                "left": 28
+              },
+              "titleRect": {
+                "x": 28,
+                "y": 238,
+                "width": 334,
+                "height": 36,
+                "top": 238,
+                "right": 362,
+                "bottom": 274,
+                "left": 28
+              },
+              "bannerRect": {
+                "x": 28,
+                "y": 24,
+                "width": 334,
+                "height": 46,
+                "top": 24,
+                "right": 362,
+                "bottom": 70,
+                "left": 28
+              },
+              "bannerOverlapsScene": false,
+              "verticalOverlap": 0
+            },
+            "nextTitleTypography": {
+              "text": "Relacionar tabelas com INNER JOIN",
+              "rect": {
+                "x": 28,
+                "y": 476,
+                "width": 334,
+                "height": 26,
+                "top": 476,
+                "right": 362,
+                "bottom": 502,
+                "left": 28
+              },
+              "clientWidth": 334,
+              "scrollWidth": 334,
+              "font": "600 18px / 26px Inter",
+              "fontFamily": "Inter",
+              "fontWeight": "600",
+              "fontSize": "18px",
+              "lineHeight": "26px",
+              "letterSpacing": "normal",
+              "fontSynthesis": "weight style small-caps",
+              "canvas": {
+                "computed": {
+                  "font": "600 18px Inter",
+                  "width": 305.0843505859375
+                },
+                "inter400": {
+                  "font": "18px Inter",
+                  "width": 299.744140625
+                },
+                "inter600": {
+                  "font": "600 18px Inter",
+                  "width": 305.0843505859375
+                },
+                "inter700": {
+                  "font": "bold 18px Inter",
+                  "width": 307.7808837890625
+                },
+                "system600": {
+                  "font": "600 18px sans-serif",
+                  "width": 309.1025390625
+                }
+              },
+              "fontCheck": {
+                "inter400": true,
+                "inter600": true,
+                "inter700": true
+              },
+              "fontFaces": [
+                {
+                  "family": "StudooTitulo",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                },
+                {
+                  "family": "StudooCorpo",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                },
+                {
+                  "family": "Inter",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "06-primeira-vitoria",
+          "width": 360,
+          "file": "app-rnweb/06-primeira-vitoria-360x800-target.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 28,
+                "y": 580,
+                "width": 304,
+                "height": 56,
+                "top": 580,
+                "right": 332,
+                "bottom": 636,
+                "left": 28
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [
+              {
+                "testId": "aviso-app",
+                "role": null,
+                "text": "Música de fundo ligada.Desligar",
+                "rect": {
+                  "x": 28,
+                  "y": 24,
+                  "width": 304,
+                  "height": 46,
+                  "top": 24,
+                  "right": 332,
+                  "bottom": 70,
+                  "left": 28
+                }
+              }
+            ],
+            "victoryHero": {
+              "heroRect": {
+                "x": 28,
+                "y": 82,
+                "width": 304,
+                "height": 261,
+                "top": 82,
+                "right": 332,
+                "bottom": 343,
+                "left": 28
+              },
+              "sceneRect": {
+                "x": 28,
+                "y": 82,
+                "width": 304,
+                "height": 140,
+                "top": 82,
+                "right": 332,
+                "bottom": 222,
+                "left": 28
+              },
+              "titleRect": {
+                "x": 28,
+                "y": 238,
+                "width": 304,
+                "height": 72,
+                "top": 238,
+                "right": 332,
+                "bottom": 310,
+                "left": 28
+              },
+              "bannerRect": {
+                "x": 28,
+                "y": 24,
+                "width": 304,
+                "height": 46,
+                "top": 24,
+                "right": 332,
+                "bottom": 70,
+                "left": 28
+              },
+              "bannerOverlapsScene": false,
+              "verticalOverlap": 0
+            },
+            "nextTitleTypography": {
+              "text": "Relacionar tabelas com INNER JOIN",
+              "rect": {
+                "x": 28,
+                "y": 512,
+                "width": 304,
+                "height": 52,
+                "top": 512,
+                "right": 332,
+                "bottom": 564,
+                "left": 28
+              },
+              "clientWidth": 304,
+              "scrollWidth": 304,
+              "font": "600 18px / 26px Inter",
+              "fontFamily": "Inter",
+              "fontWeight": "600",
+              "fontSize": "18px",
+              "lineHeight": "26px",
+              "letterSpacing": "normal",
+              "fontSynthesis": "weight style small-caps",
+              "canvas": {
+                "computed": {
+                  "font": "600 18px Inter",
+                  "width": 305.0843505859375
+                },
+                "inter400": {
+                  "font": "18px Inter",
+                  "width": 299.744140625
+                },
+                "inter600": {
+                  "font": "600 18px Inter",
+                  "width": 305.0843505859375
+                },
+                "inter700": {
+                  "font": "bold 18px Inter",
+                  "width": 307.7808837890625
+                },
+                "system600": {
+                  "font": "600 18px sans-serif",
+                  "width": 309.1025390625
+                }
+              },
+              "fontCheck": {
+                "inter400": true,
+                "inter600": true,
+                "inter700": true
+              },
+              "fontFaces": [
+                {
+                  "family": "StudooTitulo",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                },
+                {
+                  "family": "StudooCorpo",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                },
+                {
+                  "family": "Inter",
+                  "weight": "normal",
+                  "style": "normal",
+                  "status": "loaded",
+                  "display": "auto"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "07-retomada",
+          "width": 390,
+          "file": "app-rnweb/07-retomada-390x844-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 38,
+                "y": 629.1875,
+                "width": 314,
+                "height": 52,
+                "top": 629.1875,
+                "right": 352,
+                "bottom": 681.1875,
+                "left": 38
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [
+              {
+                "testId": "aviso-app",
+                "role": null,
+                "text": "Música de fundo ligada.Desligar",
+                "rect": {
+                  "x": 20,
+                  "y": 98.59375,
+                  "width": 350,
+                  "height": 46,
+                  "top": 98.59375,
+                  "right": 370,
+                  "bottom": 144.59375,
+                  "left": 20
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "07-retomada",
+          "width": 360,
+          "file": "app-rnweb/07-retomada-360x800-baseline.png",
+          "metrics": {
+            "viewport": {
+              "width": 360,
+              "height": 800
+            },
+            "horizontalOverflow": false,
+            "primary": {
+              "rect": {
+                "x": 38,
+                "y": 651.1875,
+                "width": 284,
+                "height": 52,
+                "top": 651.1875,
+                "right": 322,
+                "bottom": 703.1875,
+                "left": 38
+              },
+              "visibleWithoutScroll": true,
+              "hit": true
+            },
+            "reducedMotion": true,
+            "runningAnimations": [],
+            "music": [
+              {
+                "testId": "aviso-app",
+                "role": null,
+                "text": "Música de fundo ligada.Desligar",
+                "rect": {
+                  "x": 20,
+                  "y": 98.59375,
+                  "width": 320,
+                  "height": 46,
+                  "top": 98.59375,
+                  "right": 340,
+                  "bottom": 144.59375,
+                  "left": 20
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

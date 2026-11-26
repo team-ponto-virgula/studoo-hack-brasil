@@ -1,0 +1,530 @@
+{
+  "revision": "01b3a4be053217f0a9ffa209c8622541cd521cda",
+  "uiBaseline": "34a4c4a",
+  "surface": "web real local",
+  "startedAt": "2026-11-26T13:33:28.571Z",
+  "finishedAt": "2026-11-26T13:33:47.974Z",
+  "ai": "falsa",
+  "email": "falso",
+  "passed": true,
+  "functionalPassed": true,
+  "visualPassed": true,
+  "nativeExecuted": false,
+  "sourceBefore": {
+    "src/app/boas-vindas/tela.tsx": "a06165ecb741ac814791a969cb8f78a7b9172a0a6d578624f1d3a13fddebced5",
+    "src/app/boas-vindas/boas-vindas.css": "599b5a70e06e2969d76e3c9a0a7bc42be8be18004e179b4d8e9bb761a90933d8",
+    "src/app/acesso/acesso.css": "8c04f700d6e5fe97387755286d059c62c484c218a573c8086601d3971bc3b6c0",
+    "src/app/onboarding/jornada.tsx": "97de286410bfa73c861fc5adc11939ae2412d0fd1720b23588aa765423e0c7df",
+    "src/app/onboarding/jornada.css": "0a4600181860f5d1ce763b7a12164d4660287bca3e8a8e7d1f2d2ad87e7bd1c6",
+    "src/app/onboarding/visual.tsx": "dab694445e505269a5df7944f747bb31ea38ae63bed74901cc218f3fa6b875c3",
+    "src/app/onboarding/visual.css": "21caf83467d45f3cde2cab679ac9176fdacebd72714cb2607562e5564a845e3e",
+    "src/app/estudo.tsx": "e77cecef8a91b32c4bbe4601450c06372a16f60715034006d00ed362600c6f12",
+    "packages/contratos/src/onboarding-visual.ts": "23de534e2994c14f0d8189872f985cc954f3eccba759e098915e6d491bc73021"
+  },
+  "sourceAfter": {
+    "src/app/boas-vindas/tela.tsx": "a06165ecb741ac814791a969cb8f78a7b9172a0a6d578624f1d3a13fddebced5",
+    "src/app/boas-vindas/boas-vindas.css": "599b5a70e06e2969d76e3c9a0a7bc42be8be18004e179b4d8e9bb761a90933d8",
+    "src/app/acesso/acesso.css": "8c04f700d6e5fe97387755286d059c62c484c218a573c8086601d3971bc3b6c0",
+    "src/app/onboarding/jornada.tsx": "97de286410bfa73c861fc5adc11939ae2412d0fd1720b23588aa765423e0c7df",
+    "src/app/onboarding/jornada.css": "0a4600181860f5d1ce763b7a12164d4660287bca3e8a8e7d1f2d2ad87e7bd1c6",
+    "src/app/onboarding/visual.tsx": "dab694445e505269a5df7944f747bb31ea38ae63bed74901cc218f3fa6b875c3",
+    "src/app/onboarding/visual.css": "21caf83467d45f3cde2cab679ac9176fdacebd72714cb2607562e5564a845e3e",
+    "src/app/estudo.tsx": "e77cecef8a91b32c4bbe4601450c06372a16f60715034006d00ed362600c6f12",
+    "packages/contratos/src/onboarding-visual.ts": "23de534e2994c14f0d8189872f985cc954f3eccba759e098915e6d491bc73021"
+  },
+  "evidenceComposition": {
+    "previousConsolidated": "web-acabamento-comprovado-final-1795701079016",
+    "previousComposition": {
+      "fullRun": "web-acabamento-1795700007465",
+      "targetedMetaVictoryRun": "web-alvo-final-1795700880585",
+      "contrastRun": "web-meta-final-1795700175751",
+      "fullRunPassed": true,
+      "targetedRunPassed": true,
+      "sourceDifferenceOnly": "src/app/onboarding/jornada.css",
+      "styleChanges": "rádio normal #8590a6 (3.212:1); título da próxima lição18/26/600/tracking0; h1 tracking-1.1; detalhes e summary iguais RN",
+      "baselineImages": 10,
+      "targetImages": 4,
+      "baselineCssHash": "c84bd399a976764fd329b4d8363ffb46d6cde40ad27bf5764cedf40f09bbf581",
+      "finalCssHash": "301ef6ffed6f9d7edf9ee0bd549a01ebf78c5be78143f9da1f0a4b976c941d77",
+      "explanation": "Cadastro e percurso real completos passaram no baseline estável. Depois somente propriedades CSS específicas do rádio e da primeira vitória foram alinhadas. Um reteste real aproveitou uma conta MOBILE pendente por login WEB e retomada voluntária, preparou meta2 e concluiu SQL; META e vitória foram recapturadas nas duas larguras. Os outros10estados não exibem seletores alterados. Oitoarquivos de UI permanecem com mesmo hash. Os relatos brutos, inclusive falhas de seletor/normalização CSSOM do roteiro, permanecem preservados; nenhum foi reclassificado."
+    },
+    "targetedVictoryRun": "web-vitoria-seta-1795701766132",
+    "targetedPassed": true,
+    "baselineImages": 12,
+    "targetImages": 2,
+    "sourceDifferenceOnly": "src/app/onboarding/jornada.css",
+    "change": "Apenas2regras escopadas à ação da primeira vitória: padding simétrico48px; SVG absoluto right18px.",
+    "previousCssHash": "301ef6ffed6f9d7edf9ee0bd549a01ebf78c5be78143f9da1f0a4b976c941d77",
+    "finalCssHash": "0a4600181860f5d1ce763b7a12164d4660287bca3e8a8e7d1f2d2ad87e7bd1c6",
+    "explanation": "As12capturas fora da primeira vitória não usam os seletores alterados. A mesma conta sintética pendente foi retomada pela UI, o objetivoSQL e meta2 foram preparados, e uma primeira lição foi concluída por avaliação/ensino reais. As2capturas finais da vitória medem CTA atingível e SVGx324em390/x294em360, exatamente18px da borda direita, compatível com a anatomia do BotaoAcesso nativo. Nenhum dado ou onboarding foi redefinido no banco. Brutos anteriores e proveniência permanecem preservados."
+  },
+  "limitations": [
+    "Chromium mobile viewport; sem teclado ou leitor de tela nativo",
+    "IA e e-mail falsos; não demonstra qualidade de geração ou entrega externa"
+  ],
+  "steps": [
+    {
+      "name": "movimento-reduzido-estatico-sem-atrasar-interacao",
+      "at": "2026-11-26T13:33:31.831Z"
+    },
+    {
+      "name": "cadastro-real-201-por-ui-sem-expor-codigo",
+      "at": "2026-11-26T13:33:35.392Z"
+    },
+    {
+      "name": "objetivo-vazio-mostra-validacao-e-move-foco-ao-campo",
+      "at": "2026-11-26T13:33:37.461Z"
+    },
+    {
+      "name": "objetivo-200%-reflow-acao-alcancavel",
+      "at": "2026-11-26T13:33:37.503Z"
+    },
+    {
+      "name": "objetivo-200%-reflow-acao-alcancavel",
+      "at": "2026-11-26T13:33:37.571Z"
+    },
+    {
+      "name": "meta-200%-reflow-acao-alcancavel",
+      "at": "2026-11-26T13:33:38.353Z"
+    },
+    {
+      "name": "meta-200%-reflow-acao-alcancavel",
+      "at": "2026-11-26T13:33:38.401Z"
+    },
+    {
+      "name": "radio-unico-meta2-persistida-sem-contagem-ficticia",
+      "at": "2026-11-26T13:33:38.975Z"
+    },
+    {
+      "name": "exercicio-erro-confirmado",
+      "at": "2026-11-26T13:33:41.429Z"
+    },
+    {
+      "name": "exercicio-acerto-confirmado",
+      "at": "2026-11-26T13:33:41.750Z"
+    },
+    {
+      "name": "ensine-stu-textual-avaliado",
+      "at": "2026-11-26T13:33:42.323Z"
+    },
+    {
+      "name": "primeira-licao-salva",
+      "at": "2026-11-26T13:33:43.200Z"
+    },
+    {
+      "name": "primeira-conclusao-real-progresso1de5-meta1de2",
+      "at": "2026-11-26T13:33:43.997Z"
+    },
+    {
+      "name": "login-sem-armazenamento-anterior-entra-direto-e-preserva-progresso",
+      "at": "2026-11-26T13:33:47.974Z"
+    },
+    {
+      "name": "radio-normal-cor-real-e-contraste-AA-na-superficie-branca"
+    },
+    {
+      "name": "radio-normal-cor-real-e-contraste-AA-na-superficie-branca"
+    },
+    {
+      "name": "conta-pendente-retomada-sem-forcar-onboarding-no-login-e-meta2-selecionada",
+      "at": "2026-11-26T13:48:03.800Z"
+    },
+    {
+      "name": "exercicio-erro-confirmado",
+      "at": "2026-11-26T13:48:06.085Z"
+    },
+    {
+      "name": "exercicio-acerto-confirmado",
+      "at": "2026-11-26T13:48:06.349Z"
+    },
+    {
+      "name": "ensine-stu-textual-avaliado",
+      "at": "2026-11-26T13:48:06.721Z"
+    },
+    {
+      "name": "primeira-licao-salva",
+      "at": "2026-11-26T13:48:07.695Z"
+    },
+    {
+      "name": "tipografia-real-proxima-e-aviso-sem-sobreposicao",
+      "at": "2026-11-26T13:48:07.819Z"
+    },
+    {
+      "name": "tipografia-real-proxima-e-aviso-sem-sobreposicao",
+      "at": "2026-11-26T13:48:07.951Z"
+    },
+    {
+      "name": "retomada-legitima-conclui-primeira-licao-progresso1de5-meta1de2",
+      "at": "2026-11-26T13:48:08.034Z"
+    },
+    {
+      "name": "exercicio-erro-confirmado",
+      "at": "2026-11-26T14:02:50.964Z"
+    },
+    {
+      "name": "exercicio-acerto-confirmado",
+      "at": "2026-11-26T14:02:51.230Z"
+    },
+    {
+      "name": "ensine-stu-textual-avaliado",
+      "at": "2026-11-26T14:02:51.476Z"
+    },
+    {
+      "name": "primeira-licao-salva",
+      "at": "2026-11-26T14:02:52.423Z"
+    },
+    {
+      "name": "seta-na-extremidade-do-componente-com18px-e-CTA-inteiro",
+      "at": "2026-11-26T14:02:59.846Z"
+    },
+    {
+      "name": "seta-na-extremidade-do-componente-com18px-e-CTA-inteiro",
+      "at": "2026-11-26T14:02:59.929Z"
+    },
+    {
+      "name": "conta-pendente-retomada-por-UI-concluiu-primeira-licao-real",
+      "at": "2026-11-26T14:03:00.255Z"
+    }
+  ],
+  "captures": [
+    {
+      "name": "01-boas-vindas",
+      "width": 390,
+      "file": "web/01-boas-vindas-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 720,
+            "width": 334,
+            "height": 56,
+            "bottom": 776,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "01-boas-vindas",
+      "width": 360,
+      "file": "web/01-boas-vindas-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 676,
+            "width": 312,
+            "height": 56,
+            "bottom": 732,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "02-boas-vindas-explicacao",
+      "width": 390,
+      "file": "web/02-boas-vindas-explicacao-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 720,
+            "width": 334,
+            "height": 56,
+            "bottom": 776,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "02-boas-vindas-explicacao",
+      "width": 360,
+      "file": "web/02-boas-vindas-explicacao-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 676,
+            "width": 312,
+            "height": 56,
+            "bottom": 732,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "03-boas-vindas-retomada",
+      "width": 390,
+      "file": "web/03-boas-vindas-retomada-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 720,
+            "width": 334,
+            "height": 56,
+            "bottom": 776,
+            "label": "Criar minha conta",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "03-boas-vindas-retomada",
+      "width": 360,
+      "file": "web/03-boas-vindas-retomada-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 676,
+            "width": 312,
+            "height": 56,
+            "bottom": 732,
+            "label": "Criar minha conta",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "04-onboarding-objetivo",
+      "width": 390,
+      "file": "web/04-onboarding-objetivo-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "bottom": 724,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "04-onboarding-objetivo",
+      "width": 360,
+      "file": "web/04-onboarding-objetivo-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 624,
+            "width": 304,
+            "height": 56,
+            "bottom": 680,
+            "label": "Continuar",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "05-onboarding-meta",
+      "width": 390,
+      "file": "web/05-onboarding-meta-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "bottom": 724,
+            "label": "Preparar meu estudo",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "05-onboarding-meta",
+      "width": 360,
+      "file": "web/05-onboarding-meta-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 624,
+            "width": 304,
+            "height": 56,
+            "bottom": 680,
+            "label": "Preparar meu estudo",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 390,
+      "file": "web/06-primeira-vitoria-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 515.984375,
+            "width": 334,
+            "height": 56,
+            "bottom": 571.984375,
+            "label": "Ir para a próxima lição",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 360,
+      "file": "web/06-primeira-vitoria-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 577.984375,
+            "width": 304,
+            "height": 56,
+            "bottom": 633.984375,
+            "label": "Ir para a próxima lição",
+            "hit": true,
+            "visibleWithoutScroll": true
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        }
+      }
+    },
+    {
+      "name": "07-retomada",
+      "width": 390,
+      "file": "web/07-retomada-390.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": null
+      }
+    },
+    {
+      "name": "07-retomada",
+      "width": 360,
+      "file": "web/07-retomada-360.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": null
+      }
+    }
+  ],
+  "findings": []
+}
