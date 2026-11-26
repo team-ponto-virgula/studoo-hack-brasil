@@ -201,6 +201,7 @@ test('o fonte do estudo: o aceite passa pelo controlador (o pedido é guardado a
   const vazia = estudo.slice(estudo.indexOf('id="planos-vazio-titulo">'));
   assert.ok(vazia.indexOf('</h1>') < vazia.indexOf('<CriacoesEmCurso') && vazia.indexOf('<CriacoesEmCurso') < vazia.indexOf('planos-vazio"'), 'e na biblioteca vazia também: título, avisos, convite');
   assert.match(vazia, /\{avisosDeCriacao\.length === 0 && <div className="planos-vazio" data-testid="planos-vazio">/, 'com uma criação em curso, o convite "Nenhuma trilha ainda" não aparece junto do aviso');
+  assert.match(estudo, /setAnuncio\(destino\.tipo === 'planos' && planos\.length === 0 && criacoes\.length === 0 \? `\$\{mensagens\.planos\.vazioTitulo\}\.` : ''\);/, 'a biblioteca vazia não se anuncia com uma criação em curso');
   const css = ler('src/app/previa-trilha.css');
   assert.match(css, /\.painel--geracao\[data-fase=criada\] \.previa-mapa \{ overflow: hidden; \}/, 'o mapa só trava na passagem para a aula');
   assert.doesNotMatch(css, /:is\(\[data-fase=salvando\],\[data-fase=criada\]\) \.previa-mapa \{ overflow: hidden/, 'durante o preparo o mapa rola (teclado inclusive), para a pessoa chegar ao fim dele');
