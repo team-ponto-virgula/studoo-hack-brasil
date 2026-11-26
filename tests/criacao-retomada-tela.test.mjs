@@ -202,6 +202,8 @@ test('o fonte do estudo: o aceite passa pelo controlador (o pedido é guardado a
   assert.doesNotMatch(corpo('aoAcionarCriacao'), /anunciar\(/, 'reenviar não anuncia por conta própria: o anúncio de "preparando" sai da mudança de fase, uma vez');
   assert.match(estudo, /const naPrevia = telaRef\.current\.tipo === 'geracao' && geracaoRef\.current\?\.proposta\?\.pedidoId === pedidoId && !!painel\?\.isConnected;\s*if \(!naPrevia \|\| !painel\) return;/,
     'fora da prévia, a trilha confirmada só vira aviso: a tela da pessoa fica onde está');
+  assert.match(estudo, /planos\.find\(plano => plano\.id !== previa\.proposta!\.pedidoId && trilhaRepetida\(/,
+    'a trilha que ESTE pedido acabou de criar (mesmo id) não é "repetida": a prévia que segue na tela com "Abrir lição 1" não oferece "Abrir a que já existe"');
   assert.match(estudo, /const avisosDeCriacao = tela\.tipo === 'licao' \|\| tela\.tipo === 'abrindo-criada' \? \[\] : criacoes\.filter\(\(item\) => item\.pendente\.pedidoId !== pedidoDaPrevia\);/);
   assert.match(estudo, /\{inicio === 'pronto' && tela\.tipo !== 'planos' && <CriacoesEmCurso criacoes=\{avisosDeCriacao\}/, 'no alto de todas as telas, menos Minhas trilhas');
   const planos = estudo.slice(estudo.indexOf("tela.tipo === 'planos' && planos.length > 0 && (() => {"));
