@@ -130,7 +130,7 @@ test('a placa: não tem frases que se revezam; a linha que se vê é escondida d
   const montando = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.montandoTitulo, anunciado: g.montandoTitulo }));
   assert.equal(montando, `<p class="previa-placa" role="status"><span class="somente-leitor">Montando sua trilha</span><span class="previa-placa__linha" aria-hidden="true">Montando sua trilha</span></p>`);
   const pronta = renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.propostaPronta(10, 3), anunciado: `${g.propostaPronta(10, 3)} ${g.comecarLicao1}.` }));
-  assert.equal(pronta, `<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 10 lições curtas em 3 partes. Começar a lição 1.</span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 10 lições curtas em 3 partes.</span></p>`);
+  assert.equal(pronta, `<p class="previa-placa" role="status"><span class="somente-leitor">Sua proposta tem 10 lições em 3 partes. Começar a lição 1.</span><span class="previa-placa__linha" aria-hidden="true">Sua proposta tem 10 lições em 3 partes.</span></p>`);
   // Sem o estado de "frase" nem o de "saindo": a placa só mostra o texto que lhe passam.
   assert.doesNotMatch(renderToStaticMarkup(createElement(PlacaDaGeracao, { texto: g.dicas[0], anunciado: g.montandoTitulo, ehDica: true, saindo: true })), /data-dica|data-saindo/);
 });
@@ -154,24 +154,24 @@ test('a tela da geração: "Montando sua trilha" no começo; a proposta pronta c
   const proposta = { token: 'x', titulo: 'Culinária', objetivo: 'Culinária', origem: 'Modo demonstração', fluxos };
   const nosDe = (lista) => lista.map((f) => ({ titulo: f.titulo, licoes: f.licoes.map((l) => l.titulo) }));
   const pronta = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
-  assert.match(pronta, /<span class="somente-leitor">Sua trilha está pronta: 6 lições curtas em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span>/);
+  assert.match(pronta, /<span class="somente-leitor">Sua proposta tem 6 lições em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua proposta tem 6 lições em 3 partes\.<\/span>/);
   assert.doesNotMatch(pronta, /Proposta pronta/);
   // Com uma parte só e com uma lição só.
   const umaParte = { ...proposta, fluxos: [fluxos[0]] };
-  assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe([fluxos[0]]), umaParte) })), /aria-hidden="true">Sua trilha está pronta: 2 lições curtas\.</);
+  assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe([fluxos[0]]), umaParte) })), /aria-hidden="true">Sua proposta tem 2 lições\.</);
   const umaLicao = { ...proposta, fluxos: [{ titulo: 'Parte 1', licoes: [{ titulo: 'A' }] }] };
-  assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe(umaLicao.fluxos), umaLicao) })), /aria-hidden="true">Sua trilha está pronta: 1 lição curta\.</);
+  assert.match(renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros(), geracao: trilhaEmGeracao(nosDe(umaLicao.fluxos), umaLicao) })), /aria-hidden="true">Sua proposta tem 1 lição\.</);
   // Pronta, antes do toque: a linha de espera existe no lugar dela, escondida, com o texto de sempre; o botão não está ocupado e a linha não é região viva.
   assert.match(pronta, /<p class="previa-espera"><span class="previa-espera__linha">Escrevendo suas lições…<\/span><\/p>/);
   assert.doesNotMatch(pronta, /aria-busy/);
   // Depois de "Começar a lição 1": a placa segue com a faixa da proposta, e o botão fica afundado, ocupado e com o giro.
   const criando = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'iniciando' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
-  assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua trilha está pronta: 6 lições curtas em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span><\/p>/);
+  assert.match(criando, /<p class="previa-placa" role="status"><span class="somente-leitor">Sua proposta tem 6 lições em 3 partes\. Começar a lição 1\.<\/span><span class="previa-placa__linha" aria-hidden="true">Sua proposta tem 6 lições em 3 partes\.<\/span><\/p>/);
   assert.match(criando, /<button[^>]*class="[^"]*previa-comecar[^"]*"[^>]*aria-disabled="true"[^>]*aria-busy="true"[^>]*>|<button[^>]*aria-busy="true"[^>]*class="[^"]*previa-comecar/);
   assert.match(criando, /previa-giro[\s\S]*?Criando sua trilha…/);
   // Se a criação falha, a placa continua com a faixa, o erro de sempre aparece e a linha de espera sai.
   const erro = renderToStaticMarkup(createElement(PreviaTrilha, { ...parametros({ aceite: 'erro' }), geracao: trilhaEmGeracao(nosDe(fluxos), proposta) }));
-  assert.match(erro, /aria-hidden="true">Sua trilha está pronta: 6 lições curtas em 3 partes\.<\/span>/);
+  assert.match(erro, /aria-hidden="true">Sua proposta tem 6 lições em 3 partes\.<\/span>/);
   assert.match(erro, /<p class="previa-erro" role="alert">Não deu para criar a trilha\. Confira a conexão e tente de novo\.<\/p>/);
   assert.doesNotMatch(erro, /previa-espera" data-visivel/);
 });

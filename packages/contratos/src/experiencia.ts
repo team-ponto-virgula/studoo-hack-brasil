@@ -61,6 +61,21 @@ const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê se
 /** O botão de conferir a resposta: o da lição e o do "Sua vez" do "Resolva comigo". */
 const VERIFICAR = 'Verificar';
 
+/**
+ * A linha da proposta, antes de a trilha existir (spec 04, Retomada da criação): "Sua proposta tem 10 lições em 3 partes." Sem "pronta": a trilha só está pronta depois de salva (`trilhaPronta`).
+ * Com uma parte só, sem o "em M partes"; com uma lição só, "Sua proposta tem 1 lição".
+ */
+const resumoDaProposta = (licoes: number, partes: number) =>
+    `Sua proposta tem ${licoes} ${licoes === 1 ? 'lição' : 'lições'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`;
+
+/** Quanto falta, em palavras: "1 minuto", "5 minutos", "1 hora", "2 horas" (arredonda para cima; menos de um minuto vira "1 minuto"). */
+const esperaEmPalavras = (segundos: number) => {
+    const minutos = Math.max(1, Math.ceil(segundos / 60));
+    if (minutos < 60) return `${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`;
+    const horas = Math.ceil(minutos / 60);
+    return `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+};
+
 export const mensagens = {
     estudio: {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
@@ -1048,11 +1063,12 @@ export const mensagens = {
         montandoTitulo: 'Montando sua trilha',
         aguardandoLicao: 'Ainda montando a próxima lição…',
         /**
-         * A faixa da proposta (spec 17, mudança 2): "Sua trilha está pronta: 10 lições curtas em 3 partes." Com uma parte só, sem o "em M partes"; com uma lição só,
-         * "Sua trilha está pronta: 1 lição curta." Antes dizia "Proposta pronta", palavra de dentro do produto. Também é o anúncio do leitor de tela.
+         * A faixa da proposta (spec 19, que revê a mudança 2 da spec 17): "Sua proposta tem 10 lições em 3 partes". Com uma parte só, sem o "em M partes"; com uma lição só,
+         * "Sua proposta tem 1 lição.". "Pronta" só depois de salva (`trilhaPronta`). Também é o anúncio do leitor de tela.
          */
-        propostaPronta: (licoes: number, partes: number) =>
-            `Sua trilha está pronta: ${licoes} ${licoes === 1 ? 'lição curta' : 'lições curtas'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`,
+        propostaPronta: resumoDaProposta,
+        /** O nome certo da mesma frase: a proposta ainda não é uma trilha pronta. `propostaPronta` fica só para o app que ainda a lê. */
+        propostaResumo: resumoDaProposta,
         comecarLicao1: 'Começar a lição 1',
         salvarParaDepois: 'Salvar para depois',
         salvandoTrilha: 'Salvando trilha…',
@@ -1069,6 +1085,46 @@ export const mensagens = {
         propostaExpirada: 'Esta proposta expirou. Monte de novo.',
         montarDeNovo: 'Montar de novo',
         anuncioCriada: (titulo: string) => `Trilha criada. Lição 1: ${titulo}.`,
+        /**
+         * A criação que pode ser retomada (spec 04, Retomada da criação). O aceite escreve as lições e pode levar minutos; se a resposta se perder, o pedido continua no servidor e o cliente o recupera.
+         * "Pronta" e "Abrir lição 1" só depois de confirmar que a trilha foi salva.
+         */
+        preparandoTrilha: 'Preparando sua trilha…',
+        salvandoSuaTrilha: 'Salvando sua trilha…',
+        anuncioPreparando: 'Preparando sua trilha.',
+        anuncioSalvandoSuaTrilha: 'Salvando sua trilha.',
+        /** Depois de um tempo em preparo, sem erro: a pessoa pode sair, e o pedido continua. */
+        aindaPreparando: 'Ainda preparando. Você pode sair desta tela: o pedido continua e a trilha aparece em Minhas trilhas.',
+        semConexaoVerificar: 'Sem conexão. Vamos verificar o status quando a conexão voltar.',
+        /** Houve demora e a rede está disponível, mas o servidor ainda não confirmou: "Verificar status" consulta o mesmo pedido. */
+        semConfirmacao: 'Ainda não conseguimos confirmar se sua trilha foi salva.',
+        verificarStatus: 'Verificar status',
+        verificandoStatus: 'Verificando…',
+        anuncioSemConexao: 'Sem conexão. Vamos verificar o status quando a conexão voltar.',
+        /** Só depois de confirmar que o servidor não tem o pedido (a primeira ausência pode ser trânsito): reenvia a MESMA proposta. */
+        pedidoNaoChegou: 'Seu pedido não chegou ao servidor.',
+        reenviarPedido: 'Reenviar pedido',
+        trilhaPronta: 'Sua trilha está pronta.',
+        trilhaSalvaPronta: 'Sua trilha foi salva em Minhas trilhas.',
+        abrirLicao1: 'Abrir lição 1',
+        anuncioTrilhaPronta: 'Sua trilha está pronta. Abrir lição 1.',
+        anuncioTrilhaSalva: 'Sua trilha foi salva em Minhas trilhas.',
+        tentarDeNovo: 'Tentar de novo',
+        /** A falha confirmada pelo servidor, pela causa (`CausaDeFalhaDaCriacao`). O prazo do limite só entra quando o servidor o conhece. Sem diagnóstico inventado. */
+        falhaDaCriacao: {
+            resposta_ia: 'A IA não conseguiu escrever as lições desta vez.',
+            limite: 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.',
+            limiteComEspera: (segundos: number) => `Chegamos ao limite de criações por agora. Tente de novo em ${esperaEmPalavras(segundos)}.`,
+            tempo: 'A criação demorou mais do que o esperado e foi interrompida.',
+            interrompida: 'A criação foi interrompida antes de terminar.',
+            seguranca: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
+            proposta_expirada: 'Esta proposta expirou. Monte de novo.',
+            outra: 'Não deu para criar a trilha.',
+        },
+        anuncioFalhaCriacao: 'Não deu para criar a trilha. Veja o aviso na tela.',
+        /** O aviso da lista de trilhas enquanto um pedido segue em preparo e a pessoa está em outra tela. */
+        criacaoEmCurso: (titulo: string) => `Preparando “${titulo}”`,
+        verCriacao: 'Ver',
         montando: 'Montando a trilha',
         pronta: 'Trilha pronta',
         contagem: (total: number) => total === 0
