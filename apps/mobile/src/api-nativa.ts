@@ -146,9 +146,19 @@ export function criarClienteNativo(token?: string) {
   // /api/auth/config é pública e recusa pedido com Authorization (rotaPublica responde 401): vai sempre sem o token. Antes,
   // com sessão, a configuração nunca chegava (o aviso do material ficava sem o provedor e o compartilhar não aparecia).
   const semSessao = token ? criarClienteStudoo(transporteNativo()) : cliente;
+  let dadosDaSessao: Awaited<ReturnType<typeof cliente.sessao>> | undefined;
+  let consultaDaSessao: ReturnType<typeof cliente.sessao> | null = null;
+  const sessao = () => {
+    consultaDaSessao ??= cliente.sessao()
+      .then(dados => { dadosDaSessao = dados; return dados; })
+      .finally(() => { consultaDaSessao = null; });
+    return consultaDaSessao;
+  };
 
   return {
     ...cliente,
+    sessao,
+    contaDaSessao: async () => (dadosDaSessao ?? await sessao()).conta,
     configuracaoAcesso: semSessao.configuracaoAcesso,
     gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal, diagnosticoId?: string) => gerarTrilhaAoVivo(objetivo, sinal, token, diagnosticoId),
     responderSuaVez: (id: string, escolha: EscolhaNoSuaVez) => responderSuaVez(transporteNativo(token), id, escolha),

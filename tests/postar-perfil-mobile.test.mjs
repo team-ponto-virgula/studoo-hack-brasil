@@ -83,7 +83,7 @@ test('achados da prévia a 390: aviso por cima da folha, chave só com o trilho,
   assert.match(interfaceApp, /export function AvisoSobreAFolha\(\{ baixo \}: \{ baixo: number \}\) \{\s*const \{ aviso \} = useContext\(AvisoDoApp\);\s*return aviso \? <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} baixo=\{baixo\} \/> : null;/);
   // `expirar` muda a cada desenho da raiz (um aviso basta): fora das dependências, a lista não recarrega nem reabre a trilha.
   const estudo = await ler('apps/mobile/src/estudo.tsx');
-  assert.match(estudo, /\}, \[cliente, tentativa\]\);/);
+  assert.match(estudo, /\}, \[cliente, criacoes\.carregar, tentativa\]\);/);
   assert.doesNotMatch(estudo, /\[cliente, expirar, tentativa\]/);
   assert.match(estudo, /await expirarAtual\.current\(\);/);
 });

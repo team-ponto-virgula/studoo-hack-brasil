@@ -64,6 +64,21 @@ test('sem sessão, nada muda: a configuração vai sem token, como na entrada', 
   assert.equal(api.pedidos[0].headers.Authorization, undefined);
 });
 
+test('retomar a criação consulta o mesmo id, por GET autenticado e sem comprovante', async () => {
+  const pedidoId = '677796bf-bdf6-4682-80c6-a4cf18b3dde8';
+  const estado = { pedidoId, estado: 'nao_recebido' };
+  const api = montar({ responder: () => Response.json(estado) });
+  const cliente = api.criarClienteNativo('sessao-sintetica');
+  assert.deepEqual(await cliente.consultarCriacao(pedidoId), estado);
+  const [consulta] = api.pedidos;
+  assert.equal(consulta.metodo, 'GET');
+  assert.equal(consulta.url, `https://studoo.example.test/api/aprendizado/pedidos/${pedidoId}`);
+  assert.equal(consulta.headers.Authorization, 'Bearer sessao-sintetica');
+  assert.equal(consulta.headers['Cache-Control'], 'no-store');
+  assert.equal(consulta.corpo, undefined);
+  assert.deepEqual(api.prazos, [15_000]);
+});
+
 test('a foto do perfil vai pelo canal do app, com o token e sem cookie', async () => {
   const api = montar();
   await api.criarClienteNativo('b'.repeat(43)).enviarFoto('QUJD');
