@@ -618,7 +618,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     setErro(null);
     setFalhaGeracao(null);
     setAviso(null);
-    setAnuncio(destino.tipo === 'planos' && planos.length === 0 ? `${mensagens.planos.vazioTitulo}.` : '');
+    // "Nenhuma trilha ainda" não se anuncia com uma criação em curso: a tela mostra o aviso dela, não o convite da biblioteca vazia.
+    setAnuncio(destino.tipo === 'planos' && planos.length === 0 && criacoes.length === 0 ? `${mensagens.planos.vazioTitulo}.` : '');
     setTela(destino);
   }
 
