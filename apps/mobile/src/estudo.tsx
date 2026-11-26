@@ -447,8 +447,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
 
   /** "Minhas trilhas" (aba ou botão do alto): com o vazio já na tela, o Stu dá um pulo; senão, abre a lista. */
   const [puloDoVazio, setPuloDoVazio] = useState(0);
+  const mostrarVazioDosPlanos = planos?.length === 0 && criacoes.itens.length === 0;
   function tocarMinhasTrilhas() {
-    if (etapa.tipo === 'planos' && planos?.length === 0) { setPuloDoVazio((vezes) => vezes + 1); return; }
+    if (etapa.tipo === 'planos' && mostrarVazioDosPlanos) { setPuloDoVazio((vezes) => vezes + 1); return; }
     abrir({ tipo: 'planos' });
   }
 
@@ -1288,7 +1289,7 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
         {criacoes.itens.map(item => cartaoDaCriacao(item, true))}
         {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
-        {planos && planos.length === 0 ? (
+        {mostrarVazioDosPlanos ? (
           <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
         ) : !guardada && Boolean(planosSemRetomada?.length) && (
           /* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */

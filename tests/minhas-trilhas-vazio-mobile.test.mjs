@@ -20,7 +20,8 @@ test('a abertura sem trilhas vai para a Nova trilha; planos sem trilhas é o vaz
   assert.match(fonte, /if \(lista\.length === 0\) setEtapa\(\(atual\) => \(atual\.tipo === 'planos' \? \{ tipo: 'objetivo' \} : atual\)\);/);
   assert.match(fonte, /if \(etapa\.tipo === 'objetivo' \|\| etapa\.tipo === 'geracao'\) \{\s*return <Pedido/);
   assert.doesNotMatch(fonte, /etapa\.tipo === 'geracao' \|\| planos\?\.length === 0/, 'planos sem trilhas não desenha mais o pedido');
-  assert.match(fonte, /\{planos && planos\.length === 0 \? \(\s*<VazioDasTrilhas pulo=\{puloDoVazio\} criar=\{\(\) => abrir\(\{ tipo: 'objetivo' \}\)\} \/>/);
+  assert.match(fonte, /const mostrarVazioDosPlanos = planos\?\.length === 0 && criacoes\.itens\.length === 0;/);
+  assert.match(fonte, /\{mostrarVazioDosPlanos \? \(\s*<VazioDasTrilhas pulo=\{puloDoVazio\} criar=\{\(\) => abrir\(\{ tipo: 'objetivo' \}\)\} \/>/);
 });
 
 test('a barra de abas aparece também sem trilhas, com "Minhas trilhas" marcada no vazio', async () => {
@@ -43,5 +44,5 @@ test('o bloco: Stu curioso com halo, título anunciado, texto, "Criar minha prim
   assert.match(bloco, /<Botao rotulo=\{t\.vazioAcao\} testID="planos-vazio-criar" acao=\{criar\}/);
   assert.match(bloco, /if \(!pulo \|\| reduzir !== false\) return;/, 'com movimento reduzido, sem pulo');
   assert.match(bloco, /outputRange: \[0, -8\]/);
-  assert.match(fonte, /if \(etapa\.tipo === 'planos' && planos\?\.length === 0\) \{ setPuloDoVazio\(\(vezes\) => vezes \+ 1\); return; \}/);
+  assert.match(fonte, /if \(etapa\.tipo === 'planos' && mostrarVazioDosPlanos\) \{ setPuloDoVazio\(\(vezes\) => vezes \+ 1\); return; \}/);
 });
