@@ -185,10 +185,13 @@ test('o fonte do estudo: o aceite passa pelo controlador (o pedido é guardado a
     assert.ok(texto.length > 80, nome);
     assert.doesNotMatch(texto, /\.focus\(|setObjetivo\(|scrollTo|scrollIntoView/, `${nome} não mexe no foco, no texto digitado nem na rolagem`);
   }
-  assert.match(corpo('aoMudarCriacoes'), /fasesAnunciadas\.current\.get\(id\) === situacao\) continue;/, 'a mesma situação não é anunciada duas vezes');
+  assert.match(corpo('aoMudarCriacoes'), /const anterior = fasesAnunciadas\.current\.get\(id\);\s*if \(anterior === situacao\) continue;/, 'a mesma situação não é anunciada duas vezes');
   assert.match(corpo('aoMudarCriacoes'), /criacao\.fase === 'falha' \? `falha:\$\{criacao\.falha\?\.causa\}:\$\{criacao\.falha\?\.repetivel \? 'liberada' : 'bloqueada'\}` : criacao\.fase;/,
     'o prazo que cai não é uma situação nova, mas a falha que o servidor liberou é (o leitor ouve a mudança)');
   assert.match(corpo('aoMudarCriacoes'), /if \(criacao\.fase === 'pronta' && estaNaPrevia\(id\)\) continue;/, 'na prévia que a pessoa acompanha, o fim é anunciado pelo fluxo (não duas vezes)');
+  assert.match(corpo('aoMudarCriacoes'), /if \(!anuncio && preparando && anterior !== undefined && anterior !== 'enviando' && anterior !== 'em_preparo'\) \{\s*anuncio = criacao\.pendente\.intencao === 'salvar' \? mensagens\.geracao\.anuncioSalvandoSuaTrilha : mensagens\.geracao\.anuncioPreparando;/,
+    'voltar a preparar depois de dúvida ou falha (rede que voltou, reenvio) é dito uma vez, sem deixar o texto antigo na região viva');
+  assert.doesNotMatch(corpo('aoAcionarCriacao'), /anunciar\(/, 'reenviar não anuncia por conta própria: o anúncio de "preparando" sai da mudança de fase, uma vez');
   assert.match(estudo, /const naPrevia = telaRef\.current\.tipo === 'geracao' && geracaoRef\.current\?\.proposta\?\.pedidoId === pedidoId && !!painel\?\.isConnected;\s*if \(!naPrevia \|\| !painel\) return;/,
     'fora da prévia, a trilha confirmada só vira aviso: a tela da pessoa fica onde está');
   assert.match(estudo, /const avisosDeCriacao = tela\.tipo === 'licao' \|\| tela\.tipo === 'abrindo-criada' \? \[\] : criacoes\.filter\(\(item\) => item\.pendente\.pedidoId !== pedidoDaPrevia\);/);

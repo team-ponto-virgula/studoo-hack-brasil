@@ -988,10 +988,16 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       vistos.add(id);
       // A mesma situação não é anunciada duas vezes (o prazo que cai a cada consulta não conta); a falha que o servidor liberou é uma situação nova (o botão vira "Tentar de novo").
       const situacao = criacao.fase === 'falha' ? `falha:${criacao.falha?.causa}:${criacao.falha?.repetivel ? 'liberada' : 'bloqueada'}` : criacao.fase;
-      if (fasesAnunciadas.current.get(id) === situacao) continue;
+      const anterior = fasesAnunciadas.current.get(id);
+      if (anterior === situacao) continue;
       fasesAnunciadas.current.set(id, situacao);
       if (criacao.fase === 'pronta' && estaNaPrevia(id)) continue;
-      const anuncio = apresentarCriacao(criacao, { agora: Date.now(), online: navigator.onLine }).anuncio;
+      let anuncio = apresentarCriacao(criacao, { agora: Date.now(), online: navigator.onLine }).anuncio;
+      // Voltou a preparar depois de uma dúvida ou de uma falha (a conexão voltou, o pedido foi reenviado): a mudança é dita uma vez, em vez de deixar na região viva o texto antigo.
+      const preparando = criacao.fase === 'enviando' || criacao.fase === 'em_preparo';
+      if (!anuncio && preparando && anterior !== undefined && anterior !== 'enviando' && anterior !== 'em_preparo') {
+        anuncio = criacao.pendente.intencao === 'salvar' ? mensagens.geracao.anuncioSalvandoSuaTrilha : mensagens.geracao.anuncioPreparando;
+      }
       if (anuncio) anunciar(anuncio);
     }
     for (const id of [...fasesAnunciadas.current.keys()]) if (!vistos.has(id)) fasesAnunciadas.current.delete(id);
@@ -1015,8 +1021,8 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     if (!criacao || !ctl) return;
     if (acao === 'verificar') { ctl.verificar(pedidoId); return; }
     if (acao === 'reenviar') {
+      // O anúncio ("Preparando sua trilha.") sai de aoMudarCriacoes, quando o pedido volta a preparar: uma vez só.
       sinalDoSomDoAceite.current = tocaSons.sinalDosEfeitos;
-      anunciar(criacao.pendente.intencao === 'salvar' ? mensagens.geracao.anuncioSalvandoSuaTrilha : mensagens.geracao.anuncioPreparando);
       ctl.reenviar(pedidoId);
       return;
     }
