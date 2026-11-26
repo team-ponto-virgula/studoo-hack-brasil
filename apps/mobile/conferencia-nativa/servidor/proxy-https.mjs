@@ -8,9 +8,10 @@
 //
 // Uso: node proxy-https.mjs --cert local.crt --chave local.key [--porta 3443] [--destino http://localhost:3000]
 // Sem dependências. Uma linha por pedido na saída (método, caminho sem a busca, status e tempo), sem cabeçalhos nem corpo.
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
@@ -19,6 +20,7 @@ const { values } = parseArgs({
     chave: { type: 'string' },
     porta: { type: 'string', default: '3443' },
     destino: { type: 'string', default: 'http://localhost:3000' },
+    retomada: { type: 'string' },
   },
 });
 
@@ -36,11 +38,21 @@ const porta = Number(values.porta);
 
 /** Cabeçalhos que valem só para uma conexão: não seguem adiante. */
 const DE_UM_SALTO = new Set(['connection', 'keep-alive', 'proxy-connection', 'te', 'trailer', 'upgrade']);
+const controleDaProva = (nome) => Boolean(values.retomada && existsSync(join(values.retomada, nome)));
+const registrarProva = (etapa, dados = {}) => console.log(`[retomada] ${JSON.stringify({ etapa, em: Date.now(), ...dados })}`);
+let aceitesDaProva = 0;
 
 const servidor = https.createServer({ cert: readFileSync(values.cert), key: readFileSync(values.chave) }, (pedido, resposta) => {
   const inicio = performance.now();
   const caminho = (pedido.url ?? '/').split('?')[0];
   const registrar = (status) => console.log(`${pedido.method} ${caminho} ${status} ${Math.round(performance.now() - inicio)}ms`);
+  const provaAtiva = controleDaProva('armada');
+  const idConsultado = provaAtiva && pedido.method === 'GET'
+    ? /^\/api\/aprendizado\/pedidos\/([\da-f-]+)$/i.exec(caminho)?.[1] : undefined;
+  const cortarConsulta = Boolean(idConsultado && !controleDaProva('consultas-liberadas'));
+  const aceiteDaProva = provaAtiva && pedido.method === 'POST' && caminho === '/api/aprendizado/planos';
+  const cortarAceite = aceiteDaProva && ++aceitesDaProva === 1;
+  if (aceiteDaProva) registrarProva('post', { numero: aceitesDaProva });
 
   const cabecalhos = {};
   for (const [nome, valor] of Object.entries(pedido.headers)) {
@@ -58,6 +70,31 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
     path: pedido.url,
     headers: cabecalhos,
   }, (origem) => {
+    if (idConsultado) {
+      let texto = '';
+      origem.setEncoding('utf8');
+      origem.on('data', parte => { texto += parte; });
+      origem.once('end', () => {
+        let dados;
+        try { dados = JSON.parse(texto); } catch { dados = {}; }
+        const plano = dados?.plano;
+        registrarProva('consulta', {
+          pedidoId: idConsultado, status: origem.statusCode, estado: dados?.estado,
+          tentativas: dados?.tentativas, cortada: cortarConsulta,
+          total: plano?.progresso?.total, partes: plano?.fluxos?.length,
+          primeiraLicao: plano?.fluxos?.[0]?.licoes?.[0]?.id,
+        });
+      });
+      if (cortarConsulta) resposta.destroy();
+    }
+    origem.once('end', () => {
+      registrar(origem.statusCode ?? 502);
+      if (aceiteDaProva) registrarProva('post-servidor', { status: origem.statusCode, cortado: cortarAceite });
+    });
+    if (cortarAceite || cortarConsulta) {
+      origem.resume();
+      return;
+    }
     const deVolta = {};
     for (const [nome, valor] of Object.entries(origem.headers)) {
       if (valor !== undefined && !DE_UM_SALTO.has(nome)) deVolta[nome] = valor;
@@ -65,10 +102,13 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
     resposta.writeHead(origem.statusCode ?? 502, deVolta);
     // Sem guardar em memória: a geração ao vivo (NDJSON) chega linha a linha, como chega do servidor.
     origem.pipe(resposta);
-    origem.once('end', () => registrar(origem.statusCode ?? 502));
   });
 
   adiante.once('error', () => {
+    if (resposta.destroyed) {
+      registrar('502 (servidor fora do ar)');
+      return;
+    }
     if (!resposta.headersSent) {
       resposta.writeHead(502, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
       resposta.end(JSON.stringify({ codigo: 'falha', mensagem: 'O servidor do Studoo não respondeu ao proxy.' }));
@@ -77,8 +117,13 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
     }
     registrar('502 (servidor fora do ar)');
   });
+  if (cortarAceite) adiante.once('finish', () => {
+    // O POST inteiro foi escrito para o servidor. Só o socket TLS voltado ao app cai.
+    registrarProva('corte-aceite');
+    resposta.destroy();
+  });
   // Quem chamou desistiu (tempo limite do app, Cancelar): o pedido ao servidor também para.
-  resposta.once('close', () => { if (!resposta.writableEnded) adiante.destroy(); });
+  resposta.once('close', () => { if (!resposta.writableEnded && !cortarAceite && !cortarConsulta) adiante.destroy(); });
   pedido.pipe(adiante);
 });
 

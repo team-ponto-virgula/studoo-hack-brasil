@@ -1,0 +1,17 @@
+appId: host.exp.Exponent
+name: retomada-reabrir
+---
+- retry:
+    maxRetries: 2
+    commands:
+      - openLink: exp://127.0.0.1:8081
+- runFlow:
+    file: ../partes/sair-do-menu-do-expo-go.yaml
+    env:
+      ESPERA: "90000"
+- evalScript: ${output.esperaDaRetomada = true}
+- extendedWaitUntil:
+    visible:
+      id: criacao-preparando
+    timeout: 40000
+- takeScreenshot: 88-retomada-preparando
