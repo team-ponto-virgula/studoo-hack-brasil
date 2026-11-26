@@ -122,4 +122,9 @@ test('preparo e confirmação pendente têm saída no rodapé sem cancelar o ace
   assert.match(fonte, /testID="criacao-sair-aceite"[^>]+acao=\{sairDuranteAceite\}/);
   assert.match(fonte, /sairParaLista=\{mostrarTitulo \? undefined : tocarMinhasTrilhas\}/);
   assert.match(cartao, /testID="criacao-minhas-trilhas"[^>]+acao=\{sairParaLista\}/);
+  const guarda = fonte.indexOf('await criacoes.guardar(pedido, reenvio)');
+  const post = fonte.indexOf('await aceitarUmaVez(proposta.token)', guarda);
+  const entreGuardaEEnvio = fonte.slice(guarda, post);
+  assert.match(entreGuardaEEnvio, /if \(!montado\.current\) return;/);
+  assert.doesNotMatch(entreGuardaEEnvio, /aceiteAtual\.current !== vez/);
 });

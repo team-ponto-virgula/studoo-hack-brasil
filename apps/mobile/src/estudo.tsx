@@ -689,10 +689,13 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     try {
       if (pedido) {
         const enviar = await criacoes.guardar(pedido, reenvio);
-        if (!montado.current || aceiteAtual.current !== vez) return;
+        // Sair da prévia não desfaz o toque que já reservou o envio. Sair da conta encerra o estudo.
+        if (!montado.current) return;
         if (!enviar) {
-          terminarCriacao();
-          setCriacao(null);
+          if (aceiteAtual.current === vez) {
+            terminarCriacao();
+            setCriacao(null);
+          }
           return;
         }
         guardou = true;
