@@ -207,6 +207,28 @@ preparar_menu_do_expo_go() {
 
 metro() {
   iniciar_metro ios --go
+  aquecer_assinatura_expo_go
+}
+
+# O Expo Go pede expo-root. A primeira leitura concorrente do arquivo de desenvolvimento
+# fez o Expo CLI devolver 500 no rename da rodada 45900183093 (tentativa 2). Deixe o próprio CLI criá-lo primeiro.
+aquecer_assinatura_expo_go() {
+  local projeto arquivo tentativa
+  projeto="$(jq -er '.expo.extra.eas.projectId | strings | select(length > 0)' "$RAIZ/apps/mobile/app.json")" \
+    || erro "Sem projectId do EAS para aquecer o manifesto solicitado pelo Expo Go."
+  arquivo="${__UNSAFE_EXPO_HOME_DIRECTORY:-$HOME/.expo}/codesigning/$projeto/development-code-signing-settings-2.json"
+  for tentativa in 1 2 3; do
+    if curl -fsS -m 60 -o /dev/null -H 'expo-platform: ios' \
+      -H 'accept: application/expo+json,application/json' \
+      -H 'expo-expect-signature: sig, keyid="expo-root", alg="rsa-v1_5-sha256"' \
+      "http://127.0.0.1:$PORTA_METRO/" && [ -s "$arquivo" ]; then
+      resumo "✅ Expo Go: pedido expo-root atendido pelo Metro e arquivo de configuração disponível antes da abertura."
+      return 0
+    fi
+    if [ "$tentativa" -lt 3 ]; then sleep 2; fi
+  done
+  mostrar_registro "$REGISTROS/metro.log" 40
+  erro "O Metro não preparou a configuração do pedido expo-root antes da abertura do Expo Go."
 }
 
 # O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o log do simulador, ao vivo,
