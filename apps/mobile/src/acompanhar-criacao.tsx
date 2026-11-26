@@ -9,7 +9,7 @@ import type { CriacaoAcompanhada } from './use-criacoes-pendentes';
 
 const t = mensagens.geracao;
 
-export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoExpirarSessao, abrir, reenviar, ajustar }: {
+export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoExpirarSessao, abrir, reenviar, ajustar, sairParaLista }: {
   item: CriacaoAcompanhada;
   ocupado: boolean;
   mostrarTitulo?: boolean;
@@ -18,6 +18,7 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
   abrir: (pedido: CriacaoPendente, plano: PlanoDetalhe) => void;
   reenviar: (pedido: CriacaoPendente) => void;
   ajustar: (pedido: CriacaoPendente, editar: boolean) => void;
+  sairParaLista?: () => void;
 }) {
   const { pedido, estado } = item;
   const [verificando, setVerificando] = useState(false);
@@ -83,6 +84,9 @@ export function AcompanharCriacao({ item, ocupado, mostrarTitulo, consultar, aoE
         <Text style={estilos.legenda}>Você pode sair. Quando estiver pronta, a trilha aparece em Minhas trilhas.</Text>}
       <Botao plano variante={estado?.estado === 'pronto' && pedido.intencao === 'comecar' ? 'primario' : 'secundario'}
         {...botao} desativado={ocupado || verificando} />
+      {sairParaLista && botao.testID !== 'criacao-ver-trilha' &&
+        <Botao compacto variante="texto" testID="criacao-minhas-trilhas" rotulo={mensagens.planos.titulo}
+          desativado={ocupado} acao={sairParaLista} />}
     </View>
   );
 }
