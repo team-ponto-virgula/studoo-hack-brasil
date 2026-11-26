@@ -1,0 +1,431 @@
+{
+  "startedAt": "2026-11-25T18:44:11.551Z",
+  "finishedAt": "2026-11-25T18:44:21.720Z",
+  "surface": "web real local",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "ai": "falsa",
+  "email": "falso",
+  "passed": true,
+  "nativeExecuted": false,
+  "sourceBefore": {
+    "src/app/estudo.tsx": "c5bed79d925e43adf57b24aa12d5ff4b8447d1cd7e08b87f8979f36b51ed7c55",
+    "src/app/login/entrada.tsx": "108bddab9847d0359b24b8a92559abb7c8228b351a9480aff3a6e156000f7240",
+    "src/app/cadastro/cadastro.tsx": "05f4362337b00ddc56264d5e23d0f5e8fae16d5d316fc4cbf595ccb368fa337e",
+    "src/app/onboarding/jornada.tsx": "eddb285ae53bd3056457bd057453585785881adc6012ff8fcc7ccd10b92818c9",
+    "src/servidor/onboarding/servico.ts": "51caa8d6341c607384cb541952ef0cddf583cc741dbd161b9b6c42235b658b51",
+    "src/app/api/onboarding/route.ts": "e08f30fc30cad9b4f42c5ee4fa5d88cfb6318c883848ef98c88039e4c8d05878",
+    "packages/contratos/src/onboarding.ts": "dd57d24500946fc8712afccd595cf8f27c1f6e1a7456a90017c163222e38ea8b"
+  },
+  "sourceAfter": {
+    "src/app/estudo.tsx": "c5bed79d925e43adf57b24aa12d5ff4b8447d1cd7e08b87f8979f36b51ed7c55",
+    "src/app/login/entrada.tsx": "108bddab9847d0359b24b8a92559abb7c8228b351a9480aff3a6e156000f7240",
+    "src/app/cadastro/cadastro.tsx": "05f4362337b00ddc56264d5e23d0f5e8fae16d5d316fc4cbf595ccb368fa337e",
+    "src/app/onboarding/jornada.tsx": "eddb285ae53bd3056457bd057453585785881adc6012ff8fcc7ccd10b92818c9",
+    "src/servidor/onboarding/servico.ts": "51caa8d6341c607384cb541952ef0cddf583cc741dbd161b9b6c42235b658b51",
+    "src/app/api/onboarding/route.ts": "e08f30fc30cad9b4f42c5ee4fa5d88cfb6318c883848ef98c88039e4c8d05878",
+    "packages/contratos/src/onboarding.ts": "dd57d24500946fc8712afccd595cf8f27c1f6e1a7456a90017c163222e38ea8b"
+  },
+  "steps": [
+    {
+      "name": "conta-criada-pela-ui-e-mail-falso",
+      "at": "2026-11-25T18:44:13.767Z"
+    },
+    {
+      "name": "preparacao-salva-no-servidor",
+      "at": "2026-11-25T18:44:15.834Z",
+      "etapa": "trilha",
+      "meta": 2
+    },
+    {
+      "name": "trilha-real-aceita",
+      "at": "2026-11-25T18:44:18.070Z",
+      "progresso": {
+        "concluidas": 0,
+        "total": 5,
+        "percentual": 0
+      }
+    },
+    {
+      "name": "exercicio-erro-confirmado",
+      "at": "2026-11-25T18:44:19.057Z",
+      "status": 200
+    },
+    {
+      "name": "exercicio-acerto-confirmado",
+      "at": "2026-11-25T18:44:19.374Z",
+      "status": 200
+    },
+    {
+      "name": "ensine-stu-textual-avaliado",
+      "at": "2026-11-25T18:44:20.021Z",
+      "status": 200
+    },
+    {
+      "name": "primeira-licao-salva",
+      "at": "2026-11-25T18:44:20.750Z",
+      "status": 200,
+      "progress": {
+        "concluidas": 1,
+        "total": 5,
+        "percentual": 20
+      }
+    },
+    {
+      "name": "onboarding-e-meta-confirmados-pelo-servidor",
+      "at": "2026-11-25T18:44:20.891Z",
+      "etapa": "concluido",
+      "meta": 2,
+      "licoesHoje": 1
+    },
+    {
+      "name": "reload-preserva-progresso-e-nao-repete-onboarding",
+      "at": "2026-11-25T18:44:21.720Z"
+    }
+  ],
+  "captures": [
+    {
+      "name": "01-boas-vindas",
+      "file": "web-sql-390/01-boas-vindas.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "",
+          "tag": "BODY",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 720,
+          "width": 334,
+          "height": 56,
+          "bottom": 776,
+          "label": "Continuar",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "02-boas-vindas-explicacao",
+      "file": "web-sql-390/02-boas-vindas-explicacao.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "boas-vindas-titulo",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 720,
+          "width": 334,
+          "height": 56,
+          "bottom": 776,
+          "label": "Continuar",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "03-boas-vindas-retomada",
+      "file": "web-sql-390/03-boas-vindas-retomada.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "boas-vindas-titulo",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 720,
+          "width": 334,
+          "height": 56,
+          "bottom": 776,
+          "label": "Criar minha conta",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "04-cadastro-email",
+      "file": "web-sql-390/04-cadastro-email.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "",
+          "tag": "BODY",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 317.6875,
+          "width": 334,
+          "height": 56,
+          "bottom": 373.6875,
+          "label": "Enviar código",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "05-cadastro-codigo",
+      "file": "web-sql-390/05-cadastro-codigo.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "cadastro-codigo",
+          "tag": "INPUT",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 466.6875,
+          "width": 334,
+          "height": 56,
+          "bottom": 522.6875,
+          "label": "Continuar",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "06-cadastro-senha",
+      "file": "web-sql-390/06-cadastro-senha.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "cadastro-confirmar",
+          "tag": "INPUT",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 499.171875,
+          "width": 334,
+          "height": 56,
+          "bottom": 555.171875,
+          "label": "Criar conta",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "07-onboarding-objetivo",
+      "file": "web-sql-390/07-onboarding-objetivo.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "jornada-titulo",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 521.5,
+          "width": 334,
+          "height": 56,
+          "bottom": 577.5,
+          "label": "Continuar",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "08-onboarding-meta",
+      "file": "web-sql-390/08-onboarding-meta.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "",
+          "tag": "INPUT",
+          "label": null
+        },
+        "primary": {
+          "x": 28,
+          "y": 615,
+          "width": 334,
+          "height": 56,
+          "bottom": 671,
+          "label": "Preparar meu estudo",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "09-diagnostico-opcional",
+      "file": "web-sql-390/09-diagnostico-opcional.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "diagnostico-titulo",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": null
+      }
+    },
+    {
+      "name": "10-proposta",
+      "file": "web-sql-390/10-proposta.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "",
+          "tag": "BUTTON",
+          "label": null
+        },
+        "primary": {
+          "x": 20,
+          "y": 622,
+          "width": 350,
+          "height": 52,
+          "bottom": 674,
+          "label": "Começar a lição 1",
+          "hit": true,
+          "visibleWithoutScroll": true
+        }
+      }
+    },
+    {
+      "name": "11-primeira-vitoria",
+      "file": "web-sql-390/11-primeira-vitoria.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "primeira-vitoria-titulo",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": null
+      }
+    },
+    {
+      "name": "12-retomada-apos-reload",
+      "file": "web-sql-390/12-retomada-apos-reload.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "document": {
+          "width": 390,
+          "height": 1876
+        },
+        "horizontalOverflow": false,
+        "focus": {
+          "id": "",
+          "tag": "H1",
+          "label": null
+        },
+        "primary": null
+      }
+    }
+  ],
+  "findings": [],
+  "progress": {
+    "etapa": "concluido",
+    "meta": 2,
+    "licoesHoje": 1,
+    "totalLicoesConcluidas": 1,
+    "proximaLicao": "Relacionar tabelas com INNER JOIN"
+  }
+}

@@ -124,10 +124,11 @@ export async function retornarGoogle(request: Request, provedor = trocarGoogle) 
       const chave = hashToken(`google\0${identidade.sub}`);
       await tx.$queryRaw`SELECT 1::int FROM pg_advisory_xact_lock(hashtextextended(${chave}, 0::bigint))`;
       let usuario = await tx.usuario.findUnique({ where: { googleSub: identidade.sub } });
+      const novaConta = !usuario;
       const existente = await tx.usuario.findUnique({ where: { email: identidade.email } });
       // Não vincula automaticamente uma identidade Google a uma conta com senha só pelo e-mail.
       if (existente && existente.id !== usuario?.id) throw new FalhaApi('google_conta_existente');
-      if (!usuario) usuario = await tx.usuario.create({ data: { email: identidade.email, googleSub: identidade.sub, fuso: 'America/Sao_Paulo' } });
+      if (!usuario) usuario = await tx.usuario.create({ data: { email: identidade.email, googleSub: identidade.sub, fuso: 'America/Sao_Paulo', onboarding: { create: {} } } });
       else if (usuario.email !== identidade.email) {
         await tx.recuperacaoSenha.deleteMany({ where: { usuarioId: usuario.id } });
         usuario = await tx.usuario.update({ where: { id: usuario.id }, data: { email: identidade.email } });
@@ -135,16 +136,16 @@ export async function retornarGoogle(request: Request, provedor = trocarGoogle) 
       if (autorizacao.desafioMobile) {
         const codigo = aleatorio();
         await tx.codigoGoogleMobile.create({ data: { codigoHash: hashToken(codigo), usuarioId: usuario.id,
-          desafio: autorizacao.desafioMobile, expiraEm: new Date(Date.now() + 120_000) } });
+          desafio: autorizacao.desafioMobile, onboardingInicial: novaConta, expiraEm: new Date(Date.now() + 120_000) } });
         return { mobile: true as const, codigo };
       }
-      return { mobile: false as const, ...await criarSessao(usuario.id, 'WEB', tx) };
+      return { mobile: false as const, novaConta, ...await criarSessao(usuario.id, 'WEB', tx, undefined, novaConta) };
     });
     if (resultado.mobile) {
       destinoMobile!.searchParams.set('codigo', resultado.codigo);
       return redirecionar(destinoMobile!, cookieGoogle('', 0));
     }
-    const resposta = redirecionar(new URL('/', origemStudoo()!), cookieGoogle('', 0));
+    const resposta = redirecionar(new URL(resultado.novaConta ? '/onboarding' : '/', origemStudoo()!), cookieGoogle('', 0));
     resposta.headers.append('Set-Cookie', cookieSessao(resultado.token));
     return resposta;
   } catch (erro) {
@@ -161,7 +162,7 @@ export async function trocarCodigoMobile(codigo: unknown, verificador: unknown) 
     const where = { codigoHash: hashToken(codigo), desafio: desafioPkce(verificador), expiraEm: { gt: new Date() } };
     const registro = await tx.codigoGoogleMobile.findFirst({ where });
     if (!registro || !(await tx.codigoGoogleMobile.deleteMany({ where })).count) throw new FalhaApi('google_invalido');
-    const sessao = await criarSessao(registro.usuarioId, 'MOBILE', tx);
+    const sessao = await criarSessao(registro.usuarioId, 'MOBILE', tx, undefined, registro.onboardingInicial);
     return { token: sessao.token, expiraEm: sessao.expiraEm.toISOString() };
   });
 }

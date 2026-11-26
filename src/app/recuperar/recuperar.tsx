@@ -6,6 +6,7 @@ import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo } from '../../ui';
+import { SemMusica } from '../conheca/ilhas/sem-musica';
 
 const m = mensagens.acesso;
 export function Recuperar() {
@@ -60,7 +61,8 @@ export function Recuperar() {
       setSenha(''); setConfirmacao(''); setCodigo(''); setEtapa('pronto');
     });
   }
-  return <main className="recuperar" id="conteudo-principal">
+  return <main className="recuperar" id="conteudo-principal" data-sem-musica="">
+    <SemMusica />
     <header className="recuperar-topo"><Logo /><div className="recuperar-acoes"><BotaoSom /><Link className="botao botao--texto" href="/login">{mensagens.voltar}</Link></div></header>
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome={etapa === 'pronto' ? 'check' : 'cadeado'} /></div>

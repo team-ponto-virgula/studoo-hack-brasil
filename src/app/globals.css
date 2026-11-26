@@ -1,3 +1,12 @@
+/* Acesso e onboarding usam a tipografia da direção aprovada, sem mudar as telas existentes. */
+@font-face {
+  font-family: Inter;
+  src: url('/marca/inter-wght.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
 /*
  * Cada fonte em duas partes (o navegador só baixa a parte que a página usa). A "latim" tem o latim, a pontuação, as setas e TODOS os caracteres
  * especiais do texto do app (CARACTERES_ESPECIAIS_DO_TEXTO, inclusive o grego e os símbolos da matemática): é a que quase toda página usa, a que o

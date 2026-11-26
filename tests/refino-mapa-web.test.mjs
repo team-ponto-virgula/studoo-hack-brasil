@@ -8,6 +8,7 @@ import { register } from 'node:module';
 import { join, resolve } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import ts from 'typescript';
 
 register('data:text/javascript,' + encodeURIComponent(`export async function load(url, contexto, proximo) {
   if (url.endsWith('.css')) return { format: 'module', source: '', shortCircuit: true };
@@ -86,7 +87,16 @@ test('item 3: o cabeçalho está "preso" quando a página rolou e o topo dele ch
 test('item 15: até 767 px a barra da marca sai do mapa, e o selo de sincronia vem para a linha do rótulo do cabeçalho da trilha', () => {
   const estudo = ler('src/app/estudo.tsx');
   // O mapa recebe o selo pronto (o mesmo da barra) e o põe ao lado do rótulo "Sua trilha"; só com a lista de trilhas carregada.
-  assert.match(estudo, /<Plano tela=\{tela\} ocupado=\{ocupado\} abrindo=\{abrindo\}\s*selo=\{inicio === 'pronto' \? <SeloSincronia sincronia=\{sincronia\} agora=\{agora\} temProgresso=\{planos\.length > 0\} \/> : null\}/);
+  const arvore = ts.createSourceFile('estudo.tsx', estudo, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const mapas = [];
+  const visitar = (no) => {
+    if (ts.isJsxSelfClosingElement(no) && no.tagName.getText(arvore) === 'Plano') mapas.push(no);
+    ts.forEachChild(no, visitar);
+  };
+  visitar(arvore);
+  assert.equal(mapas.length, 1, 'o mapa recebe o selo na sua própria chamada');
+  const selo = mapas[0].attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText(arvore) === 'selo');
+  assert.match(selo?.initializer?.expression?.getText(arvore) ?? '', /^inicio === 'pronto' \? <SeloSincronia sincronia=\{sincronia\} agora=\{agora\} temProgresso=\{planos\.length > 0\} \/> : null$/);
   assert.match(estudo, /<div className="trilha-topo__linha">\s*<p className="trilha-topo__rotulo">\{mensagens\.trilha\.suaTrilha\}<\/p>\s*\{selo && <div className="trilha-topo__selo">\{selo\}<\/div>\}\s*<\/div>/);
   const css = ler('src/app/trilha.css');
   // Fora do celular o selo do mapa fica escondido (ele segue na barra), para não haver dois avisos de sincronia.

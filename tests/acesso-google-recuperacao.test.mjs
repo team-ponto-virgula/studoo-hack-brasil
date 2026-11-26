@@ -119,7 +119,7 @@ test('Google web verifica vínculo do navegador, estado, cria sessão e não ace
   assert.match(errado.headers.get('location'), /google_invalido/); assert.equal(chamadas, 0);
   const request = () => new Request(a.retorno, { headers: { Cookie: a.cookie } });
   const resposta = await retornarGoogle(request(), provedor);
-  assert.equal(resposta.headers.get('location'), process.env.STUDOO_ORIGEM + '/');
+  assert.equal(resposta.headers.get('location'), process.env.STUDOO_ORIGEM + '/onboarding');
   const cookies = resposta.headers.getSetCookie();
   assert.ok(cookies.some(c => c.includes('HttpOnly') && c.includes('SameSite=Lax')));
   const token = /studoo-sessao=([\w-]+)/.exec(cookies.join(';'))[1];

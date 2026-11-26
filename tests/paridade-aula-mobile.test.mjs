@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import ts from 'typescript';
+import { VISUAL_ONBOARDING } from '../packages/contratos/src/onboarding-visual.ts';
+import { renderizarCenaStu, nosDaCena, estiloDaCena } from './auxiliares/render-cena-mobile.mjs';
 
 // Paridade com a web (spec 16, itens 4, 6, 8 e 10): o app decide com as mesmas contas do contrato (b87efbd) e chega aos
 // mesmos números que o Web & API mediu na web.
@@ -47,12 +49,26 @@ test('item 8: a contagem da resposta aberta aparece quando o contrato manda (pri
   assert.deepEqual([0, 1, 39, 40, 41].map((usados) => mostrarContagemDaAberta(usados, 40)), [false, true, true, false, false]);
 });
 
-test('item 10: o título da entrada ao lado do Stu de 72 em 26/32 e, até 320, 22/28, como a web', async () => {
-  const sessao = await ler('sessao.tsx');
-  const tamanho = funcao(sessao, 'tamanhoDoTituloComStu');
-  assert.deepEqual(tamanho(390), { fontSize: 26, lineHeight: 32 });
-  assert.deepEqual(tamanho(360), { fontSize: 26, lineHeight: 32 });
-  assert.deepEqual(tamanho(320), { fontSize: 22, lineHeight: 28 });
-  assert.match(sessao, /<Titulo foco testID="titulo-entrada" estilo=\{estiloDoTituloComStu\(largura\)\}>/);
-  assert.match(sessao, /const STU_DO_TITULO = 72;/);
+test('item 10 atualizado: login limpo e cena de boas-vindas com as dimensões compartilhadas', async () => {
+  const acesso = await ler('acesso-mobile.tsx');
+  const ast = ts.createSourceFile('acesso.tsx', acesso, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const componente = nome => ast.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === nome)?.getText(ast);
+  assert.ok(componente('EntradaMobile'));
+  assert.doesNotMatch(componente('EntradaMobile'), /<Stu\b|entrada-stu|STU_DO_TITULO/, 'o login prioriza o acesso e deixa o mascote para a apresentação');
+  assert.match(componente('BoasVindasMobile'), /<CenaStuOnboarding nome=\{atual\.stu\}/);
+  const exemplo = { type: 'Exemplo', props: { children: 'Seu assunto vira uma trilha' } };
+  const cena = renderizarCenaStu({ nome: 'stu-acolhida', children: exemplo });
+  const nos = nosDaCena(cena);
+  const stu = nos.find(no => no.type === 'Stu');
+  const heroi = nos.find(no => no.props?.pointerEvents === 'none');
+  assert.equal(stu.props.nome, 'stu-acolhida');
+  assert.equal(stu.props.tamanho, VISUAL_ONBOARDING.cena.stu);
+  assert.equal(estiloDaCena(heroi.props.style).height, VISUAL_ONBOARDING.cena.altura);
+  assert.equal(heroi.props.accessibilityElementsHidden, true);
+  assert.equal(heroi.props.importantForAccessibility, 'no-hide-descendants');
+  assert.ok(nos.includes(exemplo), 'o exemplo faz parte da composição sem ser ocultado junto da arte decorativa');
+  assert.ok(!nosDaCena(heroi).includes(exemplo), 'o conteúdo do exemplo fica fora da região decorativa oculta');
+  assert.match(componente('TituloAcesso'), /width < 375 && \{ fontSize: 30, lineHeight: 36 \}/);
+  assert.match(acesso, /titulo: \{[^}]*fontSize: 32, lineHeight: 38/);
+  assert.doesNotMatch(acesso, /allowFontScaling=\{false\}|maxFontSizeMultiplier=/, 'mantém a ampliação de texto do aparelho');
 });

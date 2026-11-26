@@ -25,6 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const inicio = await inicioDoSite();
-  if (inicio === 'login') redirect('/login');
+  if (inicio === 'login') redirect('/boas-vindas');
   return inicio === 'app' ? <Estudo /> : <PaginaDeApresentacao naRaiz />;
 }

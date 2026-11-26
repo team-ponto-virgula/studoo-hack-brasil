@@ -1,0 +1,889 @@
+{
+  "revision": "01b3a4be053217f0a9ffa209c8622541cd521cda",
+  "uiBaseline": "34a4c4a",
+  "surface": "React Native Web em Chromium, API MOBILE local real e PostgreSQL real com IA/e-mail falsos",
+  "ai": "falsa",
+  "email": "falso",
+  "passed": true,
+  "functionalPassed": true,
+  "visualPassed": true,
+  "nativeExecuted": false,
+  "sourceBefore": {
+    "apps/mobile/src/acesso-mobile.tsx": "fda3d0b20d3babaa7ca15d8ed6399e45374c54f9f5cbceffdbbbb889719dca48",
+    "apps/mobile/src/jornada-conta.tsx": "01fd76c19f17e19270ace8a3cbb11e38034c31b92c8d1a6940da6bd2400166a3",
+    "apps/mobile/src/estudo.tsx": "e5edf2f8492405905d552bd636090138d1628e6abe9cdeda658e1fb12719c07c",
+    "apps/mobile/src/onboarding-visual.tsx": "ae2caa0187914205058bf85f8d4c08c186227df928e6be2268c8fed3fb346980",
+    "packages/contratos/src/onboarding-visual.ts": "23de534e2994c14f0d8189872f985cc954f3eccba759e098915e6d491bc73021"
+  },
+  "sourceAfter": {
+    "apps/mobile/src/acesso-mobile.tsx": "fda3d0b20d3babaa7ca15d8ed6399e45374c54f9f5cbceffdbbbb889719dca48",
+    "apps/mobile/src/jornada-conta.tsx": "01fd76c19f17e19270ace8a3cbb11e38034c31b92c8d1a6940da6bd2400166a3",
+    "apps/mobile/src/estudo.tsx": "e5edf2f8492405905d552bd636090138d1628e6abe9cdeda658e1fb12719c07c",
+    "apps/mobile/src/onboarding-visual.tsx": "ae2caa0187914205058bf85f8d4c08c186227df928e6be2268c8fed3fb346980",
+    "packages/contratos/src/onboarding-visual.ts": "23de534e2994c14f0d8189872f985cc954f3eccba759e098915e6d491bc73021"
+  },
+  "evidenceComposition": {
+    "kind": "composed-evidence-with-targeted-retest",
+    "totalCaptures": 14,
+    "totalStates": 7,
+    "widths": [
+      {
+        "width": 390,
+        "height": 844
+      },
+      {
+        "width": 360,
+        "height": 800
+      }
+    ],
+    "baseline": {
+      "report": "/workspace/work/onboarding-acabamento-qa/rn-acabamento-comprovado-1795701166818/rn-acabamento-baseline-bruto.json",
+      "originalReport": "/workspace/work/onboarding-acabamento-qa/rn-acabamento-1795700108687/resultado.json",
+      "reportSha256": "5b77a7a8fe59ab9450dd006a0c5fcd070bc69fe477aee9421b5572260a1118b1",
+      "startedAt": "2026-11-26T13:35:08.693Z",
+      "finishedAt": "2026-11-26T13:35:28.811Z",
+      "originalPassed": false,
+      "originalFunctionalPassed": true,
+      "originalVisualPassed": false,
+      "selectedStates": [
+        "01-welcome-assunto",
+        "02-welcome-erro",
+        "03-welcome-retomada",
+        "07-retomada"
+      ],
+      "selectedCaptureCount": 8,
+      "originalVisualFailurePreserved": true
+    },
+    "target": {
+      "report": "/workspace/work/onboarding-acabamento-qa/rn-acabamento-comprovado-1795701166818/rn-acabamento-target-bruto.json",
+      "originalReport": "/workspace/work/onboarding-acabamento-qa/rn-acabamento-1795700516869/resultado.json",
+      "reportSha256": "4416c43a89ed0771f68ebacbb82a2d4f84eb173805cb1256d15c2bfc02542e78",
+      "startedAt": "2026-11-26T13:41:56.876Z",
+      "finishedAt": "2026-11-26T13:42:09.545Z",
+      "originalPassed": true,
+      "selectedStates": [
+        "04-objetivo",
+        "05-meta",
+        "06-primeira-vitoria"
+      ],
+      "selectedCaptureCount": 6
+    },
+    "unaffectedBaselineEvidence": {
+      "unchangedSourceFiles": [
+        "apps/mobile/src/acesso-mobile.tsx",
+        "apps/mobile/src/onboarding-visual.tsx",
+        "packages/contratos/src/onboarding-visual.ts"
+      ],
+      "basis": "Hashes unchanged for acesso-mobile.tsx, onboarding-visual.tsx and the shared visual contract; scoped owner edit record and final-source inspection isolate the other changes to preparation and the first-victory branch.",
+      "ownerConfirmedScope": {
+        "apps/mobile/src/jornada-conta.tsx": "Only dimension/safe-area/keyboard imports and contexts, padding constant24, local CorpoPreparacao with responsive minHeight, wrapper in PrepararPrimeiroEstudo and flexGrow1/padding constant in s.pagina. MetaDoDiaMobile and its styles unchanged in this interval.",
+        "apps/mobile/src/estudo.tsx": "Only avisoNoFluxo on Tela in the primeiraVitoria branch of TelaConcluida."
+      },
+      "renderIsolation": "Welcome renders from unchanged acesso-mobile/CenaStuOnboarding. Resume/map does not render CorpoPreparacao or the primeiraVitoria branch. These facts support unchanged rendering paths for the selected8baseline images.",
+      "evidenceLimit": "Owner has no saved baseline source snapshot; this report does not claim byte-for-byte equality of unchanged function bodies or pixel equality between separate executions."
+    }
+  },
+  "limitations": [
+    "React Native Web em Chromium, sem aparelho iOS/Android",
+    "API MOBILE e banco PostgreSQL reais locais",
+    "HTTPS sintético encaminhado para HTTP local; sem validação de TLS",
+    "SecureStore.web substituído por localStorage somente no harness",
+    "Foco/accessibility events nativos sem implementação no adaptador web: no-op somente no harness",
+    "Teclado, microfone, foco e leitor de tela nativos, TLS e Keychain não validados",
+    "Sem conferência em aparelho; preferências de movimento reduzido são em Chromium",
+    "Fonte a 200% é validação web conduzida pelo QA principal",
+    "SQL usa Pular perguntas no diagnóstico porque IA falsa não suporta diagnóstico SQL; demais endpoints reais locais",
+    "Aviso de música preservado; preferências não foram pré-mutadas",
+    "Posição de foco é observação do DOM de RN Web; adaptações de eventos nativos são no-op",
+    "RN Web 0.21.4 não mapeia accessibilityState.checked/selected para ARIA; fonte nativa preserva checked no radio, validação SR nativa pendente",
+    "Fourteen final captures combine8unaffected baseline images with6current targeted retest images; the original baseline visual failure remains preserved.",
+    "Native device/TalkBack/VoiceOver/TLS/Keychain/keyboard/microphone were not executed."
+  ],
+  "steps": [
+    {
+      "name": "cadastro-mobile-via-ui-otp-falso-real-201",
+      "at": "2026-11-26T13:35:14.682Z"
+    },
+    {
+      "name": "radio-alternancia-meta3-meta2-selecao-visual-unica",
+      "at": "2026-11-26T13:35:15.539Z"
+    },
+    {
+      "name": "radio-sr-rnweb-limitacao",
+      "at": "2026-11-26T13:35:15.543Z"
+    },
+    {
+      "name": "objetivo-sql-meta2-salvos-servidor",
+      "at": "2026-11-26T13:35:16.142Z"
+    },
+    {
+      "name": "pular-perguntas-proposta-aceite-sql-real",
+      "at": "2026-11-26T13:35:19.842Z"
+    },
+    {
+      "name": "primeira-licao-sql-resposta-errada-e-correta-reais",
+      "at": "2026-11-26T13:35:21.257Z"
+    },
+    {
+      "name": "ensine-ao-stu-texto-falso-avaliacao-real-200",
+      "at": "2026-11-26T13:35:21.813Z"
+    },
+    {
+      "name": "conclusao-real-meta1de2-progresso1de5",
+      "at": "2026-11-26T13:35:22.607Z"
+    },
+    {
+      "name": "reload-entra-direto-preserva-meta-progresso",
+      "at": "2026-11-26T13:35:25.025Z"
+    },
+    {
+      "name": "storage-limpo-login-existente-direto-preserva-meta1de2-progresso1de5",
+      "at": "2026-11-26T13:35:28.146Z"
+    },
+    {
+      "name": "cadastro-mobile-via-ui-otp-falso-real-201",
+      "at": "2026-11-26T13:42:01.797Z"
+    },
+    {
+      "name": "radio-alternancia-meta3-meta2-selecao-visual-unica",
+      "at": "2026-11-26T13:42:02.486Z"
+    },
+    {
+      "name": "radio-sr-rnweb-limitacao",
+      "at": "2026-11-26T13:42:02.491Z"
+    },
+    {
+      "name": "objetivo-sql-meta2-salvos-servidor",
+      "at": "2026-11-26T13:42:02.968Z"
+    },
+    {
+      "name": "pular-perguntas-proposta-aceite-sql-real",
+      "at": "2026-11-26T13:42:06.479Z"
+    },
+    {
+      "name": "primeira-licao-sql-resposta-errada-e-correta-reais",
+      "at": "2026-11-26T13:42:07.867Z"
+    },
+    {
+      "name": "ensine-ao-stu-texto-falso-avaliacao-real-200",
+      "at": "2026-11-26T13:42:08.517Z"
+    },
+    {
+      "name": "conclusao-real-meta1de2-progresso1de5",
+      "at": "2026-11-26T13:42:09.146Z"
+    }
+  ],
+  "captures": [
+    {
+      "name": "01-welcome-assunto",
+      "width": 390,
+      "file": "app-rnweb/01-welcome-assunto-390x844-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 716,
+            "width": 334,
+            "height": 56,
+            "top": 716,
+            "right": 362,
+            "bottom": 772,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "01-welcome-assunto",
+      "width": 360,
+      "file": "app-rnweb/01-welcome-assunto-360x800-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 672,
+            "width": 312,
+            "height": 56,
+            "top": 672,
+            "right": 336,
+            "bottom": 728,
+            "left": 24
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "02-welcome-erro",
+      "width": 390,
+      "file": "app-rnweb/02-welcome-erro-390x844-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 716,
+            "width": 334,
+            "height": 56,
+            "top": 716,
+            "right": 362,
+            "bottom": 772,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "02-welcome-erro",
+      "width": 360,
+      "file": "app-rnweb/02-welcome-erro-360x800-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 672,
+            "width": 312,
+            "height": 56,
+            "top": 672,
+            "right": 336,
+            "bottom": 728,
+            "left": 24
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "03-welcome-retomada",
+      "width": 390,
+      "file": "app-rnweb/03-welcome-retomada-390x844-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 716,
+            "width": 334,
+            "height": 56,
+            "top": 716,
+            "right": 362,
+            "bottom": 772,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "03-welcome-retomada",
+      "width": 360,
+      "file": "app-rnweb/03-welcome-retomada-360x800-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 24,
+            "y": 672,
+            "width": 312,
+            "height": 56,
+            "top": 672,
+            "right": 336,
+            "bottom": 728,
+            "left": 24
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": []
+      }
+    },
+    {
+      "name": "04-objetivo",
+      "width": 390,
+      "file": "app-rnweb/04-objetivo-390x844-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "top": 668,
+            "right": 362,
+            "bottom": 724,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [],
+        "victoryHero": null,
+        "nextTitleTypography": null
+      }
+    },
+    {
+      "name": "04-objetivo",
+      "width": 360,
+      "file": "app-rnweb/04-objetivo-360x800-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 624,
+            "width": 304,
+            "height": 56,
+            "top": 624,
+            "right": 332,
+            "bottom": 680,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [],
+        "victoryHero": null,
+        "nextTitleTypography": null
+      }
+    },
+    {
+      "name": "05-meta",
+      "width": 390,
+      "file": "app-rnweb/05-meta-390x844-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 668,
+            "width": 334,
+            "height": 56,
+            "top": 668,
+            "right": 362,
+            "bottom": 724,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [],
+        "victoryHero": null,
+        "nextTitleTypography": null
+      }
+    },
+    {
+      "name": "05-meta",
+      "width": 360,
+      "file": "app-rnweb/05-meta-360x800-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 624,
+            "width": 304,
+            "height": 56,
+            "top": 624,
+            "right": 332,
+            "bottom": 680,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [],
+        "victoryHero": null,
+        "nextTitleTypography": null
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 390,
+      "file": "app-rnweb/06-primeira-vitoria-390x844-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 518,
+            "width": 334,
+            "height": 56,
+            "top": 518,
+            "right": 362,
+            "bottom": 574,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [
+          {
+            "testId": "aviso-app",
+            "role": null,
+            "text": "Música de fundo ligada.Desligar",
+            "rect": {
+              "x": 28,
+              "y": 24,
+              "width": 334,
+              "height": 46,
+              "top": 24,
+              "right": 362,
+              "bottom": 70,
+              "left": 28
+            }
+          }
+        ],
+        "victoryHero": {
+          "heroRect": {
+            "x": 28,
+            "y": 82,
+            "width": 334,
+            "height": 225,
+            "top": 82,
+            "right": 362,
+            "bottom": 307,
+            "left": 28
+          },
+          "sceneRect": {
+            "x": 28,
+            "y": 82,
+            "width": 334,
+            "height": 140,
+            "top": 82,
+            "right": 362,
+            "bottom": 222,
+            "left": 28
+          },
+          "titleRect": {
+            "x": 28,
+            "y": 238,
+            "width": 334,
+            "height": 36,
+            "top": 238,
+            "right": 362,
+            "bottom": 274,
+            "left": 28
+          },
+          "bannerRect": {
+            "x": 28,
+            "y": 24,
+            "width": 334,
+            "height": 46,
+            "top": 24,
+            "right": 362,
+            "bottom": 70,
+            "left": 28
+          },
+          "bannerOverlapsScene": false,
+          "verticalOverlap": 0
+        },
+        "nextTitleTypography": {
+          "text": "Relacionar tabelas com INNER JOIN",
+          "rect": {
+            "x": 28,
+            "y": 476,
+            "width": 334,
+            "height": 26,
+            "top": 476,
+            "right": 362,
+            "bottom": 502,
+            "left": 28
+          },
+          "clientWidth": 334,
+          "scrollWidth": 334,
+          "font": "600 18px / 26px Inter",
+          "fontFamily": "Inter",
+          "fontWeight": "600",
+          "fontSize": "18px",
+          "lineHeight": "26px",
+          "letterSpacing": "normal",
+          "fontSynthesis": "weight style small-caps",
+          "canvas": {
+            "computed": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter400": {
+              "font": "18px Inter",
+              "width": 299.744140625
+            },
+            "inter600": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter700": {
+              "font": "bold 18px Inter",
+              "width": 307.7808837890625
+            },
+            "system600": {
+              "font": "600 18px sans-serif",
+              "width": 309.1025390625
+            }
+          },
+          "fontCheck": {
+            "inter400": true,
+            "inter600": true,
+            "inter700": true
+          },
+          "fontFaces": [
+            {
+              "family": "StudooTitulo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "StudooCorpo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "Inter",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "06-primeira-vitoria",
+      "width": 360,
+      "file": "app-rnweb/06-primeira-vitoria-360x800-target.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 28,
+            "y": 580,
+            "width": 304,
+            "height": 56,
+            "top": 580,
+            "right": 332,
+            "bottom": 636,
+            "left": 28
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [
+          {
+            "testId": "aviso-app",
+            "role": null,
+            "text": "Música de fundo ligada.Desligar",
+            "rect": {
+              "x": 28,
+              "y": 24,
+              "width": 304,
+              "height": 46,
+              "top": 24,
+              "right": 332,
+              "bottom": 70,
+              "left": 28
+            }
+          }
+        ],
+        "victoryHero": {
+          "heroRect": {
+            "x": 28,
+            "y": 82,
+            "width": 304,
+            "height": 261,
+            "top": 82,
+            "right": 332,
+            "bottom": 343,
+            "left": 28
+          },
+          "sceneRect": {
+            "x": 28,
+            "y": 82,
+            "width": 304,
+            "height": 140,
+            "top": 82,
+            "right": 332,
+            "bottom": 222,
+            "left": 28
+          },
+          "titleRect": {
+            "x": 28,
+            "y": 238,
+            "width": 304,
+            "height": 72,
+            "top": 238,
+            "right": 332,
+            "bottom": 310,
+            "left": 28
+          },
+          "bannerRect": {
+            "x": 28,
+            "y": 24,
+            "width": 304,
+            "height": 46,
+            "top": 24,
+            "right": 332,
+            "bottom": 70,
+            "left": 28
+          },
+          "bannerOverlapsScene": false,
+          "verticalOverlap": 0
+        },
+        "nextTitleTypography": {
+          "text": "Relacionar tabelas com INNER JOIN",
+          "rect": {
+            "x": 28,
+            "y": 512,
+            "width": 304,
+            "height": 52,
+            "top": 512,
+            "right": 332,
+            "bottom": 564,
+            "left": 28
+          },
+          "clientWidth": 304,
+          "scrollWidth": 304,
+          "font": "600 18px / 26px Inter",
+          "fontFamily": "Inter",
+          "fontWeight": "600",
+          "fontSize": "18px",
+          "lineHeight": "26px",
+          "letterSpacing": "normal",
+          "fontSynthesis": "weight style small-caps",
+          "canvas": {
+            "computed": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter400": {
+              "font": "18px Inter",
+              "width": 299.744140625
+            },
+            "inter600": {
+              "font": "600 18px Inter",
+              "width": 305.0843505859375
+            },
+            "inter700": {
+              "font": "bold 18px Inter",
+              "width": 307.7808837890625
+            },
+            "system600": {
+              "font": "600 18px sans-serif",
+              "width": 309.1025390625
+            }
+          },
+          "fontCheck": {
+            "inter400": true,
+            "inter600": true,
+            "inter700": true
+          },
+          "fontFaces": [
+            {
+              "family": "StudooTitulo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "StudooCorpo",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            },
+            {
+              "family": "Inter",
+              "weight": "normal",
+              "style": "normal",
+              "status": "loaded",
+              "display": "auto"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "07-retomada",
+      "width": 390,
+      "file": "app-rnweb/07-retomada-390x844-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 38,
+            "y": 629.1875,
+            "width": 314,
+            "height": 52,
+            "top": 629.1875,
+            "right": 352,
+            "bottom": 681.1875,
+            "left": 38
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [
+          {
+            "testId": "aviso-app",
+            "role": null,
+            "text": "Música de fundo ligada.Desligar",
+            "rect": {
+              "x": 20,
+              "y": 98.59375,
+              "width": 350,
+              "height": 46,
+              "top": 98.59375,
+              "right": 370,
+              "bottom": 144.59375,
+              "left": 20
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "07-retomada",
+      "width": 360,
+      "file": "app-rnweb/07-retomada-360x800-baseline.png",
+      "metrics": {
+        "viewport": {
+          "width": 360,
+          "height": 800
+        },
+        "horizontalOverflow": false,
+        "primary": {
+          "rect": {
+            "x": 38,
+            "y": 651.1875,
+            "width": 284,
+            "height": 52,
+            "top": 651.1875,
+            "right": 322,
+            "bottom": 703.1875,
+            "left": 38
+          },
+          "visibleWithoutScroll": true,
+          "hit": true
+        },
+        "reducedMotion": true,
+        "runningAnimations": [],
+        "music": [
+          {
+            "testId": "aviso-app",
+            "role": null,
+            "text": "Música de fundo ligada.Desligar",
+            "rect": {
+              "x": 20,
+              "y": 98.59375,
+              "width": 320,
+              "height": 46,
+              "top": 98.59375,
+              "right": 340,
+              "bottom": 144.59375,
+              "left": 20
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "findings": []
+}

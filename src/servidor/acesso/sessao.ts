@@ -65,11 +65,12 @@ export async function criarSessao(
   canal: CanalSessao,
   transacao: Prisma.TransactionClient = banco,
   duracaoSegundos = duracaoSessao,
+  onboardingInicial = false,
 ) {
   const token = randomBytes(32).toString('base64url');
   const agora = new Date();
   const expiraEm = new Date(agora.getTime() + duracaoSegundos * 1000);
   await transacao.sessao.deleteMany({ where: { usuarioId, expiraEm: { lte: agora } } });
-  await transacao.sessao.create({ data: { tokenHash: hashToken(token), usuarioId, canal, criadaEm: agora, expiraEm } });
+  await transacao.sessao.create({ data: { tokenHash: hashToken(token), usuarioId, canal, criadaEm: agora, expiraEm, onboardingInicial } });
   return { token, expiraEm };
 }

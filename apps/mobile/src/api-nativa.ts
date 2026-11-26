@@ -3,6 +3,7 @@ import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
 import { tocaSons } from './sons';
+import { criarClienteOnboarding } from '@studoo/contratos/onboarding';
 
 /**
  * O que ESTE app sabe desenhar (spec 15): vai em toda chamada no cabeçalho `X-Studoo-Capacidades`. É uma constante do app, não a
@@ -149,6 +150,7 @@ export function criarClienteNativo(token?: string) {
 
   return {
     ...cliente,
+    ...criarClienteOnboarding(transporteNativo(token)),
     configuracaoAcesso: semSessao.configuracaoAcesso,
     gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal, diagnosticoId?: string) => gerarTrilhaAoVivo(objetivo, sinal, token, diagnosticoId),
     responderSuaVez: (id: string, escolha: EscolhaNoSuaVez) => responderSuaVez(transporteNativo(token), id, escolha),

@@ -2,6 +2,7 @@ import { CABECALHO_CAPACIDADES, criarClienteStudoo, ErroStudoo, interpretarEvent
 import { comAceiteIa } from "../app/aceite-ia";
 import { tocaSons } from "../app/sons";
 import { CAPACIDADES_DO_SITE } from "./capacidades";
+import { criarClienteOnboarding } from "@studoo/contratos/onboarding";
 
 /**
  * O transporte da web. Sem rede numa ação da pessoa (pedido que não é GET), toca `erro_rede`; as leituras de fundo
@@ -21,6 +22,7 @@ const transporteDaWeb: TransporteStudoo = (caminho, opcoes) =>
   });
 
 export const clienteStudooWeb = criarClienteStudoo(transporteDaWeb);
+export const clienteOnboardingWeb = criarClienteOnboarding(transporteDaWeb);
 
 /**
  * O "Sua vez" do "Resolva comigo" (spec 15): `POST /api/aprendizado/licoes/[id]/resolucao` com a opção e a tentativa. Devolve o corpo cru

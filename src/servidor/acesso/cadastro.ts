@@ -89,8 +89,8 @@ export async function cadastrar(entrada: unknown, codigo: unknown, senha: unknow
     }
     await tx.verificacaoCadastro.delete({ where: { chave } });
     if (await tx.usuario.findUnique({ where: { email }, select: { id: true } })) return { erro: 'codigo_invalido' as const };
-    const usuario = await tx.usuario.create({ data: { email, senhaHash, fuso: 'America/Sao_Paulo' }, select: { id: true } });
-    return { erro: null, sessao: await criarSessao(usuario.id, canal, tx) };
+    const usuario = await tx.usuario.create({ data: { email, senhaHash, fuso: 'America/Sao_Paulo', onboarding: { create: {} } }, select: { id: true } });
+    return { erro: null, sessao: await criarSessao(usuario.id, canal, tx, undefined, true) };
   });
   if (resultado.erro !== null) throw new FalhaApi(resultado.erro);
   return resultado.sessao;

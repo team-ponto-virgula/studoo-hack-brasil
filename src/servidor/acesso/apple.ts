@@ -184,8 +184,9 @@ export async function entrarApple(entrada: unknown, provedores: Provedores = {})
     if (!emailPermitido(email)) throw new FalhaApi('email_nao_permitido');
     const criado = await tx.usuario.create({ data: {
       email, appleSub: identidade.sub, appleRenovacao: renovacaoCifrada, appleCliente: identidade.cliente, fuso: 'America/Sao_Paulo',
+      onboarding: { create: {} },
     }, select: { id: true } });
-    return criarSessao(criado.id, 'MOBILE', tx);
+    return criarSessao(criado.id, 'MOBILE', tx, undefined, true);
   }).catch(async (erro: unknown) => {
     // Nenhuma conta ficou com o token: devolve à Apple para não deixar autorização órfã.
     await revogarApple(renovacaoCifrada, identidade.cliente);

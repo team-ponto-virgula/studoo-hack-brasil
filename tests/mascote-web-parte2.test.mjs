@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CATALOGO_STU } from '@studoo/contratos';
+import { elementos, renderizarBoasVindas, renderizarEntrada } from './auxiliares/render-acesso.mjs';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (arquivo) => readFileSync(join(raiz, arquivo), 'utf8');
@@ -77,10 +78,13 @@ test('teto de 250 KB de animação por tela: cada arquivo conta uma vez, o que p
   delete globalThis.window;
 });
 
-test('a acolhida grande da entrada não é pedida no celular (sem prioridade, e a arte larga some lá)', () => {
-  const entrada = ler('src/app/login/entrada.tsx');
-  assert.match(entrada, /<Mascote expressao="stu-acolhida" tamanho=\{240\} sombra className="stu" \/>/);
-  assert.match(ler('src/app/globals.css'), /\.entrada-arte \{ display: none; \}/);
+test('o login mantém só a marca e as boas-vindas apresentam o Stu estático em destaque', () => {
+  assert.equal(elementos(renderizarEntrada(), 'img').some(e => /stu-/.test(e.getAttribute('src') || '')), false);
+  const mascotes = elementos(renderizarBoasVindas(), 'img').filter(e => /stu-/.test(e.getAttribute('src') || ''));
+  assert.equal(mascotes.length, 1);
+  assert.match(mascotes[0].getAttribute('src'), /stu-acolhida-320\.webp$/);
+  assert.equal(mascotes[0].getAttribute('alt'), '', 'o personagem acompanha uma promessa textual equivalente');
+  assert.doesNotMatch(mascotes[0].getAttribute('src'), /animado/);
 });
 
 test('o Stu antigo (stu-oi) saiu da web: nenhum uso em src/ e os dois arquivos apagados (spec 13, A2)', () => {

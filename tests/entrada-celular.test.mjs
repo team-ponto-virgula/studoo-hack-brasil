@@ -3,28 +3,26 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { elementos, porId, renderizarCadastro, renderizarEntrada, visivel } from './auxiliares/render-acesso.mjs';
 
 const raiz = resolve(import.meta.dirname, '..');
-const entrada = readFileSync(join(raiz, 'src/app/login/entrada.tsx'), 'utf8');
 const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
 
-test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidade adequada', () => {
-  const cadastro = readFileSync(join(raiz, 'src/app/cadastro/cadastro.tsx'), 'utf8');
-  const google = readFileSync(join(raiz, 'src/app/botao-google.tsx'), 'utf8');
-  assert.match(entrada, /googleDisponivel && \(\s*<BotaoGoogle ocupado=\{enviando\}/);
-  assert.match(cadastro, /etapa === 'email' && googleDisponivel && <div[^>]*>\s*<BotaoGoogle ocupado=\{ocupado\}/);
-  const botao = cadastro.indexOf('<BotaoGoogle');
-  const divisor = cadastro.indexOf('{m.ou}');
-  const instrucao = cadastro.indexOf('m.instrucao');
-  assert.ok(botao < divisor && divisor < instrucao && instrucao < cadastro.indexOf('id="cadastro-email"'));
-  assert.match(entrada, /mensagens\.acesso\.ou/);
-  assert.match(google, /alt="" aria-hidden="true"/);
-  assert.match(google, /width=\{20\} height=\{20\}/);
-  assert.match(google, /\{mensagens\.acesso\.google\}/);
-  assert.match(google, /window\.location\.assign\('\/api\/auth\/google\/iniciar'\)/);
-  assert.match(css, /\.botao\.botao-google[^}]*gap: 12px/);
+test('entrada e cadastro apresentam Google como alternativa depois da ação por e-mail, com marca decorativa', () => {
+  for (const documento of [renderizarEntrada(), renderizarCadastro()]) {
+    const controles = elementos(documento, '*').filter(e => ['input', 'button', 'a'].includes(e.tagName) && visivel(e));
+    const google = controles.find(e => e.tagName === 'button' && e.textContent.includes('Continuar com Google'));
+    const principal = controles.find(e => e.tagName === 'button' && e.getAttribute('type') === 'submit');
+    assert.ok(google && principal);
+    assert.ok(controles.indexOf(principal) < controles.indexOf(google), 'a ação de e-mail vem primeiro');
+    const imagem = elementos(google, 'img')[0];
+    assert.equal(imagem.getAttribute('alt'), '');
+    assert.equal(imagem.getAttribute('aria-hidden'), 'true');
+    assert.equal(imagem.getAttribute('width'), '20');
+    assert.equal(imagem.getAttribute('height'), '20');
+    assert.match(imagem.getAttribute('srcset') || imagem.getAttribute('srcSet'), /2x.*3x/);
+  }
   for (const [nome, tamanho] of [['google-g.png', 20], ['google-g@2x.png', 40], ['google-g@3x.png', 60]]) {
-    assert.ok(google.includes('packages/contratos/assets/' + nome));
     const imagem = readFileSync(join(raiz, 'packages/contratos/assets', nome));
     assert.deepEqual([imagem.readUInt32BE(16), imagem.readUInt32BE(20)], [tamanho, tamanho]);
   }
@@ -45,14 +43,21 @@ test('a conta sem trilhas abre o pedido (sem foco sozinho até 1023 px, para a c
   assert.match(estudo, /const abaNovaTrilha = tela\.tipo === 'objetivo';/);
 });
 
-test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minha senha" embaixo dele; sem rodapé preso', () => {
-  const senha = entrada.indexOf('id="senha"');
-  const entrar = entrada.indexOf('<div className="entrada-entrar">');
-  const esqueci = entrada.indexOf('className="acesso-link entrada-esqueci"');
-  assert.ok(senha > 0 && entrar > senha && esqueci > entrar, 'senha, Entrar e Esqueci, nessa ordem');
-  assert.ok(entrar < entrada.indexOf('</form>'), 'dentro do formulário');
-  assert.doesNotMatch(entrada, /<AcaoPrincipal>/);
-  assert.match(entrada, /variante=\{visitanteDisponivel \? 'secundario' : 'primario'\}/, 'secundário com o visitante, principal sem ele');
+test('o login começa pelo e-mail, mantém a senha no formulário e oferece recuperação sem misturar apresentação', () => {
+  const documento = renderizarEntrada();
+  const formulario = elementos(documento, 'form')[0];
+  assert.ok(formulario);
+  const email = porId(documento, 'email');
+  const senha = porId(documento, 'senha');
+  assert.ok(visivel(email));
+  assert.equal(email.getAttribute('autoComplete'), 'username');
+  assert.equal(senha.getAttribute('autoComplete'), 'current-password');
+  assert.equal(visivel(senha), false, 'a senha aparece somente na etapa seguinte');
+  const principal = elementos(formulario, 'button').find(e => e.getAttribute('type') === 'submit');
+  assert.equal(principal.textContent.trim(), 'Continuar');
+  assert.ok(elementos(documento, 'a').some(e => e.getAttribute('href') === '/recuperar'));
+  assert.ok(elementos(documento, 'a').some(e => e.getAttribute('href') === '/privacidade'));
+  assert.equal(elementos(documento, 'h1').length, 1);
 });
 
 test('no celular: sem faixa até 860 px de altura (120 px acima), título 28/34, texto 15/22 e Entrar de 48 na largura toda', () => {

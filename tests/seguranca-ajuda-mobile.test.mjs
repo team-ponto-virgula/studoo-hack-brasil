@@ -45,9 +45,15 @@ test('Ajuda e suporte: as três páginas do Studoo no navegador do sistema, na o
   assert.doesNotMatch(JSON.stringify(s.rotas), /\/api/);
 });
 
-test('Entrada e recuperação: "Precisa de ajuda? Fale com o suporte" logo embaixo de "Esqueci minha senha" e na recuperação', async () => {
-  const entrada = await ler('apps/mobile/src/sessao.tsx');
-  assert.match(entrada, /\{mensagens\.acesso\.esqueci\}<\/Text>\s*<\/Pressable>\s*\)\}\s*\{\/\*[^*]*\*\/\}\s*<BotaoPrecisaDeAjuda desativado=\{ocupado\} \/>/);
+test('Entrada: ajuda e privacidade no rodapé; recuperação mantém suporte e todos os alvos são acessíveis', async () => {
+  const acesso = await ler('apps/mobile/src/acesso-mobile.tsx');
+  const rodape = acesso.slice(acesso.indexOf('export function RodapeAcesso'), acesso.indexOf('export function useConfigAcesso'));
+  assert.match(rodape, /enderecoDoStudoo\('\/suporte'\) && <LinkAcesso rotulo="Ajuda"[^>]*acao=\{\(\) => abrirPaginaDoStudoo\('\/suporte'\)\} testID="login-ajuda"/);
+  assert.match(rodape, /enderecoDoStudoo\('\/privacidade'\) && <LinkAcesso rotulo="Privacidade"[^>]*acao=\{\(\) => abrirPaginaDoStudoo\('\/privacidade'\)\} testID="login-politica"/);
+  const entrada = acesso.slice(acesso.indexOf('export function EntradaMobile'), acesso.indexOf('const beneficios'));
+  assert.ok(entrada.indexOf('testID="login-entrar"') < entrada.indexOf('<RodapeAcesso />'), 'links públicos ficam depois das ações de acesso');
+  assert.match(entrada, /config\.recuperacao && <LinkAcesso rotulo="Esqueci minha senha"/);
+  assert.match(acesso, /link: \{ minHeight: 44,/);
   const recuperar = await ler('apps/mobile/src/recuperar.tsx');
   assert.match(recuperar, /<BotaoPrecisaDeAjuda desativado=\{ocupado\} testID="recuperar-ajuda" \/>/);
   const seg = await ler('apps/mobile/src/seguranca.tsx');

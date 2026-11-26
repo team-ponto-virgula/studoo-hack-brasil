@@ -74,8 +74,19 @@ A anatomia, as medidas e o movimento do menu de ações, da confirmação, do av
 | P34 | Página de apresentação (`/` sem conta e `/conheca`, spec 18): só na web | Primeiro contato de quem ainda não usa o Studoo | O app já abre na entrada e no conteúdo, e a página existe para levar à instalação do app | Ninguém | Conferência da página em 390, 768 e 1280 (spec 18, seção 5) |
 | P35 | Cabeçalho preso do mapa da trilha: no iPhone, Liquid Glass; no Android e na web, fundo `#FFFFFF` a 94% com linha de 1 px `#E1E7FA` embaixo quando o mapa rola sob ele (spec 16, item 3) | Mapa da trilha | O vidro do sistema só existe no iOS; sem ele, o título ficava transparente e o mapa aparecia por trás | Android e web | Captura do mapa rolado sob o cabeçalho nas três plataformas |
 | V1 | A conversa ao vivo do Explique só aparece na prévia web do app; no aparelho, a opção fica escondida e o Explique segue com "Gravar" e o texto | Explique | O WebRTC nativo pede um módulo próprio (react-native-webrtc) e um build novo; por decisão do Lead, sem dependência nativa nesta versão. Na prévia, o transporte é o WebRTC do navegador, no mesmo fluxo da web | App, quando o módulo nativo entrar | Prévia web |
+| P36 | No iOS elegível, “Continuar com a Apple” usa o componente oficial e aparece depois do Google quando ambos estão disponíveis. Web e Android não exibem esse método no contrato atual. | Entrada e criação de conta | Disponibilidade do módulo nativo e validação do bundle iOS; não há entrada Apple web/Android neste contrato. O estilo oficial da Apple é controlado pelo sistema, sem substituir por desenho caseiro. | Ninguém quanto à obrigação; qualquer ampliação do método exige API e contrato próprios | Testes de servidor com provedores sintéticos; SDK/autenticação Apple em aparelho não comprovados por esta entrega. Ver [acesso Apple/cadastro](../ACESSO-APPLE-CADASTRO.md). |
 
 ## O que não é diferença de tela
+
+### Onboarding aplicado e retenção (25/11/2026)
+
+O pedido explícito do dono passou a exigir boas-vindas, criação de conta, preparo do primeiro estudo, lição real e retomada, com meta diária útil. O [contrato de entrega](../ONBOARDING-RETENCAO.md) define o fluxo e substitui o adiamento de meta descrito no histórico da spec 17. A composição nova de acesso substitui a entrada antiga onde há conflito; isso não autoriza divergências entre web móvel e app.
+
+As duas versões usam `@studoo/contratos/onboarding`, a mesma ordem de benefícios e as mesmas escolhas de objetivo/material e meta. Uma conta nova inicia pela sessão emitida em sua criação; login em conta existente não reinicia o roteiro. Checkpoint e meta pertencem à conta no servidor, não à instalação. As contagens diárias vêm de primeiras conclusões reais, e a retomada aponta para o próximo estudo recuperável.
+
+As diferenças técnicas continuam restritas às obrigações registradas: cookie e origem na web versus Bearer/SecureStore no app (P1); Google no navegador do sistema (P2); teclado, área segura e tecnologias assistivas (P3–P6); Apple somente em iOS elegível, pelo componente oficial (P36). Google vem antes de Apple quando ambos estão disponíveis, por pedido do dono. A web expõe `/boas-vindas`, `/login`, `/cadastro` e `/onboarding`; o app usa seus estados de sessão e navegação para os mesmos contextos. A intro nativa de boot (P33) continua separada desse onboarding e do pequeno movimento da logo no acesso.
+
+As capturas em React Native Web permitem conferir layout e fluxo do cliente, mas não provam SecureStore, OAuth do sistema, teclado de aparelho, VoiceOver/TalkBack, desempenho nativo ou distribuição. Pares de 390×844 e 360×800 e a verificação nativa executada precisam ser registrados separadamente na entrega. Não preencher lacunas com notas ou evidência de protótipo HTML.
 
 - "Esqueci minha senha" e "Experimentar sem conta" aparecem conforme `/api/auth/config`, com a mesma regra nos dois. No site, recuperação e visitante estão desligados.
 - Trilhas da conta e textos gerados pela IA mudam de um ambiente para outro. A ordem das opções não muda entre a web e o app: ela vem do contrato (`embaralharExercicioDaRodada`, com a semente do id da lição, do índice do exercício e da rodada; a revisão rápida sobe a rodada e a ordem nunca repete a anterior), então a mesma tentativa tem a mesma ordem nos dois (spec 16, item 23).
@@ -84,6 +95,12 @@ A anatomia, as medidas e o movimento do menu de ações, da confirmação, do av
 - No balão do nó atual, um espaço de largura zero separa a ação do título. Assim o texto visível continua contido no nome acessível ("Começar: <título>. Lição X de Y, atual."), no formato da web 4.6.
 
 ## Como conferir
+
+### Acabamento do onboarding em 26/11/2026
+
+Textos e medidas de boas-vindas, metas e cenas usam `@studoo/contratos/onboarding-visual`. A mesma pose existente do Stu, a ordem dos benefícios, o radio único e a anatomia das ações são reproduzidos na web e no app. Provas e estado do restante da UI estão na [rodada visual](../ux/onboarding-acabamento-2026-11-26/README.md).
+
+O preparo nativo preenche a altura disponível com um contêiner local que desconta área segura e se adapta ao teclado (P4/P5). Na primeira vitória, a faixa nativa usa o mecanismo existente `avisoNoFluxo`; a web mantém a reserva do aviso medido no DOM. As duas preservam arte e ação visíveis. O anel de foco programático de títulos foi alinhado na prévia RN Web, preservando foco, anúncios e indicadores dos controles (P6). A conferência em aparelho continua separada da prévia de navegador (P11).
 
 - **Matemática (spec 15):** `npm run test:paridade` e `npm run test:estudio:interface` (inclui `tests/desenho-web.test.mjs`, `tests/casos-reais-web.test.mjs`, `tests/funcao-web.test.mjs`, `tests/formula-nos-formatos-web.test.mjs`); as capturas do navegador estão na pasta de trabalho de quem entrega (`matematica-fase2/capturas`, "web, navegador"). Uma figura ou fórmula nova entra primeiro no contrato (motor e testes) e depois nos dois lados; se o motor desenhar de um jeito, os dois desenham do mesmo.
 

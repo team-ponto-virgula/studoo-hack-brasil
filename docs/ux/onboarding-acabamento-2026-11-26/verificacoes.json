@@ -1,0 +1,79 @@
+{
+  "uiRevision": "34a4c4a",
+  "alignmentFixRevision": "01b3a4b",
+  "checks": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run typecheck --workspace @studoo/mobile",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:estudio:interface",
+      "total": 703,
+      "passed": 703,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:dominio",
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:formatos",
+      "total": 271,
+      "passed": 271,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:google-mobile",
+      "total": 17,
+      "passed": 17,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:paridade",
+      "passed": 5,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:movimento",
+      "passed": 6,
+      "failed": 0,
+      "exitCode": 0
+    },
+    {
+      "command": "npm run test:visitante-mobile",
+      "passed": 8,
+      "failed": 0,
+      "exitCode": 0
+    }
+  ],
+  "build": {
+    "revision": "34a4c4a",
+    "isolatedCheckout": true,
+    "exitCode": 0
+  },
+  "exports": {
+    "platforms": [
+      "android",
+      "ios"
+    ],
+    "hermes": true,
+    "exitCode": 0
+  },
+  "nativeExecuted": false,
+  "backendChanged": false,
+  "apiChanged": false,
+  "data": "sintéticos",
+  "ai": "falsa",
+  "email": "falso"
+}

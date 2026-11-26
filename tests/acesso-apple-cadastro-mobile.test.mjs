@@ -83,15 +83,24 @@ test('Apple: só no iPhone e só com o aparelho oferecendo', async () => {
   assert.equal(await ambiente({ disponivel: false }).api.appleDisponivelNoAparelho(), false);
 });
 
-test('entrada: Apple só com config.apple no iPhone, Criar conta só com config.cadastro, e a política pública', async () => {
+test('entrada: Apple oficial depende do servidor e do aparelho; cadastro permite os provedores habilitados e mantém a política', async () => {
+  const acesso = await ler('apps/mobile/src/acesso-mobile.tsx');
+  assert.match(acesso, /apple: c\.apple === true && podeApple/);
+  assert.match(acesso, /cadastro: c\.cadastro === true/);
+  assert.match(acesso, /config\.apple && apple && <View/);
+  assert.match(acesso, /<AppleAuthentication\.AppleAuthenticationButton/, 'botão oficial da Apple (Human Interface Guidelines)');
+  assert.match(acesso, /buttonType=\{AppleAuthentication\.AppleAuthenticationButtonType\.CONTINUE\}/);
+  assert.match(acesso, /buttonStyle=\{AppleAuthentication\.AppleAuthenticationButtonStyle\.WHITE_OUTLINE\}/);
+  assert.match(acesso, /\(config\.cadastro \|\| config\.google \|\| config\.apple\)/, 'OAuth pode criar conta mesmo com o cadastro por e-mail desligado');
+  assert.match(acesso, /enderecoDoStudoo\('\/privacidade'\).*testID="login-politica"/);
   const sessao = await ler('apps/mobile/src/sessao.tsx');
-  assert.match(sessao, /setAppleDisponivel\(c\.apple === true && appleNoAparelho\)/);
-  assert.match(sessao, /setCadastroDisponivel\(c\.cadastro === true\)/);
-  assert.match(sessao, /configuracaoCarregada && appleDisponivel && \(/);
-  assert.match(sessao, /AppleAuthenticationButton/, 'botão oficial da Apple (Human Interface Guidelines)');
-  assert.match(sessao, /configuracaoCarregada && cadastroDisponivel && \(/);
-  assert.match(sessao, /testID="entrada-privacidade"/);
   assert.match(sessao, /cadastrarNativo\(email, codigo, senha\)/);
+  assert.match(sessao, /<EntradaMobile[\s\S]*google=\{continuarComGoogle\}[\s\S]*apple=\{continuarComApple\}/);
+  const cadastro = await ler('apps/mobile/src/cadastro.tsx');
+  assert.match(cadastro, /new URL\(CAMINHO_POLITICA, origemConfigurada\(\)\)/);
+  assert.match(cadastro, /politica && <LinkAcesso[^>]*testID="cadastro-politica"/);
+  assert.match(cadastro, /config\.cadastro \? <>/, 'formulário de e-mail só com a capacidade própria');
+  assert.match(cadastro, /etapa === 'email' && <ProvedoresAcesso/, 'provedores reais permanecem disponíveis no cadastro');
   const app = JSON.parse(await ler('apps/mobile/app.json')).expo;
   assert.equal(app.ios.usesAppleSignIn, true);
   assert.ok(app.plugins.includes('expo-apple-authentication'));

@@ -322,7 +322,7 @@ test('Google iniciado em app.hellostudoo.com.br encaminha ao início canônico, 
   assert.ok(cookieGoogleBruto.includes('; Secure'));
   const cookieGoogle = cookieGoogleBruto.split(';')[0];
 
-  // 3) Retorno no callback canônico autentica e conclui o usuário em ${ORIGEM_ANTIGA}/.
+  // 3) A conta nova entra no onboarding, sempre no domínio canônico do callback e do cookie.
   const email = emailNovo();
   const sub = randomUUID();
   const retornoUrl = new URL('/api/auth/google/retorno', ORIGEM_ANTIGA);
@@ -336,12 +336,43 @@ test('Google iniciado em app.hellostudoo.com.br encaminha ao início canônico, 
     },
   );
   assert.equal(fim.status, 303);
-  assert.equal(fim.headers.get('location'), `${ORIGEM_ANTIGA}/`);
+  assert.equal(fim.headers.get('location'), `${ORIGEM_ANTIGA}/onboarding`);
   const cookiesFim = fim.headers.getSetCookie();
   const sessaoCookie = cookiesFim.find((c) => c.startsWith('__Host-studoo-sessao='));
   assert.ok(sessaoCookie && sessaoCookie.includes('; Secure'));
   const token = /__Host-studoo-sessao=([\w-]+)/.exec(sessaoCookie)[1];
-  assert.ok(await usuarioDaSessao(token, 'WEB'));
+  const usuarioId = await usuarioDaSessao(token, 'WEB');
+  assert.ok(usuarioId);
+  assert.equal((await banco.sessao.findUniqueOrThrow({ where: { tokenHash: hashToken(token) } })).onboardingInicial, true);
+
+  // 3b) A mesma identidade já existente retorna diretamente aos estudos, no mesmo domínio canônico.
+  const novoInicio = await iniciarGoogleRota(new Request('http://127.0.0.1:3000/api/auth/google/iniciar', {
+    method: 'GET', headers: { 'x-forwarded-proto': 'https', 'x-forwarded-host': HOST_ANTIGO },
+  }));
+  assert.equal(novoInicio.status, 303);
+  const novaUrlGoogle = new URL(novoInicio.headers.get('location'));
+  assert.equal(novaUrlGoogle.origin, 'https://accounts.google.com');
+  assert.equal(novaUrlGoogle.searchParams.get('redirect_uri'), `${ORIGEM_ANTIGA}/api/auth/google/retorno`);
+  const novoState = novaUrlGoogle.searchParams.get('state');
+  estadosGoogle.push(hashToken(novoState));
+  const novoCookieGoogle = novoInicio.headers.get('set-cookie') ?? '';
+  assert.ok(novoCookieGoogle.startsWith('__Host-studoo-google=') && novoCookieGoogle.includes('; Secure'));
+  const novoRetorno = new URL('/api/auth/google/retorno', ORIGEM_ANTIGA);
+  novoRetorno.searchParams.set('state', novoState);
+  novoRetorno.searchParams.set('code', 'codigo-google-existente-teste');
+  const existente = await retornarGoogle(new Request(novoRetorno, { headers: { cookie: novoCookieGoogle.split(';')[0] } }),
+    async (_code, _verificador, nonce) => {
+      assert.equal(nonce, novaUrlGoogle.searchParams.get('nonce'));
+      return { sub, email };
+    });
+  assert.equal(existente.status, 303);
+  assert.equal(existente.headers.get('location'), `${ORIGEM_ANTIGA}/`);
+  const cookieExistente = existente.headers.getSetCookie().find(c => c.startsWith('__Host-studoo-sessao='));
+  assert.ok(cookieExistente && cookieExistente.includes('; Secure') && cookieExistente.includes('; HttpOnly;'));
+  assert.equal(/;\s*Domain=/i.test(cookieExistente), false);
+  const tokenExistente = /__Host-studoo-sessao=([\w-]+)/.exec(cookieExistente)[1];
+  assert.equal(await usuarioDaSessao(tokenExistente, 'WEB'), usuarioId);
+  assert.equal((await banco.sessao.findUniqueOrThrow({ where: { tokenHash: hashToken(tokenExistente) } })).onboardingInicial, false);
 
   // 4) Com Google desligado, erro volta ao login do próprio host que pediu.
   delete process.env.GOOGLE_CLIENT_ID;

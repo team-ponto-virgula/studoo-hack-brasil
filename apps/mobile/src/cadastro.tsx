@@ -1,166 +1,144 @@
+import { ErroStudoo } from '@studoo/contratos';
 import { codigoAceito, normalizarEmailEntrada, senhaAceita } from '@studoo/contratos/autenticacao';
 import { CAMINHO_POLITICA } from '@studoo/contratos/privacidade';
-import { useEffect, useRef, useState } from 'react';
-import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { criarClienteNativo, origemConfigurada } from './api-nativa';
-import { appleDisponivelNoAparelho } from './apple-nativo';
-import { googleNoAparelho } from './google-nativo';
-import { LOGO_GOOGLE } from './marca-google';
+import { AcessoTela, BotaoAcesso, CampoAcesso, ErroAcesso, LinkAcesso, ProvedoresAcesso, RodapeAcesso, TituloAcesso, acessoEstilos, useConfigAcesso } from './acesso-mobile';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { abrirNoNavegador } from './social';
-import { cores, fontes } from './tema';
 import { ouvirVoltar } from './voltar';
 
 const m = mensagens.cadastro;
 
-/** A política pública do Studoo (web, sem login) na origem do piloto; null sem origem configurada. */
+/** A política pública continua disponível antes de criar uma conta. */
 export function enderecoDaPoliticaPublica() {
-  try {
-    return new URL(CAMINHO_POLITICA, origemConfigurada()).toString();
-  } catch {
-    return null;
-  }
+  try { return new URL(CAMINHO_POLITICA, origemConfigurada()).toString(); }
+  catch { return null; }
 }
 
-/**
- * Criar conta (igual à web, /cadastro): e-mail → código de 6 dígitos (prova que o e-mail é da pessoa) + senha → entra
- * na hora com a sessão do app. Mesmo desenho da recuperação de senha. Pedir código responde sempre "enviado" (o
- * servidor não revela quais e-mails já têm conta). Erros nos campos e do servidor no cartão de erro, sem janelas nativas.
- */
+/** Três passos reais. O código só é confirmado pelo servidor junto da criação final. */
 export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
   emailInicial: string;
   voltar: () => void;
-  /** "Continuar com Google" no topo do primeiro passo, antes do e-mail, quando o servidor e o build o oferecem (spec 06). */
   google?: () => Promise<void>;
-  /** "Continuar com a Apple" acima do Google, como na entrada (App Review 4.8): só no iPhone, com `apple: true`. */
   apple?: () => Promise<void>;
-  /** Cria a conta e entra (guarda a sessão no aparelho). */
   criar: (email: string, codigo: string, senha: string) => Promise<void>;
 }) {
-  const [etapa, setEtapa] = useState<'email' | 'codigo'>('email');
+  const config = useConfigAcesso();
+  const [etapa, setEtapa] = useState<'email' | 'codigo' | 'senha'>('email');
   const [email, setEmail] = useState(emailInicial);
   const [codigo, setCodigo] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [mostrar, setMostrar] = useState(false);
   const [erro, setErro] = useState<string>();
+  const [erroCampo, setErroCampo] = useState<{ email?: string; codigo?: string; senha?: string; confirmacao?: string }>({});
   const [ocupado, setOcupado] = useState(false);
   const [espera, setEspera] = useState(0);
   const emCurso = useRef(false);
+  const emailRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const codigoRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const senhaRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const confirmacaoRef = useRef<ComponentRef<typeof TextInput>>(null);
   const politica = enderecoDaPoliticaPublica();
-  // Os provedores, como na entrada: só o que o servidor oferece (e o aparelho permite) aparece; nada apagado.
-  const [provedores, setProvedores] = useState({ google: false, apple: false });
-  useEffect(() => {
-    let ativo = true;
-    void Promise.all([criarClienteNativo().configuracaoAcesso(), appleDisponivelNoAparelho()])
-      .then(([c, appleNoAparelho]) => { if (ativo) setProvedores({ google: Boolean(google) && c.google && googleNoAparelho(), apple: Boolean(apple) && c.apple === true && appleNoAparelho }); })
-      .catch(() => {});
-    return () => { ativo = false; };
-  }, [Boolean(google), Boolean(apple)]); // as funções nascem de novo a cada desenho da raiz; só a presença conta
-  const comProvedor = etapa === 'email' && (provedores.google || provedores.apple);
+  const temProvedores = Boolean((config.google && google) || (config.apple && apple));
+
+  function editarEmail() {
+    if (emCurso.current) return;
+    setEtapa('email'); setCodigo(''); setSenha(''); setConfirmacao(''); setMostrar(false); setErro(undefined); setErroCampo({});
+    setTimeout(() => emailRef.current?.focus(), 30);
+  }
+  function retornar() {
+    if (emCurso.current) return;
+    if (etapa === 'senha') { setEtapa('codigo'); setErro(undefined); setErroCampo({}); }
+    else if (etapa === 'codigo') editarEmail();
+    else voltar();
+  }
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const evento = ouvirVoltar(() => { if (!emCurso.current) voltar(); return true; });
+    const evento = ouvirVoltar(() => { retornar(); return true; });
     return () => evento.remove();
-  }, [voltar]);
+  }, [etapa, voltar]);
+  useEffect(() => {
+    if (etapa === 'email') return;
+    const timer = setTimeout(() => (etapa === 'codigo' ? codigoRef : senhaRef).current?.focus(), 40);
+    return () => clearTimeout(timer);
+  }, [etapa]);
   useEffect(() => {
     if (!espera) return;
-    const timer = setTimeout(() => setEspera((s) => Math.max(0, s - 1)), 1000);
+    const timer = setTimeout(() => setEspera(s => Math.max(0, s - 1)), 1000);
     return () => clearTimeout(timer);
   }, [espera]);
 
-  async function executar(acao: () => Promise<void>) {
+  async function executar(acao: () => Promise<void>, aoFalhar?: (erro: unknown) => void) {
     if (emCurso.current) return;
-    emCurso.current = true; setOcupado(true); setErro(undefined); Keyboard.dismiss();
-    try { await acao(); } catch (e) { setErro(mensagemDeErro(e)); }
+    emCurso.current = true; setOcupado(true); setErro(undefined); setErroCampo({}); Keyboard.dismiss();
+    try { await acao(); }
+    catch (falha) { setErro(mensagemDeErro(falha)); aoFalhar?.(falha); }
     finally { emCurso.current = false; setOcupado(false); }
   }
   function enviar() {
+    if (emCurso.current || !config.cadastro) return;
     const normalizado = normalizarEmailEntrada(email);
-    if (!normalizado) { setErro(m.emailInvalido); return; }
+    if (!normalizado) { setErroCampo({ email: m.emailInvalido }); emailRef.current?.focus(); return; }
     void executar(async () => {
       await criarClienteNativo().pedirCodigoCadastro(normalizado, true);
-      setEtapa('codigo'); setEspera(60);
+      setEmail(normalizado); setCodigo(''); setEtapa('codigo'); setEspera(60);
     });
+  }
+  function continuarCodigo() {
+    if (emCurso.current) return;
+    if (!codigoAceito(codigo)) { setErroCampo({ codigo: m.codigoInvalido }); codigoRef.current?.focus(); return; }
+    setErroCampo({}); setErro(undefined); setEtapa('senha');
   }
   function concluir() {
+    if (emCurso.current || !config.cadastro) return;
     const normalizado = normalizarEmailEntrada(email);
-    if (!normalizado) { setErro(m.emailInvalido); return; }
-    if (!codigoAceito(codigo)) { setErro(m.codigoInvalido); return; }
-    if (!senhaAceita(senha)) { setErro(m.senhaInvalida); return; }
-    if (senha !== confirmacao) { setErro(m.senhasDiferentes); return; }
-    void executar(async () => {
-      await criar(normalizado, codigo, senha);
+    if (!normalizado) { setEtapa('email'); setErroCampo({ email: m.emailInvalido }); return; }
+    if (!codigoAceito(codigo)) { setEtapa('codigo'); setErroCampo({ codigo: m.codigoInvalido }); return; }
+    if (!senhaAceita(senha)) { setErroCampo({ senha: m.senhaInvalida }); senhaRef.current?.focus(); return; }
+    if (senha !== confirmacao) { setErroCampo({ confirmacao: m.senhasDiferentes }); confirmacaoRef.current?.focus(); return; }
+    void executar(() => criar(normalizado, codigo, senha), falha => {
+      if (falha instanceof ErroStudoo && falha.codigo === 'codigo_invalido') {
+        setEtapa('codigo'); setErroCampo({ codigo: mensagemDeErro(falha) });
+      }
     });
   }
-
-  return <Tela pagina={`cadastro-${etapa}`} acoes={<Botao variante="texto" compacto rotulo={mensagens.voltar} desativado={ocupado} acao={voltar} />}
-    rodape={<Botao rotulo={etapa === 'email' ? ocupado ? m.enviando : m.enviar : ocupado ? m.criando : m.criar}
-      testID="cadastro-enviar" ocupado={ocupado} carregando={ocupado} acao={etapa === 'email' ? enviar : concluir} />}>
-    <View style={visual.simbolo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Icone nome="cadeado" tamanho={28} cor={cores.acao} /></View>
-    <Titulo key={etapa} foco testID="titulo-cadastro">{m.titulo}</Titulo>
-    {/* Spec 06 (4e944df): com o Google, a instrução desce para logo acima do campo, depois do divisor. */}
-    {!comProvedor && <Text testID="cadastro-instrucao" style={estilos.introducao}>{etapa === 'email' ? m.instrucao : m.validade}</Text>}
-    <View style={{ gap: 20, marginTop: 24 }}>
-      {/* Spec 06: no primeiro passo, os provedores no topo, na ordem da entrada (Apple, Google), e o "ou" antes do e-mail. */}
-      {comProvedor && provedores.apple && apple && (
-        <View testID="cadastro-apple" pointerEvents={ocupado ? 'none' : 'auto'} style={ocupado ? { opacity: 0.5 } : null} accessibilityState={{ disabled: ocupado }}>
-          <AppleAuthentication.AppleAuthenticationButton buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK} cornerRadius={16} style={visual.apple}
-            onPress={() => void executar(apple)} />
-        </View>
-      )}
-      {comProvedor && provedores.google && google && (
-        <Botao rotulo={mensagens.acesso.google} testID="cadastro-google" variante="secundario" imagemAntes={LOGO_GOOGLE} desativado={ocupado}
-          acao={() => void executar(google)} />
-      )}
-      {comProvedor && (
-        <View style={visual.divisor}><View style={visual.linha} /><Text style={estilos.legenda}>{m.ou}</Text><View style={visual.linha} /></View>
-      )}
-      {comProvedor && <Text testID="cadastro-instrucao" style={[estilos.introducao, { marginTop: 0 }]}>{m.instrucao}</Text>}
-      <Campo rotulo={m.email} testID="cadastro-email" value={email} onChangeText={(v) => { setEmail(v); setErro(undefined); }}
-        autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" maxLength={254}
-        editable={!ocupado && etapa === 'email'} returnKeyType="send" onSubmitEditing={etapa === 'email' ? enviar : undefined} />
-      {etapa === 'codigo' && <>
-        <Text testID="cadastro-enviado" accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>{m.enviado}</Text>
-        <Campo rotulo={m.codigo} testID="cadastro-codigo" value={codigo} onChangeText={(v) => { setCodigo(v.replace(/\D/g, '')); setErro(undefined); }}
-          keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxLength={6} editable={!ocupado} />
-        <Campo rotulo={m.senha} testID="cadastro-senha" value={senha} onChangeText={(v) => { setSenha(v); setErro(undefined); }} secureTextEntry={!mostrar}
-          autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" maxLength={256} editable={!ocupado}
-          acessorio={<BotaoIcone icone={mostrar ? 'olhoFechado' : 'olho'} rotulo={mensagens.entrada.mostrarSenha} selecionado={mostrar} desativado={ocupado} acao={() => setMostrar((v) => !v)} />} />
-        <Text style={estilos.legenda}>{m.dicaSenha}</Text>
-        <Campo rotulo={m.confirmarSenha} testID="cadastro-confirmacao" value={confirmacao} onChangeText={(v) => { setConfirmacao(v); setErro(undefined); }}
-          secureTextEntry={!mostrar} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" maxLength={256}
-          editable={!ocupado} returnKeyType="go" onSubmitEditing={concluir} />
-        <Botao variante="texto" testID="cadastro-reenviar" rotulo={espera ? m.aguarde(espera) : m.reenviar} desativado={ocupado || espera > 0} acao={enviar} />
-        <Botao variante="texto" testID="cadastro-trocar-email" rotulo={m.trocarEmail} desativado={ocupado}
-          acao={() => { setEtapa('email'); setCodigo(''); setErro(undefined); }} />
-      </>}
-      {erro && <EstadoErro mensagem={erro} foco />}
-      {politica && (
-        <Pressable testID="cadastro-politica" accessibilityRole="link" hitSlop={{ top: 2, bottom: 2 }} onPress={() => abrirNoNavegador(politica)}
-          style={({ pressed }) => [visual.link, pressed && { opacity: 0.7 }]}>
-          <Text style={visual.linkTexto}>{m.politica}</Text>
-        </Pressable>
-      )}
-      <Pressable testID="cadastro-ja-tenho-conta" accessibilityRole="link" disabled={ocupado} hitSlop={{ top: 2, bottom: 2 }} onPress={voltar}
-        style={({ pressed }) => [visual.link, pressed && { opacity: 0.7 }]}>
-        <Text style={visual.linkTexto}>{mensagens.acesso.jaTenhoConta}</Text>
-      </Pressable>
+  const titulo = etapa === 'email' ? 'Vamos começar.' : etapa === 'codigo' ? 'Confira seu e-mail.' : 'Proteja sua conta.';
+  const descricao = etapa === 'email' ? 'Crie sua conta e prepare seu primeiro estudo.' : etapa === 'codigo' ? m.enviado : 'Escolha uma senha para voltar quando quiser.';
+  return <AcessoTela pagina={`cadastro-${etapa}`} voltar={retornar} ocupado={ocupado} acontecimento={etapa}>
+    <View style={s.cabeca}><TituloAcesso testID="titulo-cadastro">{titulo}</TituloAcesso><Text testID="cadastro-instrucao" style={acessoEstilos.descricao}>{descricao}</Text></View>
+    <View style={s.formulario}>
+      {config.cadastro ? <>
+        {etapa !== 'email' && <View style={acessoEstilos.contexto}><Text style={acessoEstilos.contextoTexto}>{email}</Text><LinkAcesso rotulo="Alterar" testID="cadastro-alterar-email" acao={editarEmail} desativado={ocupado} /></View>}
+        {etapa === 'email' && <CampoAcesso rotulo="E-mail" testID="cadastro-email" campoRef={emailRef} value={email} erro={erroCampo.email} placeholder="voce@exemplo.com" onChangeText={v => { setEmail(v); setErroCampo({}); setErro(undefined); }} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" maxLength={254} editable={!ocupado} returnKeyType="send" onSubmitEditing={enviar} />}
+        {etapa === 'codigo' && <>
+          <CampoAcesso rotulo={m.codigo} testID="cadastro-codigo" campoRef={codigoRef} value={codigo} erro={erroCampo.codigo} placeholder="000000" onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setErroCampo({}); setErro(undefined); }} keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxLength={6} editable={!ocupado} returnKeyType="next" onSubmitEditing={continuarCodigo} />
+          <Text style={s.dica}>{m.validade}</Text>
+        </>}
+        {etapa === 'senha' && <>
+          <CampoAcesso rotulo={m.senha} testID="cadastro-senha" campoRef={senhaRef} value={senha} erro={erroCampo.senha} onChangeText={v => { setSenha(v); setErroCampo({}); setErro(undefined); }} secureTextEntry={!mostrar} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" maxLength={256} editable={!ocupado} returnKeyType="next" onSubmitEditing={() => confirmacaoRef.current?.focus()}
+            acessorio={<Pressable accessibilityRole="button" accessibilityLabel={mostrar ? 'Ocultar senha' : 'Mostrar senha'} accessibilityState={{ selected: mostrar, disabled: ocupado }} testID="cadastro-mostrar-senha" disabled={ocupado} onPress={() => setMostrar(v => !v)} style={acessoEstilos.olho}><Icone nome={mostrar ? 'olhoFechado' : 'olho'} tamanho={22} cor="#626b7e" /></Pressable>} />
+          <Text style={s.dica}>{m.dicaSenha}</Text>
+          <CampoAcesso rotulo={m.confirmarSenha} testID="cadastro-confirmacao" campoRef={confirmacaoRef} value={confirmacao} erro={erroCampo.confirmacao} onChangeText={v => { setConfirmacao(v); setErroCampo({}); setErro(undefined); }} secureTextEntry={!mostrar} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" textContentType="newPassword" maxLength={256} editable={!ocupado} returnKeyType="go" onSubmitEditing={concluir} />
+        </>}
+        <ErroAcesso mensagem={erro} />
+        <BotaoAcesso rotulo={etapa === 'email' ? ocupado ? m.enviando : m.enviar : etapa === 'codigo' ? 'Continuar' : ocupado ? m.criando : m.criar} testID="cadastro-enviar" ocupado={ocupado} seta acao={etapa === 'email' ? enviar : etapa === 'codigo' ? continuarCodigo : concluir} />
+        {etapa === 'codigo' && <LinkAcesso rotulo={espera ? m.aguarde(espera) : m.reenviar} testID="cadastro-reenviar" discreto desativado={ocupado || espera > 0} acao={enviar} />}
+      </> : !config.carregada ? <Text accessibilityLiveRegion="polite" style={acessoEstilos.descricao}>Verificando formas de criar sua conta…</Text> : config.erro ? <><ErroAcesso mensagem="Não foi possível verificar as formas de criar sua conta." /><BotaoAcesso rotulo="Tentar novamente" acao={config.tentar} secundario testID="cadastro-tentar-config" /></> : !temProvedores ? <Text style={acessoEstilos.descricao}>A criação de contas está indisponível neste momento. Se já tem uma conta, você pode entrar.</Text> : null}
     </View>
-  </Tela>;
+    {etapa === 'email' && <ProvedoresAcesso config={config} google={google} apple={apple} ocupado={ocupado} executar={acao => void executar(acao)} divisor={config.cadastro} prefixo="cadastro" />}
+    {!config.cadastro && <ErroAcesso mensagem={erro} />}
+    <View style={s.links}>
+      {politica && <LinkAcesso rotulo={m.politica} testID="cadastro-politica" discreto desativado={ocupado} acao={() => abrirNoNavegador(politica)} />}
+      <LinkAcesso rotulo="Já tenho conta" testID="cadastro-ja-tenho-conta" desativado={ocupado} acao={voltar} />
+    </View>
+    <RodapeAcesso />
+  </AcessoTela>;
 }
 
-const visual = StyleSheet.create({
-  divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
-  apple: { width: '100%', height: 52 },
-  simbolo: { width: 56, height: 56, borderRadius: 18, backgroundColor: cores.nevoa, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  aviso: { padding: 14, borderRadius: 14, backgroundColor: cores.nevoa },
-  // Como .acesso-link da web: 44 de altura, texto no centro.
-  link: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center' },
+const s = StyleSheet.create({
+  cabeca: { marginTop: 36, gap: 12 }, formulario: { marginTop: 32, gap: 14 }, links: { marginTop: 20, gap: 4 }, dica: { color: '#626b7e', fontFamily: 'Inter', fontSize: 13, lineHeight: 20 },
 });

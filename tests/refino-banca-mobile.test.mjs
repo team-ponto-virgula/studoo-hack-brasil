@@ -58,7 +58,27 @@ test('P2-1: o troféu da criação é pré-carregado na tela do pedido (no iPhon
   assert.match(mascote, /export const TROFEU_DA_CRIACAO = \['acessorio-trofeu-p', 'acessorio-trofeu-m'\] as const;/);
   assert.match(mascote, /lugar: \{ position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' \}/);
   assert.match(mascote, /accessibilityElementsHidden style=\{estilosDaPreCarga\.lugar\}/);
-  assert.match(estudo, /<Tela pagina="objetivo"[^\n]*>\n\s*\{\/\*[^\n]*\*\/\}\n\s*<PreCargaDoStu arquivos=\{TROFEU_DA_CRIACAO\} \/>/);
+  // A pré-carga continua dentro da tela do pedido, mesmo com novas propriedades
+  // de onboarding e comentários entre os filhos. Verifica a árvore JSX real.
+  const arvore = ts.createSourceFile('estudo.tsx', estudo, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const pedidos = [];
+  const visitar = (no) => {
+    if (ts.isJsxElement(no) && no.openingElement.tagName.getText(arvore) === 'Tela'
+      && no.openingElement.attributes.properties.some(p => ts.isJsxAttribute(p) && p.name.getText(arvore) === 'pagina'
+        && p.initializer && ts.isStringLiteral(p.initializer) && p.initializer.text === 'objetivo')) pedidos.push(no);
+    ts.forEachChild(no, visitar);
+  };
+  visitar(arvore);
+  assert.equal(pedidos.length, 1, 'uma tela de pedido');
+  const precargas = [];
+  const visitarPedido = (no) => {
+    if (ts.isJsxSelfClosingElement(no) && no.tagName.getText(arvore) === 'PreCargaDoStu') precargas.push(no);
+    ts.forEachChild(no, visitarPedido);
+  };
+  visitarPedido(pedidos[0]);
+  assert.equal(precargas.length, 1, 'a pré-carga pertence ao pedido, antes da criação');
+  const arquivosPreCarga = precargas[0].attributes.properties.find(p => ts.isJsxAttribute(p) && p.name.getText(arvore) === 'arquivos');
+  assert.equal(arquivosPreCarga?.initializer?.expression?.getText(arvore), 'TROFEU_DA_CRIACAO');
   const arquivos = await ler('stu-arquivos.ts');
   assert.match(arquivos, /'acessorio-trofeu-p': require/);
   assert.match(arquivos, /'acessorio-trofeu-m': require/);

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readdir, readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import ts from 'typescript';
+import { VISUAL_ONBOARDING } from '../packages/contratos/src/onboarding-visual.ts';
+import { renderizarCenaStu, nosDaCena, estiloDaCena } from './auxiliares/render-cena-mobile.mjs';
 
 // Spec 16 (refinamento de UI), P1 do app, lotes 1 a 3: itens 5, 6, 8, 9 (com a apresentação sem selo), 16 e 17.
 const ler = (caminho) => readFile(new URL(`../apps/mobile/src/${caminho}`, import.meta.url), 'utf8');
@@ -146,15 +148,33 @@ test('item 4: com folga (regra do contrato), o Exemplo ganha o stu-feliz de 72 a
   assert.match(licao, /<Stu nome="stu-feliz" tamanho=\{STU_DA_ETAPA\} \/>/);
 });
 
-test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do título (parado com movimento reduzido)', async () => {
-  const sessao = await ler('sessao.tsx');
-  assert.match(sessao, /<View testID="entrada-stu" style=\{entradaEstilos\.stuDoTitulo\} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>\n\s*<Stu nome="stu-acolhida" tamanho=\{STU_DO_TITULO\} animado="laco" pausado=\{recolher\} \/>/);
-  assert.match(sessao, /const STU_DO_TITULO = 72;/);
-  assert.match(sessao, /tituloComStu: \{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 \}/);
-  // Com a paisagem (tela alta), o Stu já está nela: não aparece duas vezes.
-  assert.match(sessao, /\{ilustracao > 0 \? \(\n\s*<Titulo foco testID="titulo-entrada"/);
-  // O laço do Stu para com movimento reduzido (o próprio componente do mascote).
-  assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
+test('item 10 atualizado: Stu expressivo nas boas-vindas, login limpo e animações breves respeitando movimento reduzido', async () => {
+  const acesso = await ler('acesso-mobile.tsx');
+  const ast = ts.createSourceFile('acesso.tsx', acesso, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const componente = nome => ast.statements.find(no => ts.isFunctionDeclaration(no) && no.name?.text === nome)?.getText(ast);
+  const entrada = componente('EntradaMobile');
+  const boas = componente('BoasVindasMobile');
+  assert.doesNotMatch(entrada, /<Stu\b|entrada-stu|STU_DO_TITULO/);
+  assert.match(boas, /<CenaStuOnboarding nome=\{atual\.stu\}/);
+  const vitoria = nosDaCena(renderizarCenaStu({ nome: 'stu-celebrando', compacto: true }));
+  const stuVitoria = vitoria.find(no => no.type === 'Stu');
+  const heroiVitoria = vitoria.find(no => no.props?.pointerEvents === 'none');
+  assert.equal(stuVitoria.props.nome, 'stu-celebrando');
+  assert.equal(stuVitoria.props.tamanho, VISUAL_ONBOARDING.vitoria.stu);
+  assert.equal(estiloDaCena(heroiVitoria.props.style).height, VISUAL_ONBOARDING.vitoria.altura);
+  assert.equal(stuVitoria.props.animado, undefined, 'a composição não adiciona um laço ao mascote aprovado');
+  assert.match(boas, /<TransicaoAcesso chave=\{pagina\}/);
+  const logo = acesso.slice(acesso.indexOf('export function LogoAcesso'), acesso.indexOf('export function AcessoTela'));
+  const transicao = acesso.slice(acesso.indexOf('export function TransicaoAcesso'), acesso.indexOf('export function TituloAcesso'));
+  for (const animacao of [logo, transicao]) {
+    assert.match(animacao, /useMovimentoReduzido\(\)/);
+    assert.match(animacao, /if \(reduzir === null\) return;/, 'espera conhecer a preferência antes de animar');
+    assert.match(animacao, /if \(reduzir \|\|[^}]*progresso\.stopAnimation\(\); progresso\.setValue\(1\); return;/);
+    assert.match(animacao, /animacao\.stop\(\)/, 'limpa a animação ao sair');
+    assert.doesNotMatch(animacao, /Animated\.loop|setInterval|animado="laco"/);
+  }
+  assert.match(logo, /vistos\.current\.has\(acontecimento\)/, 'a saudação não recomeça ao redesenhar');
+  assert.match(transicao, /ultimo\.current === chave/, 'a transição não recomeça na mesma etapa');
 });
 
 test('a explicação tem etapa própria, mantém o envio no rodapé e deixa seguir após o retorno ou pular', async () => {

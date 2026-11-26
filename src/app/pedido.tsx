@@ -42,7 +42,9 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, repetirGeracao, verPlanos, comoFunciona,
-  focarCampo = false, porLink, aoDesconectar }: {
+  focarCampo = false, porLink, aoDesconectar, modoInicial = 'ideia' }: {
+  /** Onboarding com material abre diretamente o envio real, sem pedir de novo o mesmo objetivo. */
+  modoInicial?: 'ideia' | 'material';
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
   /** A ação da lista vazia leva diretamente ao campo de objetivo, inclusive no celular. */
@@ -65,7 +67,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
 }) {
   const [pedidoDiagnostico, setPedidoDiagnostico] = useState<string | null>(null);
   const [diagnosticoAberto, setDiagnosticoAberto] = useState(false);
-  const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  const [modo, setModo] = useState<'ideia' | 'material'>(modoInicial);
   const [temaRecusado, setTemaRecusado] = useState<string | null>(null);
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);

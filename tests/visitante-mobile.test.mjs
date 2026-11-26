@@ -75,13 +75,120 @@ test('visitante: falha ao guardar encerra no servidor a sessão recém-criada', 
   assert.equal(a.chamadas.tokenDoLogout, a.token);
 });
 
-test('entrada: o botão só aparece com visitante: true e usa o aviso do aparelho e o texto do limite', async () => {
-  const sessao = await readFile(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
-  assert.match(sessao, /setVisitanteDisponivel\(c\.visitante === true\)/);
-  assert.match(sessao, /visitanteDisponivel && \(\s*<View testID="acesso-visitante"/);
-  assert.match(sessao, /mensagens\.acesso\.experimentarAvisoApp/);
-  assert.match(sessao, /entrarComoVisitante\(\)/);
-  const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
-  assert.match(mensagens.acesso.experimentarAvisoApp, /neste aparelho/);
-  assert.ok(mensagens.erros.limite_visitante.length > 0);
+// Executa a EntradaMobile e seu hook real com dublês dos componentes nativos. A árvore JSX é inspecionada sem
+// montar a interface nativa; os toques e as atualizações assíncronas executam o código de produção.
+const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
+const { normalizarEmailEntrada } = await import('../packages/contratos/src/autenticacao.ts');
+const visualOnboarding = await import('../packages/contratos/src/onboarding-visual.ts');
+const acessoJs = ts.transpileModule(await readFile(new URL('../apps/mobile/src/acesso-mobile.tsx', import.meta.url), 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+}).outputText;
+
+function entrada({ visitante, entrarVisitante = async () => {} } = {}) {
+  const estados = [], efeitos = [];
+  let cursor = 0, pendentes = [];
+  const hooks = {
+    useState(inicial) {
+      const i = cursor++;
+      if (!(i in estados)) estados[i] = typeof inicial === 'function' ? inicial() : inicial;
+      return [estados[i], valor => { estados[i] = typeof valor === 'function' ? valor(estados[i]) : valor; }];
+    },
+    useRef(inicial) { const i = cursor++; return estados[i] ??= { current: inicial }; },
+    useEffect(acao, deps) {
+      const i = cursor++;
+      if (!efeitos[i] || !deps || deps.some((v, n) => !Object.is(v, efeitos[i].deps?.[n]))) {
+        const anterior = efeitos[i];
+        efeitos[i] = { deps };
+        pendentes.push(() => { anterior?.limpar?.(); efeitos[i].limpar = acao(); });
+      }
+    },
+    useContext: () => null,
+  };
+  class ErroStudoo extends Error { constructor(codigo) { super(codigo); this.codigo = codigo; } }
+  const elemento = (type, props) => ({ type, props });
+  const modulos = {
+    react: hooks,
+    'react/jsx-runtime': { jsx: elemento, jsxs: elemento, Fragment: 'Fragment' },
+    'react-native': { StyleSheet: { create: valor => valor }, Platform: { OS: 'web' }, Keyboard: { dismiss() {} },
+      View: 'View', Text: 'Text', Pressable: 'Pressable', TextInput: 'TextInput', Image: 'Image', ActivityIndicator: 'ActivityIndicator' },
+    'expo-apple-authentication': {},
+    'react-native-safe-area-context': {},
+    '@studoo/contratos': { ErroStudoo },
+    '@studoo/contratos/autenticacao': { normalizarEmailEntrada },
+    '@studoo/contratos/onboarding-visual': visualOnboarding,
+    // A unidade executa a entrada e seus controles, sem montar a cena decorativa das boas-vindas.
+    './onboarding-visual': {},
+    './api-nativa': { criarClienteNativo: () => ({ configuracaoAcesso: async () => ({ visitante, google: false, apple: false, cadastro: false, recuperacao: false }) }) },
+    './apple-nativo': { appleDisponivelNoAparelho: async () => false },
+    './google-nativo': { googleNoAparelho: () => false },
+    './marca-google': {}, './icone': {}, './interface': {}, './movimento': {}, './foco': {}, './mascote': {},
+    './mensagens': { mensagens: { ...mensagens, entrada: mensagens.login }, mensagemDeErro: erro => mensagens.erros[erro.codigo] ?? mensagens.erros.falha },
+    './seguranca': {}, './voltar': {},
+    '../assets/marca/logo-com-sorriso.png': 0, '../assets/marca/abertura-oculos-hd.png': 0,
+  };
+  const api = {};
+  runInNewContext(acessoJs, { exports: api, require(nome) { assert.ok(nome in modulos, `módulo sem dublê: ${nome}`); return modulos[nome]; }, setTimeout, clearTimeout });
+  const props = { entrar: async () => {}, google: async () => {}, apple: async () => {}, criarConta() {}, visitante: entrarVisitante, recuperar() {} };
+  function render() {
+    cursor = 0;
+    const arvore = api.EntradaMobile(props);
+    const fila = pendentes; pendentes = []; fila.forEach(efeito => efeito());
+    return arvore;
+  }
+  return { render, ErroStudoo, api, async atualizar() { await new Promise(setImmediate); return render(); } };
+}
+
+function nos(arvore) {
+  if (Array.isArray(arvore)) return arvore.flatMap(nos);
+  if (!arvore || typeof arvore !== 'object') return [];
+  return [arvore, ...nos(arvore.props?.children)];
+}
+const porId = (arvore, id) => nos(arvore).find(no => no.props?.testID === id);
+function textos(arvore) {
+  if (Array.isArray(arvore)) return arvore.map(textos).join(' ');
+  if (typeof arvore === 'string' || typeof arvore === 'number') return String(arvore);
+  return textos(arvore?.props?.children ?? []);
+}
+
+test('entrada: só a configuração visitante estritamente true oferece experimentar sem conta', async () => {
+  for (const visitante of [false, undefined, 'true', 1, true]) {
+    const a = entrada({ visitante });
+    assert.equal(porId(a.render(), 'experimentar-sem-conta'), undefined, 'não oferece antes de consultar a configuração');
+    const arvore = await a.atualizar();
+    assert.equal(Boolean(porId(arvore, 'experimentar-sem-conta')), visitante === true, `visitante=${visitante}`);
+  }
+});
+
+test('entrada: informa duração e ausência de migração antes de confirmar; dois toques criam uma sessão só', async () => {
+  let chamadas = 0, liberar;
+  const pedido = new Promise(resolve => { liberar = resolve; });
+  const a = entrada({ visitante: true, entrarVisitante: async () => { chamadas++; await pedido; } });
+  a.render();
+  let arvore = await a.atualizar();
+  assert.equal(porId(arvore, 'confirmar-visitante'), undefined);
+  porId(arvore, 'experimentar-sem-conta').props.acao();
+  arvore = a.render();
+  assert.equal(chamadas, 0, 'abrir o aviso não cria sessão');
+  assert.match(textos(arvore), /24 horas neste aparelho e não é transferido para uma conta/);
+  const confirmar = porId(arvore, 'confirmar-visitante');
+  confirmar.props.acao(); confirmar.props.acao();
+  assert.equal(chamadas, 1);
+  assert.equal(porId(a.render(), 'confirmar-visitante').props.desativado, true);
+  liberar();
+  assert.equal(porId(await a.atualizar(), 'confirmar-visitante').props.desativado, false);
+});
+
+test('entrada: a recusa por limite mostra a mensagem do contrato e permite uma nova tentativa', async () => {
+  let chamadas = 0;
+  const a = entrada({ visitante: true, entrarVisitante: async () => { chamadas++; throw new a.ErroStudoo('limite_visitante'); } });
+  a.render();
+  porId(await a.atualizar(), 'experimentar-sem-conta').props.acao();
+  porId(a.render(), 'confirmar-visitante').props.acao();
+  const arvore = await a.atualizar();
+  const erro = nos(arvore).find(no => no.type === a.api.ErroAcesso);
+  assert.equal(erro.props.mensagem, mensagens.erros.limite_visitante);
+  assert.equal(porId(arvore, 'confirmar-visitante').props.desativado, false);
+  porId(arvore, 'confirmar-visitante').props.acao();
+  await a.atualizar();
+  assert.equal(chamadas, 2);
 });

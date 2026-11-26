@@ -91,6 +91,9 @@ jobs:
       - name: Google e recuperação (provedores simulados, banco real)
         run: npm run test:acesso
 
+      - name: Onboarding por conta e retenção (provedores simulados, banco real)
+        run: npm run test:onboarding
+
       - name: Percursos HTTP (marco e trilha ao vivo)
         run: |
           STUDOO_IA_FALSA_PAUSA_MS=0 npm start > servidor.log 2>&1 &
