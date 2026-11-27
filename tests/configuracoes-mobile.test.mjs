@@ -172,10 +172,11 @@ test('a capa escolhida aparece nos cartões de Minhas trilhas e no alto do mapa,
     return estudo.slice(inicio, estudo.indexOf('\n}\n', inicio));
   };
   // Nos dois cartões, a capa entra no lugar da ilustração, na área inteira da cena (.plano-destaque__capa e
-  // .plano-cartao__capa da web); sem capa, a ilustração de sempre.
+  // .plano-cartao__capa da web); sem capa, a ilustração de sempre. A foto da própria trilha vai com a sessão (em revisão,
+  // só a dona a vê); a recebida, sem o token.
   for (const nome of ['CartaoDestaque', 'CartaoPlano']) {
     const corpo = corpoDe(nome);
-    assert.match(corpo, /\{plano\.capa \? <CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} estilo=\{StyleSheet\.absoluteFill\} \/> : \(/,
+    assert.match(corpo, /\{plano\.capa \? <CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} estilo=\{StyleSheet\.absoluteFill\} daDona=\{!plano\.recebida\} \/> : \(/,
       `${nome}: a capa no lugar da ilustração`);
     assert.ok(corpo.indexOf('<CapaDaTrilha') < corpo.indexOf('cartaoColina'), `${nome}: a colina só sem capa`);
   }
@@ -186,7 +187,7 @@ test('a capa escolhida aparece nos cartões de Minhas trilhas e no alto do mapa,
 
   // No mapa: .trilha-capa (4:1, até 140, cantos de 20), na imagem grande; no celular, acima da faixa parada.
   const mapa = corpoDe('TelaPlano');
-  assert.match(mapa, /<CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} grande estilo=\{estudoEstilos\.capaTrilha\} \/>/);
+  assert.match(mapa, /<CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} grande estilo=\{estudoEstilos\.capaTrilha\} daDona=\{!plano\.recebida\} \/>/);
   assert.match(mapa, /acimaDaFaixa=\{largo \|\| !capa \? undefined : <View testID=\"capa-do-mapa\" style=\{estudoEstilos\.capaTrilhaFaixa\}>\{capa\}<\/View>\}/);
   assert.match(estudo, /capaTrilha: \{ width: '100%', aspectRatio: 4, maxHeight: 140, borderRadius: 20 \}/);
   assert.match(estudo, /capaTrilhaFaixa: \{[^}]*paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 \}/);

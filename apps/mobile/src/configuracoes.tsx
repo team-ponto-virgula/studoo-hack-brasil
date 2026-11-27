@@ -73,12 +73,17 @@ export function CapaDaTrilha({ semente, tema, capa, grande = false, estilo, daDo
   estilo?: StyleProp<ViewStyle>;
 }) {
   const foto = ehCapaFoto(capa) ? urlDaCapa(capa, grande) : null;
+  // A foto que não abriu (sem rede, sessão vencida, em revisão para quem não é a dona): no lugar do fundo liso na cor do tema,
+  // fica a capa padrão, a mesma que os outros veem enquanto a foto está em revisão. Outra foto (ou a sessão) tenta de novo.
+  const tentativa = foto ? `${daDona ? 'dona' : 'publica'}:${foto}` : null;
+  const [falhou, setFalhou] = useState<string | null>(null);
   return (
     <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[confEstilos.capa, { backgroundColor: coresDaCapa(tema, capa).de }, estilo]}>
-      {foto ? (
+      {foto && falhou !== tentativa ? (
         <>
-          <Image source={daDona ? fonteDaMidiaDaDona(foto) : { uri: foto }} accessible={false} resizeMode="cover" style={StyleSheet.absoluteFill} />
+          <Image source={daDona ? fonteDaMidiaDaDona(foto) : { uri: foto }} accessible={false} resizeMode="cover" style={StyleSheet.absoluteFill}
+            onError={() => setFalhou(tentativa)} />
           <View style={[confEstilos.capaVeu, degrade('linear-gradient(to bottom, rgba(15, 23, 42, 0.38), rgba(15, 23, 42, 0))')]} />
         </>
       ) : (
@@ -425,7 +430,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
       </View>
 
       {conf && (
-        <GaleriaDeCapas visivel={galeria} atual={conf.capa} semente={conf.semente} tema={conf.tema} aoFechar={() => setGaleria(false)}
+        <GaleriaDeCapas visivel={galeria} atual={conf.capa} semente={conf.semente} tema={conf.tema} daDona={recebidaDe == null} aoFechar={() => setGaleria(false)}
           // A foto usa a mesma flag da foto do perfil (com o compartilhar ligado).
           aoUsarFoto={compartilhar ? () => (toque ? setOrigemDaFoto(true) : void buscarFoto(false)) : undefined}
           aoEscolher={async (capa) => {
@@ -469,12 +474,14 @@ function Voltar({ acao }: { acao: () => void }) {
  * prontas, em duas colunas (três a partir de 600 de largura). É um grupo de escolha única: a escolhida tem a borda azul e
  * o visto no canto; escolher salva, mostra o visto na capa nova e fecha a folha em 300 ms.
  */
-function GaleriaDeCapas({ visivel, atual, semente, tema, aoFechar, aoEscolher, aoUsarFoto }: {
+function GaleriaDeCapas({ visivel, atual, semente, tema, daDona = false, aoFechar, aoEscolher, aoUsarFoto }: {
   /** A folha fica montada e só liga e desliga: no iPhone, o que abre depois dela (a galeria de fotos) espera a folha sair. */
   visivel: boolean;
   atual: string | null;
   semente: string;
   tema: Tema | null;
+  /** A trilha da própria pessoa: o "Sua foto" vai com a sessão, como a prévia (em revisão, só a dona vê a foto). */
+  daDona?: boolean;
   aoFechar: () => void;
   /** "Usar uma foto": fecha a folha e abre a escolha da foto. Sem ele (compartilhar desligado), o botão não aparece. */
   aoUsarFoto?: () => void;
@@ -560,7 +567,7 @@ function GaleriaDeCapas({ visivel, atual, semente, tema, aoFechar, aoEscolher, a
                     onPress={() => void escolher(opcao.id)} style={({ pressed }) => [{ width: ladoDaCapa }, confEstilos.opcao, pressed && { opacity: 0.85 }]}>
                     {/* O anel fica por fora do desenho: 2 de gelo; na escolhida, 3 de azul, com o visto no canto. */}
                     <View style={[confEstilos.opcaoAnel, escolhida && confEstilos.opcaoAnelMarcado]}>
-                      <CapaDaTrilha semente={semente} tema={tema} capa={opcao.id} estilo={confEstilos.opcaoCapa} />
+                      <CapaDaTrilha semente={semente} tema={tema} capa={opcao.id} estilo={confEstilos.opcaoCapa} daDona={daDona} />
                       {escolhida && (
                         <View style={confEstilos.visto}><Icone nome="check" tamanho={16} cor="#FFFFFF" traco={3} /></View>
                       )}
