@@ -488,7 +488,8 @@ fluxo_criacao() {
     if [ "$plataforma" = android ] && [ "${REVIVIDOS:-0}" -ne 0 ]; then
       ponte="não rodou: o emulador foi religado nesta execução (o fluxo 98 só roda com REVIVIDOS=0)"
     elif rodar_maestro ponte "$PASTA_DOS_FLUXOS/criacao/98-ponte-e-ensine.yaml" \
-      -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada" -e "RESPOSTA_LACUNA=${lacuna:-ausente}"; then
+      -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada" -e "RESPOSTA_LACUNA=${lacuna:-ausente}" \
+      -e "PLATAFORMA=$plataforma"; then
       ponte=passou
     else
       ponte="falhou (maestro-ponte.log e tela-no-fim-de-ponte.png, nos registros)"
