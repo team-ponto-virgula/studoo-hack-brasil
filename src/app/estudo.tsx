@@ -1582,6 +1582,8 @@ function SkeletonLicao({ texto }: { texto: string }) {
         <div className="aula-quadro skeleton-licao__quadro">
           <span /><span /><span /><span />
         </div>
+        {/* Spec 19 (M4): se a lição demora mais de 2 s, a espera ganha palavras à vista (o leitor de tela já ouviu a linha de cima, uma vez só). */}
+        <p className="skeleton-licao__espera">{texto}…</p>
       </div>
       <div className="aula-rodape" aria-hidden="true">
         <div className="aula-rodape__conteudo"><span className="skeleton-licao__botao" /></div>
