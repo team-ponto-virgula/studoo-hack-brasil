@@ -46,7 +46,7 @@ export function useAvisoDaMusica(avisar: (texto: string, opcoes?: OpcoesDoAviso)
       void SecureStore.setItemAsync(CHAVE_AVISO_MUSICA, '1').catch(() => undefined);
       // Sem o som do aviso: a própria música que entra é o sinal.
       // No alto, em todas as telas (spec 16, item 14): nunca cobre o balão do mapa, o rodapé, links nem a barra de abas.
-      avisar(t.musicaAviso, { som: null, noAlto: true, acao: { rotulo: t.desligarMusica, aoTocar: () => void tocaSons.definirMusicaLigada(false) } });
+      avisar(t.musicaAviso, { som: null, noAlto: true, duracaoMs: 300000, acao: { rotulo: t.desligarMusica, aoTocar: () => void tocaSons.definirMusicaLigada(false) } });
     };
     void SecureStore.getItemAsync(CHAVE_AVISO_MUSICA)
       .then((valor) => { avisado = valor === '1'; conferir(tocaSons.obterEstado()); })
