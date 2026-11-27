@@ -33,6 +33,10 @@ on:
         description: Rodar só o simulador de iPhone
         type: boolean
         default: false
+      ensine_iphone:
+        description: Conferir só a criação e o caminho até Ensine ao Stu no iPhone (fluxos 90, 95 e 98)
+        type: boolean
+        default: false
       so_android:
         description: Rodar só o Android (o iPhone não roda)
         type: boolean
@@ -75,7 +79,7 @@ jobs:
       LC_ALL: en_US.UTF-8
       CONFERENCIA_APARELHO: ${{ inputs.aparelho || 'iPhone 17 Pro' }}
       CONFERENCIA_IOS: ${{ inputs.ios || '26.5' }}
-      CONFERENCIA_TELAS: ${{ inputs.retomada_criacao && 'retomada-criacao' || inputs.feedback_aluno && 'feedback-aluno' || '' }}
+      CONFERENCIA_TELAS: ${{ inputs.ensine_iphone && 'ensine-iphone' || inputs.retomada_criacao && 'retomada-criacao' || inputs.feedback_aluno && 'feedback-aluno' || '' }}
       # Expo Go de simulador para o SDK 58 (a versão que https://api.expo.dev/v2/versions/latest indica). Ao subir o SDK
       # do app, troque o endereço e o sha256 juntos.
       EXPO_GO_IOS_URL: https://github.com/expo/expo-go-releases/releases/download/Expo-Go-58.0.7/Expo-Go-58.0.7.tar.gz
@@ -185,7 +189,7 @@ jobs:
     name: Android (emulador)
     # Rota A1 de docs/BUILD-ANDROID.md: o build de debug do projeto (com a CA local só no debug), num emulador com KVM.
     runs-on: ubuntu-latest
-    if: ${{ !inputs.so_iphone }}
+    if: ${{ !inputs.so_iphone && !inputs.ensine_iphone }}
     # O primeiro build do Gradle, sem cache, é o passo mais longo; cada passo tem o próprio limite, abaixo deste.
     timeout-minutes: 120
     env:
