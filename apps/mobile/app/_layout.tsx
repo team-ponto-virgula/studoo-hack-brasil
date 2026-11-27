@@ -1,6 +1,6 @@
 import { abertura } from '@studoo/contratos/abertura';
 import { mensagens } from '@studoo/contratos/experiencia';
-import { useFonts } from 'expo-font';
+import * as Font from 'expo-font';
 import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cores, fontes } from '../src/tema';
 import { BordaDeVoltar } from '../src/borda-voltar';
 import { Abertura, ocultarSplashNativo } from '../src/abertura';
+
+// SÓ PARA AS CAPTURAS: as fontes começam a carregar 2 s depois de o app abrir, como num aparelho lento. Prova, sem
+// depender da sorte da corrida, o login medido com a fonte do sistema e desenhado com a Nunito (texto cortado).
+function useFonts(mapa: Record<string, number>): [boolean, Error | null] {
+  const [estado, setEstado] = useState<[boolean, Error | null]>([false, null]);
+  useEffect(() => {
+    const atraso = setTimeout(() => {
+      Font.loadAsync(mapa).then(() => setEstado([true, null]), (erro: Error) => setEstado([false, erro]));
+    }, 2000);
+    return () => clearTimeout(atraso);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return estado;
+}
 
 export default function Layout() {
   const [carregadas, erro] = useFonts({
