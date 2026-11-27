@@ -150,6 +150,31 @@ name: 98-ponte-e-ensine
 - tapOn:
     waitToSettleTimeoutMs: 1500
     id: continuar-licao
+# A lição de frações tem uma lacuna depois da múltipla escolha. Só a prova do iPhone fornece esse gabarito.
+- runFlow:
+    when:
+      true: ${typeof RESPOSTA_LACUNA !== "undefined" && RESPOSTA_LACUNA !== "ausente"}
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: resposta-licao
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          id: resposta-licao
+      - inputText: ${RESPOSTA_LACUNA}
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: enviar-resposta
+      - extendedWaitUntil:
+          visible:
+            id: continuar-licao
+          timeout: 30000
+      - assertNotVisible:
+          id: tentar-de-novo
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: continuar-licao
 - extendedWaitUntil:
     visible:
       id: titulo-ensino

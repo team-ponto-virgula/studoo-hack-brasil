@@ -62,6 +62,9 @@ if [ "${CONFERENCIA_TELAS:-}" = "feedback-aluno" ]; then
 elif [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
   CAPTURAS_ESPERADAS="$CAPTURAS_RETOMADA"
 fi
+if [ "${CONFERENCIA_TELAS:-}" = "ensine-iphone" ]; then
+  CAPTURAS_ESPERADAS="$(printf '%s\n' "$CAPTURAS_ESPERADAS" | tr ' ' '\n' | grep '^9[0-9]-')"
+fi
 CAPTURAS_ESPERADAS="$CAPTURAS_ENTRADA $CAPTURAS_ESPERADAS"
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -427,11 +430,11 @@ trilhas_da_criacao() {
   return "${PIPESTATUS[0]}"
 }
 
-# A resposta certa e uma errada do primeiro exercício da trilha temporária (servidor/resposta-da-prova.mjs): duas linhas,
-# RESPOSTA_CERTA=<id> e RESPOSTA_ERRADA=<id>; o motivo de não escolher vai para resposta-da-prova.log.
+# Gabarito do primeiro exercício da trilha temporária e, com --segundo, da lacuna do iPhone, se houver.
+# O motivo de não escolher vai para resposta-da-prova.log.
 resposta_da_prova() {
   (cd "$RAIZ" && NODE_EXTRA_CA_CERTS="$TLS/ca.crt" node --env-file=.env --import tsx "$AQUI/servidor/resposta-da-prova.mjs" \
-    --api "$API" --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/resposta-da-prova.json") 2>> "$REGISTROS/resposta-da-prova.log"
+    --api "$API" --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/resposta-da-prova.json" "$@") 2>> "$REGISTROS/resposta-da-prova.log"
 }
 
 # O fundo por baixo dos fluxos 90 e 95, pelo veredito da linha do tempo (servidor/linha-do-tempo-som.mjs): ✅ só com o
@@ -452,8 +455,11 @@ resumir_fundo() {
 }
 
 fluxo_criacao() {
-  local plataforma=iphone comandos90 comandos95 fluxo=falhou resposta codigo=0 linha parametros certa errada
-  case "$TITULO_DA_CONFERENCIA" in *Android*) plataforma=android ;; esac
+  local plataforma=iphone comandos90 comandos95 fluxo=falhou resposta codigo=0 linha parametros certa errada lacuna="" segundo=""
+  case "$TITULO_DA_CONFERENCIA" in
+    *Android*) plataforma=android ;;
+    *) segundo=--segundo ;;
+  esac
   rm -f "$SAIDA/criacao-falhou.txt"
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
   if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
@@ -462,9 +468,10 @@ fluxo_criacao() {
   # mapa dela. Sem a criação, ou sem opções escolhidas sem dúvida, o fluxo não roda, e as capturas 95 a 97 faltam.
   if [ "$fluxo" != passou ]; then
     resposta="não rodou: a criação falhou"
-  elif parametros="$(resposta_da_prova)"; then
+  elif parametros="$(resposta_da_prova ${segundo:+"$segundo"})"; then
     certa="$(printf '%s\n' "$parametros" | sed -n 's/^RESPOSTA_CERTA=//p')"
     errada="$(printf '%s\n' "$parametros" | sed -n 's/^RESPOSTA_ERRADA=//p')"
+    lacuna="$(printf '%s\n' "$parametros" | sed -n 's/^RESPOSTA_LACUNA=//p')"
     if rodar_maestro resposta "$PASTA_DOS_FLUXOS/criacao/95-resposta-certa-e-errada.yaml" -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada"; then
       resposta=passou
     else
@@ -480,7 +487,8 @@ fluxo_criacao() {
   if [ "$resposta" = passou ]; then
     if [ "$plataforma" = android ] && [ "${REVIVIDOS:-0}" -ne 0 ]; then
       ponte="não rodou: o emulador foi religado nesta execução (o fluxo 98 só roda com REVIVIDOS=0)"
-    elif rodar_maestro ponte "$PASTA_DOS_FLUXOS/criacao/98-ponte-e-ensine.yaml" -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada"; then
+    elif rodar_maestro ponte "$PASTA_DOS_FLUXOS/criacao/98-ponte-e-ensine.yaml" \
+      -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada" -e "RESPOSTA_LACUNA=${lacuna:-ausente}"; then
       ponte=passou
     else
       ponte="falhou (maestro-ponte.log e tela-no-fim-de-ponte.png, nos registros)"
@@ -576,6 +584,10 @@ fluxo_retomada() {
 
 fluxo_telas() {
   local falhas
+  if [ "${CONFERENCIA_TELAS:-}" = "ensine-iphone" ]; then
+    fluxo_criacao
+    return
+  fi
   if [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
     fluxo_retomada
     return
