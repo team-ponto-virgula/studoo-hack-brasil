@@ -788,6 +788,7 @@ export function ApoioDaLicao({
       {ultimo && <details
         className="estudio-card estudio-ensino"
         open={ensinoDireto || undefined}
+        data-direto={ensinoDireto || undefined}
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
           if (e.currentTarget.open) {
@@ -830,7 +831,6 @@ export function ApoioDaLicao({
           <span aria-hidden="true">{passoDoEnsino.visivel}</span>
           <span className="somente-leitor">{passoDoEnsino.leitor}</span>
         </p>
-        <p>{m.ensinoDica}</p>
         <TextoComFormulas como="p" className="estudio-legenda" texto={m.ensinoIdeia(licao.objetivo)} />
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
           <div className="voz-ao-vivo-entrada">
@@ -986,17 +986,13 @@ export function ApoioDaLicao({
         <textarea
           ref={campoEnsinoRef}
           id="ensino-texto"
-          rows={5}
+          rows={4}
           maxLength={3000}
           value={texto}
           onFocus={garantirAcoesEnsinoVisiveis}
           onChange={(e) => setTexto(e.target.value)}
           disabled={ocupado || gravando || etapaVoz === 'ativa'}
         />
-        <p className="estudio-legenda">
-          {m.vozDica}
-          {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
-        </p>
         <div ref={acoesEnsinoRef} className="estudio-acoes">
           <Botao
             variante="secundario"
@@ -1039,6 +1035,12 @@ export function ApoioDaLicao({
           </Botao>
         </div>
         {aviso && <p role="status" ref={avisoRef}>{aviso}</p>}
+        {/* Spec 19, L1: a ajuda fica depois dos botões, para o campo e o "Enviar" caberem na primeira tela. */}
+        <p className="estudio-legenda ensino-ajuda">{m.ensinoDica}</p>
+        <p className="estudio-legenda ensino-ajuda">
+          {m.vozDica}
+          {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
+        </p>
         {ensino && (
           <div className="estudio-feedback ensino-caderno" role="status" ref={retornoDoEnsino}>
             <div className="ensino-caderno__cartao" data-tipo="acertos">

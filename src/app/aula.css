@@ -103,6 +103,23 @@
 .aula-etapa[data-etapa='exemplo'] .icone { background: #fff1cc; }
 .aula-etapa[data-etapa='exercicio'] { color: var(--sucesso); }
 .aula-etapa[data-etapa='exercicio'] .icone { background: #e3f6ea; }
+/* Spec 19, L1: no "Ensine ao Stu" a linha da etapa é o título (h2 com o foco) e mostra "Opcional" à direita; o cartão que repetia o nome saiu. */
+.aula-etapa--titulo { display: flex; width: 100%; margin: 0; font-family: inherit; }
+/* O miolo só tem o título: quem ocupa a sobra da tela é o cartão do Stu, logo abaixo dele (sem vão no meio quando tudo cabe). */
+.aula-miolo:has(> .aula-etapa--titulo) { flex-grow: 0; }
+.aula-miolo:has(> .aula-etapa--titulo) + .estudio-apoio { flex: 1 0 auto; }
+.aula-etapa__marca {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--texto2);
+  background: #f4f7ff;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.385;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 

@@ -792,7 +792,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             <Icone nome="seta" />{t.etapaAnterior}
           </button>
         )}
-        <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
+        {etapa.tipo === 'ensino' ? (
+          // Spec 19, L1: no "Ensine ao Stu" esta linha é o título da etapa (recebe o foco) e leva a marca "Opcional"; o cartão que repetia o nome saiu.
+          <h2 className="aula-etapa aula-etapa--titulo" data-etapa="ensino" tabIndex={-1} ref={tituloEtapa}>
+            <Icone nome={iconesDaEtapa.ensino} />{nomeEtapa}<span className="aula-etapa__marca">{mensagens.estudio.ensinoOpcional}</span>
+          </h2>
+        ) : (
+          <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
+        )}
         {etapa.tipo === 'conceito' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
         {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
         {avisoRetomada && (
@@ -880,12 +887,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             </>
           );
         })()}
-        {etapa.tipo === 'ensino' && (
-          <div className="aula-quadro" data-etapa="ensino">
-            <h2 tabIndex={-1} ref={tituloEtapa}>Ensine ao Stu</h2>
-            <p>Explique a ideia com suas palavras. Esta etapa é opcional.</p>
-          </div>
-        )}
         {etapa.tipo === 'pratica' && licao.pratica && (
           <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao} reinicio={voltasPratica}
             restanteInicial={praticaRestante.current} aoMudarRestante={(valor) => { praticaRestante.current = valor; }}
