@@ -114,6 +114,9 @@ export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (tex
 });
 export const DURACAO_DO_AVISO_MS = 4500;
 export const DURACAO_DO_AVISO_COM_ACAO_MS = 7000;
+/** Os números da web (aviso-musica-regras.ts): o vão entre a barra e o aviso do alto, e até onde a página ainda está no alto. */
+const RESPIRO_DO_AVISO = 8;
+const TOPO_DA_PAGINA = 4;
 
 /** O estado do aviso na raiz do app: cada `avisar` entra no lugar do anterior na hora e recomeça o tempo. */
 export function useAvisoDoAppRaiz() {
@@ -135,7 +138,7 @@ export function useAvisoDoAppRaiz() {
 }
 
 /** A faixa do aviso: até 480 de largura, fundo #0B1B5C, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
-function FaixaDoAviso({ aviso, baixo, alto, emFluxo = false }: { aviso: AvisoAtual; baixo?: number; alto?: number; emFluxo?: boolean }) {
+function FaixaDoAviso({ aviso, baixo, alto, emFluxo = false, aoMedir }: { aviso: AvisoAtual; baixo?: number; alto?: number; emFluxo?: boolean; aoMedir?: (altura: number) => void }) {
   const deCima = alto !== undefined;
   const reduzir = useMovimentoReduzido();
   const { dispensar } = useContext(AvisoDoApp);
@@ -147,7 +150,8 @@ function FaixaDoAviso({ aviso, baixo, alto, emFluxo = false }: { aviso: AvisoAtu
     return () => animacao.stop();
   }, [aviso.vez, reduzir, entrada]);
   return (
-    <View pointerEvents="box-none" style={emFluxo ? { alignItems: 'center', marginBottom: 12 } : [estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}>
+    <View pointerEvents="box-none" style={emFluxo ? { alignItems: 'center', marginBottom: 12 } : [estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}
+      onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}>
       {/* Spec 12 e 16 (item 14): fora da faixa, nada é bloqueado (o lugar é box-none); dentro dela, só a ação responde. */}
       <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
         opacity: entrada,
@@ -377,6 +381,34 @@ export function Tela({ children, acoes, topo, rodape, pagina, avisoNoFluxo, semC
     // Só quando um aviso novo entra.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aviso?.vez]);
+  // O espaço reservado para o aviso do alto (spec 16, item 14, 23/11; na web, aviso-musica-regras.ts): enquanto ele está à
+  // vista, o conteúdo logo depois da barra da marca desce a altura dele mais 8, e o aviso fica nesse vão, sem cobrir título,
+  // mascote, campo nem botão (na entrada, com o e-mail em foco, ele cobria "Ver como funciona"). Desce em 220 ms; com
+  // movimento reduzido, na hora. Ao sair (7 s ou "Desligar"), o vão fica até a pessoa trocar de tela: o conteúdo não sobe de
+  // volta sob o dedo. Rolada além da barra da marca, nada desce e o aviso fica sobre o que passa. Com a faixa presa (o mapa,
+  // a geração), a barra fixa da aula ou o aviso no fluxo, nada muda aqui.
+  const comVaoDoAviso = !avisoNoFluxo && !faixaFixa && !topo;
+  const [alturaDoAvisoNoAlto, setAlturaDoAvisoNoAlto] = useState(0);
+  const [vaoDoAviso, setVaoDoAviso] = useState(0);
+  const [descidaDoAviso] = useState(() => new Animated.Value(0));
+  const vaoDaPagina = useRef({ pagina, altura: 0 });
+  useEffect(() => {
+    if (vaoDaPagina.current.pagina !== pagina) {
+      // Outra tela: o vão da de antes sai na hora.
+      vaoDaPagina.current = { pagina, altura: 0 };
+      descidaDoAviso.setValue(0);
+      setVaoDoAviso(0);
+    }
+    if (!aviso?.noAlto || !comVaoDoAviso || alturaDoAvisoNoAlto <= 0) return;
+    if (rolado.current >= Math.max(TOPO_DA_PAGINA, cabecalhoNaRolagem ? alturaCabecalho : 0)) return;
+    const altura = Math.ceil(alturaDoAvisoNoAlto) + RESPIRO_DO_AVISO;
+    if (altura <= vaoDaPagina.current.altura) return;
+    vaoDaPagina.current = { pagina, altura };
+    setVaoDoAviso(altura);
+    Animated.timing(descidaDoAviso, { toValue: altura, duration: reduzirMovimento === false ? 220 : 0, easing: Easing.out(Easing.ease), useNativeDriver: false }).start();
+    // A rolagem e o movimento reduzido valem no instante em que o aviso entra; o resto entra na lista.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina, aviso?.vez, aviso?.noAlto, alturaDoAvisoNoAlto, comVaoDoAviso, cabecalhoNaRolagem, alturaCabecalho, descidaDoAviso]);
   // No alto (spec 16, item 14): 8 abaixo da faixa presa (a da trilha ou a da geração) ou, sem faixa, da barra da marca que
   // ainda aparece; com a barra fixa no alto (topo), 8 abaixo dela, que fica fora da rolagem.
   const altoDoAviso = 8 + (faixaFixa
@@ -449,9 +481,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, avisoNoFluxo, semC
             {avisoEmFluxo && <View onLayout={evento => setAlturaAviso(evento.nativeEvent.layout.height)}>
               <FaixaDoAviso key={aviso.vez} aviso={aviso} emFluxo />
             </View>}
+            {/* O vão do aviso do alto: ele fica por cima, 8 abaixo da barra da marca, e o conteúdo começa embaixo dele. */}
+            {vaoDoAviso > 0 && <Animated.View testID="vao-do-aviso" pointerEvents="none" style={{ height: descidaDoAviso }} />}
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) || (comAcima && !alturaAcima) ? null
-              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0) + (avisoEmFluxo ? alturaAviso : 0)}>
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0) + (avisoEmFluxo ? alturaAviso : 0) + vaoDoAviso}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
                 <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor, medir }}>
                   <TecladoAberto.Provider value={teclado}>
@@ -469,7 +503,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, avisoNoFluxo, semC
           {fimDaRolagem > 0 && <View style={{ height: fimDaRolagem }} />}
         </ScrollView>
         {/* O aviso do alto fica dentro desta área (abaixo da área segura e da barra fixa do alto), por cima da rolagem. */}
-        {aviso?.noAlto && !avisoEmFluxo && <FaixaDoAviso key={aviso.vez} aviso={aviso} alto={altoDoAviso} />}
+        {aviso?.noAlto && !avisoEmFluxo && <FaixaDoAviso key={aviso.vez} aviso={aviso} alto={altoDoAviso} aoMedir={setAlturaDoAvisoNoAlto} />}
         {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
         {rodape && !rodapePreso && (() => {
           const base = StyleSheet.flatten([estilos.rodapeConteudo, estiloRodapeConteudo])?.paddingBottom;

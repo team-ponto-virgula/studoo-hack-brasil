@@ -128,11 +128,43 @@ test('item 14: o aviso "Música de fundo ligada." fica no alto e pode reservar e
   const interfaceApp = await ler('interface.tsx');
   assert.match(som, /avisar\(t\.musicaAviso, \{ som: null, noAlto: true, acao:/);
   // A Tela desenha o aviso do alto dentro da área abaixo da área segura e da barra fixa; o de baixo continua para os outros.
-  assert.match(interfaceApp, /\{aviso\?\.noAlto && !avisoEmFluxo && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} alto=\{altoDoAviso\} \/>\}/);
+  assert.match(interfaceApp, /\{aviso\?\.noAlto && !avisoEmFluxo && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} alto=\{altoDoAviso\} aoMedir=\{setAlturaDoAvisoNoAlto\} \/>\}/);
   assert.match(interfaceApp, /\{aviso && !aviso\.noAlto && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} baixo=\{baixoDoAviso\} \/>\}/);
   assert.match(interfaceApp, /const altoDoAviso = 8 \+ \(faixaFixa\n\s*\? Math\.max\(0, inicioDaFaixa - roladoDoAviso\) \+ alturaFaixa\n\s*: cabecalhoNaRolagem \? Math\.max\(0, alturaCabecalho - roladoDoAviso\) : 0\);/);
   assert.match(interfaceApp, /<FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} emFluxo \/>/);
   assert.match(interfaceApp, /deCima \? \{ top: alto \} : \{ bottom: baixo \}/);
+});
+
+test('item 14 (23/11): o aviso do alto reserva o espaço dele no conteúdo, como na web; o vão fica até a pessoa trocar de tela', async () => {
+  const interfaceApp = await ler('interface.tsx');
+  const regrasWeb = await readFile(new URL('../src/app/aviso-musica-regras.ts', import.meta.url), 'utf8');
+  // Os mesmos números da web: 8 entre a barra e o aviso (e embaixo dele), e a página "no alto" até 4 de rolagem.
+  assert.match(interfaceApp, /const RESPIRO_DO_AVISO = 8;/);
+  assert.match(regrasWeb, /export const RESPIRO_DO_AVISO = 8;/);
+  assert.match(interfaceApp, /const TOPO_DA_PAGINA = 4;/);
+  assert.match(regrasWeb, /export const TOPO_DA_PAGINA = 4;/);
+  const tela = interfaceApp.slice(interfaceApp.indexOf('export function Tela('), interfaceApp.indexOf('const altoDoAviso = 8 + (faixaFixa'));
+  // Só nas telas em que o aviso fica sobre o conteúdo: sem faixa presa (mapa, geração), sem barra fixa (aula) e sem o aviso no fluxo.
+  assert.match(tela, /const comVaoDoAviso = !avisoNoFluxo && !faixaFixa && !topo;/);
+  // A reserva é a da web (reservaDoAviso): a altura medida do aviso, arredondada para cima, mais 8.
+  assert.match(regrasWeb, /return Math\.ceil\(alturaDoAviso\) \+ RESPIRO_DO_AVISO;/);
+  assert.match(tela, /const altura = Math\.ceil\(alturaDoAvisoNoAlto\) \+ RESPIRO_DO_AVISO;/);
+  // Rolada além da barra da marca (ou além de 4, sem barra), nada desce: o aviso fica sobre o que passa (quemDesce, na web).
+  assert.match(tela, /if \(rolado\.current >= Math\.max\(TOPO_DA_PAGINA, cabecalhoNaRolagem \? alturaCabecalho : 0\)\) return;/);
+  // Desce em 220 ms; com movimento reduzido (ou ainda sem saber), na hora.
+  assert.match(tela, /Animated\.timing\(descidaDoAviso, \{ toValue: altura, duration: reduzirMovimento === false \? 220 : 0,/);
+  // Na mesma tela, o vão só cresce; quando o aviso sai (7 s, "Desligar", o balão do nó), nada sobe de volta.
+  assert.match(tela, /if \(altura <= vaoDaPagina\.current\.altura\) return;/);
+  assert.match(tela, /if \(!aviso\?\.noAlto \|\| !comVaoDoAviso \|\| alturaDoAvisoNoAlto <= 0\) return;/);
+  // O vão sai na hora só quando a tela muda.
+  assert.match(tela, /if \(vaoDaPagina\.current\.pagina !== pagina\) \{\n(\s*\/\/[^\n]*\n)?\s*vaoDaPagina\.current = \{ pagina, altura: 0 \};\n\s*descidaDoAviso\.setValue\(0\);\n\s*setVaoDoAviso\(0\);/);
+  assert.equal((tela.match(/setVaoDoAviso\(0\)/g) ?? []).length, 1, 'só a troca de tela tira o vão');
+  // O vão é o primeiro bloco do conteúdo, embaixo da barra da marca, e entra na conta de onde o conteúdo começa.
+  assert.match(interfaceApp, /\{vaoDoAviso > 0 && <Animated\.View testID="vao-do-aviso" pointerEvents="none" style=\{\{ height: descidaDoAviso \}\} \/>\}\n(\s*\{\/\*[^\n]*\*\/\}\n)?\s*<DeslocamentoDaRolagem\.Provider/);
+  assert.match(interfaceApp, /\(avisoEmFluxo \? alturaAviso : 0\) \+ vaoDoAviso\}>/);
+  // A medida vem do próprio lugar do aviso do alto (sem margem nem padding nele).
+  assert.match(interfaceApp, /onLayout=\{aoMedir && \(\(evento\) => aoMedir\(evento\.nativeEvent\.layout\.height\)\)\}/);
+  assert.match(interfaceApp, /avisoLugar: \{ position: 'absolute', left: 16, right: 16, alignItems: 'center', zIndex: 70 \}/);
 });
 
 test('item 4: com folga (regra do contrato), o Exemplo ganha o stu-feliz de 72 acima do cartão; o Conceito só centraliza', async () => {
