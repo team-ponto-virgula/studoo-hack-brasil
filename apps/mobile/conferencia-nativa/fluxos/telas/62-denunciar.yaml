@@ -11,13 +11,34 @@ name: 62-denunciar
     visible:
       id: titulo-explorar
     timeout: 30000
-- scrollUntilVisible:
-    element:
-      text: "Mais opções de .*"
-    direction: DOWN
-    timeout: 60000
-    speed: 50
-    centerElement: true
+# O "•••" do primeiro cartão de "Em alta esta semana": no iPhone, centralizado; no Android, achado e levado acima da barra
+# de baixo por um arrasto até o fim da página (o porquê está no 61-bloquear.yaml).
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+          centerElement: true
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 60%
+          end: 50%, 30%
+          duration: 800
 - tapOn:
     waitToSettleTimeoutMs: 1000
     text: "Mais opções de .*"
