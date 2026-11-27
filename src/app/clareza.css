@@ -114,6 +114,12 @@
 .estudo[data-direcao='clareza'] .pedido-ideia[aria-pressed='true'] { border-color: var(--acao); background: #f4f7ff; color: var(--acao); }
 .estudo[data-direcao='clareza'] .pedido-ideia:active:not(:disabled) { transform: none; box-shadow: none; }
 .estudo[data-direcao='clareza'] .pedido-como { color: var(--texto2); font-size: 14px; line-height: 21px; }
+/* Até 600 px, as saídas de texto depois das ideias ficam a 4 px uma da outra (o vão da tela é 20 px): as três cabem
+   acima da cápsula em 360 × 800, sem tocável inteiro atrás dela na primeira vista (spec 16, item 35; spec 19, L6). */
+@media (max-width: 600px) {
+  .estudo[data-direcao='clareza'] .pedido-novo > .por-link__abrir + .por-link__abrir,
+  .estudo[data-direcao='clareza'] .pedido-novo > .por-link__abrir + .pedido-como { margin-top: -16px; }
+}
 
 /* Geração e proposta: o motor do caminho é o mesmo; a superfície deixa de disputar com os nós e a ação. */
 .estudo[data-direcao='clareza'] .painel--geracao { border-color: #e2e8f4; border-radius: 22px; }

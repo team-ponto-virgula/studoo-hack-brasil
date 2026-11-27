@@ -203,6 +203,10 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
   .estudio-acoes > * {
     width: 100%;
   }
+  /* O campo de arquivo escondido continua com 1 px: com 100% ele alargava a página além da tela (spec 19, L5). */
+  .estudio-acoes > .estudio-arquivo-input {
+    width: 1px;
+  }
   /* A ação principal da prévia é a presa (globals.css): a largura dela vem das margens da ilha, não de 100%. */
   .estudio-acoes > .acao-principal {
     width: auto;
