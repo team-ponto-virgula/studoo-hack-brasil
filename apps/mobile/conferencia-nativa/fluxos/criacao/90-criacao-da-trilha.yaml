@@ -44,11 +44,16 @@ name: 90-criacao-da-trilha
     id: diagnostico-pular
 # Em criação: a faixa presa com o pedido (faixa-geracao) está na tela desde o primeiro evento da geração. O cartão do
 # título (titulo-geracao) só aparece com a proposta pronta, então não serve para provar "em criação".
-- extendedWaitUntil:
-    visible:
-      id: faixa-geracao
-    timeout: 30000
-- takeScreenshot: 91-criacao-em-andamento
+# A captura sai só com a faixa à vista. Pronta e no alto da página, a geração troca a faixa pelo cartão do título
+# (estudo.tsx, cartaoDeVolta), e no emulador do Android a proposta já estava pronta quando o fluxo procurou a faixa: o
+# toque em "Pular perguntas" levou quase 10 s (execução 45942548694). Sem a faixa, o fluxo segue para a proposta pronta,
+# a coleta acusa a 91 como faltando e o "em criação" fica no vídeo da transição.
+- runFlow:
+    when:
+      visible:
+        id: faixa-geracao
+    commands:
+      - takeScreenshot: 91-criacao-em-andamento
 # Pronta: o "Começar" aparece quando a última lição entra no caminho.
 - extendedWaitUntil:
     visible:
