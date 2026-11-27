@@ -619,7 +619,10 @@ fluxo_telas_uma_por_vez() {
     resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
   fi
 
-  while IFS= read -r fluxo; do
+  # A lista chega pelo descritor 3, não pela entrada padrão: o `adb shell` de aparelho_responde lê a entrada padrão e
+  # engolia os nomes que faltavam, e só a primeira tela da lista rodava (execução 45942548694: "Telas: 1 fluxo(s)" com
+  # todas pedidas; na 45936548736, de "20-minhas-trilhas,60-configuracoes", só a 20).
+  while IFS= read -r -u 3 fluxo; do
     if [ -n "$pedidas" ] && ! printf ' %s ' "$pedidas" | grep -qF " $fluxo "; then continue; fi
     if [ -n "$caiu" ]; then
       naorodaram="$naorodaram $fluxo"
@@ -643,7 +646,7 @@ fluxo_telas_uma_por_vez() {
       falhas="$falhas$(node "$AQUI/servidor/falhas-do-relatorio.mjs" "$REGISTROS/maestro-telas-$fluxo.xml" 2> /dev/null || echo "- \`$fluxo\`: sem relatório do Maestro (código $codigo)")
 "
     fi
-  done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
+  done 3< <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
     "$PASTA_DOS_FLUXOS/telas/config.yaml")
 
   # A criação por último (Android): com o aparelho de pé, religando se preciso.
