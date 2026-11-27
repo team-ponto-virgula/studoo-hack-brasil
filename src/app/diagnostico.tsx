@@ -32,7 +32,7 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
   const [posicaoRevisao, setPosicaoRevisao] = useState<number | null>(null);
   const exibido = posicaoRevisao === null ? passo : anteriores[posicaoRevisao]?.passo;
   const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<'ia_indisponivel' | 'outro' | null>(null);
+  const [erro, setErro] = useState<'ia_indisponivel' | 'consentimento_ia' | 'outro' | null>(null);
   const [ultimaOpcao, setUltimaOpcao] = useState<string>();
   const vivo = useRef(true);
   const emCurso = useRef(false);
@@ -66,7 +66,8 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
       const codigo = falha instanceof ErroStudoo ? falha.codigo : null;
       if (aoDesconectar && codigo === 'nao_autenticado') aoDesconectar();
       else if (codigo === 'conteudo_nocivo') aoRecusar();
-      else setErro(codigo === 'ia_indisponivel' ? codigo : 'outro');
+      // Spec 19 (M1): "Agora não" no aceite de IA não é falha de carregamento. A tela diz o que falta e o botão reabre o mesmo aceite (como em "Pular perguntas", spec 17, B4).
+      else setErro(codigo === 'ia_indisponivel' || codigo === 'consentimento_ia' ? codigo : 'outro');
     } finally {
       emCurso.current = false;
       if (vivo.current) setOcupado(false);
@@ -80,9 +81,9 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
     <p>{objetivo}</p>
     {!passo && <p>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</p>}
     {ocupado && <p role="status">Preparando o próximo passo…</p>}
-    {erro && <p role="alert">{erro === 'ia_indisponivel' ? mensagens.erros.ia_indisponivel : 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.'}</p>}
+    {erro && <p role="alert">{erro === 'outro' ? 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.' : mensagens.erros[erro]}</p>}
     <div className="estudio-acoes">
-      {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{mensagens.tentarNovamente}</Botao>
+      {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{erro === 'consentimento_ia' ? mensagens.privacidade.permitirAgora : mensagens.tentarNovamente}</Botao>
         : !passo && <Botao disabled={ocupado} onClick={() => void consultar()}>Responder perguntas</Botao>}
       {exibido?.tipo === 'pergunta' && exibido.pergunta.opcoes.map(opcao =>
         <Botao key={opcao.id} variante="secundario" disabled={ocupado} onClick={() => void consultar(opcao.id)}>{opcao.texto}</Botao>)}
