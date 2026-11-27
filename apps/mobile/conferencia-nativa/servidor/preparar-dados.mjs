@@ -18,6 +18,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
+import sharp from 'sharp';
 import { criarClienteStudoo, ErroStudoo } from '@studoo/contratos';
 import { candidatasErradas } from '../../../../scripts/verificar-publicado.mjs';
 import { respostaCerta } from '../../../../src/dominio/aprendizado/plano.ts';
@@ -46,6 +47,25 @@ const PERFIL = {
 };
 
 class FalhaDoPreparo extends Error {}
+
+/**
+ * SÓ PARA AS CAPTURAS DA CAPA EM REVISÃO (ramo capturas/capa-em-revisao-*; não vai para o PR): uma "foto" fictícia,
+ * desenhada aqui (céu, sol e morros, sem pessoa nenhuma), bem diferente da capa padrão do tema. Em JPEG de 1024 × 512,
+ * como o recorte 2:1 que o app envia.
+ */
+async function fotoDaCapa(indice) {
+  const [ceuAlto, ceuBaixo, sol, morroLonge, morroPerto] = indice === 0
+    ? ['#ff7a45', '#ffd166', '#fff3b0', '#7b2cbf', '#3c096c']
+    : ['#48cae4', '#caf0f8', '#ffffff', '#2d6a4f', '#1b4332'];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="512" viewBox="0 0 1024 512">
+  <defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ceuAlto}"/><stop offset="1" stop-color="${ceuBaixo}"/></linearGradient></defs>
+  <rect width="1024" height="512" fill="url(#c)"/>
+  <circle cx="${indice === 0 ? 700 : 300}" cy="230" r="90" fill="${sol}"/>
+  <path d="M0 380 L180 250 L330 340 L520 210 L700 330 L860 240 L1024 320 L1024 512 L0 512 Z" fill="${morroLonge}"/>
+  <path d="M0 450 L220 360 L420 430 L640 350 L860 440 L1024 390 L1024 512 L0 512 Z" fill="${morroPerto}"/>
+</svg>`;
+  return (await sharp(Buffer.from(svg)).jpeg({ quality: 86 }).toBuffer()).toString('base64');
+}
 
 const { values: opcoes } = parseArgs({
   options: {
@@ -214,12 +234,26 @@ async function preparar() {
     const doDestaque = trilhas.find((trilha) => trilha.id === destaque.id);
     if (doDestaque) doDestaque.compartilhada = true;
 
+    // SÓ PARA AS CAPTURAS DA CAPA EM REVISÃO: foto na capa do destaque (o mapa que abre, o cartão "Seu próximo passo" e as
+    // configurações) e na do primeiro cartão de baixo. A revisão local deixa toda foto pendente: só a dona a vê, e só com
+    // a sessão, como a capa do Julio em 27/11.
+    const comFoto = [destaque, lista.find((plano) => plano.id !== destaque.id)].filter(Boolean);
+    const capasComFoto = [];
+    for (const [indice, plano] of comFoto.entries()) {
+      const conf = await etapa(`Capa com foto de "${plano.titulo}"`, async () => cliente.enviarCapa(plano.id, await fotoDaCapa(indice)));
+      if (conf.capaModeracao !== 'pendente' || !/^foto:/.test(conf.capa ?? '')) {
+        throw new FalhaDoPreparo(`"${plano.titulo}": esperava a capa com foto em revisão; a API diz capa ${conf.capa} e moderação ${conf.capaModeracao}.`);
+      }
+      capasComFoto.push({ titulo: plano.titulo, moderacao: conf.capaModeracao });
+    }
+
     const resultado = {
       api: base.origin,
       conta: { email, nome: PERFIL.nome },
       destaque: { titulo: destaque.titulo, concluidas: destaque.progresso.concluidas, total: destaque.progresso.total, codigoDoLink: link.codigo },
       ordemDaLista: lista.map((plano) => plano.titulo),
       trilhas,
+      capasComFoto,
       avisos,
     };
 
@@ -235,6 +269,7 @@ async function preparar() {
       console.log(`- ${trilha.formato}: "${trilha.titulo}", ${trilha.concluidas} de ${trilha.total} concluídas; lição atual "${trilha.licaoAtual}" (${trilha.exercicios.join(', ')})${trilha.compartilhada ? '; compartilhada' : ''}`);
     }
     console.log(`Destaque de Minhas trilhas: "${destaque.titulo}".`);
+    for (const capa of capasComFoto) console.log(`- capa com foto em revisão (${capa.moderacao}): "${capa.titulo}"`);
     for (const aviso of avisos) console.log(`AVISO: ${aviso}`);
   } finally {
     // A sessão do preparo não fica aberta: o app entra com a sua.
