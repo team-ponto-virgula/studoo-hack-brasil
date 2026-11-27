@@ -7,6 +7,7 @@
 //
 // Saída: RESPOSTA_CERTA=<id> e RESPOSTA_ERRADA=<id>, uma por linha, e o que foi visto em --saida (JSON). Código 3 se não
 // der para escolher sem dúvida (o motivo vai para a saída de erro), 1 se a API não responder.
+// Com --segundo, inclui RESPOSTA_LACUNA se a lição do iPhone tiver o segundo exercício.
 // Só roda contra a API do próprio computador, com IA simulada e conta `.test`, como preparar-dados.mjs.
 // Uso: NODE_EXTRA_CA_CERTS=<ca.crt> node --env-file=.env --import tsx resposta-da-prova.mjs \
 //        --api https://127.0.0.1:3443 --antes <trilhas-antes-da-criacao.json> --saida <resposta-da-prova.json>
@@ -20,6 +21,7 @@ const { values: opcoes } = parseArgs({
     api: { type: 'string', default: 'https://127.0.0.1:3443' },
     antes: { type: 'string' },
     saida: { type: 'string' },
+    segundo: { type: 'boolean' },
   },
 });
 
@@ -90,12 +92,23 @@ try {
   const certa = gabarito.length === 1 && ids.includes(gabarito[0]) ? gabarito[0] : null;
   const errada = ids.find((id) => !gabarito.includes(id)) ?? null;
   if (!certa || !errada) terminar(3, `O gabarito de "${licao.titulo}" não bate com as opções da API (gabarito ${gabarito.join(', ') || 'vazio'}; opções ${ids.join(', ')}).`, registro);
+  let lacuna;
+  if (opcoes.segundo && licao.exercicios.length > 1) {
+    const segundo = licao.exercicios[1];
+    const extra = daDemo?.extras?.[0];
+    if (licao.exercicios.length !== 2 || segundo.tipo !== 'lacuna' || extra?.tipo !== 'lacuna'
+      || segundo.enunciado !== extra.enunciado || extra.gabarito.length !== 1 || !/^\d+$/.test(extra.gabarito[0])) {
+      terminar(3, `O segundo exercício de "${licao.titulo}" não corresponde à lacuna numérica da demonstração.`, registro);
+    }
+    lacuna = { enunciado: segundo.enunciado, resposta: extra.gabarito[0] };
+  }
   const texto = (id) => publico.opcoes.find((opcao) => opcao.id === id)?.texto;
   if (opcoes.saida) {
-    writeFileSync(opcoes.saida, `${JSON.stringify({ momento: new Date().toISOString(), ...registro, certa: { id: certa, texto: texto(certa) }, errada: { id: errada, texto: texto(errada) } }, null, 2)}\n`);
+    writeFileSync(opcoes.saida, `${JSON.stringify({ momento: new Date().toISOString(), ...registro, certa: { id: certa, texto: texto(certa) }, errada: { id: errada, texto: texto(errada) }, ...(lacuna && { lacuna }) }, null, 2)}\n`);
   }
   console.log(`RESPOSTA_CERTA=${certa}`);
   console.log(`RESPOSTA_ERRADA=${errada}`);
+  if (lacuna) console.log(`RESPOSTA_LACUNA=${lacuna.resposta}`);
 } catch (erro) {
   terminar(1, `A API não respondeu ao detalhe da trilha ou da lição: ${erro?.codigo ?? erro?.message ?? erro}.`);
 }
