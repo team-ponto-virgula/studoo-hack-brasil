@@ -11,13 +11,37 @@ name: 61-bloquear
     visible:
       id: titulo-explorar
     timeout: 30000
-- scrollUntilVisible:
-    element:
-      text: "Mais opções de .*"
-    direction: DOWN
-    timeout: 60000
-    speed: 50
-    centerElement: true
+# O "•••" do primeiro cartão de "Em alta esta semana", a última seção do Explorar. No iPhone, a busca o leva ao meio da
+# tela, longe da barra de baixo. No emulador do Android (720×1560), a página acaba com o botão em y=1140, abaixo do meio:
+# a centralização nunca se cumpre, e a busca estourava os 60 s com o botão inteiro à vista (execução 45947070355, fluxos
+# 61 e 62). Lá, a busca para assim que o acha (ainda sob a barra de baixo, em y=1368), e um arrasto leva a página até o
+# fim, com o botão acima da barra. O 62-denunciar faz o mesmo.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+          centerElement: true
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 60%
+          end: 50%, 30%
+          duration: 800
 - tapOn:
     waitToSettleTimeoutMs: 1000
     text: "Mais opções de .*"
