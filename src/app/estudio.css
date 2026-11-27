@@ -867,6 +867,9 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
 .reforco h2:focus, .reforco h3:focus { outline: none; }
 .reforco__selo { display: flex; align-items: center; gap: 8px; color: var(--acao-escura); font-weight: 900; text-transform: uppercase; }
 .reforco__motivo { color: var(--texto2); line-height: 1.5; }
+@media (max-width: 600px) {
+  .reforco__motivo[data-lido] { display: none; }
+}
 .reforco__faixa { position: relative; display: grid; grid-template-columns: 1fr 3fr 1fr; align-items: end; max-width: 560px;
   height: 88px; padding-bottom: 9px; border-radius: 16px; background: linear-gradient(to top,#bfdef7 0 16%,#edf6ff 16%); }
 .reforco__faixa > span { align-self: end; padding-inline: 3px; text-align: center; font-size: .73rem; font-weight: 800; color: var(--texto2); }
