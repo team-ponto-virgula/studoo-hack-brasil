@@ -2657,8 +2657,10 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       ocupado={ocupado} rodape={!largo} aoAbrir={() => abrirLicao(proximo.no.id)} />
   );
   // .trilha-capa da web: a capa escolhida no alto do mapa, em 4:1 (até 140 de altura) e cantos de 20. Só com capa escolhida.
+  // Na trilha da própria pessoa, a foto vai com a sessão: em revisão, a API só a entrega para a dona (sem isso, sobrava o
+  // fundo liso na cor do tema). A recebida vai sem o token, como nas configurações.
   const capa = plano.capa
-    ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} grande estilo={estudoEstilos.capaTrilha} />
+    ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} grande estilo={estudoEstilos.capaTrilha} daDona={!plano.recebida} />
     : null;
 
   return (
@@ -2892,8 +2894,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
     <Animated.View testID="plano-destaque" style={[degrauFora(4, 24, cores.destaqueBorda), estudoEstilos.destaqueFora, estiloDeEntrada(entrada)]}>
     <View style={estudoEstilos.destaque}>
       <View style={[estudoEstilos.destaqueCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        {/* Como .plano-destaque__capa da web: com capa escolhida nas configurações, ela entra no lugar da ilustração. */}
-        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} /> : (
+        {/* Como .plano-destaque__capa da web: com capa escolhida nas configurações, ela entra no lugar da ilustração. A foto
+            da própria trilha vai com a sessão (em revisão, só a dona a vê). */}
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} daDona={!plano.recebida} /> : (
           <>
             <View style={[estudoEstilos.cartaoColina, estudoEstilos.cartaoColinaDestaque, { backgroundColor: relevo }]} />
             <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
@@ -2956,8 +2959,9 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, conf
     <Animated.View style={[degrauFora(4, 24, cores.gelo), estudoEstilos.cartaoFora, estiloDeEntrada(entrada)]}>
     <View style={estudoEstilos.cartao}>
       <View style={[estudoEstilos.cartaoCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        {/* Como .plano-cartao__capa da web: a capa escolhida no lugar da ilustração; o selo de concluída fica por cima. */}
-        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} /> : (
+        {/* Como .plano-cartao__capa da web: a capa escolhida no lugar da ilustração; o selo de concluída fica por cima. A
+            foto da própria trilha vai com a sessão (em revisão, só a dona a vê). */}
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} daDona={!plano.recebida} /> : (
           <>
             <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
             <Desenho nome={enfeites[0]} largura={46} estilo={[estudoEstilos.cartaoEnfeite, { left: '8%' }]} />
