@@ -14,7 +14,7 @@ Este documento só propõe. Não muda código, não toca na página de apresenta
 
 ## 1. Lote curto: o que mais aparece na demo
 
-Ordem de implementação sugerida: L1, L2, L5, L3, L4, L6, L7, L8.
+Ordem de implementação sugerida: L1, L2, L5, L3, L6, L4, L7, L8.
 
 ### L1 (P0). Ensine ao Stu: o campo e o envio aparecem na primeira tela
 
@@ -99,19 +99,15 @@ Ordem de implementação sugerida: L1, L2, L5, L3, L4, L6, L7, L8.
 - **Comportamento.** O fim da página reserva a altura da barra, para os números não ficarem atrás dela. Na trilha concluída, a mesma barra leva as ações que a spec 17, seção 7, define.
 - **Critério observável.** Em 1280 × 720 e em 1366 × 768, ao chegar na conclusão, "Ir para a próxima lição" e "Voltar à trilha" estão inteiros na tela sem rolar. Em 768 × 1024, também.
 
-### L4 (P1). Proposta pronta: a lição 1 aparece inteira, e só um botão é azul cheio
+### L4 (P2). Proposta pronta: só um botão é azul cheio
 
 - **Onde:** prévia da trilha, depois de montar. Web em 390 × 844. App: não conferido nesta rodada.
-- **Evidência:** `a07-proposta-390`.
-- **Hoje.**
-  - A placa "Sua proposta tem 6 lições em 3 partes." ocupa de 77 a 127 px. O nó da lição 1 fica de 45 a 173 px: o círculo some atrás do cabeçalho e da placa, e o nome aparece cortado ("…denominador contam"). A lição que o botão "Começar a lição 1" abre é a única que não se vê.
-  - "Ver o fim da trilha" é uma pílula azul cheia, da mesma cor de "Começar a lição 1", 16 px acima dele, por cima do caminho.
-- **Regra já decidida e não cumprida:** spec 16, item 1, e spec 04 ("ela rola até a lição 1 inteira no alto da área").
-- **Proposta.**
-  - Ao ficar pronta, a rolagem deixa o topo do nó da lição 1 a 12 px abaixo da placa.
-  - "Ver o fim da trilha" passa a ter o desenho da pílula "Ver mais abaixo" da aula: fundo branco, borda de 2 px `#E1E7FA`, texto e seta em azul, 44 px de altura.
+- **Evidência:** `g01-proposta-390` (tela parada, 2,5 s depois de ficar pronta).
+- **Conferido e certo:** ao ficar pronta, a tela rola sozinha até a lição 1. Com a tela parada, o nó da lição 1 fica de 157 a 285 px, inteiro abaixo da placa (77 a 127), como a spec 16, item 1, pede. Uma captura feita no meio dessa rolagem mostrava o nó cortado; não é defeito.
+- **Hoje.** "Ver o fim da trilha" é uma pílula azul cheia, da mesma cor de "Começar a lição 1", 33 px acima dele (545 a 589; o botão começa em 622), por cima do caminho e do nó da lição 3. A spec 16, item 1, chama esse controle de "botão de texto". Na tela há dois azuis cheios, e o menor fica mais perto do dedo.
+- **Proposta.** "Ver o fim da trilha" passa a ter o desenho da pílula "Ver mais abaixo" da aula: fundo branco, borda de 2 px `#E1E7FA`, texto e seta em azul, 44 px de altura. Lugar e comportamento não mudam.
 - **Texto final.** Sem mudança.
-- **Critério observável.** Em 390 × 844 e em 360 × 800, com a proposta pronta e sem tocar na tela: o círculo e o nome inteiro da lição 1 ficam abaixo da placa; na tela há um único botão azul cheio, "Começar a lição 1".
+- **Critério observável.** Em 390 × 844 e em 360 × 800, com a proposta pronta e a tela parada: o círculo e o nome inteiro da lição 1 ficam abaixo da placa; na tela há um único botão azul cheio, "Começar a lição 1".
 
 ### L5 (P1, defeito). Tela do material no celular: a página fica mais larga que a tela
 
@@ -157,7 +153,6 @@ Não são propostas novas. Entram aqui para a divisão da implementação.
 
 | Regra | Onde está | O que se vê hoje | Evidência |
 | --- | --- | --- | --- |
-| A lição 1 inteira no alto da área quando a proposta fica pronta | spec 16, item 1; spec 04 | Nó atrás do cabeçalho e da placa (L4) | `a07-proposta-390` |
 | Nenhum tocável inteiro atrás da cápsula na primeira vista | spec 16, item 35 | "Ver como funciona" em 360 × 800 (L6) | `a04-nova-360` |
 | Alto compacto da tela do material | spec 16, item 35 | Título em três linhas grandes (L5) | `a08-material-390` |
 | Alvo de toque de 44 px nos botões de texto | spec 04, item 9 | "Etapa anterior" tem 29 px de altura; "Ver mais abaixo" tem 33 | `c12-ensine-390`, `e08-ensine-1280` |
@@ -165,6 +160,7 @@ Não são propostas novas. Entram aqui para a divisão da implementação.
 
 ## 3. O que foi visto e fica como está
 
+- Proposta pronta: a tela rola até a lição 1 inteira abaixo da placa (spec 16, item 1, cumprida na web).
 - Retorno do erro: "Não foi dessa vez", "Ver outro jeito de entender", "Tentar de novo", "Pular por agora" e a linha "Se pular, este exercício volta no fim da lição.".
 - Retorno do acerto, na web em 390 e em 1280.
 - Minhas trilhas com o cartão "Seu próximo passo".
@@ -192,7 +188,7 @@ Todas as capturas desta rodada: navegador (Chrome 158, sem janela), servidor loc
 | `a02-login-390` | Entrada, vinda de "Entrar" na apresentação | 390 × 844 |
 | `a03-nova-390`, `a04-nova-360` | Nova trilha | 390 × 844, 360 × 800 |
 | `a05-comecamos-390` | "Por onde começamos?" | 390 × 844 |
-| `a07-proposta-390` | Proposta pronta | 390 × 844 |
+| `g01-proposta-390` | Proposta pronta, tela parada | 390 × 844 |
 | `a08-material-390` | Tela do material | 390 × 844 |
 | `c05-erro-390`, `c10-acerto-390` | Retorno do erro e do acerto | 390 × 844 |
 | `c06-ponte-390`, `c08-ponte3-390`, `c09-ponte-acerto-390` | Ponte de reforço | 390 × 844 |
