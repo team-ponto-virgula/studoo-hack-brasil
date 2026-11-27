@@ -1,0 +1,14 @@
+appId: host.exp.Exponent
+name: retomada
+---
+- runFlow: retomada-interromper.yaml
+- runScript:
+    file: sinalizar.js
+    env:
+      MARCO: processo-fechado
+- runFlow: retomada-reabrir.yaml
+- runScript:
+    file: sinalizar.js
+    env:
+      MARCO: liberar-geracao
+- runFlow: retomada-abrir.yaml

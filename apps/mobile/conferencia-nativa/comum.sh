@@ -24,6 +24,7 @@ MAESTRO="$FERRAMENTAS/maestro/bin/maestro"
 
 API="https://127.0.0.1:3443"
 PORTA_API=3443
+PORTA_IA_RETOMADA=3451
 PORTA_WEB="${CONFERENCIA_PORTA_WEB:-3000}"
 # O app abre o Metro pela porta 8081, onde fica a cache dos pacotes (servidor/cache-do-metro.mjs); o Metro fica na 8082.
 PORTA_METRO=8081
@@ -256,8 +257,7 @@ servidor() {
   cat "$REGISTROS/preparar-dados.log"
 
   if [ "${CONFERENCIA_TELAS:-}" = "retomada-criacao" ]; then
-    local porta_ia=3451
-    nohup node "$AQUI/servidor/ia-da-retomada.mjs" "$porta_ia" "$PROVA_RETOMADA/geracao-liberada" \
+    nohup node "$AQUI/servidor/ia-da-retomada.mjs" "$PORTA_IA_RETOMADA" "$PROVA_RETOMADA" \
       > "$REGISTROS/ia-retomada.log" 2>&1 < /dev/null &
     local esperou=0
     until grep -q '"etapa":"escutando"' "$REGISTROS/ia-retomada.log"; do
@@ -267,7 +267,7 @@ servidor() {
     done
     kill -TERM "$pid_web"
     wait "$pid_web" || true
-    IA=openai OPENAI_API_KEY=chave-sintetica OPENAI_BASE_URL="http://127.0.0.1:$porta_ia/v1" EMAIL=resend \
+    IA=openai OPENAI_API_KEY=chave-sintetica OPENAI_BASE_URL="http://127.0.0.1:$PORTA_IA_RETOMADA/v1" EMAIL=resend \
       nohup node node_modules/next/dist/bin/next start --hostname localhost --port "$PORTA_WEB" > "$REGISTROS/servidor-retomada.log" 2>&1 < /dev/null &
     esperar_http "http://localhost:$PORTA_WEB/api/saude" 90 || erro "O servidor local da retomada não reiniciou."
     curl -fsS --max-time 20 --cacert "$TLS/ca.crt" "$API/api/auth/config" \
@@ -388,7 +388,9 @@ rodar_maestro() {
   # running on port [37701]" e, 0,3 s depois, "Failed to bind to address [::]:37701" no gRPC do próprio driver, e o
   # Maestro desiste com DeviceServerDiedException em 'deviceInfo'). Não é o app nem o fluxo: o fluxo roda de novo uma vez,
   # com o driver parado e os encaminhamentos dele desfeitos (limpar_driver_maestro, do android.sh; o adb reverse fica).
+  # Depois de entrar no fluxo de retomada, repetir a sessão inteira poderia enviar um segundo aceite.
   if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}" ] \
+    && { [ "$fase" != retomada ] || ! grep -qF '> Flow retomada' "$REGISTROS/maestro-$fase.log"; } \
     && grep -qE "DeviceServerDiedException|Failed to bind to address|Device server died" "$REGISTROS/maestro-$fase.log"; then
     resumo "⚠️ O driver do Maestro caiu na partida da fase \`$fase\` (antes do primeiro comando); a fase rodou de novo uma vez."
     cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
@@ -558,19 +560,17 @@ fluxo_retomada() {
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$antes" \
     || erro "A conta sintética não corresponde ao preparo antes da prova de retomada."
   : > "$PROVA_RETOMADA/armada"
-  if ! rodar_maestro retomada-interromper "$PASTA_DOS_FLUXOS/retomada/retomada-interromper.yaml"; then
-    : > "$PROVA_RETOMADA/geracao-liberada"
-    erro "A prova parou antes de fechar o app. Veja as capturas e os registros do aceite e da consulta."
+  # Reabrir no mesmo Maestro evita reiniciar o driver enquanto o lote da API ainda está em andamento.
+  local codigo=0
+  rodar_maestro retomada "$PASTA_DOS_FLUXOS/retomada/retomada.yaml" \
+    -e "CONTROLE_RETOMADA=http://127.0.0.1:$PORTA_IA_RETOMADA" || codigo=$?
+  if [ -f "$PROVA_RETOMADA/retomada-processo-fechado.txt" ]; then
+    cp "$PROVA_RETOMADA/retomada-processo-fechado.txt" "$REGISTROS/"
   fi
-  node -p 'Date.now()' > "$REGISTROS/retomada-processo-fechado.txt"
-  : > "$PROVA_RETOMADA/consultas-liberadas"
-  if ! rodar_maestro retomada-reabrir "$PASTA_DOS_FLUXOS/retomada/retomada-reabrir.yaml"; then
+  if [ "$codigo" -ne 0 ]; then
     : > "$PROVA_RETOMADA/geracao-liberada"
-    erro "O processo relançado não mostrou que recuperou a criação em preparo."
+    erro "A prova de retomada falhou. Veja o comando que parou em maestro-retomada.log e a tela registrada."
   fi
-  : > "$PROVA_RETOMADA/geracao-liberada"
-  rodar_maestro retomada-abrir "$PASTA_DOS_FLUXOS/retomada/retomada-abrir.yaml" \
-    || erro "O app não abriu a lição 1 da trilha recuperada."
   trilhas_da_criacao depois --antes "$antes" --saida "$depois" --titulo-esperado "Observar o céu noturno" --apagar \
     || erro "A conferência da conta sintética encontrou divergência na trilha recuperada."
   node "$AQUI/servidor/conferir-retomada.mjs" "$REGISTROS" \

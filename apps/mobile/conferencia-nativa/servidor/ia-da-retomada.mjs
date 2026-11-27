@@ -1,9 +1,14 @@
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { join } from 'node:path';
 import { setTimeout as esperar } from 'node:timers/promises';
 
-const [porta, liberar] = process.argv.slice(2);
-if (!porta || !liberar) throw new Error('Informe a porta local e o caminho do sinal de liberação.');
+const [porta, pastaDaProva] = process.argv.slice(2);
+if (!porta || !pastaDaProva) throw new Error('Informe a porta local e a pasta de controle da retomada.');
+const armada = join(pastaDaProva, 'armada');
+const processoFechado = join(pastaDaProva, 'retomada-processo-fechado.txt');
+const consultasLiberadas = join(pastaDaProva, 'consultas-liberadas');
+const liberar = join(pastaDaProva, 'geracao-liberada');
 
 const titulo = 'Observar o céu noturno';
 const blocos = [
@@ -37,11 +42,35 @@ function json(resposta, dados) {
 }
 
 const servidor = createServer(async (requisicao, resposta) => {
-  if (requisicao.method !== 'POST' || requisicao.url !== '/v1/responses') {
+  if (requisicao.method !== 'POST') {
     resposta.writeHead(404).end();
     return;
   }
   try {
+    // Chamadas do Maestro na mesma sessão que fechou e reabriu o app. Este servidor só escuta no loopback.
+    if (requisicao.url === '/retomada/processo-fechado') {
+      if (!existsSync(armada)) {
+        resposta.writeHead(409).end();
+        return;
+      }
+      if (!existsSync(processoFechado)) writeFileSync(processoFechado, String(Date.now()) + '\n');
+      writeFileSync(consultasLiberadas, '');
+      resposta.writeHead(204).end();
+      return;
+    }
+    if (requisicao.url === '/retomada/liberar-geracao') {
+      if (!existsSync(consultasLiberadas)) {
+        resposta.writeHead(409).end();
+        return;
+      }
+      writeFileSync(liberar, '');
+      resposta.writeHead(204).end();
+      return;
+    }
+    if (requisicao.url !== '/v1/responses') {
+      resposta.writeHead(404).end();
+      return;
+    }
     let corpo = '';
     for await (const parte of requisicao) corpo += parte;
     const pedido = JSON.parse(corpo);
@@ -67,7 +96,7 @@ const servidor = createServer(async (requisicao, resposta) => {
       const limite = Date.now() + 190_000;
       while (!existsSync(liberar) && Date.now() < limite && !resposta.destroyed) await esperar(150);
       if (resposta.destroyed) return;
-      if (!existsSync(liberar)) throw new Error('liberacao');
+      if (!existsSync(liberar)) throw new Error('prazo_da_liberacao');
       json(resposta, {
         objetivo: licoes[numero - 1],
         conceito: 'O céu fica mais fácil de observar quando há pouca iluminação artificial.',
@@ -84,8 +113,8 @@ const servidor = createServer(async (requisicao, resposta) => {
     } else {
       throw new Error('pedido');
     }
-  } catch {
-    registrar('falha');
+  } catch (erro) {
+    registrar('falha', { motivo: erro.message === 'prazo_da_liberacao' ? 'prazo_da_liberacao' : 'pedido_invalido' });
     if (!resposta.headersSent) resposta.writeHead(500);
     resposta.end();
   }
