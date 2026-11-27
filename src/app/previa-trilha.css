@@ -17,12 +17,13 @@
   border: 1px solid #f0cb74; border-radius: 16px; color: var(--texto); background: #fff9ea; font-size: .94rem; font-weight: 800;
 }
 .previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; container-type: size; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
+/* A pílula é um atalho, não a ação da tela: branca, como "Ver mais abaixo" na aula; o único azul cheio é o botão principal (spec 19, L4). */
 .previa-seguir {
   position: absolute; z-index: 3; inset: auto auto 16px 50%; transform: translateX(-50%);
   display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
-  border: 0; border-radius: 999px; background: var(--acao); color: white;
+  border: 2px solid #e1e7fa; border-radius: 999px; background: var(--fundo); color: var(--acao);
   font: inherit; font-weight: 800; white-space: nowrap; cursor: pointer;
-  box-shadow: 0 3px 0 var(--acao-escura);
+  box-shadow: 0 2px 0 #e1e7fa;
 }
 .previa-seguir .icone { width: 18px; height: 18px; transform: rotate(90deg); }
 /* O mapa só trava na passagem para a aula (`criada`). Enquanto a trilha é preparada ele rola (mouse, teclado e toque): a espera pode levar minutos, e a pessoa precisa chegar ao fim do mapa (spec 04, C8). */

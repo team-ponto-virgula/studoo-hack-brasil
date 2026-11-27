@@ -36,3 +36,27 @@ test('as camadas, na mesma pilha: o chão dos nós (auto) < a estrada (1) < o no
   assert.doesNotMatch(chegada, /z-index/, 'o chão da chegada fica no nível de baixo, em ordem de documento');
   assert.match(regra('.previa-no'), /position: relative; height: var\(--passo\); background: var\(--chao\);/, 'cada linha com o chão da região, sem z-index');
 });
+
+// Refino para a banca (spec 19, L4 e L7).
+test('spec 19 (L4): "Ver o fim da trilha" é um atalho branco de 44 px (borda e sombra #E1E7FA, texto azul); o único azul cheio da proposta é o botão principal', () => {
+  const pilula = regra('.previa-seguir');
+  assert.match(pilula, /min-height: 44px;/);
+  assert.match(pilula, /border: 2px solid #e1e7fa;/);
+  assert.match(pilula, /background: var\(--fundo\); color: var\(--acao\);/);
+  assert.match(pilula, /box-shadow: 0 2px 0 #e1e7fa;/);
+  assert.doesNotMatch(pilula, /background: var\(--acao\)|color: white/);
+});
+
+test('spec 19 (L7): "Por onde começamos?" abre com o Stu ao lado do título e o pedido com o rótulo "Seu pedido"; nas perguntas, o título fica sozinho', () => {
+  const tela = ler('src/app/diagnostico.tsx');
+  assert.match(tela, /\{exibido \? cabecalho : <header className="pedido-heroi">/);
+  assert.match(tela, /<div className="pedido-heroi__stu" aria-hidden="true"><Stu expressao="stu-curioso" tamanho=\{96\} animado="uma-vez" \/><\/div>/);
+  assert.match(tela, /<p className="diagnostico-pedido"><span>Seu pedido<\/span> <strong>\{objetivo\}<\/strong><\/p>/);
+  assert.doesNotMatch(tela, /<p>\{objetivo\}<\/p>/);
+  // O título continua um só, com o id e o foco de antes.
+  assert.equal(tela.match(/<h1 /g)?.length, 1);
+  assert.match(tela, /<h1 id="diagnostico-titulo" tabIndex=\{-1\} ref=\{titulo\}>/);
+  const estilos = ler('src/app/pedido.css');
+  assert.match(estilos, /\.diagnostico-pedido span \{ color: var\(--texto2\); font-size: 14px; font-weight: 700; line-height: 21px; \}/);
+  assert.match(estilos, /\.diagnostico-pedido strong \{ font-size: 17px; font-weight: 800; line-height: 26px;/);
+});
