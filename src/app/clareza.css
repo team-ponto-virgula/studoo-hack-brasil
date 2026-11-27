@@ -223,3 +223,15 @@
   .estudo[data-direcao='clareza'] .pedido-novo .pedido-campo textarea,
   .estudo[data-direcao='clareza'] .pedido-novo .pedido-campo__caixa::after { min-height: 88px; }
 }
+
+/* Nova trilha em telas largas (spec 19, M2). A fileira de ideias rolava para o lado e cortava a terceira ideia na borda da coluna, sem sinal de que havia mais;
+   agora as ideias quebram em linhas dentro da coluna. As três saídas de texto ("Adicionar por link", "Ver trilhas da comunidade", "Ver como funciona")
+   ocupavam uma linha cada; agora ficam numa fileira só, centralizada. As colunas do meio só existem para essa fileira: todo o resto ocupa a largura inteira. */
+@media (min-width: 768px) {
+  .estudo[data-direcao='clareza'] .pedido-ideias { flex-wrap: wrap; margin: 2px 0 0; padding: 4px 0; overflow: visible; scroll-snap-type: none; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo { grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); column-gap: 8px; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > * { grid-column: 1 / -1; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .por-link__abrir { grid-column: 2; margin-top: 0; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .por-link__abrir + .por-link__abrir { grid-column: 3; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .pedido-como { grid-column: 4; margin-top: 0; }
+}
