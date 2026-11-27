@@ -38,6 +38,22 @@ name: 98-ponte-e-ensine
 - extendedWaitUntil:
     visible: 'Etapa \d+ de \d+'
     timeout: 30000
+# A lição reabre no exercício já acertado e, com a avaliação de volta, rola até o fim dele (licao.tsx, como a web em
+# aula.tsx): o aviso de "continuou de onde parou" fica sob o topo da lição. O iPhone ainda o dá como visível, e o toque
+# caía no topo sem abrir a confirmação (execuções 45933651982, 45935451042 e 45942548694). No Android, escondido, o
+# recomeço seria pulado e o fluxo tentaria responder o exercício já respondido. Espera a rolagem acabar e volta ao alto.
+- waitForAnimationToEnd:
+    timeout: 2000
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 35%
+    end: 50%, 80%
+    duration: 800
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 35%
+    end: 50%, 80%
+    duration: 800
 # "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco).
 - runFlow:
     when:
