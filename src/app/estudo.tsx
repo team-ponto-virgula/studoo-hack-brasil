@@ -1807,6 +1807,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
   // A última lição fecha a trilha: a comemoração é da trilha inteira.
   const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
   const paraRever = trilhaFeita ? plano.fluxos.flatMap(fluxo => fluxo.licoes).find(item => item.rever) : undefined;
+  const comConquista = Boolean(resumo?.ponteConstruida || resumo?.ensinouStu);
 
   return (
     <section className="painel painel--concluida">
@@ -1824,6 +1825,23 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
           <h2>{mensagens.planos.progressoPlano}</h2>
           <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
         </div>
+        {/* O que a pessoa fez nesta lição (ponte, explicação ao Stu) vem logo depois do progresso: aparece sem rolar. */}
+        {comConquista && <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
+          {resumo?.ponteConstruida && (
+            <li data-tipo="ponte">
+              <Icone nome="check" />
+              <strong>{mensagens.licao.historia.ponteTitulo}</strong>
+              <p>{mensagens.licao.historia.ponteTexto}</p>
+            </li>
+          )}
+          {resumo?.ensinouStu && (
+            <li data-tipo="ensino">
+              <Icone nome="lapis" />
+              <strong>{mensagens.licao.historia.ensinoTitulo}</strong>
+              <p>{mensagens.licao.historia.ensinoTexto}</p>
+            </li>
+          )}
+        </ul>}
         <p className="conclusao-sincronia">
           {!visitante && <Icone nome="check" />}
           {visitante ? mensagens.licao.historia.sincroniaVisitante : mensagens.licao.historia.sincronia}
@@ -1840,22 +1858,9 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, visit
           </p>
         )}
       </div>
-      <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>
+      {/* Com uma conquista à vista, a frase genérica de comemoração sai; a da trilha concluída fica. */}
+      {(trilhaFeita || !comConquista) && <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>}
       {trilhaFeita && <p className="conclusao-trilha"><Icone nome="trofeu" />{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</p>}
-      {(resumo?.ponteConstruida || resumo?.ensinouStu) && <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
-        {resumo?.ponteConstruida && (
-          <li data-tipo="ponte">
-            <strong>{mensagens.licao.historia.ponteTitulo}</strong>
-            <p>{mensagens.licao.historia.ponteTexto}</p>
-          </li>
-        )}
-        {resumo?.ensinouStu && (
-          <li data-tipo="ensino">
-            <strong>{mensagens.licao.historia.ensinoTitulo}</strong>
-            <p>{mensagens.licao.historia.ensinoTexto}</p>
-          </li>
-        )}
-      </ul>}
       {resumo && trilhaFeita && <p className="conclusao-numeros__legenda">{textos.ultimaLicao}</p>}
       {resumo && (
         <ul className="conclusao-numeros" aria-label={trilhaFeita ? `${textos.titulo}: ${textos.ultimaLicao}` : textos.titulo}>
