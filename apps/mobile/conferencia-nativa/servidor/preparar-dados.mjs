@@ -236,7 +236,7 @@ async function preparar() {
 
     // SÓ PARA AS CAPTURAS DA CAPA EM REVISÃO: foto na capa do destaque (o mapa que abre, o cartão "Seu próximo passo" e as
     // configurações) e na do primeiro cartão de baixo. A revisão local deixa toda foto pendente: só a dona a vê, e só com
-    // a sessão, como a capa do Julio em 27/11.
+    // a sessão, como no relato de 27/11.
     const comFoto = [destaque, lista.find((plano) => plano.id !== destaque.id)].filter(Boolean);
     const capasComFoto = [];
     for (const [indice, plano] of comFoto.entries()) {
