@@ -113,7 +113,7 @@ export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (tex
   aviso: null, avisar: () => undefined, dispensar: () => undefined,
 });
 export const DURACAO_DO_AVISO_MS = 4500;
-export const DURACAO_DO_AVISO_COM_ACAO_MS = 7000;
+export const DURACAO_DO_AVISO_COM_ACAO_MS = 30000;
 /** Os números da web (aviso-musica-regras.ts): o vão entre a barra e o aviso do alto, e até onde a página ainda está no alto. */
 const RESPIRO_DO_AVISO = 8;
 const TOPO_DA_PAGINA = 4;
