@@ -100,6 +100,18 @@ test('Mídia da própria pessoa: o token só para o host da API e só nas imagen
   const conf = await ler('apps/mobile/src/configuracoes.tsx');
   // Recebida continua recebida mesmo sem o nome de quem compartilhou (banca P0-3): só a trilha própria (null) é da dona.
   assert.match(conf, /daDona=\{recebidaDe == null\}/);
+  // Minhas trilhas e o alto do mapa: a capa com foto da própria trilha vai com a sessão (em revisão, sem ela sobrava o bloco
+  // liso na cor do tema). As três capas da trilha em estudo.tsx; a recebida vai sem o token.
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  const capasDaTrilha = estudo.match(/<CapaDaTrilha [^>]*\/>/g) ?? [];
+  assert.equal(capasDaTrilha.length, 3, 'destaque, cartão e alto do mapa');
+  for (const capa of capasDaTrilha) assert.match(capa, /daDona=\{!plano\.recebida\}/);
+  // O "Sua foto" da galeria de capas, como a prévia das configurações.
+  assert.match(conf, /<GaleriaDeCapas [^>]*daDona=\{recebidaDe == null\}/);
+  assert.match(conf, /<CapaDaTrilha semente=\{semente\} tema=\{tema\} capa=\{opcao\.id\} estilo=\{confEstilos\.opcaoCapa\} daDona=\{daDona\} \/>/);
+  // A foto que não abre dá lugar à capa padrão do tema, e não ao fundo liso.
+  assert.match(conf, /onError=\{\(\) => setFalhou\(tentativa\)\}/);
+  assert.match(conf, /\{foto && falhou !== tentativa \? \(/);
   assert.match(comunidade, /<Indisponivel titulo=\{mensagens\.seguranca\.trilhaIndisponivel\}/);
   assert.equal(s.trilhaIndisponivel, 'Esta trilha não está disponível agora.');
 });
