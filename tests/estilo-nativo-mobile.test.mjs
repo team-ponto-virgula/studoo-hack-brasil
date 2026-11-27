@@ -112,3 +112,16 @@ test('o texto do cartão do Ordenar (lista única) encolhe e quebra em linhas, s
   assert.equal(props.flexShrink, 1, 'o texto encolhe e quebra quando passa da largura');
   assert.equal(props.flexGrow, 1, 'e ocupa o que sobra da linha, entre o número e a alça');
 });
+
+test('as telas só montam com as fontes prontas: nenhum texto do app é medido com a fonte do sistema', () => {
+  // Capturas do Android em 27/11 (execuções 45933648133 e 45933651982 da conferência nativa): na primeira abertura, o login
+  // mediu os textos antes de a Nunito carregar e desenhou com ela na mesma caixa ("Entra", "Ver como", "Fale com o"). O
+  // texto não se mede de novo quando a fonte chega; a espera fica com a abertura, que já cobre o conteúdo.
+  const layout = readFileSync(new URL('../apps/mobile/app/_layout.tsx', import.meta.url), 'utf8');
+  assert.match(layout, /const \[carregadas, erro\] = useFonts\(\{/);
+  assert.match(layout, /const telasProntas = carregadas \|\| Boolean\(erro\) \|\| semEsperarAsFontes;/);
+  assert.match(layout, /<Abertura pronta=\{carregadas\} falha=\{Boolean\(erro\)\}>\s*\{telasProntas && <Stack screenOptions=\{\{ headerShown: false, contentStyle: estilos\.inicio \}\} \/>\}\s*<\/Abertura>/);
+  assert.equal((layout.match(/<Stack\b/g) ?? []).length, 1, 'um Stack só, o que espera as fontes');
+  // Sem as fontes até o limite da launch screen (5 s), as telas montam assim mesmo: o app nunca fica só no fundo.
+  assert.match(layout, /if \(carregadas \|\| erro\) return;\s*const limite = setTimeout\(\(\) => setSemEsperarAsFontes\(true\), abertura\.limiteNativoMs\);\s*return \(\) => clearTimeout\(limite\);/);
+});
