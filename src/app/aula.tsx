@@ -363,7 +363,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
-  else if (etapa.tipo === 'ensino') nomeEtapa = 'Ensine ao Stu';
+  else if (etapa.tipo === 'ensino') nomeEtapa = mensagens.estudio.ensinoTitulo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     // Na revisão, o contador é o da revisão ("Revisão 1 de 1"), não o dos exercícios da lição.

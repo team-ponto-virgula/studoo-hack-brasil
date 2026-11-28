@@ -7,6 +7,7 @@ import {
   Platform,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   StyleSheet, Pressable } from 'react-native';
 import { File } from 'expo-file-system';
@@ -402,6 +403,7 @@ export function ApoioDaLicao({
   /** A explicação foi enviada: a lição tira o convite para explicar. Como na web. */
   aoEnsinar?: () => void;
 }) {
+  const estreita = useWindowDimensions().width <= 600;
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
@@ -878,9 +880,9 @@ export function ApoioDaLicao({
         <View testID="ponte-clara" onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }} style={s.ponteClara}>
           <SeloDaPonte />
           <Text ref={tituloPonte} testID="titulo-ponte" accessible accessibilityRole="header" style={[estilos.subtitulo, s.tituloPonte]}>{m.ponte}</Text>
-          <Text testID="ponte-motivo" style={s.ponteMotivo}>
+          {(!estreita || etapaPonte === 1 || revendo) && <Text testID="ponte-motivo" style={s.ponteMotivo}>
             {revendo && ponte ? m.ponteReabertaAviso : ultimaResposta.trim() ? m.ponteMotivoResposta(ultimaResposta) : m.ponteMotivo}
-          </Text>
+          </Text>}
           <FaixaDaPonte passo={etapaPonte} construida={venceu || (revendo && Boolean(ponte))} carregando={!ponte} comemorar={venceu} />
           <Animated.View key={`passo-${venceu ? 'vencida' : revendo ? 'reaberta' : etapaPonte}`} style={[s.ponteCartao, estiloDeEntrada(entradaPasso, 8, 1)]}>
             {!ponte ? (
@@ -970,7 +972,6 @@ export function ApoioDaLicao({
               fala={etapaVoz === 'ativa' ? m.vozAoVivo.estados[estadoVoz.estado] : undefined} />
             <EtapasDoEnsino ativa={gravando || etapaVoz === 'ativa' ? 0 : ensino ? 2 : !texto.trim() ? 0 : 1}
               primeira={vozDisponivel ? m.vozAoVivo.passoComVoz : undefined} />
-            <T>{m.ensinoDica}</T>
             <Text style={[estilos.legenda, s.legendaCartao]}>{m.ensinoIdeia(licao.objetivo)}</Text>
             {(vozDisponivel || etapaVoz !== 'inativa') && (
               // As margens de 12 da web se juntam com as dos parágrafos vizinhos: aqui o vão do cartão (14) fica em 12.
@@ -1026,20 +1027,13 @@ export function ApoioDaLicao({
               estiloRotulo={s.rotuloExplicacao}
               campoRef={campoEnsino}
               multiline
-              numberOfLines={5}
+              numberOfLines={estreita ? 3 : 4}
               maxLength={3000}
               value={texto}
               onChangeText={setTexto}
               editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
-              // A textarea da web (5 linhas de 24, 16 de respiro e borda de 2 em gelo, .estudio-card textarea): 156. Desligada
-              // (gravando, ocupada ou com a conversa ao vivo), fica no cinza claro da textarea desativada do navegador.
-              style={[s.campoEnsino, (ocupado || gravando || etapaVoz === 'ativa') && s.campoEnsinoDesligado]}
+              style={[s.campoEnsino, { minHeight: estreita ? 96 : 120 }, (ocupado || gravando || etapaVoz === 'ativa') && s.campoEnsinoDesligado]}
             />
-            {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
-            {/* .estudio-acoes tem 20 em cima (o cartão põe 14). */}
-            <Text style={[estilos.legenda, s.legendaCartao, { marginBottom: 6 }]}>
-              {m.vozDica}{provedorGravacao ? ` ${m.vozProvedorPorProvedor(provedorGravacao)}` : ''}
-            </Text>
             <Botao
               variante="secundario"
               rotulo={gravando ? m.parar : m.gravar}
@@ -1056,6 +1050,10 @@ export function ApoioDaLicao({
             )}
             {/* Como a web (<p role="status"> depois das ações): o aviso da gravação, da permissão e da fala trazida da conversa. */}
             {!!aviso && <Text role="status" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text>}
+            <Text style={[estilos.legenda, s.legendaCartao]}>{m.ensinoDica}</Text>
+            <Text style={[estilos.legenda, s.legendaCartao]}>
+              {m.vozDica}{provedorGravacao ? ` ${m.vozProvedorPorProvedor(provedorGravacao)}` : ''}
+            </Text>
             {ensino && (
               <View
                 onLayout={(evento) => {
@@ -1125,7 +1123,7 @@ const s = StyleSheet.create({
   // .ensino-gravando: 12 em cima na web (24 do "Parar e transcrever", com o cartão pondo 14) e 12 até o "Enviar".
   gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, marginBottom: -2, paddingVertical: 10, paddingHorizontal: 14,
     borderRadius: 14, backgroundColor: cores.ceu },
-  campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.gelo },
+  campoEnsino: { paddingVertical: 10, textAlignVertical: 'top', borderColor: cores.gelo },
   campoEnsinoDesligado: { backgroundColor: '#FAFAFA' },
   // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.
   rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 2 },

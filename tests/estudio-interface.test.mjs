@@ -43,7 +43,7 @@ const esperar = async () => {
 };
 
 // Exercita handlers e efeitos reais dos componentes, sem câmera ou permissão física.
-function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false } } = {}) {
+function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false }, largura = 390, ponteConcluida = false } = {}) {
   let cursor = 0;
   const slots = [];
   let efeitos = [];
@@ -85,7 +85,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     conceito: 'Uma explicação nova.',
     exemplo: 'Um novo exemplo.',
     simulado: true,
-    concluida: false,
+    concluida: ponteConcluida,
     exercicio: {
       tipo: 'multipla_escolha',
       enunciado: 'Outra pergunta',
@@ -103,6 +103,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       contagem.pontes++;
       return { erros: 1, ponte, ensino: null };
     },
+    avaliarPonte: async () => ({ correta: true, feedback: 'Acertou', apoio: { erros: 1, ensino: null, ponte: { ...ponte, concluida: true } } }),
     ensinarStu: async (_id, texto) => {
       contagem.ensinos.push(texto);
       return { acertos: ['Ok'], lacuna: 'Nada', pergunta: 'E agora?', proximoPasso: 'Seguir', simulado: true };
@@ -173,6 +174,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       Pressable: 'Pressable',
       ScrollView: 'ScrollView',
       StyleSheet: { create: (x) => x },
+      useWindowDimensions: () => ({ width: largura, height: 800 }),
     },
     'expo-file-system': { File: class {} },
     'expo-document-picker': {},
@@ -254,18 +256,21 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     },
     setInterval: () => 1,
     clearInterval() {},
+    setTimeout, clearTimeout,
     requestAnimationFrame: () => 1,
     Blob,
     window: { requestAnimationFrame: () => 1, cancelAnimationFrame() {}, matchMedia: () => ({ matches: true }) },
   };
   vm.runInNewContext(fontes[nativo ? 1 : 0], contexto);
   let rodapeEnsino = null;
+  let rodapePonte = null;
   const props = {
     cliente,
     licao: { id: 'licao', objetivo: 'Entender a lição', exercicio: {} },
     avaliacao: { correta: false },
     pedidoPonte: 0,
-    ...(nativo && { ensinoEmEtapa: true, definirRodapeEnsino: valor => { rodapeEnsino = valor; } }),
+    ...(nativo && { ensinoEmEtapa: true, ultimaResposta: 'A', definirRodapeEnsino: valor => { rodapeEnsino = valor; },
+      definirRodapePonte: valor => { rodapePonte = valor; } }),
   };
   function render() {
     cursor = 0;
@@ -306,7 +311,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     return buscarTipo(no.props?.children, tipo);
   }
   function clicar(nome) {
-    const b = buscar([arvore, rodapeEnsino], nome);
+    const b = buscar([arvore, rodapeEnsino, rodapePonte], nome);
     assert.ok(b, `Botão ${nome}`);
     return (b.props.onClick ?? b.props.acao ?? b.props.alternar)();
   }
@@ -425,6 +430,39 @@ test('app: segundo plano durante preparo libera modo de gravação', async () =>
   assert.equal(ui.contagem.gravar, 0);
   assert.equal(ui.contagem.parar, 1);
   assert.equal(ui.modos.at(-1).allowsRecording, false);
+});
+
+test('app: a largura decide as linhas do campo e se o motivo da ponte continua nos passos 2, 3 e na vitória', async () => {
+  const m = mensagens.estudio;
+  for (const largura of [360, 390, 600, 601]) {
+    const ui = montar(true, { largura });
+    assert.equal(ui.tipo('Campo').props.numberOfLines, largura <= 600 ? 3 : 4);
+    assert.ok(ui.botao(m.enviar));
+    ui.pedirPonte();
+    await esperar();
+    ui.render();
+    const motivo = m.ponteMotivoResposta('A');
+    assert.ok(ui.texto().includes(motivo));
+    for (const acao of [m.ponteVerExemplo, m.ponteIrDesafio]) {
+      ui.clicar(acao);
+      ui.render();
+      assert.equal(ui.texto().includes(motivo), largura > 600);
+    }
+    ui.tipo('Opcao').props.acao();
+    ui.render();
+    ui.clicar(m.verificar);
+    await esperar();
+    ui.render();
+    assert.ok(ui.texto().includes(m.ponteVencida));
+    assert.equal(ui.texto().includes(motivo), largura > 600);
+    ui.desmontar();
+  }
+  const reaberta = montar(true, { largura: 360, ponteConcluida: true });
+  reaberta.pedirPonte();
+  await esperar();
+  reaberta.render();
+  assert.ok(reaberta.texto().includes(m.ponteReabertaAviso));
+  reaberta.desmontar();
 });
 
 for (const nativo of [false, true])

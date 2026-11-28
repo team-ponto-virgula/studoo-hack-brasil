@@ -84,7 +84,7 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
       <div className="pedido-heroi__stu" aria-hidden="true"><Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" /></div>
       {cabecalho}
     </header>}
-    <p className="diagnostico-pedido"><span>Seu pedido</span> <strong>{objetivo}</strong></p>
+    <p className="diagnostico-pedido"><span>{mensagens.pedido.seuPedido}</span> <strong>{objetivo}</strong></p>
     {!passo && <p>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</p>}
     {ocupado && <p role="status">Preparando o próximo passo…</p>}
     {erro && <p role="alert">{erro === 'outro' ? 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.' : mensagens.erros[erro]}</p>}

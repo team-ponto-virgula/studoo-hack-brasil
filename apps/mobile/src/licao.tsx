@@ -353,7 +353,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : null;
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
-  else if (etapa.tipo === 'ensino') nomeEtapa = 'Ensine ao Stu';
+  else if (etapa.tipo === 'ensino') nomeEtapa = mensagens.estudio.ensinoTitulo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     nomeEtapa = revisao
@@ -839,12 +839,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {/* .aula-etapa .icone: caixa de 28 com 4 de respiro, desenho de 20. */}
             <Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
           </View>
-          <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
+          <Text ref={ensinando ? tituloEtapa : undefined} testID={ensinando ? 'titulo-ensino' : undefined}
+            accessibilityRole={ensinando ? 'header' : undefined}
+            accessibilityLabel={ensinando ? `${nomeEtapa}, ${mensagens.estudio.ensinoOpcional}` : undefined}
+            style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
+          {ensinando && <View style={licaoEstilos.marcaOpcional} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <Text style={licaoEstilos.opcionalTexto}>{mensagens.estudio.ensinoOpcional}</Text>
+          </View>}
         </View>
         {/* Rodada 4B da web: o nome da lição é o título no conceito e na prática; no exemplo, o título é "Exemplo" e, no
             exercício, a própria pergunta. O nome continua pequeno no topo. */}
-        {ensinando && <Text ref={tituloEtapa} testID="titulo-ensino" accessible accessibilityRole="header" textBreakStrategy="balanced"
-          style={[estilos.titulo, quebraEquilibrada, licaoEstilos.tituloLicao]}>Explique a ideia com suas palavras.</Text>}
         {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} equilibrado estilo={licaoEstilos.tituloLicao}>{textoSemFormulas(licao.titulo)}</Titulo>}
         {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
         {/* O cartão de erro da web (3A), sem ação: na lição, a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). */}
@@ -1038,7 +1042,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       </View>
       {/* Como a web desde bf8cf37: o bloco de apoio vazio (sem reforço, origem nem Explique) não conta (40 entre o último
           conteúdo e o rodapé); com cartões, a margem do último cartão soma, como na web (64). */}
-      {(exercicio || ensinando) && <View style={[licaoEstilos.apoio, ponteAberta && licaoEstilos.apoioComPonte, apoioVazio && licaoEstilos.apoioVazio]}
+      {(exercicio || ensinando) && <View style={[licaoEstilos.apoio, ensinando && licaoEstilos.apoioEnsino, ponteAberta && licaoEstilos.apoioComPonte, apoioVazio && licaoEstilos.apoioVazio]}
         onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; setApoioVazio(evento.nativeEvent.layout.height < 1); }}>
         <ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ensinoEmEtapa={ensinando} rascunhoEnsino={ensinando ? rascunhoEnsino : undefined}
@@ -1388,7 +1392,9 @@ const licaoEstilos = StyleSheet.create({
   pular: { minHeight: 48, paddingHorizontal: 8 },
   etapa: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, letterSpacing: 0.6 },
+  etapaTexto: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, letterSpacing: 0.6 },
+  marcaOpcional: { marginLeft: 'auto', borderRadius: 999, backgroundColor: cores.superficieSutil, paddingHorizontal: 10, paddingVertical: 3 },
+  opcionalTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   // Como .aula-miolo h1 da web no celular: clamp(1,5rem, 4,6vw, 2rem) = 24 px, entrelinha 1,15.
   // .aula-miolo h1 no celular: 24 px na entrelinha de 1,15; com o vão de 14 da etapa e o -6 de cima, fica a 8 da etapa e a 14 do
   // objetivo (a introdução já tem 8 em cima).
@@ -1444,6 +1450,7 @@ const licaoEstilos = StyleSheet.create({
   // cartão sai do bloco de apoio na web e soma com o vão do painel e a do rodapé (24 + 22 + 18 = 64 no fim da rolagem): aqui,
   // os 12 do cartão, mais 12 do bloco e os 40 do conteúdo. Sem cartões, o bloco não conta e sobram os 40.
   apoio: { marginTop: 27, marginBottom: 12 },
+  apoioEnsino: { marginTop: 0 },
   apoioVazio: { marginTop: 0, marginBottom: 0 },
   // Com a ponte aberta, a etapa some (como na web) e o cartão da ponte é o primeiro bloco: sem o vão que vinha depois dela.
   // Com a ponte aberta, o rodapé some e a web deixa 40 do cartão até a borda (16 do painel + os 24 do cartão): aqui o bloco

@@ -94,6 +94,7 @@ export const mensagens = {
       ponteMapa: 'Reforço', ponteMapaFeita: 'Ponte construída',
       retornoAutomatico: 'Dica do Stu',
       verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique como se ensinasse um amigo e dê um exemplo seu.', ensinoOpcional: 'Opcional',
+      ensinoTitulo: 'Ensine ao Stu',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
@@ -1022,6 +1023,7 @@ export const mensagens = {
     pedido: {
       editarTema: 'Editar tema',
         titulo: 'O que você quer aprender?',
+        seuPedido: 'Seu pedido',
         instrucoes: 'Pode ser qualquer assunto. Conte o tema e o que você já sabe: a IA do Studoo monta uma trilha de lições curtas, e você confere antes de começar.',
         objetivo: 'Seu objetivo de estudo',
         dica: 'Dica: diga o tema, o que você já sabe e aonde quer chegar.',

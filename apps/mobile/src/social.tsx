@@ -1079,7 +1079,7 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   if (!aberto) {
     return (
       <Pressable testID="por-link-abrir" accessibilityRole="button" accessibilityState={{ disabled: ocupadoFora }} disabled={ocupadoFora}
-        onPress={() => setAberto(true)} style={({ pressed }) => [socialEstilos.porLinkAbrir, socialEstilos.porLinkNoPedido, pressed && { backgroundColor: cores.nevoa }]}>
+        onPress={() => setAberto(true)} style={({ pressed }) => [socialEstilos.porLinkAbrir, pressed && { backgroundColor: cores.nevoa }]}>
         <Icone nome="compartilhar" tamanho={18} cor={cores.acao} />
         <Text style={socialEstilos.porLinkAbrirTexto}>{m.porLink}</Text>
       </Pressable>
@@ -1087,7 +1087,7 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   }
   const empilhar = width <= 420;
   return (
-    <View ref={secao} testID="por-link" style={[socialEstilos.porLink, socialEstilos.porLinkNoPedido]}>
+    <View ref={secao} testID="por-link" style={socialEstilos.porLink}>
       <Text accessibilityRole="header" style={socialEstilos.porLinkTitulo}>{m.porLink}</Text>
       <View style={socialEstilos.porLinkForm}>
         <Text style={socialEstilos.rotulo} onPress={() => campo.current?.focus()} suppressHighlighting>{m.porLinkRotulo}</Text>
@@ -1276,10 +1276,8 @@ export const socialEstilos = StyleSheet.create({
 
   porLinkAbrir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', gap: 8, minHeight: 44,
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  // No pedido, 26 do último exemplo até "Adicionar por link" (o bloco das ideias já deixa 5), fechado ou aberto.
-  porLinkNoPedido: { marginTop: 21 },
   porLinkAbrirTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  porLink: { gap: 14, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
+  porLink: { width: '100%', gap: 14, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   porLinkTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   porLinkForm: { gap: 6 },
   porLinkLinha: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 4 },

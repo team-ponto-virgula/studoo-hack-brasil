@@ -35,6 +35,16 @@ test('spec 19 (L2 e L3), web: as conquistas vêm logo depois do progresso e as a
   assert.match(largo.slice(0, largo.indexOf('\n}')), /\.painel--concluida \.acoes-tela \{ position: sticky;[^}]*inset-block-end: 0;/);
 });
 
+test('spec 19 (L2), app: o progresso, as conquistas e a sessão aparecem nessa ordem, inclusive ao concluir a trilha', async () => {
+  const estudo = await ler('estudo.tsx');
+  const tela = estudo.slice(estudo.indexOf('function TelaConcluida('), estudo.indexOf('function CartaoHistoria('));
+  const posicoes = ['testID="progresso-plano"', 'testID="conclusao-historia"', '<CartaoHistoria tipo="ponte"',
+    '<CartaoHistoria tipo="ensino"', 'estudoEstilos.conclusaoSincronia', 'testID="conclusao-aprendizado"'].map(item => tela.indexOf(item));
+  assert.ok(posicoes.every((posicao, i) => posicao >= 0 && (!i || posicao > posicoes[i - 1])));
+  assert.match(tela, /Boolean\(resumo\?\.ponteConstruida \|\| resumo\?\.ensinouStu\)/);
+  assert.match(tela, /\(trilhaFeita \|\| !comConquista\) && <Text[^>]*>\s*\{trilhaFeita \? mensagens\.licao\.trilhaConcluidaTexto\(plano\.titulo\) : mensagens\.licao\.comemoracao\}/);
+});
+
 test('item 5: a dica "use as teclas de A a C" nunca aparece no app', async () => {
   const arquivos = (await readdir(new URL('../apps/mobile/src/', import.meta.url))).filter((nome) => /\.tsx?$/.test(nome));
   for (const nome of arquivos) {

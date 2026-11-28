@@ -707,11 +707,11 @@ function FichaTema({ rotulo, marcada, aoTocar, testID }: { rotulo: string; marca
   );
 }
 
-/** "Ver trilhas da comunidade" no pedido, logo depois de "Adicionar por link" (`.por-link__abrir` da web: 26 entre os dois, o vão do pedido e os 8 da regra). */
+/** "Ver trilhas da comunidade" no pedido, logo depois de "Adicionar por link". */
 export function IrAoExplorar({ ocupado, acao }: { ocupado: boolean; acao: () => void }) {
   return (
     <Pressable testID="ir-ao-explorar" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado} onPress={acao}
-      style={({ pressed }) => [socialEstilos.porLinkAbrir, comunidadeEstilos.irAoExplorar, pressed && { backgroundColor: cores.nevoa }]}>
+      style={({ pressed }) => [socialEstilos.porLinkAbrir, pressed && { backgroundColor: cores.nevoa }]}>
       <Icone nome="bussola" tamanho={18} cor={cores.acao} />
       <Text style={socialEstilos.porLinkAbrirTexto}>{c.irAoExplorar}</Text>
     </Pressable>
@@ -1338,7 +1338,6 @@ const ALTURA_CAPA_GRADE = 112;
 const ALTURA_CAPA_EM_ALTA = 104;
 
 const comunidadeEstilos = StyleSheet.create({
-  irAoExplorar: { marginTop: 26 },
   // .quem-compartilhou__seguir: 6 acima e a largura do próprio botão.
   seguirNaPrevia: { marginTop: 6, alignSelf: 'flex-start' },
   // .cartao-trilha: borda de 2 em volta, cantos de 20 e o degrau de 4 por fora.
