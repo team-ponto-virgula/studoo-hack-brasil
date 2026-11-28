@@ -839,6 +839,32 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 [data-tremor='a'] { animation: tremer-a 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 [data-tremor='b'] { animation: tremer-b 420ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
+/* Troca de tela com direção (contrato `transicao-de-tela.ts`, `src/app/troca-de-tela.ts`). Durante a View Transition, só o
+   conteúdo anda: a tela que sai desliza para um lado e some rápido (180 ms), e a que entra chega do outro (300 ms). O resto
+   da página (cabeçalho, menu lateral) fica parado, e a barra de baixo, que flutua sobre o conteúdo, é fotografada à parte
+   para continuar por cima dele. A entrada do painel (`painel-entrar`) não roda junto, para a tela não entrar duas vezes. */
+html[data-troca-de-tela] .estudo-principal { view-transition-name: estudo-tela; }
+html[data-troca-de-tela] .navegacao-mobile { view-transition-name: estudo-barra; }
+html[data-troca-de-tela] .painel { animation: none; }
+html[data-troca-de-tela]::view-transition-old(root),
+html[data-troca-de-tela]::view-transition-new(root) { animation: none; }
+html[data-troca-de-tela]::view-transition-group(estudo-tela) { animation: none; }
+html[data-troca-de-tela]::view-transition-image-pair(estudo-tela) { isolation: isolate; }
+html[data-troca-de-tela='avancar']::view-transition-old(estudo-tela) { animation: tela-sair-esquerda 180ms cubic-bezier(0.4, 0, 1, 1) both; }
+html[data-troca-de-tela='avancar']::view-transition-new(estudo-tela) { animation: tela-entrar-direita 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+html[data-troca-de-tela='voltar']::view-transition-old(estudo-tela) { animation: tela-sair-direita 180ms cubic-bezier(0.4, 0, 1, 1) both; }
+html[data-troca-de-tela='voltar']::view-transition-new(estudo-tela) { animation: tela-entrar-esquerda 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+html[data-troca-de-tela='trocar']::view-transition-old(estudo-tela) { animation: tela-sumir 160ms ease-in both; }
+html[data-troca-de-tela='trocar']::view-transition-new(estudo-tela) { animation: painel-entrar 300ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes tela-sair-esquerda { to { opacity: 0; transform: translateX(-28px); } }
+@keyframes tela-sair-direita { to { opacity: 0; transform: translateX(28px); } }
+@keyframes tela-entrar-direita { from { opacity: 0; transform: translateX(28px); } }
+@keyframes tela-entrar-esquerda { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes tela-sumir { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
 /* Movimento reduzido: nada se move; tudo aparece no estado final, com a mesma informação. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

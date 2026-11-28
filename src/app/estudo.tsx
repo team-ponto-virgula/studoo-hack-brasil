@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ErroStudoo,
+  direcaoDaTroca,
   mesmoDiagnostico,
   estadoDoCompartilhamento,
   recebidaTemNome,
@@ -65,6 +66,7 @@ import {
 } from './navegacao-web';
 import { useAtualizacaoComunidade } from './seguranca-comunidade';
 import { tocaSons } from './sons';
+import { trocarTelaComTransicao } from './troca-de-tela';
 import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
 import './aula.css';
 import './trilha.css';
@@ -599,29 +601,38 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
    * Troca de tela. Sair da geração ao vivo cancela o pedido em andamento. Uma tela nova começa do topo (no celular,
    * cancelar no fim da trilha não deixa o pedido rolado); o caminho ainda rola até a lição certa depois de desenhar.
    */
-  function navegar(destino: Tela) {
+  function navegar(destino: Tela, opcoes: { animar?: boolean; depois?: () => void } = {}) {
     // Saindo do Perfil com os dados abertos e alteração não salva: a confirmação do app pergunta antes.
-    if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino, opcoes); })) return;
     if (destino.tipo === 'planos' && tela.tipo === 'planos' && planos.length === 0 && inicio === 'pronto') {
       voltarAoTopo();
       setPuloVazio(pulo => pulo + 1);
       return;
     }
-    setPuloVazio(0);
-    aceiteAtual.current?.abort();
-    aceiteAtual.current = null;
-    setAceite('livre');
-    setPassagem(null);
-    tocaSons.descartarEfeitosPendentes();
-    if (destino.tipo !== 'geracao') pararGeracao();
-    if (destino.tipo !== tela.tipo) voltarAoTopo();
-    setErro(null);
-    setFalhaGeracao(null);
-    setAviso(null);
-    // "Nenhuma trilha ainda" não se anuncia com uma criação em curso: a tela mostra o aviso dela, não o convite da biblioteca vazia.
-    setAnuncio(destino.tipo === 'planos' && planos.length === 0 && criacoes.length === 0 ? `${mensagens.planos.vazioTitulo}.` : '');
-    setTela(destino);
+    const aplicar = () => {
+      setPuloVazio(0);
+      aceiteAtual.current?.abort();
+      aceiteAtual.current = null;
+      setAceite('livre');
+      setPassagem(null);
+      tocaSons.descartarEfeitosPendentes();
+      if (destino.tipo !== 'geracao') pararGeracao();
+      if (destino.tipo !== tela.tipo) voltarAoTopo();
+      setErro(null);
+      setFalhaGeracao(null);
+      setAviso(null);
+      // "Nenhuma trilha ainda" não se anuncia com uma criação em curso: a tela mostra o aviso dela, não o convite da biblioteca vazia.
+      setAnuncio(destino.tipo === 'planos' && planos.length === 0 && criacoes.length === 0 ? `${mensagens.planos.vazioTitulo}.` : '');
+      setTela(destino);
+      opcoes.depois?.();
+    };
+    // Troca por um toque (abas, abrir a trilha ou a lição, concluir, voltar): a tela anda para o lado de quem avança ou volta.
+    if (opcoes.animar) trocarTelaComTransicao(direcaoDaTroca(tela.tipo, destino.tipo), aplicar);
+    else aplicar();
   }
+
+  /** Troca de tela por um toque, com a animação de direção (contrato `transicao-de-tela.ts`). */
+  const irPara = (destino: Tela) => navegar(destino, { animar: true });
 
   async function executar<T>(acao: Acao, operacao: () => Promise<T>): Promise<Resultado<T>> {
     if (emExecucao.current) return { ok: false, codigo: 'falha' };
@@ -900,8 +911,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (resultado.ok) {
       atualizarPlano(resultado.dados);
-      navegar({ tipo: 'plano', plano: resultado.dados, origem, ...(aviso ? { aviso } : {}) });
-      if (aviso) anunciar(aviso);
+      navegar({ tipo: 'plano', plano: resultado.dados, origem, ...(aviso ? { aviso } : {}) }, { animar: true, depois: aviso ? () => anunciar(aviso) : undefined });
     }
   }
 
@@ -939,7 +949,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
     setAbrindo(id);
     const resultado = await executar('abrir', () => obterLicaoComCache(id));
     setAbrindo(null);
-    if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
+    if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados }, { animar: true });
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
@@ -956,7 +966,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
       ultimaBusca.current = momento;
       setAgora(momento);
       setSincronia({ estado: 'atualizado', em: momento });
-      navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
+      navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo }, { animar: true });
       return true;
     }
     return false;
@@ -1119,13 +1129,13 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
 
   return (
     <PostarNoPerfil ativo={inicio === 'pronto' && comunidade && !visitante} planos={planos} perfil={perfil}
-      atualizarPerfil={setPerfil} mudarLink={mudarLink} novaTrilha={() => navegar({ tipo: 'objetivo' })} editarNome={() => navegar({ tipo: 'perfil', focoNome: Date.now() })}>
+      atualizarPerfil={setPerfil} mudarLink={mudarLink} novaTrilha={() => irPara({ tipo: 'objetivo' })} editarNome={() => irPara({ tipo: 'perfil', focoNome: Date.now() })}>
     <div className="estudo" data-direcao="clareza" data-navegacao={comNavegacao || undefined}>
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
       <aside className="barra-lateral" inert={!!passagem}>
         <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
-          <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
+          <Botao variante="texto" className="navegacao-item" onClick={() => irPara({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
             <Icone nome="livro" />{mensagens.planos.titulo}
           </Botao>
           {planosNaLista.length > 0 && <ul className="navegacao-planos">
@@ -1137,21 +1147,21 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               </li>
             ))}
           </ul>}
-          <Botao variante="texto" className="navegacao-item navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
+          <Botao variante="texto" className="navegacao-item navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => irPara({ tipo: 'objetivo' })} disabled={ocupado}>
             <Icone nome="lampada" />{mensagens.planos.novo}
           </Botao>
           {comunidade && (
-            <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => navegar({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
+            <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => irPara({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
               <Icone nome="bussola" />{mensagens.comunidade.navegacao}
             </Botao>
           )}
         </nav>
         <div className="navegacao-rodape">
-          <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
+          <Botao variante="texto" onClick={() => irPara({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
             {mensagens.pedido.comoFunciona}
           </Botao>
           <button type="button" className="navegacao-item navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'perfil' })}>
+            onClick={() => irPara({ tipo: 'perfil' })}>
             <Icone nome="pessoa" />
             <span>{mensagens.perfil.navegacao}</span>
           </button>
@@ -1172,9 +1182,9 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
             {inicio === 'pronto' && (
-              <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
+              <Botao variante="texto" className="planos-movel" onClick={() => irPara({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
             )}
-            <Botao variante="texto" className="perfil-cabecalho" onClick={() => navegar({ tipo: 'perfil' })} disabled={ocupado}>{mensagens.perfil.navegacao}</Botao>
+            <Botao variante="texto" className="perfil-cabecalho" onClick={() => irPara({ tipo: 'perfil' })} disabled={ocupado}>{mensagens.perfil.navegacao}</Botao>
           </div>
         </header>
 
@@ -1192,12 +1202,12 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso?.texto ?? null} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
               focarCampo={tela.focarCampo} aoMudar={texto => { setObjetivo(texto); setFalhaGeracao(null); }} anunciar={anunciar} gerar={(texto, id) => void gerar(texto, id)}
               repetirGeracao={repetirGeracao}
-              verPlanos={() => navegar({ tipo: 'planos' })}
-              comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
+              verPlanos={() => irPara({ tipo: 'planos' })}
+              comoFunciona={() => irPara({ tipo: 'apresentacao', primeiraVez: false })}
               aoDesconectar={() => irParaLogin(true)}
               porLink={compartilhar ? <>
                 <AdicionarPorLink ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPlano={(id) => void abrirPlano(id)} />
-                {comunidade && <button type="button" className="por-link__abrir" disabled={ocupado} onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.irAoExplorar}</button>}
+                {comunidade && <button type="button" className="por-link__abrir" disabled={ocupado} onClick={() => irPara({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.irAoExplorar}</button>}
               </> : undefined} />
           )}
           {inicio === 'pronto' && visivel && tela.tipo === 'planos' && planos.length === 0 && (
@@ -1211,7 +1221,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                 </div>
                 <h2>{mensagens.planos.vazioTitulo}</h2>
                 <p>{mensagens.planos.vazioTexto}</p>
-                <Botao onClick={() => navegar({ tipo: 'objetivo', focarCampo: true })}>{mensagens.planos.vazioAcao}</Botao>
+                <Botao onClick={() => irPara({ tipo: 'objetivo', focarCampo: true })}>{mensagens.planos.vazioAcao}</Botao>
               </div>}
             </section>
           )}
@@ -1224,7 +1234,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               <section className="painel painel--planos">
                 <div className="planos-cabeca">
                   <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
-                  <Botao variante="secundario" disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>
+                  <Botao variante="secundario" disabled={ocupado} onClick={() => irPara({ tipo: 'objetivo' })}>
                     <span aria-hidden="true">+</span> {mensagens.planos.novo}
                   </Botao>
                 </div>
@@ -1235,7 +1245,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
                     ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => apagarPlano(destaque)}
                     compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined}
-                    configurar={() => navegar({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })} />
+                    configurar={() => irPara({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })} />
                 )}
                 {restantes.length > 0 && (
                   <>
@@ -1246,7 +1256,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
                           <CartaoPlano plano={plano} regiao={planos.findIndex((p) => p.id === plano.id)} ocupado={ocupado}
                             secundario abrir={() => void abrirPlano(plano.id)} apagar={() => apagarPlano(plano)}
                             compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined}
-                            configurar={() => navegar({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })} />
+                            configurar={() => irPara({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })} />
                         </li>
                       ))}
                     </ul>
@@ -1257,7 +1267,7 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           })()}
           {previa && (
             <PreviaTrilha geracao={previa} aceite={aceiteDaPrevia} passagem={passagem} retomada={retomadaDaPrevia} dica={dicaDaPrevia}
-              cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
+              cancelar={cancelarGeracao} sair={() => irPara({ tipo: 'planos' })} ajustar={() => irPara({ tipo: 'objetivo' })}
               aceitar={painel => void comecar(painel)} salvar={painel => void comecar(painel, false)}
               visitante={visitante} remontar={() => { if (pedidoDaPrevia) controlador.current?.descartar(pedidoDaPrevia); void gerar(previa.objetivo, previa.diagnosticoId); }}
               existente={previa.proposta ? planos.find(plano => plano.id !== previa.proposta!.pedidoId && trilhaRepetida(plano.titulo, previa.proposta!.titulo) && mesmoDiagnostico(plano.diagnostico, previa.proposta!.diagnostico)) : undefined}
@@ -1268,13 +1278,13 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               selo={inicio === 'pronto' ? <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} /> : null}
               precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
-              novoPlano={() => navegar({ tipo: 'objetivo' })}
+              novoPlano={() => irPara({ tipo: 'objetivo' })}
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined}
-              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
+              configurar={() => irPara({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
           )}
           {visivel && tela.tipo === 'configuracoes' && (() => {
             const resumo = planos.find((item) => item.id === tela.planoId);
-            const voltarDaqui = () => (tela.volta === 'plano' ? void abrirPlano(tela.planoId) : navegar({ tipo: 'planos' }));
+            const voltarDaqui = () => (tela.volta === 'plano' ? void abrirPlano(tela.planoId) : irPara({ tipo: 'planos' }));
             return (
               <TelaConfiguracoes key={tela.planoId} planoId={tela.planoId} compartilhar={Boolean(abrirFolha)} versao={versaoFolha}
                 recebidaDe={resumo?.recebida ? resumo.recebida.nome : null}
@@ -1291,13 +1301,13 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
               && (temAndamentoNoPlano(plano.id) || plano.progresso.concluidas > 0));
             return <TelaPerfil continuarEstudo={retomar ? () => void abrirPlano(retomar.id) : undefined} focoNome={tela.focoNome} perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
-              comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
+              comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => irPara({ tipo: 'planos' })} />
          })()}
           {visivel && tela.tipo === 'explorar' && comunidade && (
             <Explorar logado visitante={visitante} aoSair={() => void sair()}
               temaInicial={filtroExplorar.tema} abaInicial={filtroExplorar.aba} buscaInicial={filtroExplorar.busca}
               aoMudarFiltro={setFiltroExplorar}
-              aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}
+              aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => irPara({ tipo: 'planos' })}
               aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
           )}
           {visivel && tela.tipo === 'licao' && (
@@ -1314,20 +1324,20 @@ export function Estudo({ abrirNoExplorar = false, filtroExplorarInicial }: { abr
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado} visitante={visitante}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })}
-              novoAssunto={() => navegar({ tipo: 'objetivo' })}
+              voltar={() => irPara({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })}
+              novoAssunto={() => irPara({ tipo: 'objetivo' })}
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined} />
           )}
         </main>
         {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} ref={medirIlha}>
           <button type="button" disabled={ocupado} aria-current={!abaNovaTrilha && !['perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
+            onClick={() => irPara({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
           <button type="button" disabled={ocupado} aria-current={abaNovaTrilha ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
+            onClick={() => irPara({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
           {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
+            onClick={() => irPara({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
           <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>
+            onClick={() => irPara({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>
         </nav>}
       </div>
       {folha && (

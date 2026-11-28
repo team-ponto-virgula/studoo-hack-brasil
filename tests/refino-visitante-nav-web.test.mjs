@@ -58,7 +58,7 @@ test('item 33: o visitante entra no mesmo conjunto de abas da conta: nenhuma con
   const lateral = estudo.slice(estudo.indexOf('<aside className="barra-lateral"'), estudo.indexOf('</aside>'));
   assert.doesNotMatch(lateral, /visitante/);
   // O Perfil do visitante é a versão de conta temporária, que já existia: a aba abre a mesma tela.
-  assert.match(capsula, /onClick=\{\(\) => navegar\(\{ tipo: 'perfil' \}\)\}><Icone nome="pessoa" \/>/);
+  assert.match(capsula, /onClick=\{\(\) => (?:navegar|irPara)\(\{ tipo: 'perfil' \}\)\}><Icone nome="pessoa" \/>/);
   assert.match(ler('src/app/perfil.tsx'), /visitante/);
 });
 
@@ -105,7 +105,7 @@ test('item 33: sem trilha, a primeira tela (o pedido) não ganha o foco sozinha 
   assert.match(primeira, /setTela\(\{ tipo: 'objetivo' \}\);/, 'a tela abre sem pedir o foco do campo');
   assert.doesNotMatch(primeira.replace(/\/\/.*$/gm, ''), /focarCampo/);
   // O foco automático continua onde a pessoa pediu o campo (o botão do vazio) e no computador (1024 px ou mais) ou com um rascunho salvo.
-  assert.match(estudo, /vazioTexto[\s\S]*?navegar\(\{ tipo: 'objetivo', focarCampo: true \}\)/);
+  assert.match(estudo, /vazioTexto[\s\S]*?(?:navegar|irPara)\(\{ tipo: 'objetivo', focarCampo: true \}\)/);
   assert.match(estudo, /const vaiFocarCampo = tela\.tipo === 'objetivo' && \(tela\.focarCampo \|\| window\.innerWidth >= 1024 \|\| Boolean\(objetivoRef\.current\.trim\(\)\)\);/);
   assert.match(ler('src/app/pedido.tsx'), /if \(modo !== 'ideia' \|\| \(!focarCampo && window\.innerWidth < 1024 && !objetivo\.trim\(\)\)\) return;/);
   // Sem o foco no campo, o título recebe o foco (leitor de tela: "O que você quer aprender?").

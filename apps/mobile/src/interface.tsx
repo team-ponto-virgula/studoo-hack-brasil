@@ -40,6 +40,7 @@ import { focarSemRolar, focoVisivel } from './foco';
 import { Stu } from './mascote';
 import { tocaSons } from './sons';
 import type { IdEfeitoSonoro } from '../../../packages/contratos/src/catalogo-sons';
+import { TEMPOS_DA_TROCA, type DirecaoDaTroca } from '../../../packages/contratos/src/transicao-de-tela';
 
 /**
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
@@ -65,6 +66,12 @@ export const RolagemDaTela = createContext<{
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
+
+/**
+ * A direção da última troca de tela (contrato `transicao-de-tela.ts`), dada por quem troca as telas (`estudo.tsx`). A Tela
+ * nova entra pelo lado de quem avança (da direita) ou volta (da esquerda); sem direção, sobe um pouco, como antes.
+ */
+export const DirecaoDaTrocaContexto = createContext<DirecaoDaTroca | null>(null);
 /** Altura ocupada no pé da janela (barra de abas, rodapé ou área segura): o menu "•••" abre em cima quando não cabe acima dela. */
 export const BaixoOcupado = createContext(0);
 /**
@@ -539,6 +546,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, avisoNoFluxo, semC
 function Entrada({ children }: { children: ReactNode }) {
   const reduzir = useMovimentoReduzido();
   const [valor] = useState(() => new Animated.Value(0));
+  // A direção fica a do momento em que a tela montou: avançar entra da direita (1), voltar da esquerda (-1), sem direção sobe.
+  const direcao = useContext(DirecaoDaTrocaContexto);
+  const [lado] = useState(() => (direcao === 'avancar' ? 1 : direcao === 'voltar' ? -1 : 0));
 
   useEffect(() => {
     if (reduzir === null) return;
@@ -546,13 +556,18 @@ function Entrada({ children }: { children: ReactNode }) {
       valor.setValue(1);
       return;
     }
-    const animacao = Animated.timing(valor, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    const animacao = Animated.timing(valor, {
+      toValue: 1, duration: lado ? TEMPOS_DA_TROCA.entradaMs : 340, easing: Easing.out(Easing.cubic), useNativeDriver: true,
+    });
     animacao.start();
     return () => animacao.stop();
-  }, [reduzir, valor]);
+  }, [reduzir, valor, lado]);
 
+  const movimento = lado
+    ? { translateX: valor.interpolate({ inputRange: [0, 1], outputRange: [lado * TEMPOS_DA_TROCA.deslocamento, 0] }) }
+    : { translateY: valor.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) };
   return (
-    <Animated.View style={{ opacity: valor, transform: [{ translateY: valor.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+    <Animated.View style={{ opacity: valor, transform: [movimento] }}>
       {children}
     </Animated.View>
   );

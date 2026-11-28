@@ -13,7 +13,7 @@ const css = ler('src/app/globals.css');
 
 test('item 18: os quatro itens da lateral levam a mesma classe e os ícones da cápsula do app (livro, lâmpada, bússola e pessoa)', () => {
   const lateral = estudo.slice(estudo.indexOf('<aside className="barra-lateral"'), estudo.indexOf('</aside>'));
-  assert.match(lateral, /className="navegacao-item" onClick=\{\(\) => navegar\(\{ tipo: 'planos' \}\)\}[\s\S]*?>\s*<Icone nome="livro" \/>\{mensagens\.planos\.titulo\}/);
+  assert.match(lateral, /className="navegacao-item" onClick=\{\(\) => (?:navegar|irPara)\(\{ tipo: 'planos' \}\)\}[\s\S]*?>\s*<Icone nome="livro" \/>\{mensagens\.planos\.titulo\}/);
   assert.match(lateral, /className="navegacao-item navegacao-novo"[\s\S]*?>\s*<Icone nome="lampada" \/>\{mensagens\.planos\.novo\}/);
   assert.match(lateral, /className="navegacao-item navegacao-explorar"[\s\S]*?>\s*<Icone nome="bussola" \/>\{mensagens\.comunidade\.navegacao\}/);
   assert.match(lateral, /<button type="button" className="navegacao-item navegacao-perfil"[\s\S]*?>\s*<Icone nome="pessoa" \/>\s*<span>\{mensagens\.perfil\.navegacao\}<\/span>/);
