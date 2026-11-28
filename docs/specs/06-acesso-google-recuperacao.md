@@ -58,10 +58,27 @@ A pedido do dono, o botão ganha o logo do Google, igual na web, no Android e no
 - **Com a Apple:** no iPhone, "Continuar com a Apple" fica acima do Google, com o botão oficial da Apple (preto, `AppleAuthenticationButton`, a regra da Apple), na mesma largura, raio 16 e altura de 52 px com o degrau. Os dois não se misturam: o Google não fica preto, e a Apple não ganha a borda do Studoo. Na web e no Android não há o botão da Apple, e o Google fica sozinho acima do "ou". Essa diferença já é a do iPhone, sem linha nova na spec 07.
 - **Aceite:** em 390, na web e no app, o "G" colorido aparece à esquerda do texto, com 20 px e 12 px de respiro; ampliar a captura não mostra borda, cor trocada ou serrilhado; o leitor de tela lê só "Continuar com Google, botão". Um teste confere que o botão do Google mostra a imagem e que ela não tem nome acessível.
 
+## E-mails de acesso
+
+O servidor envia três mensagens. Todas vão em HTML e em texto simples no mesmo envio (`html` e `text`), pelo Resend ou pelo MillionSend.
+
+| Mensagem | Quando sai | Assunto | O que traz |
+| --- | --- | --- | --- |
+| Código de cadastro | pedido de código para um e-mail sem conta | Seu código para criar a conta no Studoo | o código, a validade e o que fazer; sem link de retorno, porque o cadastro aberto do zero pede outro código |
+| Recuperação de senha | pedido de recuperação para um e-mail com conta | Seu código para recuperar a senha do Studoo | o código, a validade e o link de `/recuperar`, onde "Já tenho um código" abre o campo |
+| Aviso de conta existente | pedido de código de cadastro para um e-mail que já tem conta | Você já tem uma conta no Studoo | como entrar (`/login`) e como recuperar a senha (`/recuperar`); nenhum código |
+
+- **Onde fica.** O conteúdo e a apresentação estão em `src/servidor/email/modelos.ts`. Quem recebe, os limites e o provedor continuam em `src/servidor/email/recuperacao.ts` e em `src/servidor/acesso/`.
+- **Marca.** As cores são as do produto (`:root` de `globals.css`), com Nunito e Quicksand e uma pilha de reserva. O cabeçalho usa o ícone e o nome em texto: o logo em PNG é azul-marinho sobre transparente e some nos clientes que escurecem o fundo. O Stu é o `stu-acolhida` em PNG, sobre o halo lavanda. As imagens vêm sempre de `https://app.hellostudoo.com.br/marca/`.
+- **Regras do HTML.** Tabelas com estilos inline, até 600 px, sem JavaScript. O `<style>` só acrescenta as fontes da marca, a versão escura e o respiro no celular; o cliente que o descarta mostra a mesma mensagem. As fontes só carregam fora do site porque `next.config.ts` manda `Access-Control-Allow-Origin` nos `.woff2` de `/marca/`.
+- **Código.** É um texto só, sem espaço entre os dígitos, para ser selecionado inteiro. Não vai no assunto, que aparece em registros de provedor e na tela de bloqueio. No texto simples ele abre a mensagem (`Seu código do Studoo é: 123456`); os testes com banco e o roteiro de QA leem o código dessa linha.
+- **Links.** Ficam na origem de quem pediu, quando ela é permitida, ou em `STUDOO_ORIGEM`. Uma origem alheia nunca entra na mensagem.
+- **Prévia sem envio.** `npm run email:previa` grava o HTML e o texto de cada modelo em `.studoo-local/emails-previa/`, com dados fictícios. Com `STUDOO_CHROME=<Chrome sem janela>` e `-- --capturas`, fotografa cada modelo em 390 e 600 px, claro e escuro; `--cliente-simples` repete as capturas como num cliente que descarta o `<style>` e escurece por conta própria.
+
 ## Validação
 
-`npm run test:acesso` usa o banco local migrado, cria e remove somente suas contas sintéticas e testa recuperação, expiração, concorrência, revogação, OAuth, JWT e isolamento de canais. Não exige credenciais externas. `npm run test:email` verifica o contrato HTTP do Resend e suas falhas com respostas simuladas, sem enviar mensagens reais. `npm run test:google-mobile` testa PKCE, retorno após recriação do app, cancelamento e falhas de armazenamento com módulos nativos simulados. `npm run test:paridade` verifica também os textos de acesso.
+`npm run test:acesso` usa o banco local migrado, cria e remove somente suas contas sintéticas e testa recuperação, expiração, concorrência, revogação, OAuth, JWT e isolamento de canais. Não exige credenciais externas. `npm run test:email` verifica o contrato HTTP do Resend e do MillionSend e suas falhas com respostas simuladas, sem enviar mensagens reais, e confere os modelos das mensagens: o código e a validade no HTML e no texto, os links, as regras de e-mail, o contraste nos dois esquemas de cor e o texto simples. `npm run test:google-mobile` testa PKCE, retorno após recriação do app, cancelamento e falhas de armazenamento com módulos nativos simulados. `npm run test:paridade` verifica também os textos de acesso.
 
-A revisão visual mobile usa React Native Web com API simulada. A recuperação web é verificada com a API e o banco locais. Login Google real, entrega real pelo Resend e retorno em aparelho Android exigem validação no ambiente configurado; testes simulados não comprovam esses serviços.
+A revisão visual mobile usa React Native Web com API simulada. A recuperação web é verificada com a API e o banco locais. Login Google real, entrega real pelo Resend ou pelo MillionSend, a aparência das mensagens em cada cliente de e-mail e o retorno em aparelho Android exigem validação no ambiente configurado; testes simulados não comprovam esses serviços.
 
 Referências: [Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect), [Expo WebBrowser](https://docs.expo.dev/versions/latest/sdk/webbrowser/), [API de envio do Resend](https://resend.com/docs/api-reference/emails/send-email) e [domínios verificados](https://resend.com/docs/dashboard/domains/introduction).

@@ -29,7 +29,16 @@ test('Resend envia o código pelo servidor para um único destinatário', async 
     assert.match(corpo.text, /123456/);
     assert.match(corpo.text, /15 minutos/);
     assert.match(corpo.text, /https:\/\/studoo.example.test\/recuperar/);
-    assert.equal(corpo.text.includes(process.env.RESEND_API_KEY), false);
+    // A mensagem vai em HTML e em texto simples, com o mesmo código, a mesma validade e o mesmo link.
+    assert.deepEqual(Object.keys(corpo).sort(), ['from', 'html', 'subject', 'text', 'to']);
+    assert.match(corpo.html, /^<!DOCTYPE html>\n<html lang="pt-BR"/);
+    assert.match(corpo.html, />123456<\/p>/);
+    assert.match(corpo.html, /Vale por 15&nbsp;minutos/);
+    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar"/);
+    assert.match(corpo.text, /^Seu código do Studoo é: 123456\n/);
+    for (const parte of [corpo.subject, corpo.html, corpo.text]) {
+      for (const segredo of [process.env.RESEND_API_KEY, 'pessoa@example.test', 'acesso@example.test']) assert.equal(parte.includes(segredo), false);
+    }
     return Response.json({ id: 'email-sintetico' });
   });
   assert.equal(recuperacaoDisponivel(), true);

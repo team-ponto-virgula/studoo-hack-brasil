@@ -50,14 +50,21 @@ test('MillionSend envia recuperação de senha via POST /emails transacional par
     assert.equal(opcoes.cache, 'no-store');
     assert.ok(opcoes.signal instanceof AbortSignal);
     const corpo = JSON.parse(opcoes.body);
-    assert.deepEqual(Object.keys(corpo).sort(), ['from', 'subject', 'text', 'to']);
+    // HTML e texto simples vão juntos, e nada além deles: sem cópia, sem resposta, sem marcador nem tópico.
+    assert.deepEqual(Object.keys(corpo).sort(), ['from', 'html', 'subject', 'text', 'to']);
     assert.deepEqual(corpo.to, ['pessoa@example.test']);
     assert.equal(corpo.from, process.env.EMAIL_FROM);
     assert.match(corpo.subject, /recuperar a senha/i);
     assert.match(corpo.text, /654321/);
     assert.match(corpo.text, /15 minutos/);
     assert.match(corpo.text, /https:\/\/studoo\.example\.test\/recuperar/);
-    assert.equal(corpo.text.includes(process.env.MILLIONSEND_API_KEY), false);
+    assert.match(corpo.html, /^<!DOCTYPE html>\n<html lang="pt-BR"/);
+    assert.match(corpo.html, />654321<\/p>/);
+    assert.match(corpo.html, /Vale por 15&nbsp;minutos/);
+    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar"/);
+    for (const parte of [corpo.subject, corpo.html, corpo.text]) {
+      for (const segredo of [process.env.MILLIONSEND_API_KEY, 'pessoa@example.test', 'acesso@example.test']) assert.equal(parte.includes(segredo), false);
+    }
     assert.equal('topic_id' in corpo, false, 'envio transacional não entra em tópico de campanha');
     return Response.json({ id: '11111111-1111-4111-8111-111111111111' });
   });
@@ -91,9 +98,17 @@ test('MillionSend envia código de cadastro e aviso de conta existente (e aceita
   assert.deepEqual(enviados[0].to, ['nova@example.test']);
   assert.match(enviados[0].subject, /criar a conta/i);
   assert.match(enviados[0].text, /987654/);
+  assert.match(enviados[0].html, />987654<\/p>/);
   assert.deepEqual(enviados[1].to, ['existente@example.test']);
   assert.match(enviados[1].subject, /já tem uma conta/i);
   assert.match(enviados[1].text, /https:\/\/studoo\.example\.test\/recuperar/);
+  // O aviso de conta existente leva à entrada e à recuperação, nas duas versões, e não traz código.
+  for (const parte of [enviados[1].html, enviados[1].text]) {
+    assert.match(parte, /https:\/\/studoo\.example\.test\/login/);
+    assert.match(parte, /https:\/\/studoo\.example\.test\/recuperar/);
+  }
+  assert.doesNotMatch(enviados[1].text, /\d{6}/);
+  for (const enviado of enviados) assert.deepEqual(Object.keys(enviado).sort(), ['from', 'html', 'subject', 'text', 'to']);
 });
 
 test('MillionSend rejeita configurações incompletas, URLs inseguras/inválidas e não cruza chaves com o Resend', async () => {
