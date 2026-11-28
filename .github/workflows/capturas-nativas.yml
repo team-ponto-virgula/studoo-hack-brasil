@@ -38,7 +38,7 @@ on:
         type: boolean
         default: false
   push:
-    branches: [feat/hackathon-integracao]
+    branches: [main]
     paths:
       - "apps/mobile/**"
       - "packages/contratos/**"

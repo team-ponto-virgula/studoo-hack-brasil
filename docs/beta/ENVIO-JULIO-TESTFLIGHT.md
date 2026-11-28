@@ -19,7 +19,7 @@ Em português, a seção pode aparecer como **Chave de API Individual → Gerar 
 
 ## 2. Configurar o envio no ambiente dele
 
-Atualizar a branch `release/testflight-cloud` e disponibilizar estas duas variáveis no terminal ou nos segredos de CI:
+Use a `main` atualizada e sem alterações locais, conforme o [guia do TestFlight](../BUILD-IOS-TESTFLIGHT.md#como-gerar-e-enviar-quem-tem-a-conta-expo-e-a-conta-apple). Configure as duas variáveis de envio abaixo no terminal ou nos segredos de CI.
 
 ```sh
 export EXPO_ASC_INDIVIDUAL_KEY_PATH='/caminho/privado/AuthKey_DA_CHAVE_INDIVIDUAL.p8'

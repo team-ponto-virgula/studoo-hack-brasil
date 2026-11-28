@@ -7,7 +7,9 @@ Página única para quem gera e envia o build do iPhone. Ela não repete o hist�
 
 Nada aqui pede senha no chat. Chaves e arquivos `.p8` vão pelo canal seguro combinado com o Lead, que grava no Dokploy.
 
-## 0. O que já está pronto no código (ramo `release/testflight-cloud`)
+## 0. O que já está pronto no código (ramo `main`)
+
+Para preparar o próximo build a partir da `main`, siga o [guia de build do TestFlight](../BUILD-IOS-TESTFLIGHT.md).
 
 | Item | Valor | Onde |
 |---|---|---|

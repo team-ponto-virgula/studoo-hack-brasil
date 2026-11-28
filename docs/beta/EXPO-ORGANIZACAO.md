@@ -31,7 +31,7 @@ Não houve nova compilação ou upload para a Apple nesta mudança. O registro A
 
 ## Como Julio trabalha
 
-Para gerar builds, ele usa o próprio login Expo com acesso Developer à organização:
+Julio usa o próprio login Expo com acesso Developer à organização. Para gerar builds de distribuição, prepare a `main` atualizada e sem alterações locais conforme o [guia do TestFlight](../BUILD-IOS-TESTFLIGHT.md#como-gerar-e-enviar-quem-tem-a-conta-expo-e-a-conta-apple).
 
 ```sh
 cd apps/mobile

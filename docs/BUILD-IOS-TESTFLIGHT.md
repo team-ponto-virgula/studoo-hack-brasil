@@ -8,6 +8,16 @@ o build, o App Store Connect ou a revisão Beta confirmam está marcado como pen
 
 ## Como gerar e enviar (quem tem a conta Expo e a conta Apple)
 
+Para o próximo build do TestFlight, atualize a `main` na raiz do repositório.
+
+```sh
+git switch main
+git pull --ff-only origin main
+git status --short --branch
+```
+
+Confira se a `main` está alinhada com `origin/main` e sem alterações locais antes de gerar o build. O EAS empacota os arquivos desse checkout.
+
 ```sh
 cd apps/mobile
 npx eas-cli@latest login                 # ou EXPO_TOKEN no ambiente
@@ -72,7 +82,7 @@ recusada. A revisão Beta da Apple pede uma conta de demonstração com senha na
 ## Fica para quem tem as contas
 
 1. Projeto já vinculado e configuração commitada; conferir acesso com `eas project:info`.
-2. Primeiro `eas build --profile testflight --platform ios` (credenciais da Apple pelo EAS).
+2. Gerar o build a partir da `main` com o perfil `testflight` conforme os comandos acima.
 3. `eas submit`, depois, no App Store Connect: grupo de teste externo, informações de teste com a conta de demonstração, rótulo de privacidade.
 4. No servidor publicado e na conta Apple: os itens "Pendente" de `docs/QA-TESTFLIGHT-ACESSO.md` (capacidade Sign in with Apple no App ID,
    `APPLE_BUNDLE_IDS`, `STUDOO_APPLE`, `STUDOO_CADASTRO` com Resend, notificações da Apple e conta de demonstração).
