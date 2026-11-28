@@ -1,0 +1,17 @@
+appId: host.exp.Exponent
+name: retomada-abrir
+---
+- extendedWaitUntil:
+    visible: 'Abrir lição 1'
+    timeout: 50000
+- assertVisible: 'Sua trilha está pronta\.'
+- takeScreenshot: 88-retomada-pronta
+- tapOn:
+    text: 'Abrir lição 1'
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: 'Etapa 1 de \d+'
+    timeout: 35000
+- assertVisible:
+    id: titulo-licao
+- takeScreenshot: 89-retomada-licao-1

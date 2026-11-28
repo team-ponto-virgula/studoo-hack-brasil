@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-11-21T03:14:21.232Z",
+  "appId": "6837508955",
+  "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
+  "requestedTester": "Julio Akamine",
+  "userActive": true,
+  "roles": [
+    "DEVELOPER"
+  ],
+  "appStoreConnectInvitationPending": false,
+  "testFlightMembershipConfirmed": true,
+  "testFlightState": "ACCEPTED",
+  "buildId": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+  "buildNumber": "3",
+  "limits": "Confirma usuário Developer ativo, acesso restrito ao Studoo, associação ao grupo interno e aceite do TestFlight conforme estado ACCEPTED da Apple; instalação e funcionamento no iPhone de Julio ainda não comprovados.",
+  "allAppsVisible": false,
+  "provisioningAllowed": false,
+  "visibleAppIds": [
+    "6837508955"
+  ],
+  "nextStep": "Instalar o Studoo 0.1.0 (3) pelo TestFlight e validar os fluxos no iPhone."
+}

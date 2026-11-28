@@ -8,12 +8,79 @@ O Studoo ensina qualquer assunto, não só programação. A lição tem formatos
 | --- | --- | --- | --- |
 | `lacuna` | escreve uma palavra, número ou símbolo | o texto | tolera maiúsculas, acentos, aspas, pontuação nas pontas e artigo; grafias que soam igual em português (ch e x, ç, ss e s, sc e xc, z e s entre vogais: “tarracha”), com aviso de grafia; um deslize de digitação em palavras de 5 letras ou mais (dois a partir de 9), com aviso; a frase em volta junto (“how much” na lacuna de “How ___ is…”), uma palavra de cortesia (“repeat please”, “por favor”) ou, com a lacuna no fim da frase, um complemento (“repeat it”), com o aviso de que basta o que falta. Com a palavra certa no meio de outras, o retorno diz que ela está na resposta e que a lacuna pede só o que falta. Números e símbolos (`>=`) seguem exatos. Com `exata`, a grafia é a lição (idioma) e não há tolerância a deslize: uma letra a mais ou a menos continua errada, mas o retorno diz **Quase! Confira a grafia**. Com a IA configurada, uma resposta errada passa por um desempate (sinônimo, número por extenso), menos uma armadilha conhecida da lição (“chave”), que continua errada, com o aviso; com `exata`, o desempate sabe que a grafia é a lição e não aceita palavra escrita errado. |
 | `multipla_escolha` | escolhe uma opção | o id | exata |
-| `ordenar` | toca nos itens na ordem certa (chegam embaralhados, sempre do mesmo jeito) | `a,b,c` | exata; o retorno diz quais posições já estão certas |
+| `ordenar` | vê todos os itens numa lista só e arrasta para pôr em ordem, ou toca em dois para trocar de lugar (chegam embaralhados, sempre do mesmo jeito) | `a,b,c` | exata; o retorno diz quais posições já estão certas |
 | `associar` | liga cada item da esquerda ao par da direita (a direita chega embaralhada) | `e1=d2,e2=d1` | exata; o retorno diz quais pares estão certos |
 | `verdadeiro_falso` | julga a afirmação e escolhe a justificativa | `falso:j2` | os dois precisam estar certos; acertar só o valor gera um aviso |
 | `aberta` | explica com as próprias palavras (mínimo de caracteres) | o texto | com a IA, critério por critério, e os essenciais continuam obrigatórios (sem o essencial, o retorno diz “Falta o ponto principal desta resposta: …”), com o aviso da armadilha ou da grafia junto; no modo demonstração, confere as ideias-chave (grupos de palavras-chave sem acento, pelo começo da palavra, com um deslize de digitação em palavras de 5 letras ou mais) e desconsidera a ideia negada logo antes (“não continuo”), a menos que o termo já comece com a negação (“não para”). Critérios em `essenciais` (o ponto da lição, como “I'd like” e não “I like”) precisam aparecer para passar. Erros comuns (`armadilhas`, como “I want” num pedido) ganham um aviso próprio, e uma ideia achada só com um deslize de digitação (“coffe”) vale com o aviso da grafia; na lacuna, a armadilha vale para a resposta inteira errada (“chave”, o nome popular da tarraxa). Mostra os critérios e, no acerto ou na segunda tentativa, uma resposta modelo; “Tentar de novo” mantém o texto para a pessoa corrigir. |
 
 O trecho de um exercício tem um tipo (`trechoTipo`): `codigo` (o único em fonte monoespaçada), `frase`, `citacao`, `formula` ou `passos`. Lições salvas antes dos tipos recebem um tipo inferido (código só quando parece código). As lacunas (`___`) aparecem como um espaço sublinhado.
+
+## Revisão do dono (19/11): ordenar em lista única e cada formato em 3 segundos
+
+Vale para web, Android e iPhone, com os mesmos textos, medidas e ordem. O ordenar por fichas (a ficha ia para “Sua ordem”, com vagas e “Recomeçar”) sai. A resposta enviada e a correção não mudam (`a,b,c`). Esboços: `ordenar-390.png` e `formatos-390.png`, na pasta de trabalho do Designer (`ux/02-ordenar-formatos`).
+
+### Ordenar em lista única
+
+**Como funciona.** Todos os itens ficam numa lista só, na ordem do servidor, que nunca é a resposta. A pessoa arrasta um item para outro lugar, ou toca em dois itens para trocar os dois de lugar. A ordem da lista é a resposta.
+
+**Anatomia (390 px).**
+- Logo abaixo do enunciado, a linha de como responder (ver abaixo): o ícone de arrastar e “Arraste para pôr em ordem ou toque em dois itens para trocar.”
+- Lista numerada, com 8 px entre os cartões, na largura do quadro (na web larga, até 640 px).
+- Cartão: altura mínima de 56 px, respiro de 10 px em cima e embaixo e 12 px à esquerda, raio de 16, borda de 2 px `#C9D1EA`, fundo branco e degrau de 4 px `#C9D1EA`, que some no toque como nos outros cartões. Da esquerda para a direita: o número da posição num círculo de 28 px (fundo `#EEF3FF`, número `#2A44A8`, Quicksand 700 de 15 px, sem “º”); o texto (Nunito 700, 16/22, `#1B2A5E`, até três linhas, sem cortar); a alça de arrastar (seis pontos de 20 px, `#8A94B3`) numa área de toque de 44 × 44 px.
+- Sem o rótulo “Sua ordem”, sem a caixa tracejada e sem vagas.
+
+**Estados do cartão.**
+
+| Estado | Como fica |
+| --- | --- |
+| Normal | como na anatomia |
+| Mouse em cima (web) | borda `#9FB1F0` e cursor de mão na alça |
+| Foco pelo teclado | anel de 3 px `#3858D6`, afastado 3 px |
+| Escolhido (primeiro toque) | sobe 2 px; borda `#3858D6`, fundo `#EEF3FF`, degrau de 6 px `#2A44A8` e o círculo do número cheio `#3858D6`, com o número branco |
+| Arrastando | escala 1,03, com a sombra `0 12px 24px rgba(27, 42, 94, .18)`; os outros abrem espaço |
+| Certo e travado (nova tentativa) | borda `#2F9E6F`, fundo `#EEFAF3`, círculo `#2F9E6F` e o visto no lugar da alça; não se move nem troca |
+| Depois de verificar | certo em verde e errado em âmbar (borda `#E3A24A`, fundo `#FFF6EA`, círculo `#E3A24A` e um X no lugar da alça) |
+| Enviando | igual; os toques são ignorados |
+
+**Toques e gestos.**
+- Tocar num cartão escolhe ele, e a linha de como responder vira “Agora toque em outro item para trocar os dois de lugar.” Tocar em outro troca os dois. Tocar de novo no escolhido, ou fora da lista, desfaz a escolha.
+- Arrastar: no toque, segurar 180 ms e mover, para a rolagem da página continuar livre; com o mouse, 4 px de movimento já arrastam; pela alça, o arrasto começa na hora. Perto da borda de cima ou de baixo da tela (64 px), a página rola sozinha.
+- Teclado (web): Tab chega a cada cartão. Enter ou Espaço escolhe; com um escolhido, as setas para cima e para baixo movem ele uma posição, e Enter ou Espaço noutro cartão troca os dois; Esc desfaz a escolha.
+- Os travados ficam fora: arrastar passa por eles sem tirá-los do lugar, e tocar num travado só lê o estado.
+
+**Movimento.**
+- Escolher: 120 ms, com saída suave.
+- Trocar: os dois cartões deslizam um para o lugar do outro em 240 ms, com uma mola curta (curva 0,2, 0,9, 0,3, 1,2); ao chegar, ganham um brilho `#EEF3FF` que some em 400 ms.
+- Soltar o arrastado: 200 ms até o lugar, com a mesma mola; os outros andam em 180 ms.
+- Movimento reduzido: nada sobe, escala ou desliza. A troca e o soltar são imediatos, e os dois cartões que mudaram ficam com o brilho por 600 ms (só cor).
+- App: os mesmos tempos com `Animated` e o arrasto com `react-native-gesture-handler`, que já está instalado. Sem dependência nova e sem vibração (o app não tem `expo-haptics`).
+
+**Textos finais.**
+- Como responder: “Arraste para pôr em ordem ou toque em dois itens para trocar.”
+- Com um escolhido: “Agora toque em outro item para trocar os dois de lugar.”
+- Rodapé antes da primeira mudança: “Mude a ordem para verificar.”, com “Verificar” desligado. Depois da primeira mudança, “Verificar” liga e o rodapé fica sem texto.
+- “Voltar à ordem inicial”, um link que aparece depois da primeira mudança. Na nova tentativa, ele volta à ordem com que a tentativa começou.
+- Nome acessível do cartão: “2º de 4: Despachar a mala”. O escolhido tem o estado selecionado (`aria-pressed` na web e `accessibilityState.selected` no app).
+- Avisos falados (`aria-live` educado; no app, `announceForAccessibility`): ““Despachar a mala” escolhido. Toque em outro item para trocar os dois de lugar.”, ““Despachar a mala” e “Pegar o cartão de embarque” trocaram de lugar.” e ““Despachar a mala” agora está na posição 3 de 4.”
+- Ações de acessibilidade em cada cartão (VoiceOver e TalkBack; na web, as setas): “Mover para cima” e “Mover para baixo”.
+- Travado: ““Mostrar o passaporte no balcão”, na posição 1: já está certo.” O retorno continua como hoje (“Confira a 2ª posição…” e “2 de 4 na posição certa.”).
+
+**Nova tentativa.** Os itens certos ficam travados no lugar, em verde. Os outros continuam onde estavam, sem o âmbar, e só eles se mexem. A dica da tentativa anterior continua embaixo. “Verificar” liga depois da primeira mudança.
+
+**O que a web e o app acompanham.** A resposta começa com a ordem do servidor, não vazia. No ordenar, `respostaCompleta` e `faltaParaVerificar` (em `packages/contratos/src/licao.ts`) comparam a resposta com a ordem inicial (`exercicio.itens`; na nova tentativa, a ordem com que ela começou), e o texto da falta vira “Mude a ordem para verificar.” A API e a correção não mudam. Saem os textos `suaOrdem`, `disponiveis`, `vazio`, `vaga`, `colocar` e `tirar`; `recomecar` vira “Voltar à ordem inicial”.
+
+### Cada formato em 3 segundos
+
+A pergunta é uma só: dá para entender o que fazer em 3 segundos? Do mais grave para o menos grave:
+
+1. **Verdadeiro ou falso (grave).** São duas perguntas na tela ao mesmo tempo, Verdadeira ou Falsa e três porquês, com rótulos pequenos em caixa alta. A pessoa vê cinco caixas e não sabe por onde começar. Mudar: as duas partes viram perguntas numeradas de 16 px em 800 (“1. A frase é verdadeira ou falsa?” e “2. Por quê?”). Os porquês aparecem só depois da escolha, entrando de cima em 200 ms (com movimento reduzido, aparecem direto), e o foco vai para “2. Por quê?”. Trocar a escolha mantém o porquê marcado.
+2. **Associar (grave no celular).** Em 390 px, duas colunas de 160 px apertam as definições, que chegam a quatro linhas, e os rótulos “Itens” e “Pares” não dizem nada. Mudar: abaixo de 560 px, os itens da esquerda viram uma fileira de fichas numeradas no alto (“1 Tarraxa”, “2 Pestana”) e os pares ficam embaixo, um por linha, na largura toda. Ligar dá ao par o número e a cor da ficha. A instrução vira dois passos, com o atual em azul: “1 Escolha um item” e “2 Toque no par dele”. “Itens” e “Pares” saem da tela e ficam só para o leitor de tela. A partir de 560 px, ficam as duas colunas.
+3. **Como responder (média, em todos os formatos).** Hoje só o ordenar e o associar dizem como responder, cada um num lugar. Mudar: todo exercício tem uma linha logo abaixo do enunciado, com ícone de 20 px `#3858D6` e texto de 16 px em 700 `#5E6A85`. Escolha: “Toque na resposta certa.” Lacuna: “Escreva o que falta na frase.” Ordenar: como acima. Associar: os dois passos. Verdadeiro ou falso: “Diga se a frase é verdadeira ou falsa e por quê.” Aberta: “Explique com as suas palavras, em uma ou duas frases.”
+4. **Lacuna (média).** O espaço da frase é um traço fino, diferente na web (barra cinza-azulada) e no app (traço azul-marinho), e o campo embaixo diz só “Sua resposta”: não fica claro que o que se escreve vai para a frase. Mudar: o espaço vira uma vaga com largura mínima de 72 px, altura de 1,4 em, borda tracejada de 2 px `#9FB1F0`, raio de 8 e fundo branco. Com o campo em foco, a borda fica cheia `#3858D6`. O que se escreve aparece na vaga, como hoje, e tocar na vaga põe o foco no campo. O rótulo do campo vira “Escreva o que falta”. Igual na web e no app.
+5. **Resposta aberta (baixa).** “Faltam 40 letras” aparece antes de qualquer letra e soa como cobrança. Mudar: antes de escrever, “Pelo menos 40 letras”; escrevendo, “Faltam 12 letras”; passado o mínimo, “52 letras”, em verde e com o visto. O campo cresce com o texto, de 5 até 10 linhas.
+6. **Múltipla escolha (passa).** As letras A, B e C e os cartões com degrau se explicam sozinhos. Só o rótulo “Sua resposta” sai da tela e fica para o leitor de tela.
+
+**Quem decide.** Tudo nesta seção é decisão de design. O modelo de lista única é decisão do Lead. Nada precisa do dono.
 
 ## Recursos
 
@@ -29,7 +96,40 @@ O trecho de um exercício tem um tipo (`trechoTipo`): `codigo` (o único em font
 ## Conteúdo
 
 - **IA da OpenAI**: a estrutura da trilha traz, para cada lição, um `resumo` (o que a pessoa vai saber fazer), que aparece na prévia. O esquema estrito da lição pede `exemploTipo`, `passos`, `outroJeito`, `recurso`, `falas` (com tradução e pronúncia), `pratica` (com o som de referência no violão) e 2 ou 3 `exercicios` nos seis formatos (ao menos um de produzir a resposta: lacuna, ordenar ou aberta; o normalizador ainda aceita um só), com os critérios da aberta marcados como essenciais ou não e as armadilhas da lacuna e da aberta. O recurso de acorde aceita o `anterior` da troca. Tudo o que as trilhas prontas têm escrito à mão, a IA também escreve. Numa lição de idioma, as frases entre aspas retas do conceito e do exemplo viram aspas curvas, que o app torna tocáveis; fora dos idiomas, as aspas ficam como vieram, porque podem ser código. O normalizador refaz ids, monta o gabarito de ordenar e associar a partir da ordem do modelo e descarta só o opcional que não fecha (uma pronúncia longa demais, um som com cinco cordas, um exercício extra fora do formato), mantendo o resto da lição; uma armadilha que aparece numa resposta certa (no gabarito ou na resposta modelo) sai, e o essencial só vale quando se destaca (no máximo dois, nunca todos). O formato antigo (um `exercicio`, critérios só com o texto) continua aceito.
-- **Modo demonstração** (IA falsa): trilhas prontas, com pelo menos dois exercícios em cada lição (as de inglês têm três, com menos de 40% de “ouça e escolha” e quase metade de produzir a resposta, como “I'm ___ Brazil” e a ordem do check-in no aeroporto; toda escuta tem tradução, e um teste garante). Os números de inglês ficam no exemplo, com os algarismos na tradução, e a explicação fala só do que confunde (‑teen e ‑ty). Quase todas as lições de inglês têm prática com cronômetro (falar em voz alta a apresentação, o balcão do aeroporto, o check-in do hotel, os preços e a viagem inteira na revisão), e a revisão retoma a imigração e o hotel numa resposta aberta. O violão ensina as mãos, a postura e as cordas já na primeira lição, com a afinação como bônus (com um app afinador ou comparando com o Mi que o Studoo toca), sem pressão no primeiro dia; a trilha de inglês tem uma lição de aeroporto (check-in e embarque) e fecha com a revisão, depois do restaurante e conteúdo de verdade para violão, inglês para viagem (com frases para a imigração do aeroporto), culinária básica, história do Brasil, frações e fotografia com o celular (`src/servidor/ia/demos.ts`), além de SQL. Para quem aprende, a origem aparece como “Trilha pronta do Studoo sobre…” (`origemLegivel`), sem jargão técnico. Todas as ideias populares da tela inicial têm trilha pronta (um teste garante). Outros assuntos recebem a trilha genérica, que também usa os formatos novos.
+- **Modo demonstração** (IA falsa): trilhas prontas, com pelo menos dois exercícios em cada lição (as de inglês têm três, com menos de 40% de “ouça e escolha” e quase metade de produzir a resposta, como “I'm ___ Brazil” e a ordem do check-in no aeroporto; toda escuta tem tradução, e um teste garante). Os números de inglês ficam no exemplo, com os algarismos na tradução, e a explicação fala só do que confunde (‑teen e ‑ty). Quase todas as lições de inglês têm prática com cronômetro (falar em voz alta a apresentação, o balcão do aeroporto, o check-in do hotel, os preços e a viagem inteira na revisão), e a revisão retoma a imigração e o hotel numa resposta aberta. O violão ensina as mãos, a postura e as cordas já na primeira lição, com a afinação como bônus (com um app afinador ou comparando com o Mi que o Studoo toca), sem pressão no primeiro dia; a trilha de inglês tem uma lição de aeroporto (check-in e embarque) e fecha com a revisão, depois do restaurante e conteúdo de verdade para violão, inglês para viagem (com frases para a imigração do aeroporto), culinária básica, história do Brasil, frações e fotografia com o celular (`src/servidor/ia/demos.ts`), além de SQL. Na proposta, o aviso “Trilha pronta do Studoo, a mais próxima do seu pedido” identifica a demonstração. Todas as ideias populares da tela inicial têm trilha pronta (um teste garante). Outros assuntos recebem a trilha genérica, que também usa os formatos novos.
+
+## Sem provedor de IA como fonte (pedido do dono, 20/11)
+
+Palavras do dono: "Nao quero que mostre nunca a fonte, ia deepseek". A regra vale para web, Android e iPhone.
+
+**A regra:** Os créditos das trilhas ficam sem nome de provedor ou de modelo. No lugar da linha, não fica nada: nem outra frase, nem "Gerado por IA". A trilha é do Studoo.
+
+**Telas que deixam de exibir `origem`**
+
+| Tela | Apresentação anterior | Apresentação atual |
+|---|---|---|
+| Lição, balão "O Stu explica" (web `aula.tsx`, app `licao.tsx`) | "Fonte · IA da DeepSeek (deepseek-flash)" | sem a linha; o balão termina no texto ou nos marcadores [1] do material |
+| Proposta da trilha (web `previa-trilha.tsx`, app `estudo.tsx`, `geracao.origem`) | "Fonte: …" | sem a linha. O texto `geracao.ia` ("Gerada por IA a partir do seu pedido. Confira as lições antes de começar.") continua, porque não cita provedor e avisa que é preciso conferir |
+| Folha e prévia de compartilhar, Explorar, perfil e páginas públicas `/t` e `/p` (web `compartilhar.tsx` e `p/[id]/page.tsx`, app `social.tsx` e `comunidade.tsx`) | "N lições · <origem>" | "N lições" |
+| Imagens de prévia do link (`src/servidor/og`) | — | conferir que nenhuma traz a origem |
+
+Isso vale também para o modo demonstração. Lá, a proposta já diz "Trilha pronta do Studoo, a mais próxima do seu pedido." (`geracao.demonstracao`), e a linha da origem também sai, para todas as telas seguirem uma regra só.
+
+**O que continua:**
+- **A fonte do material da própria pessoa:** os marcadores [1], [2] e o cartão da citação da lição ("Fonte do seu material", "Material de <nome>"); no Estúdio, "De onde veio esta ideia". É um dos quatro momentos do roteiro da demo, e a fonte é o material, não a IA.
+- **As telas de privacidade**, que dizem a quem o dado vai (regra 5.1.2(i) da Apple): o cartão "Permitir o uso de IA?", os avisos de envio de material, de gravação e da voz ao vivo, Perfil "Privacidade e dados" e a Política de privacidade. Esses avisos identificam a OpenAI conforme os recursos ativos. A permissão inclui a triagem de segurança.
+
+**Dado antigo:** as trilhas criadas antes guardam "IA da DeepSeek (…)" ou "IA da OpenAI (…)". Como a linha some das telas, o dado antigo também não aparece. O servidor converte as origens antigas de IA para “Conteúdo gerado pelo Studoo” ao ler as trilhas. Os rótulos de demonstração e as citações do material continuam disponíveis.
+
+**Textos:** saem do contrato `licao.origem` ("Fonte") e `geracao.origem` ("Fonte: …"). `origemLegivel` deixa de ser usado em tela.
+
+**Aceite** (390, web e app, a mesma lição da captura do dono, mais uma trilha de demonstração e uma com material):
+- E1: o balão "O Stu explica" termina no texto, sem "Fonte".
+- E2: a proposta mostra "Gerada por IA a partir do seu pedido…", sem "Fonte:".
+- E3: os cartões do Explorar e do perfil, a prévia de compartilhar, `/t` e `/p` mostram só "N lições".
+- E4: a lição com material mostra os marcadores e o cartão da citação, como hoje.
+- E5: o cartão de aceite de IA e os avisos de material, gravação e voz continuam com o nome do provedor.
+- Teste de interface: títulos, fontes e créditos das trilhas ficam sem o nome do provedor ou do modelo.
 
 ## Quando a pessoa erra
 

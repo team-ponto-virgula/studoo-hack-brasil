@@ -1,10 +1,13 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomUUID } from "node:crypto";
-import { LIMITES_GERACAO, type EventoGeracao } from "@studoo/contratos";
-import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import { LIMITES_GERACAO, type EventoGeracao, type PerfilDiagnostico } from "@studoo/contratos";
+import { esqueletoValido, type AmostraDemonstrada, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { obterGerador, type GeradorTrilha, type MetaPlano } from "@/servidor/ia/gerador";
+import { exigirTrilhaSegura } from "@/servidor/ia/seguranca-trilhas";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { registrarGeracao } from "@/servidor/ia/limite";
-import { emitirComprovante } from "./comprovantes";
+import { emitirComprovante, TAMANHO_MAXIMO_COMPROVANTE } from "./comprovantes";
 
 const DURACAO_PROPOSTA = 30 * 60 * 1000;
 
@@ -17,17 +20,22 @@ export interface Geracao {
  * Tudo o que pode falhar antes de a resposta começar: objetivo, IA disponível e teto de gerações.
  * Lança FalhaApi (JSON de erro). Depois daqui, os problemas viram o evento `erro`.
  */
-export function iniciarGeracao(usuarioId: string, objetivo: string): Geracao {
+export function iniciarGeracao(
+  usuarioId: string,
+  objetivo: string,
+  opcoes?: { verificarLimite?: boolean; diagnostico?: PerfilDiagnostico; amostrasDemonstradas?: AmostraDemonstrada[] },
+): Geracao {
   const texto = objetivo.trim();
   if (texto.length < LIMITES_GERACAO.objetivoMin || texto.length > LIMITES_GERACAO.objetivoMax) {
     throw new FalhaApi("invalido");
   }
   const gerador = obterGerador();
-  if (!registrarGeracao(usuarioId)) {
+  if (opcoes?.verificarLimite !== false && !registrarGeracao(usuarioId)) {
     throw new FalhaApi("limite_geracoes");
   }
 
-  return { eventos: (sinal, opcoes) => emitirEventos(gerador, usuarioId, texto, sinal, opcoes?.aoVivo ?? true) };
+  const { diagnostico, amostrasDemonstradas } = opcoes ?? {};
+  return { eventos: (sinal, opcoes) => emitirEventos(gerador, usuarioId, texto, sinal, opcoes?.aoVivo ?? true, diagnostico, amostrasDemonstradas) };
 }
 
 /** Confere que cada evento segue o anterior: plano, fluxo 0, suas lições, fluxo 1, e assim por diante. */
@@ -56,12 +64,17 @@ async function* emitirEventos(
   objetivo: string,
   sinal: AbortSignal,
   aoVivo: boolean,
+  diagnostico?: PerfilDiagnostico,
+  amostrasDemonstradas?: AmostraDemonstrada[],
 ): AsyncGenerator<EventoGeracao> {
-  const estrutura = gerador.gerarEstrutura(objetivo, sinal, { aoVivo });
+  const estrutura = gerador.gerarEstrutura(objetivo, sinal, { aoVivo, diagnostico, amostrasDemonstradas });
   try {
     let plano: { titulo: string; objetivo: string } | undefined;
     const acumulado = { fluxos: [] as EsqueletoPlano["fluxos"], tem: false };
     let meta: MetaPlano | undefined;
+    const eventosParaRevisao: EventoGeracao[] = [];
+    const simulado = provedorIaAtivo() === "falsa";
+    await exigirTrilhaSegura({ objetivo, diagnostico, amostrasDemonstradas }, { sinal });
 
     while (true) {
       const passo = await estrutura.next();
@@ -71,34 +84,51 @@ async function* emitirEventos(
       }
       seguirEstrutura(acumulado, passo.value);
       if (passo.value.tipo === "plano") {
-        plano = { titulo: passo.value.titulo, objetivo: passo.value.objetivo };
+        plano = { titulo: passo.value.titulo, objetivo: diagnostico ? objetivo : passo.value.objetivo };
       }
-      yield passo.value;
+      const evento = passo.value.tipo === "plano" && diagnostico ? { ...passo.value, objetivo } : passo.value;
+      if (simulado) yield evento;
+      else eventosParaRevisao.push(evento);
     }
     if (sinal.aborted) return;
 
-    const completo = { ...meta, ...plano, fluxos: acumulado.fluxos };
+    if (!meta) throw new FalhaApi("falha");
+    const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, ...(diagnostico && { diagnostico }),
+      ...(meta.curriculoAdaptado && amostrasDemonstradas?.length && { amostrasDemonstradas }), fluxos: acumulado.fluxos };
     if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
     }
-    // O comprovante da proposta leva a trilha inteira e tem tamanho máximo: os resumos (só para a prévia) saem se a
-    // trilha ficar grande demais com eles.
-    const esqueleto = Buffer.byteLength(JSON.stringify(completo)) > 3600
+    // Os resumos comuns podem sair se a trilha ficar grande demais. No currículo adaptado eles guiam a criação de cada lição.
+    const esqueleto = !completo.curriculoAdaptado && Buffer.byteLength(JSON.stringify(completo)) > 3600
       ? { ...completo, fluxos: completo.fluxos.map((fluxo) => ({ ...fluxo, licoes: fluxo.licoes.map(({ titulo }) => ({ titulo })) })) }
       : completo;
+    // O id do comprovante é o do pedido (e o do plano): o cliente o usa para consultar o aceite se a resposta se perder (spec 04, Retomada da criação).
+    const pedidoId = randomUUID();
     const token = emitirComprovante("proposta", usuarioId, {
-      id: randomUUID(),
+      id: pedidoId,
       expiraEm: Date.now() + DURACAO_PROPOSTA,
       plano: esqueleto,
     });
+    if (token.length > TAMANHO_MAXIMO_COMPROVANTE) throw new FalhaApi("ia_indisponivel");
+    if (!simulado) {
+      await exigirTrilhaSegura({ objetivo, estrutura: eventosParaRevisao }, { sinal });
+      for (const evento of eventosParaRevisao) {
+        if (sinal.aborted) return;
+        yield evento;
+      }
+      if (sinal.aborted) return;
+    }
     yield {
       tipo: "pronto",
       proposta: {
         token,
+        pedidoId,
+        validaPorMs: DURACAO_PROPOSTA,
         titulo: esqueleto.titulo,
         objetivo: esqueleto.objetivo,
         origem: esqueleto.origem,
         fluxos: esqueleto.fluxos,
+        ...(diagnostico && { diagnostico }),
       },
     };
   } catch (erro) {

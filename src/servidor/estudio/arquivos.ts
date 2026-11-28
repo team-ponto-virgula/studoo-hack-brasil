@@ -6,6 +6,7 @@ import {
 import sharp from 'sharp';
 import { lerDocx, lerCsv } from './documentos';
 import { FalhaApi } from '../acesso/http';
+import { exigirTrilhaSegura } from '../ia/seguranca-trilhas';
 import { objeto, lista, texto, pedirJson } from './ia';
 
 export function validarArquivo(entrada: unknown): {
@@ -84,7 +85,10 @@ export async function lerMaterial(entrada: unknown) {
     extensao === 'csv' &&
     [
       'text/csv',
+      'text/comma-separated-values',
       'application/csv',
+      'application/x-csv',
+      'text/x-csv',
       'text/plain',
       'application/vnd.ms-excel',
       'application/octet-stream',
@@ -180,6 +184,7 @@ export async function lerMaterial(entrada: unknown) {
       throw new FalhaApi('material_invalido');
     }
   } else throw new FalhaApi('material_invalido');
+  await exigirTrilhaSegura({ material: { nome: arquivo.nome } }, { anexos: [anexo] });
   const resultado = await pedirJson(
     'leitura_material',
     objeto({ paginas: lista(objeto({ numero: { type: 'integer' }, texto })) }),

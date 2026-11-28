@@ -1,0 +1,235 @@
+# Conta sintética e IA simulada. O shell executa este fluxo com PERFIL=inicial e PERFIL=demonstrada.
+appId: host.exp.Exponent
+name: feedback-aluno
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    id: nav-objetivo
+    waitToSettleTimeoutMs: 1500
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: objetivo-estudo
+    timeout: 30000
+- tapOn:
+    id: objetivo-estudo
+- inputText: Equacao do primeiro grau
+- tapOn:
+    id: gerar-trilha
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: diagnostico-iniciar
+    timeout: 30000
+- tapOn:
+    id: diagnostico-iniciar
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: 'Pergunta 2 · até 4'
+    timeout: 30000
+- runFlow:
+    when:
+      true: ${PERFIL == 'inicial'}
+    commands:
+      - tapOn:
+          text: '^Ainda não sei$'
+          waitToSettleTimeoutMs: 1500
+      - evalScript: ${output.primeiraLicao = 'Preservar a igualdade'}
+      - evalScript: ${output.total = 3}
+- runFlow:
+    when:
+      true: ${PERFIL == 'demonstrada'}
+    commands:
+      - tapOn:
+          text: '^4$'
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible: 'Pergunta 3 · até 4'
+          timeout: 30000
+      - tapOn:
+          text: '^4$'
+          waitToSettleTimeoutMs: 1500
+      - evalScript: ${output.primeiraLicao = 'Modelar um problema com equação'}
+      - evalScript: ${output.total = 2}
+- extendedWaitUntil:
+    visible:
+      id: diagnostico-montar
+    timeout: 30000
+- tapOn:
+    id: diagnostico-montar
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: salvar-trilha-depois
+    timeout: 120000
+- tapOn:
+    id: salvar-trilha-depois
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: trilha-salva-aviso
+    timeout: 30000
+- assertVisible:
+    id: titulo-planos
+- assertNotVisible:
+    id: titulo-licao
+- runFlow: ../partes/reabrir-ate-abas.yaml
+- evalScript: ${output.esperaDaLista = true}
+- extendedWaitUntil:
+    visible:
+      id: trilha-salva-aviso
+    timeout: 45000
+- assertVisible:
+    id: titulo-planos
+- assertVisible:
+    text: '0 de ${output.total} lições concluídas'
+- extendedWaitUntil:
+    visible:
+      id: abrir-destaque
+      text: 'Começar: Equação do primeiro grau'
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- runFlow:
+    when:
+      true: ${PERFIL == 'inicial'}
+    commands:
+      - takeScreenshot: 84-equacao-inicial-salva
+- runFlow:
+    when:
+      true: ${PERFIL == 'demonstrada'}
+    commands:
+      - takeScreenshot: 85-equacao-demonstrada-salva
+- tapOn:
+    id: abrir-destaque
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000
+- waitForAnimationToEnd:
+    timeout: 2000
+- evalScript: ${output.abriuPeloCartao = false}
+- runFlow:
+    when:
+      visible:
+        id: comecar-licao
+    commands:
+      - tapOn:
+          id: comecar-licao
+          waitToSettleTimeoutMs: 1500
+      - evalScript: ${output.abriuPeloCartao = true}
+- runFlow:
+    when:
+      true: ${output.abriuPeloCartao == false}
+    commands:
+      - tapOn:
+          text: 'Começar: ${output.primeiraLicao}.*'
+          waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: titulo-licao
+      text: '${output.primeiraLicao}'
+    timeout: 30000
+- repeat:
+    while:
+      notVisible:
+        id: pergunta-exercicio
+    times: 10
+    commands:
+      - tapOn:
+          id: ler-mais|avancar-licao
+          waitToSettleTimeoutMs: 1500
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: pergunta-exercicio
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 2000
+- runFlow:
+    when:
+      true: ${PERFIL == 'inicial'}
+    commands:
+      - assertVisible:
+          id: pergunta-exercicio
+          text: '.*x.*(5|cinco).*(12|doze).*'
+      - takeScreenshot: 84-equacao-inicial-exercicio
+      - scrollUntilVisible:
+          element:
+            text: '^Subtrair 5$'
+          direction: DOWN
+          timeout: 10000
+      - tapOn:
+          text: '^Subtrair 5$'
+          waitToSettleTimeoutMs: 1500
+      - tapOn:
+          id: enviar-resposta
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: continuar-licao
+            text: '^Continuar$'
+          timeout: 30000
+      - tapOn:
+          id: continuar-licao
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-ensino
+          timeout: 30000
+      - assertNotVisible:
+          id: pergunta-exercicio
+      - assertVisible:
+          id: ensino-seguir
+          text: '^Pular e concluir$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine
+      # O título e o campo podem ficar em dobras diferentes. Registra o campo antes de abrir o teclado.
+      - scrollUntilVisible:
+          element:
+            id: ensino-texto
+          direction: DOWN
+          timeout: 30000
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-ensine-campo
+      - tapOn:
+          id: ensino-texto
+      - inputText: Para chegar a x = 7, tiro cinco dos dois lados. Assim a igualdade continua valendo.
+      - tapOn:
+          id: enviar-explicacao
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: caderno-do-stu
+          timeout: 30000
+      - assertVisible:
+          id: ensino-seguir
+          text: '^Concluir lição$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-caderno-do-stu
+      - tapOn:
+          id: ensino-seguir
+          waitToSettleTimeoutMs: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-conclusao
+            text: '^Lição concluída!$'
+          timeout: 30000
+      - assertVisible:
+          id: progresso-plano
+          text: '^1 de 3 lições concluídas$'
+      - waitForAnimationToEnd:
+          timeout: 2000
+      - takeScreenshot: 84-equacao-inicial-conclusao
+- runFlow:
+    when:
+      true: ${PERFIL == 'demonstrada'}
+    commands:
+      - assertVisible:
+          id: pergunta-exercicio
+          text: '.*corrida.*'
+      - takeScreenshot: 85-equacao-demonstrada-exercicio

@@ -1,0 +1,103 @@
+{
+  "perfil": "testflight",
+  "beta": "externo",
+  "apto": false,
+  "flags": {
+    "google": true,
+    "apple": false,
+    "cadastro": false,
+    "recuperacao": false,
+    "visitante": true,
+    "compartilhar": true,
+    "comunidade": true,
+    "ia": "deepseek"
+  },
+  "verificacoes": [
+    {
+      "codigo": "expo_owner",
+      "nivel": "ok",
+      "mensagem": "Conta Expo definida no app.json."
+    },
+    {
+      "codigo": "eas_project_id",
+      "nivel": "ok",
+      "mensagem": "Projeto EAS vinculado no app.json."
+    },
+    {
+      "codigo": "ios_bundle",
+      "nivel": "ok",
+      "mensagem": "Bundle ID iOS definido."
+    },
+    {
+      "codigo": "distribuicao_store",
+      "nivel": "ok",
+      "mensagem": "Perfil testflight de loja, para aparelho e sem cliente de desenvolvimento."
+    },
+    {
+      "codigo": "apple_nativo",
+      "nivel": "ok",
+      "mensagem": "Sign in with Apple habilitado e plugin presente no app."
+    },
+    {
+      "codigo": "origem_https",
+      "nivel": "ok",
+      "mensagem": "API do perfil testflight usa uma origem HTTPS sem credenciais, caminho ou parâmetros."
+    },
+    {
+      "codigo": "saude",
+      "nivel": "ok",
+      "mensagem": "/api/saude: resposta esperada.",
+      "status": 200
+    },
+    {
+      "codigo": "saude_ok",
+      "nivel": "ok",
+      "mensagem": "API anuncia saúde ok."
+    },
+    {
+      "codigo": "auth_config",
+      "nivel": "ok",
+      "mensagem": "/api/auth/config: resposta esperada.",
+      "status": 200
+    },
+    {
+      "codigo": "apple_ativo",
+      "nivel": "erro",
+      "mensagem": "Com Google habilitado, o beta externo exige Apple também habilitada no servidor."
+    },
+    {
+      "codigo": "ia_real",
+      "nivel": "ok",
+      "mensagem": "Servidor usa um provedor real de IA reconhecido, sem IA falsa."
+    },
+    {
+      "codigo": "cadastro_email",
+      "nivel": "aviso",
+      "mensagem": "Cadastro por email não anunciado: a interface o esconde; não bloqueia este preflight."
+    },
+    {
+      "codigo": "recuperacao_email",
+      "nivel": "aviso",
+      "mensagem": "Recuperação de senha não anunciado: a interface o esconde; não bloqueia este preflight."
+    },
+    {
+      "codigo": "privacidade",
+      "nivel": "ok",
+      "mensagem": "/privacidade: resposta esperada.",
+      "status": 200
+    },
+    {
+      "codigo": "suporte",
+      "nivel": "ok",
+      "mensagem": "/suporte: resposta esperada.",
+      "status": 200
+    },
+    {
+      "codigo": "apple_nonce",
+      "nivel": "ok",
+      "mensagem": "/api/mobile/apple/nonce: resposta esperada.",
+      "status": 405
+    }
+  ],
+  "limites": "Este preflight confere configuração e respostas públicas; não comprova login real, credenciais Apple, assinatura do IPA ou aprovação da revisão beta."
+}

@@ -1,0 +1,166 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "before": {
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "after": {
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "stable": true,
+  "reason": "Fixture inicial omitia visibility/status no estado ativo; três quadros não representavam legado. Corrigida somente a fixture. Originais preservados em adaptacao-inicial; três rechecagens substituem, não somam.",
+  "rows": [
+    {
+      "d": "jornada",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "jornada-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=jornada&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "caderno",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "caderno-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=caderno&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    },
+    {
+      "d": "foco",
+      "id": "material-legado",
+      "p": "compartilhar",
+      "seed": "legacy",
+      "w": 390,
+      "file": "foco-material-legado-390.png",
+      "errors": [],
+      "title": "Escolha onde compartilhar.",
+      "text": "SEU MATERIAL\nEscolha onde compartilhar.\n\nTrilhas criadas a partir de material podem ser compartilhadas por link ou no perfil. Elas não vão para o Explorar.\n\nQuem pode ver\nSó com o link\nApenas quem receber o link.\nNo meu perfil\nTambém aparece no seu perfil público.\nNo Explorar\nIndisponível para trilhas criadas com material.\n\nVão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão.",
+      "dialog": "",
+      "url": "?d=foco&p=compartilhar&capture=1",
+      "mainOverflow": false,
+      "bodyOverflow": false,
+      "notes": [
+        "Vão junto o título, os trechos citados nas lições e as páginas de referência. O título traz o nome do seu arquivo. Arquivo bruto, fotos das páginas, progresso, respostas e explicações pessoais não vão."
+      ],
+      "absolutePromise": false,
+      "codeAfterNotice": null,
+      "qr": 0,
+      "copies": 0,
+      "footer": [
+        {
+          "text": "Escolher só com o link",
+          "top": 672,
+          "bottom": 724
+        },
+        {
+          "text": "Parar de compartilhar",
+          "top": 732,
+          "bottom": 776
+        },
+        {
+          "text": "Voltar à trilha",
+          "top": 784,
+          "bottom": 828
+        }
+      ],
+      "assets": true
+    }
+  ],
+  "sameAsMain": true
+}

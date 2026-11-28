@@ -1,28 +1,181 @@
 import type { FaltaParaVerificar, MotivoRever } from './licao';
 
 /** Conteúdo compartilhado pelas interfaces web e nativa. */
+/** "e-mail" sem quebra de linha no hífen (marcadores de junção invisíveis em volta dele). */
+const EMAIL = 'e\u2060-\u2060mail';
+/**
+ * O gesto de gostar de uma trilha, num lugar só (spec 10, "Revisão do dono (19/11)", tabela "Textos finais").
+ * "Curtir" é a palavra recomendada; se o dono mantiver "Valeu", basta trocar `GESTO` para `GESTO_VALEU`.
+ */
+type Gesto = {
+    nome: string; palavra: string; plural: string;
+    rotulo: (titulo: string) => string;
+    marcou: (titulo: string) => string;
+    desmarcou: (titulo: string) => string;
+    /** Aviso curto ao retirar (até o item B tirar esse aviso). */
+    retirado: string;
+    primeiraVez: (primeiroNome: string) => string;
+    erroRede: string; limite: string; contaTemporaria: string; faixaSemConta: string;
+    legendaEmAlta: string; semNinguem: string;
+    novidade: (quem: string, total: number, titulo: string) => string;
+    novidadesVazio: string;
+};
+const GESTO_CURTIR: Gesto = {
+    nome: 'Curtir', palavra: 'curtida', plural: 'curtidas',
+    rotulo: (titulo) => `Curtir “${titulo}”`,
+    marcou: (titulo) => `Você curtiu “${titulo}”.`,
+    desmarcou: (titulo) => `Curtida retirada de “${titulo}”.`,
+    retirado: 'Curtida retirada.',
+    primeiraVez: (primeiroNome) => `${primeiroNome} vai ver sua curtida. Curtidas levam trilhas ao Em alta.`,
+    erroRede: 'Não deu para curtir agora. Confira a conexão e tente de novo.',
+    limite: 'Muitas curtidas seguidas. Tente de novo daqui a pouco.',
+    contaTemporaria: 'Curtidas precisam de uma conta. Como visitante, você continua estudando normalmente.',
+    faixaSemConta: 'Entre para estudar e curtir.',
+    legendaEmAlta: 'As trilhas que mais gente começou e curtiu nos últimos 7 dias.',
+    semNinguem: 'Ainda sem ninguém estudando e sem curtidas',
+    novidade: (quem, total, titulo) => `${quem} ${total === 1 ? 'curtiu' : 'curtiram'} “${titulo}”`,
+    novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar ou curtir uma trilha sua, ou seguir você, aparece aqui.',
+};
+/** A coluna "Valeu" da mesma tabela, caso o dono mantenha a palavra. */
+export const GESTO_VALEU: Gesto = {
+    nome: 'Valeu', palavra: 'valeu', plural: 'valeus',
+    rotulo: (titulo) => `Mandar valeu para “${titulo}”`,
+    marcou: (titulo) => `Valeu enviado para “${titulo}”.`,
+    desmarcou: (titulo) => `Valeu retirado de “${titulo}”.`,
+    retirado: 'Valeu retirado.',
+    primeiraVez: (primeiroNome) => `${primeiroNome} vai ver seu valeu. Valeus levam trilhas ao Em alta.`,
+    erroRede: 'Não deu para mandar o valeu agora. Confira a conexão e tente de novo.',
+    limite: 'Muitos valeus seguidos. Tente de novo daqui a pouco.',
+    contaTemporaria: 'O valeu precisa de uma conta. Como visitante, você continua estudando normalmente.',
+    faixaSemConta: 'Entre para estudar e mandar valeu.',
+    legendaEmAlta: 'As trilhas que mais gente começou e mandou valeu nos últimos 7 dias.',
+    semNinguem: 'Ainda sem ninguém estudando e sem valeus',
+    novidade: (quem, total, titulo) => `${quem} ${total === 1 ? 'mandou um valeu' : 'mandaram valeu'} em “${titulo}”`,
+    novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui.',
+};
+const GESTO: Gesto = GESTO_CURTIR;
+
+/** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
+const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
+
+/** O botão de conferir a resposta: o da lição e o do "Sua vez" do "Resolva comigo". */
+const VERIFICAR = 'Verificar';
+
+/**
+ * A linha da proposta, antes de a trilha existir (spec 04, Retomada da criação): "Sua proposta tem 10 lições em 3 partes." Sem "pronta": a trilha só está pronta depois de salva (`trilhaPronta`).
+ * Com uma parte só, sem o "em M partes"; com uma lição só, "Sua proposta tem 1 lição".
+ */
+const resumoDaProposta = (licoes: number, partes: number) =>
+    `Sua proposta tem ${licoes} ${licoes === 1 ? 'lição' : 'lições'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`;
+
+/** Quanto falta, em palavras: "1 minuto", "5 minutos", "1 hora", "2 horas" (arredonda para cima; menos de um minuto vira "1 minuto"). */
+const esperaEmPalavras = (segundos: number) => {
+    const minutos = Math.max(1, Math.ceil(segundos / 60));
+    if (minutos < 60) return `${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`;
+    const horas = Math.ceil(minutos / 60);
+    return `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+};
+
 export const mensagens = {
     estudio: {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
       arquivo: 'Escolher material', camera: 'Fotografar página', demo: 'Experimentar com frações',
       limites: 'Imagem JPG/PNG/WebP, PDF de até 6 páginas, DOCX ou CSV. Até 5 MB e 24 mil caracteres. CSV: até 200 linhas e 20 colunas, em UTF-8.',
-      privacidade: 'Ao enviar, você autoriza a leitura pela OpenAI quando a IA real estiver ativa. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
+      privacidade: 'Com IA real ativa, você autoriza a leitura e a verificação de segurança do material pela OpenAI; no modo demonstração, o material não sai do Studoo. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
+      privacidadePorProvedor: (ia?: 'falsa' | 'openai') =>
+        ia === 'falsa'
+          ? 'No modo demonstração, o material não é enviado para nenhum provedor externo de IA. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.'
+          : 'Com a IA ativa, o texto e as imagens são enviados à OpenAI para leitura, verificação de segurança e criação da trilha. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
       revisar: 'Confira o conteúdo antes de gerar', ocr: 'A leitura de imagens pode errar números e fórmulas. Se houver erro, remova e envie uma imagem mais nítida.',
       remover: 'Remover material', gerar: 'Criar trilha deste material', objetivo: 'Estudar este material',
       tabela: 'Prévia da tabela', linha: 'Linha',
       pagina: (n: number) => `Página ${n}`, simulado: 'Modo demonstração', origem: 'De onde veio esta ideia',
-      verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
-      pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço', ponteMapaFeita: 'Reforço feito',
+      verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender',
+      ponteMapa: 'Reforço', ponteMapaFeita: 'Ponte construída',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Conferir este exemplo', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo, e dê um exemplo seu. O Stu, o mascote do Studoo, aponta o que faz sentido e propõe uma situação nova.',
+      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
+      /** Quem recebe a gravação, mostrado junto da dica quando a gravação está disponível (`transcricao` no config). */
+      vozProvedorPorProvedor: (_ia?: string) => 'A gravação é transcrita pela OpenAI.',
+      cameraNegada: 'Permita o acesso à câmera para fotografar o seu material.',
+      cameraBloqueada: 'Câmera bloqueada nas permissões do aparelho. Libere o acesso nas configurações para fotografar.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',
       acertos: 'O que fez sentido', lacuna: 'O que revisar', pergunta: 'Leve a ideia adiante', proximo: 'Próximo passo',
       pensando: 'O Stu está preparando…', erro: 'Não foi possível concluir. Tente novamente.',
+      baseadoMaterial: 'Baseado no seu material',
+      fonteMaterial: 'Fonte do seu material',
+      ponteMotivo: 'Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.',
+      ponteMotivoResposta: (resposta: string) => {
+        const letras = Array.from(resposta.trim());
+        const trecho = letras.length > 60 ? letras.slice(0, 59).join('').trimEnd() + '…' : letras.join('');
+        return `Você respondeu “${trecho}”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.`;
+      },
+      ponteIndicador: (n: number) => `Passo ${n} de 3`,
+      ponteConstruida: 'Ponte construída!',
+      ponteVencida: 'Agora tente o exercício de novo.',
+      ponteRever: 'Rever explicação e exemplo',
+      ponteTentarDeNovo: 'Tentar de novo',
+      ponteMargemErro: 'Onde travou',
+      ponteMargemVolta: 'Exercício',
+      pontePassoExplicacao: 'Outro caminho',
+      pontePassoExemplo: 'Um exemplo',
+      pontePassoDesafio: 'Desafio',
+      vozAoVivo: {
+        abrir: 'Conversar com o Stu',
+        abrirBeneficio: 'Até 3 minutos por voz: ele pergunta, você explica.',
+        passoComVoz: '1. Conversar, gravar ou escrever',
+        notaPrivacidade: 'Sua voz vai para a OpenAI durante a conversa.',
+        privacidadeTitulo: 'Antes de conversar ao vivo',
+        privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        notaPrivacidadePorProvedor: (_ia?: string) =>
+          'Sua voz vai para a OpenAI durante a conversa.',
+        privacidadeTextoPorProvedor: (_ia?: string) =>
+          'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        privacidadeAceitar: 'Começar conversa',
+        privacidadeCancelar: 'Agora não',
+        estados: {
+          pedindo_mic: 'Pedindo microfone…',
+          conectando: 'Conectando…',
+          ouvindo: 'Ouvindo você',
+          stu_falando: 'Stu falando',
+          encerrando: 'Encerrando…',
+          erro: 'Conversa encerrada',
+        },
+        dicaOuvindo: 'Fale no seu ritmo',
+        dicaInterromper: 'Você pode interromper quando quiser',
+        conectado: 'Conversa conectada. Pode falar quando estiver pronto.',
+        mudo: 'Silenciar microfone',
+        ativarMic: 'Ativar microfone',
+        encerrar: 'Encerrar e ver retorno',
+        alternativaTexto: 'Prefiro escrever ou gravar',
+        avisoTempo: 'Faltam cerca de 30 segundos para encerrar esta conversa.',
+        avisoFechamentoStu: 'Faltam 30 segundos para encerrar a conversa. Faça o fechamento em até 2 frases dizendo o que entendeu e peça para tocar em "Encerrar e ver retorno".',
+        parcialNoCampo: 'O que você já explicou está no campo de texto. Complete e envie.',
+        voceDisse: 'Você',
+        stuDisse: 'Stu',
+        erros: {
+          micNegado: 'O microfone não foi liberado. Você pode escrever ou gravar sua explicação.',
+          falhaConexao: 'Não foi possível conectar a voz ao vivo agora. Você pode escrever ou gravar sua explicação.',
+          rede: 'A conexão caiu durante a conversa. Tente de novo ou escreva sua explicação.',
+          limite: 'Você atingiu o limite de conversas ao vivo por agora. Tente mais tarde ou escreva sua explicação.',
+          visitante: 'A conversa ao vivo está disponível para contas cadastradas. Você pode escrever ou gravar sua explicação.',
+          curta: 'Não deu para captar sua explicação completa. Fale um pouco mais ou escreva sua explicação.',
+        },
+      },
+      ponteVerExemplo: 'Ver exemplo',
+      ponteIrDesafio: 'Ir para o desafio',
+      ponteVoltarExercicio: 'Voltar ao exercício',
+      ponteReabertaAviso: 'Você já construiu esta ponte. Releia e volte ao exercício.',
+      ensinoStuOuvindo: 'Estou ouvindo você explicar…',
+      ensinoStuAnotou: 'Boa explicação! Veja o que anotei:',
+      ensinoStuAluno: 'Agora eu sou o aluno: me explique com suas palavras!',
+      ensinoEtapasLabel: 'Etapas para explicar',
+      ensinoEtapas: ['1. Gravar ou escrever', '2. Revisar texto', '3. Ver retorno do Stu'] as const,
+      paginaExpandir: 'Ver texto completo',
     },
     nome: 'Studoo',
     descricao: 'Trilhas de estudo com lições curtas e exercícios.',
@@ -33,10 +186,15 @@ export const mensagens = {
     tentarNovamente: 'Tentar novamente',
     sair: 'Sair',
     sairPergunta: 'Sair da sua conta? Para voltar, você vai precisar entrar de novo.',
+    sairVisitantePergunta: 'Sair da sessão de visitante? Como visitante não há e-mail nem senha: as trilhas e o progresso desta sessão não passam para uma conta e deixam de ficar disponíveis neste navegador.',
     ficar: 'Ficar',
     acesso: {
         google: 'Continuar com Google',
         googleIndisponivel: 'O login com Google está indisponível no momento.',
+        verComoFunciona: 'Ver como funciona',
+        experimentar: 'Experimentar sem conta',
+        experimentarAviso: 'Conta temporária, sem e-mail nem senha: seu progresso fica guardado por 24 horas neste navegador.',
+        experimentarAvisoApp: 'Conta temporária, sem e-mail nem senha: seu progresso fica guardado por 24 horas neste aparelho.',
         ou: 'ou entre com e-mail',
         esqueci: 'Esqueci minha senha',
         recuperar: 'Recuperar acesso',
@@ -62,7 +220,35 @@ export const mensagens = {
         reenviar: 'Enviar outro código',
         trocarEmail: 'Usar outro e-mail',
         validade: 'O código vale por 15 minutos e só pode ser usado uma vez.',
-        aguarde: (segundos: number) => `Enviar outro código em ${segundos}s`
+        aguarde: (segundos: number) => `Enviar outro código em ${segundos}s`,
+        apple: 'Continuar com a Apple',
+        criarConta: 'Criar conta',
+        jaTenhoConta: 'Já tenho conta',
+        semConta: 'Ainda não tem conta?'
+    },
+    cadastro: {
+        titulo: 'Criar sua conta',
+        ou: 'ou crie com seu e-mail',
+        instrucao: 'Informe seu e-mail. Vamos mandar um código para confirmar que ele é seu.',
+        email: 'Seu e-mail',
+        enviar: 'Enviar código',
+        enviando: 'Enviando…',
+        enviado: 'Enviamos um código para este e-mail, se ele puder criar conta. Confira também a pasta de spam.',
+        codigo: 'Código de 6 dígitos',
+        senha: 'Crie uma senha',
+        confirmarSenha: 'Confirme a senha',
+        dicaSenha: 'Use de 8 a 256 caracteres.',
+        senhaInvalida: 'Use de 8 a 256 caracteres na senha.',
+        senhasDiferentes: 'As senhas precisam ser iguais.',
+        codigoInvalido: 'Informe os 6 dígitos do código.',
+        emailInvalido: 'Informe um e-mail válido.',
+        criar: 'Criar conta',
+        criando: 'Criando conta…',
+        reenviar: 'Enviar outro código',
+        trocarEmail: 'Usar outro e-mail',
+        validade: 'O código vale por 15 minutos e só pode ser usado uma vez.',
+        aguarde: (segundos: number) => `Enviar outro código em ${segundos}s`,
+        politica: 'Ao criar a conta, você concorda com a Política de privacidade.'
     },
     retomada: {
         titulo: 'Seu próximo passo',
@@ -72,9 +258,17 @@ export const mensagens = {
         revisar: 'Reveja uma lição ou descubra um novo assunto.',
         licoes: (total: number) => `${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`
     },
+    sincronia: {
+        atualizando: 'Salvando progresso…',
+        salvo: 'Progresso salvo',
+        agora: 'Progresso salvo agora',
+        minutos: (n: number) => `Progresso salvo há ${n} min`,
+        offline: 'Sem conexão: mostrando seu último progresso salvo',
+        offlineCurto: 'Sem conexão',
+    },
     login: {
-        titulo: 'Que bom te ver por aqui!',
-        instrucoes: 'Entre para continuar sua trilha de onde parou.',
+        titulo: 'Aprenda qualquer coisa, um passo de cada vez.',
+        instrucoes: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
         email: 'E-mail',
         senha: 'Senha',
         mostrarSenha: 'Mostrar senha',
@@ -83,8 +277,8 @@ export const mensagens = {
         senhaVazia: 'Informe sua senha.',
         entrar: 'Entrar',
         entrando: 'Entrando…',
-        arteTitulo: 'Aprenda qualquer coisa, um passo de cada vez.',
-        arteTexto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
+        arteTitulo: 'Seu material vira prática. O erro abre outro caminho.',
+        arteTexto: 'Envie um PDF, foto ou pedido, entenda de outro jeito quando travar e explique com suas palavras o que aprendeu.',
         temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Frações'],
     },
     apresentacao: {
@@ -95,32 +289,613 @@ export const mensagens = {
         comecar: 'Criar minha primeira trilha',
         entendi: 'Entendi',
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
+        /**
+         * Spec 17, mudança 2: sem palavras de dentro do produto ("citação", "ponte", "cartões objetivos"). O 5º passo (só com sessão) não mudou. O 4º passo não promete "no computador ou no
+         * celular" nem "salvo": isso não vale para o visitante (o progresso dele dura 24 h neste aparelho); o texto vale para conta e para visitante (decisão do Lead, 22/11).
+         */
         passos: [
             {
-                titulo: 'Oi! Eu sou o Stu.',
-                texto: 'Vou te acompanhar nos estudos. Você escolhe o assunto e eu ajudo a montar a trilha até lá.',
+                titulo: 'Seu material vira lição',
+                texto: 'Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia.',
             },
             {
-                titulo: 'Conte o que quer aprender',
-                texto: 'Pode ser qualquer coisa: violão, inglês para viagem, culinária, história do Brasil, fotografia ou primeiros socorros.',
+                titulo: 'Errou? Tem outro jeito',
+                texto: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.',
             },
             {
-                titulo: 'Veja sua trilha nascer',
-                texto: 'A IA monta lições curtas, uma de cada vez, na ordem que ajuda a aprender. Você confere a trilha antes de começar.',
+                titulo: 'Explique do seu jeito',
+                texto: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar.',
             },
             {
-                titulo: 'Avance no seu ritmo',
-                texto: 'Cada lição tem explicação, exemplo e exercícios de vários tipos, com áudio, imagens e prática fora da tela quando ajudam. Seu progresso fica salvo na web e no celular.',
+                titulo: 'Seu caminho fica no mapa',
+                texto: 'Cada lição concluída fica marcada, e você continua de onde parou.',
             },
             {
                 titulo: 'O que te interessa?',
                 texto: 'Escolha uma área para ver ideias de trilha primeiro. Dá para mudar depois.',
             },
         ],
+        exemplos: {
+            fonteArquivo: 'Frações.pdf · pág. 2',
+            fonteTrecho: 'Dividir um inteiro em partes iguais garante que cada fração represente a mesma parte.',
+            ensinoAcertos: 'Você explicou a divisão em partes iguais.',
+            ensinoLacuna: 'Faltou ligar o denominador ao total de partes.',
+            ensinoPergunta: 'Como ficam 3 fatias de uma pizza dividida em 8?',
+            ensinoProximo: 'Pratique comparando frações com o mesmo todo.',
+        },
         temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Primeiros socorros'],
         salvo: 'Progresso salvo',
         oi: 'Oi!',
         areas: 'Áreas de interesse'
+    },
+    /** Compartilhar trilha (spec 09). */
+    compartilhar: {
+        entrada: 'Compartilhar',
+        entradaRotulo: (titulo: string) => `Compartilhar a trilha “${titulo}”`,
+        concluidaAcao: 'Compartilhar esta trilha',
+        selo: 'Compartilhada',
+        folhaTitulo: 'Compartilhar trilha',
+        fechar: 'Fechar',
+        voltar: 'Voltar',
+        comoAparecer: 'Como você quer aparecer?',
+        comoAparecerDica: PRIVACIDADE,
+        nomeRotulo: 'Seu nome',
+        corRotulo: 'Cor do perfil',
+        cores: { azul: 'Azul', verde: 'Verde', laranja: 'Laranja', roxo: 'Roxo', rosa: 'Rosa', turquesa: 'Turquesa' },
+        compartilhadaPor: (nome: string) => `Compartilhada por ${nome}`,
+        continuar: 'Continuar',
+        oQueVai: 'O que vai junto',
+        contagem: (licoes: number, partes: number) =>
+            `${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}`,
+        doZero: 'Quem abrir vê seu nome, sua foto e seu resumo. Suas respostas e seu progresso não vão junto.',
+        /** Na folha "Compartilhar perfil": o que o perfil público mostra. */
+        perfilMostra: `Quem abrir vê seu nome, sua foto, seu resumo, seus interesses e as trilhas que você mostra no perfil. Seu ${EMAIL} nunca aparece.`,
+        avisoMaterial: 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo, o nome dele e as fotos das páginas não vão.',
+        /** Quando o título traz o nome do arquivo: o aviso não pode dizer que o nome não vai. */
+        avisoMaterialComTitulo: 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo e as fotos das páginas não vão.',
+        tituloComArquivo: 'O título desta trilha traz o nome do seu arquivo.',
+        criarLink: 'Criar link',
+        criando: 'Criando link…',
+        linkPronto: 'Link pronto',
+        linkRotulo: 'Link da trilha',
+        compartilhar: 'Compartilhar',
+        copiar: 'Copiar link',
+        copiado: 'Link copiado',
+        copiarFalhou: 'Não deu para copiar. Selecione o link e copie.',
+        textoCompartilhar: (titulo: string) => `Estude comigo no Studoo: ${titulo}`,
+        noPerfil: 'Mostrar no meu perfil',
+        noPerfilDica: 'A trilha aparece no seu perfil, para quem tiver o endereço dele.',
+        parar: 'Parar de compartilhar',
+        pararTitulo: 'Parar de compartilhar esta trilha?',
+        pararTexto: 'O link deixa de funcionar. Quem já adicionou continua com a própria cópia.',
+        pararConfirmar: 'Parar de compartilhar',
+        pararCancelar: 'Continuar compartilhando',
+        parado: 'Você parou de compartilhar esta trilha.',
+        visitante: 'Para compartilhar, entre com uma conta.',
+        /** Trilha recebida não é recompartilhada. */
+        recebidaDe: (nome: string) => `Esta trilha é de ${nome}`,
+        verOriginal: 'Ver o link original',
+        // Quem recebe
+        publicoTitulo: (nome: string) => `${nome} compartilhou uma trilha com você`,
+        /** O cartão de quem compartilhou, na página /t. */
+        quemCompartilhou: 'Quem compartilhou',
+        verPerfil: (nome: string) => `Ver o perfil de ${nome}`,
+        stuConvite: 'Bora estudar junto? Eu te acompanho em cada lição.',
+        publicoDescricao: (licoes: number, nome: string) => `Trilha com ${licoes} ${licoes === 1 ? 'lição' : 'lições'}, compartilhada por ${nome}`,
+        totalLicoes: (licoes: number) => `${licoes} ${licoes === 1 ? 'lição' : 'lições'}`,
+        parte: (n: number) => `Parte ${n}`,
+        comecaDoZero: 'Você começa do zero, no seu ritmo.',
+        adicionar: 'Adicionar às minhas trilhas',
+        adicionando: 'Adicionando…',
+        entrarParaAdicionar: 'Entrar para adicionar',
+        adicionada: (nome: string) => `Trilha adicionada. Compartilhada por ${nome}.`,
+        jaAdicionada: 'Você já adicionou esta trilha.',
+        jaAdicionadaTexto: 'Ela já está nas suas trilhas. Continue de onde parou.',
+        stuDeNovo: 'Que bom te ver de novo!',
+        abrirMinhas: 'Abrir nas minhas trilhas',
+        sua: 'Esta trilha é sua',
+        abrirSua: 'Abrir trilha',
+        inativo: 'Este link não está mais ativo',
+        inativoTexto: 'Quem compartilhou pode ter parado de compartilhar ou apagado a trilha.',
+        criarMinha: 'Criar minha trilha',
+        verExplorar: 'Ver trilhas no Explorar',
+        // Adicionar por link
+        porLink: 'Adicionar por link',
+        porLinkDica: 'Recebeu o link de uma trilha? Cole aqui o endereço inteiro ou só o código.',
+        porLinkRotulo: 'Link ou código da trilha',
+        porLinkVer: 'Ver trilha',
+        porLinkInvalido: 'Confira o link: ele termina com um código de 16 letras e números.',
+        // Aula de uma trilha recebida, feita de material: nunca "seu material".
+        baseadoMaterialDe: (nome: string) => `Baseado no material de ${nome}`,
+        fonteMaterialDe: (nome: string) => `Fonte do material de ${nome}`,
+        apagarAviso: 'O link de compartilhamento desta trilha também deixa de funcionar.',
+    },
+    /** Configurações da trilha (lote 4): capa e nome, quem pode ver e apagar. */
+    configuracoes: {
+        titulo: 'Configurações da trilha',
+        entrada: 'Configurações',
+        entradaRotulo: (titulo: string) => `Configurações da trilha “${titulo}”`,
+        voltar: 'Voltar',
+        capaENome: 'Capa e nome',
+        trocarCapa: 'Trocar capa',
+        capaTitulo: 'Escolher a capa',
+        capaPadrao: 'Padrão',
+        capaPadraoDica: 'A cor e o desenho do tema',
+        usarFoto: 'Usar uma foto',
+        usarFotoDica: 'JPG, PNG ou WebP, até 2 MB',
+        suaFoto: 'Sua foto',
+        capaFotoTitulo: 'Ajustar a capa',
+        capaFotoAviso: 'A capa aparece no cartão, no mapa e no link da trilha. Quem adicionar uma cópia fica com a capa padrão: a foto continua só com você.',
+        capaSalva: 'Capa salva.',
+        capaEscolhida: (nome: string) => `Capa: ${nome}`,
+        capas: {
+            aurora: 'Aurora', oceano: 'Oceano', floresta: 'Floresta', 'por-do-sol': 'Pôr do sol', noite: 'Noite', areia: 'Areia',
+            lavanda: 'Lavanda', menta: 'Menta', coral: 'Coral', ceu: 'Céu', cereja: 'Cereja', grafite: 'Grafite',
+        } as Record<string, string>,
+        nomeRotulo: 'Nome da trilha',
+        nomeDica: 'De 3 a 80 caracteres. Aparece em Minhas trilhas, no mapa, no link e no Explorar.',
+        nomeErros: {
+            curto: 'Use pelo menos 3 caracteres.',
+            longo: 'Use até 80 caracteres.',
+            caracteres: 'Use letras, números e pontuação simples.',
+        },
+        descricaoRotulo: 'Descrição (opcional)',
+        descricaoDica: 'Uma frase para quem vai estudar. É o texto que aparece no cartão e no link.',
+        temaRotulo: 'Tema',
+        temaDica: 'Os mesmos temas do Explorar. Ajuda quem procura por assunto.',
+        quemPodeVer: 'Quem pode ver',
+        soVoce: 'Só você vê',
+        estadoCompartilhamento: (nivel: string, estudando: number, valeus: number) =>
+            [nivel, ...(estudando > 0 ? [`${estudando} estudando`] : []), ...(valeus > 0 ? [`${valeus} ${valeus === 1 ? GESTO.palavra : GESTO.plural}`] : [])].join(' · '),
+        mudarCompartilhamento: 'Mudar compartilhamento',
+        recebida: (nome: string) => `Trilha adicionada de ${nome}. As mudanças valem só para a sua cópia; a original continua como ${nome} deixou.`,
+        /** Quem compartilhou excluiu a conta ou parou de compartilhar: sem o nome (`recebidaTemNome`). */
+        recebidaSemNome: 'Trilha adicionada da comunidade. As mudanças valem só para a sua cópia; a original continua como está.',
+        apagarTitulo: 'Apagar trilha',
+        apagarDica: 'Apaga a trilha, as lições e o seu progresso nela.',
+        apagar: 'Apagar trilha',
+        salvando: 'Salvando…',
+        salvo: 'Salvo',
+        configurar: 'Configurações da trilha',
+        /** Revisão de design de 19/11 (spec 10): o nome acessível da capa, que abre a galeria ("Capa: X" sai da tela). */
+        trocarCapaRotulo: (nome: string) => `Trocar capa. Capa atual: ${nome}`,
+        /** Embaixo de "Padrão", na galeria (no lugar de "Padrão · A cor e o desenho do tema", que quebrava em duas linhas). */
+        capaPadraoDoTema: 'Do tema',
+        /** O que o leitor de tela ouve quando um campo salva ("Salvo" aparece no rótulo do campo, só para quem vê). */
+        salvoLeitor: { titulo: 'Nome da trilha salvo.', descricao: 'Descrição salva.', tema: 'Tema salvo.' },
+        /** A ajuda de "Usar uma foto", embaixo do botão e numa linha só (revisão de 19/11, item 3). */
+        usarFotoAjuda: 'JPG, PNG ou WebP, até 2 MB.',
+        /** O texto do recorte da capa, com a área dos selos tracejada por cima da foto (revisão de 19/11). */
+        capaFotoDica: 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.',
+    },
+    /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. */
+    som: {
+        titulo: 'Som',
+        musicaTitulo: 'Música de fundo',
+        musicaFaixa: 'Lo-fi de Estudo',
+        musicaEmLaco: 'Lo-fi de Estudo, em laço',
+        musicaComeca: 'Começa no primeiro toque',
+        musicaPausada: 'Pausada enquanto você grava',
+        musicaErro: 'Não deu para tocar a música. Desligue e ligue de novo para tentar.',
+        musicaAviso: 'Música de fundo ligada.',
+        desligarMusica: 'Desligar',
+        rodapeMusica: 'Os efeitos tocam por cima da música. Ela fica mais baixa quando o Studoo fala e para enquanto você grava.',
+        botaoMusicaRotulo: (ligada: boolean, efeitos: boolean, motivo?: string) => {
+            if (ligada && motivo === 'sem_gesto') return 'Som: música começa no primeiro toque';
+            if (ligada && motivo === 'gravando') return 'Som: música pausada enquanto você grava';
+            return `Som: música ${ligada ? 'ligada' : 'desligada'}, efeitos ${efeitos ? 'ligados' : 'desligados'}`;
+        },
+        fechar: 'Fechar',
+        efeitosTitulo: 'Efeitos sonoros',
+        /** Na folha. */
+        efeitosDica: 'Toques, acertos, erros e conquistas',
+        /** No Perfil (linha mais curta). */
+        efeitosDicaPerfil: 'Toques, acertos e conquistas',
+        /** Só no iPhone (P24 da spec 07). */
+        rodapeIphone: 'No modo silencioso do iPhone, nenhum som do Studoo toca.',
+        tocando: 'Tocando',
+        carregando: 'Carregando…',
+    },
+    /** Página 404 própria (endereço que não existe): em português, com o Stu. */
+    naoEncontrada: {
+        titulo: 'Esta página não existe',
+        texto: 'O endereço pode estar errado ou a página saiu do ar.',
+        voltar: 'Voltar para o início',
+    },
+    /** Perfil (spec 09). */
+    perfil: {
+        estudo: {
+            titulo: 'Meu estudo',
+            trilhasConcluidas: 'Trilhas concluídas',
+            diasSeguidos: 'Dias seguidos',
+            diasDeEstudo: 'Dias de estudo',
+            continuar: 'Continuar de onde parei',
+        },
+        titulo: 'Perfil',
+        navegacao: 'Perfil',
+        /**
+         * Postar no perfil (spec 10, "Postar no perfil", 20/11; pedido do dono): a pessoa escolhe quais trilhas aparecem no
+         * perfil dela. Web, Android e iPhone com os mesmos textos; "Nova trilha", "Desfazer", "Cancelar", a linha das regras,
+         * os selos "Em revisão" e "Não publicada" e "Enviada para revisão…" vêm de onde já estavam (spec 14).
+         */
+        postar: {
+            botao: 'Postar trilha no perfil',
+            vazio: 'Escolha quais trilhas aparecem no seu perfil.',
+            titulo: 'Postar no perfil',
+            texto: 'Só aparecem no seu perfil as trilhas que você ligar aqui.',
+            semNome: 'Para postar no perfil, escolha como você aparece.',
+            editarPerfil: 'Editar perfil',
+            semTrilhas: 'Você ainda não tem trilhas.',
+            estadoPerfil: 'No seu perfil',
+            estadoPerfilExplorar: 'No perfil e no Explorar',
+            salvando: 'Salvando…',
+            erro: 'Não deu para salvar. Tente de novo.',
+            aviso: 'Trilha no seu perfil.',
+            avisoTirada: 'Trilha tirada do seu perfil.',
+            confirmarTitulo: 'Tirar do perfil e do Explorar?',
+            confirmarTexto: 'A trilha sai do seu perfil e do Explorar. Quem tem o link continua abrindo.',
+            confirmarAcao: 'Tirar',
+            menuPostar: 'Postar no meu perfil',
+            menuTirar: 'Tirar do meu perfil',
+        },
+        editar: 'Editar',
+        salvar: 'Salvar',
+        salvando: 'Salvando…',
+        cancelar: 'Cancelar',
+        salvo: 'Perfil salvo.',
+        semNome: 'Você ainda não escolheu como aparecer.',
+        escolherNome: 'Escolher nome',
+        avatar: (nome: string) => `Avatar de ${nome}`,
+        nomeErros: {
+            curto: 'Use pelo menos 2 caracteres.',
+            longo: 'Use até 40 caracteres.',
+            caracteres: 'Use letras, números e pontuação simples.',
+            endereco: `O nome não pode ter endereço de site nem ${EMAIL}.`,
+            /** Campo vazio ao salvar (revisão de 19/11). */
+            vazio: 'Escreva como você quer aparecer.',
+        },
+        /**
+         * Dois termos, cada um com o seu sentido (spec 16, item 32): compartilhar é ter um link (só quem o recebe abre); postar é aparecer no perfil.
+         * O título da seção fala do link, e a linha de baixo diz como aparecer no perfil.
+         */
+        compartilhadas: 'Trilhas com link',
+        /** Título da seção com o total (inclui as trilhas só com o link). */
+        compartilhadasTotal: (n: number) => `Trilhas com link (${n})`,
+        /** Sob o título, quando há trilhas com link: com a comunidade, o caminho é "Postar trilha no perfil". */
+        compartilhadasLinha: 'Só quem tem o link abre. Para aparecer no seu perfil, use “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        compartilhadasLinhaSemComunidade: 'Só quem tem o link abre. Para aparecer no seu perfil, marque “Mostrar no meu perfil”.',
+        nenhuma: 'Você ainda não compartilha nenhuma trilha. Abra uma trilha e toque em “Compartilhar”.',
+        nenhumaAntes: 'Você ainda não compartilha nenhuma trilha.',
+        nenhumaLink: 'Abra uma trilha',
+        nenhumaDepois: (toque: boolean) => ` e ${toque ? 'toque' : 'clique'} em “Compartilhar”.`,
+        desde: (data: string) => `Compartilhada desde ${data}`,
+        adicoes: (n: number) => (n === 0 ? 'Ainda ninguém estudando' : n === 1 ? '1 pessoa estudando' : `${n} pessoas estudando`),
+        /** Na lista da dona, quando ninguém começou nem curtiu: uma frase só. */
+        semNinguem: GESTO.semNinguem,
+        publicoTitulo: 'Seu perfil público',
+        /** Perfil vazio: esta frase e a dica de baixo formam uma só ("Privado: nenhuma trilha está postada no seu perfil. Para aparecer nele, use “Postar trilha no perfil”."). */
+        privado: 'Privado: nenhuma trilha está postada no seu perfil.',
+        publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
+        verComoOutros: 'Ver como os outros veem',
+        conta: 'Conta',
+        email: 'E\u2060-\u2060mail',
+        soVoceVe: 'Só você vê',
+        visitante: 'Conta temporária: para ter um perfil e compartilhar trilhas, entre com uma conta.',
+        entrarOuCriar: 'Entrar ou criar conta',
+        visitanteAvisoTroca: 'As trilhas e o progresso desta sessão de visitante não passam para a conta.',
+        // Página pública /p/<id>
+        paginaTitulo: (nome: string) => `Trilhas de ${nome}`,
+        paginaDescricao: (nome: string, n: number) => `${n === 1 ? '1 trilha compartilhada' : `${n} trilhas compartilhadas`} por ${nome} no Studoo`,
+        inativo: 'Este perfil não está disponível',
+        inativoTexto: 'Ele pode ter deixado de ser público.',
+        abrirTrilha: (titulo: string) => `Ver a trilha “${titulo}”`,
+        // Perfil rico (spec 10)
+        editarPerfil: 'Editar perfil',
+        compartilharPerfil: 'Compartilhar perfil',
+        textoCompartilharPerfil: (nome: string) => `As trilhas de ${nome} no Studoo`,
+        linkPerfilCopiado: 'Link do perfil copiado',
+        // Spec 10, 7b (db773e6): com a comunidade, o perfil fica público pela folha "Postar no perfil".
+        perfilPrivadoDica: 'Para aparecer nele, use “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        perfilPrivadoDicaSemComunidade: 'Para aparecer nele, marque “Mostrar no meu perfil” em ao menos uma trilha.',
+        alcance: (trilhas: number, pessoas: number) =>
+            mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
+        /**
+         * Os itens da linha de alcance (cada um sem quebra no meio). `semZeros`: na página pública, item zerado não aparece.
+         * "Estudando" é o verbo de todo o social (cartão, alcance, lista e Novidades).
+         */
+        alcanceItens: (trilhas: number, pessoas: number, { seguidores, semZeros = false }: { seguidores?: number; semZeros?: boolean } = {}) => [
+            ...(trilhas > 0 || !semZeros ? [trilhas === 1 ? '1 trilha compartilhada' : `${trilhas} trilhas compartilhadas`] : []),
+            ...(pessoas > 0 ? [pessoas === 1 ? '1 pessoa estudando suas trilhas' : `${pessoas} pessoas estudando suas trilhas`] : semZeros ? [] : ['ninguém estudando ainda']),
+            ...(seguidores === undefined || (semZeros && seguidores === 0) ? [] : [seguidores === 1 ? '1 seguidor' : `${seguidores} seguidores`]),
+        ],
+        alcanceRotulo: 'Alcance',
+        interessesRotulo: 'Interesses',
+        semResumoDona: 'Conte em uma frase o que você gosta de estudar.',
+        completar: 'Completar perfil',
+        /** O perfil abre direto nos dados (sem tela de convite): a linha sobre os campos. */
+        editorLinha: 'É assim que as pessoas te veem quando você compartilha uma trilha.',
+        seusDados: 'Seus dados',
+        convitePerfil: 'Coloque seu nome, uma foto e o que você gosta de estudar. É assim que as pessoas veem você quando você compartilha uma trilha.',
+        // Tela Editar perfil
+        voltarPerfil: 'Voltar ao perfil',
+        fotoRotulo: 'Foto',
+        /** Título da folha da foto no celular e nome acessível do menu da foto na web (spec 10, 19/11). */
+        fotoFolhaTitulo: 'Foto do perfil',
+        fotoEscolher: 'Escolher foto',
+        fotoTrocar: 'Trocar foto',
+        fotoRemover: 'Remover foto',
+        fotoCamera: 'Tirar foto',
+        fotoDica: 'Opcional. Sem foto, aparece a inicial do seu nome.',
+        fotoAviso: PRIVACIDADE,
+        fotoEnviando: 'Enviando foto…',
+        fotoSalva: 'Foto salva.',
+        fotoRemovida: 'Foto removida.',
+        fotoRemoverTitulo: 'Remover a foto?',
+        fotoRemoverTexto: 'No lugar dela volta a inicial do seu nome, na cor do perfil.',
+        fotoRemoverCancelar: 'Manter foto',
+        fotoIlegivel: 'Não deu para abrir esta imagem. Tente outra foto.',
+        // Revisão de 19/11 (spec 10, "Perfil direto nos dados"): campos na ordem privacidade, foto, nome, resumo, interesses e cor.
+        /** A linha de privacidade, com cadeado, no alto dos campos. */
+        privacidade: PRIVACIDADE,
+        /** O link ao lado do avatar sem foto (com foto: `fotoTrocar`). */
+        fotoAdicionar: 'Adicionar foto',
+        /** Menu de ações do Studoo para a foto: galeria, câmera (só toque), remover (só com foto) e cancelar. */
+        fotoGaleria: 'Escolher da galeria',
+        fotoMenuCancelar: 'Cancelar',
+        /** Resposta 422 do envio da foto. */
+        fotoFormato: 'Use uma foto JPG, PNG ou WebP de até 2 MB.',
+        /** Resposta 429 do envio da foto. */
+        fotoLimite: 'Você trocou de foto muitas vezes. Tente de novo daqui a pouco.',
+        nomeDica: 'Nome ou apelido, de 2 a 40 caracteres.',
+        interessesCampoRotulo: 'Interesses (opcional)',
+        corDica: 'Pinta a faixa do perfil e a inicial, quando não há foto.',
+        /** Barra de salvar: erro de rede (os campos guardam o que foi digitado). */
+        salvarErroRede: 'Não deu para salvar. Confira a conexão e tente de novo.',
+        /** Fileira de números do perfil: rótulo sob cada número (só entram os itens acima de zero). */
+        numeroTrilhas: (n: number) => (n === 1 ? 'trilha' : 'trilhas'),
+        numeroEstudando: 'estudando',
+        numeroSeguidores: (n: number) => (n === 1 ? 'seguidor' : 'seguidores'),
+        /** O que o leitor de tela ouve da fileira inteira, numa frase só. */
+        numerosLeitor: (trilhas: number, pessoas: number, seguidores: number) =>
+            mensagens.perfil.alcanceItens(trilhas, pessoas, { seguidores, semZeros: true }).join(', '),
+        /** Ações do perfil preenchido, numa fileira: `editar` e esta. */
+        compartilhar: 'Compartilhar',
+        // Recorte
+        recorteTitulo: 'Ajustar foto',
+        recorteDica: 'Arraste para posicionar. Use o controle ou as setas para aproximar.',
+        recorteDicaToque: 'Arraste para posicionar. Use o controle para aproximar.',
+        recorteTeclado: 'Setas movem a foto; + e − aproximam e afastam.',
+        recorteZoom: 'Aproximar',
+        recorteArea: 'Área do recorte. Use as setas para mover e + ou − para aproximar.',
+        recorteUsar: 'Usar esta foto',
+        recorteCancelar: 'Cancelar',
+        resumoRotulo: 'Resumo (opcional)',
+        resumoDica: 'Uma frase sobre você e o que gosta de estudar.',
+        resumoContador: (usados: number, maximo: number) => `${usados} de ${maximo}`,
+        resumoContadorLeitor: (restam: number) => (restam >= 0 ? `Restam ${restam} caracteres` : `${-restam} caracteres além do limite`),
+        resumoErros: {
+            longo: 'Use até 160 caracteres.',
+            caracteres: 'Use letras, números e pontuação simples.',
+            endereco: `O resumo não pode ter endereço de site nem ${EMAIL}.`,
+        },
+        interessesDica: (maximo: number) => `Escolha até ${maximo}`,
+        interessesContador: (n: number, _maximo: number) => `· ${n} ${n === 1 ? 'escolhido' : 'escolhidos'}`,
+        interessesCheio: (maximo: number) => `Você já escolheu ${maximo}. Desmarque um para trocar.`,
+        previaTitulo: 'Como os outros veem',
+        alteracoesNaoSalvas: 'Alterações não salvas',
+        /** Na barra com "Cancelar" e "Salvar" numa tela de até 400 px, para caber numa linha (spec 10, 19/11). */
+        naoSalvoCurto: 'Não salvo',
+        tudoSalvo: 'Tudo salvo',
+        sairSemSalvarTitulo: 'Sair sem salvar?',
+        sairSemSalvarTexto: 'As mudanças no nome, no resumo, nos interesses e na cor se perdem.',
+        sairSemSalvarConfirmar: 'Sair sem salvar',
+        sairSemSalvarCancelar: 'Continuar editando',
+        corrigirCampos: 'Confira os campos marcados.',
+    },
+    /** Comunidade (spec 10, etapa B): Explorar, Em alta, cartão de trilha, Curtir, Denunciar e publicar. */
+    comunidade: {
+        navegacao: 'Explorar',
+        titulo: 'Explorar',
+        subtitulo: 'Trilhas que a comunidade publicou. Escolha uma e comece do zero, no seu ritmo.',
+        emAlta: 'Em alta esta semana',
+        emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
+        emAltaDica: GESTO.legendaEmAlta,
+        /** O que o leitor de tela ouve na capa de uma trilha do Em alta (spec 16, item 16): "1º em alta". Era "1º lugar". */
+        posicao: (n: number) => `${n}º em alta`,
+        /** O que a pílula da capa escreve: "1º" (13 px 800 sobre branco). */
+        posicaoSelo: (n: number) => `${n}º`,
+        anteriores: 'Ver as anteriores',
+        proximas: 'Ver as próximas',
+        temas: 'Filtrar por tema',
+        todos: 'Todos os temas',
+        novas: 'Novas',
+        novasDoTema: (tema: string) => `Novas em ${tema}`,
+        carregarMais: 'Ver mais trilhas',
+        carregando: 'Carregando…',
+        fim: 'Você viu todas as trilhas daqui.',
+        vazioTitulo: 'O Explorar ainda está vazio',
+        vazioTexto: 'Publique a primeira trilha: abra uma trilha sua, toque em “Compartilhar” e escolha “No Explorar”.',
+        vazioAcao: 'Ir para minhas trilhas',
+        vazioTema: (tema: string) => `Ainda não tem trilha de ${tema} por aqui.`,
+        vazioTemaTexto: 'Que tal ser a primeira pessoa a publicar uma? Ou veja os outros temas.',
+        vazioTemaAcao: 'Ver todos os temas',
+        contagem: (licoes: number, partes: number) => `${licoes} ${licoes === 1 ? 'lição' : 'lições'} · ${partes} ${partes === 1 ? 'parte' : 'partes'}`,
+        estudando: (n: number) => `${n} estudando`,
+        valeus: (n: number) => `${n} ${n === 1 ? GESTO.palavra : GESTO.plural}`,
+        por: (nome: string) => `por ${nome}`,
+        perfilDe: (nome: string) => `Ver o perfil de ${nome}`,
+        queroEstudar: 'Quero estudar',
+        adicionando: 'Adicionando…',
+        continuar: 'Continuar',
+        sua: 'Abrir minha trilha',
+        valeu: GESTO.nome,
+        /** Nome acessível fixo do botão (marcado ou não): o estado vai em `aria-pressed` e a contagem em `aria-describedby`. */
+        valeuRotulo: GESTO.rotulo,
+        /** Igual ao `valeuRotulo` (o nome não muda com o estado); fica para quem ainda usa a chave. */
+        valeuMarcadoRotulo: GESTO.rotulo,
+        /** O que o leitor de tela ouve ao marcar e ao desmarcar. */
+        valeuEnviado: GESTO.marcou,
+        valeuRetirado: GESTO.desmarcou,
+        /** O aviso do app (nunca do sistema), só na primeira curtida da pessoa. */
+        valeuAviso: GESTO.primeiraVez,
+        valeuRetiradoAviso: GESTO.retirado,
+        valeuErroRede: GESTO.erroRede,
+        valeuLimite: GESTO.limite,
+        /** Conta temporária: o aviso vem com o botão "Entrar" (`entrar`). */
+        valeuContaTemporaria: GESTO.contaTemporaria,
+        compartilhar: 'Compartilhar',
+        compartilharRotulo: (titulo: string) => `Compartilhar “${titulo}”`,
+        linkCopiado: 'Link da trilha copiado',
+        mais: (titulo: string) => `Mais ações para “${titulo}”`,
+        denunciar: 'Denunciar',
+        /** O selo do conteúdo sintético do Explorar (spec 16, item 9): "Exemplo", no selo neutro; a honestidade continua, o conteúdo segue marcado. */
+        demonstracao: 'Exemplo',
+        /** O nome do selo para o leitor de tela (a palavra "Exemplo" na tela fica escondida dele, para não repetir). */
+        demonstracaoRotulo: 'Exemplo criado pelo Studoo para mostrar o app',
+        demonstracaoDica: 'Trilha de exemplo do Studoo.',
+        /** O parágrafo do alto do Explorar saiu (spec 16, item 9); o app ainda o usa até a troca (Mobile 2), por isso a chave fica, coerente com "Exemplo". */
+        demonstracaoExplica: '“Exemplo” marca conteúdo criado pelo Studoo para mostrar o app.',
+        entrarParaAgir: GESTO.faixaSemConta,
+        entrar: 'Entrar',
+        adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
+        denuncia: {
+            tituloTrilha: 'Denunciar trilha',
+            tituloPerfil: 'Denunciar perfil',
+            texto: 'Conte o motivo. A equipe do Studoo revisa as denúncias; com denúncias de pessoas diferentes, a trilha sai do Explorar até a revisão.',
+            textoPerfil: 'Conte o motivo. A equipe do Studoo revisa cada denúncia.',
+            alvoTrilha: (titulo: string, nome: string) => `“${titulo}”, de ${nome}`,
+            motivos: { spam: 'Spam ou propaganda', ofensivo: 'Conteúdo ofensivo', direitos: 'Cópia ou direitos autorais', outro: 'Outro motivo' },
+            enviar: 'Enviar denúncia',
+            enviando: 'Enviando…',
+            cancelar: 'Cancelar',
+            enviada: 'Denúncia enviada. Obrigado por avisar.',
+            escolha: 'Escolha um motivo.',
+        },
+        // Folha de compartilhar: os três níveis e a publicação
+        visibilidadeTitulo: 'Quem pode ver',
+        niveis: {
+            link: { titulo: 'Só com o link', texto: 'Só quem receber o link abre a trilha.' },
+            perfil: { titulo: 'No meu perfil', texto: 'Aparece no seu perfil, para quem tiver o endereço dele.' },
+            explorar: { titulo: 'No Explorar', texto: 'Qualquer pessoa encontra no Explorar. Também aparece no seu perfil.' },
+        },
+        nivelSalvo: (nivel: string) => `Agora: ${nivel}.`,
+        agora: 'Agora',
+        aindaNaoNoExplorar: (nivel: string) => `Ainda não está no Explorar. Agora: ${nivel}.`,
+        temaRotulo: 'Tema',
+        temaDica: 'Ajuda quem procura por assunto.',
+        temaSugerido: 'sugerido pelo título',
+        legendaRotulo: 'Legenda (opcional)',
+        legendaDica: 'Uma frase para quem vai estudar: para quem é, o que tem de especial.',
+        legendaErros: {
+            longa: 'Use até 140 caracteres.',
+            caracteres: 'Use letras, números e pontuação simples.',
+            endereco: 'A legenda não pode ter endereço de site nem e-mail.',
+        },
+        publicar: 'Publicar no Explorar',
+        publicando: 'Publicando…',
+        salvarPublicacao: 'Salvar tema e legenda',
+        publicada: 'Publicada no Explorar.',
+        publicacaoSalva: 'Tema e legenda salvos.',
+        materialFora: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
+        demonstracaoAviso: 'Esta trilha é um exemplo do Studoo e aparece no Explorar com o rótulo “Exemplo”.',
+        verNoExplorar: 'Ver no Explorar',
+        irAoExplorar: 'Ver trilhas da comunidade',
+        // Tela Perfil (dona)
+        ajustar: 'Quem pode ver',
+        ajustarRotulo: (titulo: string) => `Mudar quem pode ver “${titulo}”`,
+        naSuaPagina: 'Como os outros veem',
+        perfilDemo: 'Perfil de exemplo',
+        // Seguir (etapa C2)
+        seguir: 'Seguir',
+        seguindo: 'Seguindo',
+        seguirRotulo: (nome: string) => `Seguir ${nome}`,
+        seguindoRotulo: (nome: string) => `Seguindo ${nome}. Toque para deixar de seguir.`,
+        passouASeguir: (nome: string) => `Agora você segue ${nome}.`,
+        deixouDeSeguir: (nome: string) => `Você deixou de seguir ${nome}.`,
+        seguidores: (n: number) => (n === 1 ? '1 seguidor' : `${n} seguidores`),
+        abasRotulo: 'O que mostrar',
+        abaTodos: 'Comunidade',
+        abaSeguindo: 'Seguindo',
+        seguindoTitulo: 'De quem você segue',
+        vazioSeguindoTitulo: 'Você ainda não segue ninguém',
+        vazioSeguindoTexto: 'Siga quem publica trilhas do seu interesse: use o botão “Seguir” no perfil da pessoa. As trilhas novas dela aparecem aqui.',
+        vazioSeguindoAcao: 'Ver todas as trilhas',
+        voltarComunidade: 'Voltar à Comunidade',
+        entrarOuCriar: 'Entrar ou criar conta',
+        seguindoVisitanteTitulo: 'Para seguir pessoas, entre com uma conta',
+        seguindoVisitanteTexto: 'Como visitante, você pode explorar e estudar qualquer trilha. Para seguir quem publica trilhas, entre ou crie uma conta — as trilhas desta sessão não passam para a conta.',
+        seguirVisitanteAviso: 'Para seguir este perfil, entre ou crie uma conta. As trilhas desta sessão de visitante não passam para a conta.',
+        buscaRotulo: 'Buscar trilhas no Explorar',
+        buscaPlaceholder: 'Buscar por assunto, título ou pessoa',
+        buscaLimpar: 'Limpar busca',
+        buscaVazio: (termo: string) => `Nenhuma trilha encontrada para “${termo}”.`,
+        buscaResultados: (total: number, termo: string) => `${total === 1 ? '1 trilha' : `${total} trilhas`} para “${termo}”`,
+        seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
+        // Novidades (etapa C2)
+        novidadesTitulo: 'Novidades',
+        novidadesVazio: GESTO.novidadesVazio,
+        novidadesSemana: 'Nos últimos 7 dias',
+        alguem: 'Alguém',
+        listaPessoas: (nomes: string[], outros: number) => {
+            if (nomes.length === 0) return outros === 1 ? 'Alguém' : `${outros} pessoas`;
+            if (outros === 0) return nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
+            return `${nomes.join(', ')} e mais ${outros} ${outros === 1 ? 'pessoa' : 'pessoas'}`;
+        },
+        novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} a estudar “${titulo}”`,
+        novidadeValeus: GESTO.novidade,
+        novidadeSeguidores: (quem: string | null, total: number) => (quem
+            ? `${quem} ${total === 1 ? 'começou' : 'começaram'} a seguir você`
+            : `${total === 1 ? '1 pessoa nova segue' : `${total} pessoas novas seguem`} você`),
+        quando: (iso: string) => {
+            const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+            return dias <= 0 ? 'hoje' : dias === 1 ? 'ontem' : `há ${dias} dias`;
+        },
+        nova: 'Nova',
+        novaRotulo: 'Nova: ninguém começou ainda.',
+        trocarTema: 'Trocar tema',
+        trocarTemaRotulo: (tema: string) => `Trocar o tema (agora: ${tema})`,
+        temaEscolhido: 'Tema escolhido',
+    },
+    /** Código Studoo (spec 10, etapa C1): o código na folha de compartilhar e em "Compartilhar perfil". */
+    codigo: {
+        titulo: 'Código Studoo',
+        dicaTrilha: 'Aponte a câmera do celular para abrir a trilha.',
+        dicaPerfil: 'Aponte a câmera do celular para abrir o perfil.',
+        rotuloTrilha: (titulo: string) => `Código Studoo da trilha “${titulo}”. Aponte a câmera do celular para abrir.`,
+        rotuloPerfil: (nome: string) => `Código Studoo do perfil de ${nome}, com a foto (ou a inicial) no centro. Aponte a câmera do celular para abrir.`,
+        copiar: 'Copiar link',
+        copiado: 'Link copiado',
+        compartilhar: 'Compartilhar',
+        compartilharImagem: 'Compartilhar imagem',
+        baixar: 'Baixar imagem',
+        gerando: 'Preparando a imagem…',
+        baixada: 'Imagem baixada.',
+        falhou: 'Não deu para preparar a imagem agora. Tente de novo.',
+        apresentar: 'Apresentar',
+        apresentarRotulo: 'Mostrar o código em tela cheia',
+        apresentacaoApontar: 'Aponte a câmera do celular',
+        apresentacaoAbrir: 'e toque no link para abrir no Studoo.',
+        fechar: 'Fechar',
+        perfilTitulo: 'Compartilhar perfil',
+        imagemTrilha: (titulo: string) => titulo,
+        imagemPerfil: (nome: string) => `As trilhas de ${nome}`,
+    },
+    /** Temas (spec 10): interesses do perfil e, na etapa B, o tema da trilha publicada. */
+    temas: {
+        idiomas: 'Idiomas',
+        matematica: 'Matemática',
+        ciencias: 'Ciências',
+        programacao: 'Programação e tecnologia',
+        negocios: 'Negócios e finanças',
+        vestibular: 'Vestibular e concursos',
+        historia: 'História e sociedade',
+        artes: 'Artes e música',
+        saude: 'Saúde e bem-estar',
+        culinaria: 'Culinária e casa',
+        carreira: 'Carreira e produtividade',
+        outros: 'Outros',
     },
     planos: {
         titulo: 'Minhas trilhas',
@@ -137,11 +912,25 @@ export const mensagens = {
         concluido: 'Concluída',
         apagar: 'Apagar',
         apagarRotulo: (titulo: string) => `Apagar a trilha “${titulo}”`,
+        maisOpcoesRotulo: (titulo: string) => `Mais opções de “${titulo}”`,
+        /** Confirmação de apagar (revisão de 19/11): título, texto e ações separados; com link, entra também `compartilhar.apagarAviso`. */
+        apagarTitulo: (titulo: string) => `Apagar “${titulo}”?`,
+        apagarTexto: (licoes: number, concluidas: number) => {
+            const asLicoes = licoes === 1 ? 'a lição' : `as ${licoes} lições`;
+            return concluidas > 0
+                ? `A trilha, ${asLicoes} e o seu progresso (${concluidas} ${concluidas === 1 ? 'concluída' : 'concluídas'}) saem da sua conta. Não dá para desfazer.`
+                : `A trilha e ${asLicoes} saem da sua conta. Não dá para desfazer.`;
+        },
+        /** A ação segura, que recebe o foco (a outra é `apagar`). */
+        apagarCancelar: 'Cancelar',
         apagarPergunta: (titulo: string, detalhe?: string) =>
             `Apagar a trilha “${titulo}”${detalhe ? ` (${detalhe})` : ''}? As lições e o progresso dela também serão apagados.`,
-        semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',
+        vazioTitulo: 'Nenhuma trilha ainda',
+        vazioTexto: 'Suas trilhas ficam aqui. Conte o que quer aprender e o Studoo monta a primeira.',
+        vazioAcao: 'Criar minha primeira trilha',
         apagada: (titulo: string) => `Trilha “${titulo}” apagada.`,
         manter: 'Manter',
+        outrasTrilhas: 'Outras trilhas',
         progresso: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`
     },
     trilha: {
@@ -186,6 +975,7 @@ export const mensagens = {
         concluidoTexto: 'Você concluiu todas as lições desta trilha. Refaça qualquer uma ou crie uma nova trilha.',
         revisitando: 'Você já concluiu esta lição. Refazer não muda seu progresso.',
         stuInicio: 'Comece pela primeira lição. Cada uma libera a próxima.',
+        stuInicioEmAndamento: 'A primeira lição já está aberta. Continue de onde parou.',
         stuMeio: 'Continue de onde parou. A próxima lição já está liberada.',
         stuFim: 'Você chegou ao fim da trilha!',
         marco: (numero: number) => `Marco ${numero}`,
@@ -225,11 +1015,12 @@ export const mensagens = {
         detalhes: 'Saiba mais',
         materialTitulo: 'Transforme seu material em descobertas',
         materialTexto: 'Escolha um arquivo ou fotografe uma página. Depois, confira o que o Stu leu.',
-        arquivo: 'Escolher arquivo', camera: 'Usar a câmera', demo: 'Quero experimentar primeiro',
+        arquivo: 'Escolher arquivo', camera: 'Usar a câmera', demo: 'Experimentar com frações',
         ler: '1 · Traga seu material', conferir: '2 · Confira a leitura',
         saberMais: 'Ver como funciona',
     },
     pedido: {
+      editarTema: 'Editar tema',
         titulo: 'O que você quer aprender?',
         instrucoes: 'Pode ser qualquer assunto. Conte o tema e o que você já sabe: a IA do Studoo monta uma trilha de lições curtas, e você confere antes de começar.',
         objetivo: 'Seu objetivo de estudo',
@@ -260,7 +1051,9 @@ export const mensagens = {
             vazio: 'Pode ser qualquer assunto!',
             curto: 'Isso! Conte um pouco mais…',
             pronto: 'Perfeito! Já dá para montar sua trilha.',
-            escolhida: 'Boa escolha! Ajuste o texto se quiser.'
+            escolhida: 'Boa escolha! Ajuste o texto se quiser.',
+            limite: 'Suas trilhas salvas continuam prontas para estudar.',
+            erro: 'Não deu para gerar agora. Veja o aviso abaixo.'
         },
         exemplosDigitados: ['Quero aprender violão do zero', 'Inglês para conversar em viagens', 'Cozinhar o básico sem medo', 'História do Brasil para a prova'],
         exemploPrefixo: 'Ex.: '
@@ -268,6 +1061,73 @@ export const mensagens = {
     geracao: {
         contexto: 'Nova trilha',
         montandoTitulo: 'Montando sua trilha',
+        aguardandoLicao: 'Ainda montando a próxima lição…',
+        /**
+         * A faixa da proposta (spec 19, que revê a mudança 2 da spec 17): "Sua proposta tem 10 lições em 3 partes". Com uma parte só, sem o "em M partes"; com uma lição só,
+         * "Sua proposta tem 1 lição.". "Pronta" só depois de salva (`trilhaPronta`). Também é o anúncio do leitor de tela.
+         */
+        propostaPronta: resumoDaProposta,
+        /** O nome certo da mesma frase: a proposta ainda não é uma trilha pronta. `propostaPronta` fica só para o app que ainda a lê. */
+        propostaResumo: resumoDaProposta,
+        comecarLicao1: 'Começar a lição 1',
+        salvarParaDepois: 'Salvar para depois',
+        salvandoTrilha: 'Salvando trilha…',
+        anuncioSalvando: 'Salvando trilha.',
+        erroSalvar: 'Não deu para salvar. Tente de novo.',
+        criandoTrilha: 'Criando sua trilha…',
+        anuncioCriando: 'Criando sua trilha.',
+        /**
+         * A linha embaixo do botão "Começar a lição 1" (spec 17, mudança 1, revista em 23/11): entra 1,5 s depois do toque e dura enquanto a trilha é criada (de 12 a 21 s medidos).
+         * Por isso não promete "alguns segundos". Depois de 3 s na tela, a mesma linha troca para as frases de `dicas`.
+         */
+        escrevendoLicoes: 'Escrevendo suas lições…',
+        erroCriacao: 'Não deu para criar a trilha. Confira a conexão e tente de novo.',
+        propostaExpirada: 'Esta proposta expirou. Monte de novo.',
+        montarDeNovo: 'Montar de novo',
+        anuncioCriada: (titulo: string) => `Trilha criada. Lição 1: ${titulo}.`,
+        /**
+         * A criação que pode ser retomada (spec 04, Retomada da criação). O aceite escreve as lições e pode levar minutos; se a resposta se perder, o pedido continua no servidor e o cliente o recupera.
+         * "Pronta" e "Abrir lição 1" só depois de confirmar que a trilha foi salva.
+         */
+        preparandoTrilha: 'Preparando sua trilha…',
+        salvandoSuaTrilha: 'Salvando sua trilha…',
+        anuncioPreparando: 'Preparando sua trilha.',
+        anuncioSalvandoSuaTrilha: 'Salvando sua trilha.',
+        /** Depois de um tempo em preparo, sem erro: a pessoa pode sair, e o pedido continua. */
+        aindaPreparando: 'Você pode sair. Quando estiver pronta, a trilha aparece em Minhas trilhas.',
+        semConexaoVerificar: 'Sem conexão. Vamos verificar o status quando a conexão voltar.',
+        /** Houve demora e a rede está disponível, mas o servidor ainda não confirmou: "Verificar status" consulta o mesmo pedido. */
+        semConfirmacao: 'Ainda não conseguimos confirmar se sua trilha foi salva.',
+        verificarStatus: 'Verificar status',
+        verificandoStatus: 'Verificando…',
+        /** Só depois de confirmar que o servidor não tem o pedido (a primeira ausência pode ser trânsito): reenvia a MESMA proposta. */
+        pedidoNaoChegou: 'Seu pedido não chegou ao servidor.',
+        reenviarPedido: 'Reenviar pedido',
+        trilhaPronta: 'Sua trilha está pronta.',
+        /** A trilha já foi salva e só a lição 1 não abriu: nada é recriado, e tocar na lição tenta abrir de novo. */
+        licaoNaoAbriu: 'Sua trilha foi salva, mas não deu para abrir a lição 1. Toque na lição para tentar de novo.',
+        trilhaSalvaPronta: 'Sua trilha foi salva em Minhas trilhas.',
+        abrirLicao1: 'Abrir lição 1',
+        anuncioTrilhaPronta: 'Sua trilha está pronta. Abrir lição 1.',
+        tentarDeNovo: 'Tentar de novo',
+        /** A falha confirmada pelo servidor, pela causa (`CausaDeFalhaDaCriacao`). O prazo do limite só entra quando o servidor o conhece. Sem diagnóstico inventado. */
+        falhaDaCriacao: {
+            resposta_ia: 'A IA não conseguiu escrever as lições desta vez.',
+            limite: 'Chegamos ao limite de criações por agora. Tente de novo mais tarde.',
+            limiteComEspera: (segundos: number) => `Chegamos ao limite de criações por agora. Tente de novo em ${esperaEmPalavras(segundos)}.`,
+            /** O prazo conhecido acabou e o servidor, ao ser consultado, liberou: a frase combina com o botão "Tentar de novo" que volta a existir. */
+            limiteLiberado: 'O limite acabou. Você já pode tentar de novo.',
+            tempo: 'A criação demorou mais do que o esperado e foi interrompida.',
+            interrompida: 'A criação foi interrompida antes de terminar.',
+            seguranca: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
+            proposta_expirada: 'Esta proposta expirou. Monte de novo.',
+            outra: 'Não deu para criar a trilha.',
+        },
+        /** Os avisos de criação (uma trilha que segue sendo criada, ou terminou, enquanto a pessoa está em outra tela). */
+        criacoesEmCurso: 'Criação de trilhas',
+        verCriacao: 'Ver a prévia',
+        abrirMinhasTrilhas: 'Ver em Minhas trilhas',
+        fecharAviso: 'Fechar',
         montando: 'Montando a trilha',
         pronta: 'Trilha pronta',
         contagem: (total: number) => total === 0
@@ -276,23 +1136,44 @@ export const mensagens = {
         contagemFinal: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
         stuMontando: 'Montando sua trilha, uma lição de cada vez',
         stuPronta: 'Trilha pronta! Confira as lições e comece quando quiser.',
+        /**
+         * As frases da espera da criação da trilha (spec 17, mudança 1, revista em 23/11), nesta ordem e em laço: depois de "Começar a lição 1", a linha "Escrevendo suas lições…"
+         * (`escrevendoLicoes`) troca, 3 s depois de aparecer, para a 1ª frase e, a cada 5 s, para a seguinte (`dicaDaEspera`, em @studoo/contratos, diz qual). A placa "Montando sua trilha",
+         * na geração da proposta (uns 3 s), NÃO usa as frases. São verdadeiras para conta e para visitante, sem número nem promessa que não medimos (por isso a 3ª não diz "salvo": o
+         * progresso do visitante dura 24 h neste aparelho; e "Você confere a trilha antes de começar." saiu, porque nessa espera a pessoa já conferiu a trilha). Cada uma cabe em 2 linhas em 320 px.
+         */
         dicas: [
-            'Dica: um conceito novo por lição deixa tudo mais leve.',
-            'Dica: revisões de tempos em tempos ajudam a lembrar.',
-            'Dica: errar faz parte. O feedback mostra o caminho.',
-            'Dica: lições curtas cabem em qualquer intervalo do dia.',
+            'Lições curtas, com exercício e retorno na hora.',
+            'Errou? O Stu explica de outro jeito.',
+            'Cada lição concluída fica marcada no mapa.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
         repetida: (titulo: string) => `Você já tem a trilha “${titulo}”. Quer continuar nela em vez de criar outra igual?`,
         abrirExistente: 'Abrir a que já existe',
         montadaDoPedido: 'Preparando a trilha para o seu pedido…',
         demonstracao: 'Trilha pronta do Studoo, a mais próxima do seu pedido. Confira as lições antes de começar.',
-        origem: (origem: string) => `Fonte: ${origem}`,
         cancelar: 'Cancelar',
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
         anuncioTitulo: (titulo: string) => `Trilha: ${titulo}. As lições vão aparecer uma a uma.`,
-        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`
+        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`,
+        /**
+         * A geração que se acompanha (spec 04, "Revisão do dono (19/11)"). A faixa de 52 px que substitui o cartão do título
+         * conta "Gerando…" e depois `contagemFinal`; a placa do alto do mapa troca a frase do Stu pela da espera longa e pela
+         * do fim; a pílula leva de volta à lição nova (ou ao fim, quando a trilha fica pronta).
+         */
+        faixaGerando: 'Gerando…',
+        verLicaoNova: (numero: number) => `Ver a lição nova · ${numero}`,
+        verFimDaTrilha: 'Ver o fim da trilha',
+        esperaLonga: 'Ainda escrevendo… esta parte pede mais cuidado.',
+        placaPronta: (licoes: number, partes: number) =>
+            `Trilha pronta! ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+        placaProntaTexto: 'Confira o caminho e comece quando quiser.',
+        /** O balãozinho ao lado do Stu, no máximo a cada três lições. */
+        maisUma: 'Mais uma!',
+        /** Leitor de tela: cada lição que nasce e o fim (aria-live educado na web; announceForAccessibility no app). */
+        anuncioLicao: (numero: number, titulo: string) => `Lição ${numero}: ${titulo}.`,
+        anuncioFim: (total: number) => `Trilha pronta, ${total} ${total === 1 ? 'lição' : 'lições'}. Começar.`
     },
     preparo: {
         titulo: 'Escrevendo suas lições',
@@ -318,7 +1199,7 @@ export const mensagens = {
         exemplo: 'Exemplo',
         exercicio: 'Exercício',
         resposta: 'Sua resposta',
-        avaliar: 'Verificar',
+        avaliar: VERIFICAR,
         avaliando: 'Verificando…',
         correta: 'Resposta correta',
         incorreta: 'Resposta incorreta',
@@ -361,11 +1242,32 @@ export const mensagens = {
             return `${base}, em ${tempo}, com ${estatisticas.acertosDePrimeira} de ${estatisticas.exercicios} exercícios de primeira.`;
         },
         trilhaConcluidaTexto: (titulo: string) => `Você completou todas as lições de “${titulo}”. Reveja quando quiser ou comece um assunto novo.`,
+        stuEstado: {
+            neutro: 'Leia com calma e confira sua resposta.',
+            pensando: 'Sem pressa — tente de novo com a dica abaixo.',
+            atento: 'O erro mostra o próximo degrau. Que tal ver outro jeito?',
+            primeira: 'Mandou bem logo de primeira!',
+            acerto: 'Boa! Você acertou este desafio.',
+            ponte: 'Você construiu a ponte e venceu o desafio!',
+        },
+        historia: {
+            titulo: 'Resumo qualitativo da lição',
+            praticou: 'O que você praticou',
+            ponteTitulo: 'Ponte construída',
+            ponteTexto: 'Você transformou o erro em degrau, atravessou o reforço e voltou para vencer.',
+            ensinoTitulo: 'Você ensinou ao Stu',
+            ensinoTexto: 'Você explicou a ideia com suas palavras e testou seu entendimento.',
+            sincronia: 'Progresso salvo na sua conta · pronto para continuar em outro dispositivo',
+            sincroniaVisitante: 'Sessão de visitante · seu progresso fica por até 24 h a partir da entrada neste navegador',
+            sincroniaVisitanteApp: 'Sessão de visitante · seu progresso fica por até 24 h a partir da entrada neste aparelho',
+        },
         novoAssunto: 'Começar um assunto novo',
         falta: {
             escrever: 'Escreva sua resposta para verificar.',
             escolher: 'Escolha uma opção para verificar.',
             ordenar: (faltam: number) => `${faltam === 1 ? 'Falta 1 item' : `Faltam ${faltam} itens`} para colocar em ordem.`,
+            /** Ordenar em lista única: antes da primeira mudança. */
+            mudarOrdem: 'Mude a ordem para verificar.',
             associar: (faltam: number) => `${faltam === 1 ? 'Falta 1 par' : `Faltam ${faltam} pares`} para ligar.`,
             valor: 'Diga se a frase é verdadeira ou falsa.',
             justificativa: 'Agora escolha o porquê.',
@@ -383,7 +1285,6 @@ export const mensagens = {
             pratica: 'Prática'
         },
         avancar: 'Ir para a próxima lição',
-        origem: 'Fonte',
         progresso: 'Progresso na trilha',
         demonstracao: 'Demonstração',
         exercicioDe: (atual: number, total: number) => `Exercício ${atual} de ${total}`,
@@ -465,7 +1366,30 @@ export const mensagens = {
             travado: (texto: string, posicao: number) => `“${texto}”, na posição ${posicao}: já está certo`,
             vaga: 'Toque num item abaixo para esta posição',
             recomecar: 'Recomeçar',
-            certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`
+            certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`,
+            // Lista única (spec 08, revisão de 19/11). As chaves das fichas (suaOrdem, disponiveis, vazio, vaga, colocar,
+            // tirar e recomecar) saem quando a web e o app migrarem.
+            comoResponder: 'Arraste para pôr em ordem ou toque em dois itens para trocar.',
+            comoResponderEscolhido: 'Agora toque em outro item para trocar os dois de lugar.',
+            voltarOrdemInicial: 'Voltar à ordem inicial',
+            /** Nome acessível do cartão: "2º de 4: Despachar a mala". */
+            cartaoRotulo: (posicao: number, total: number, texto: string) => `${posicao}º de ${total}: ${texto}`,
+            avisoEscolhido: (texto: string) => `“${texto}” escolhido. Toque em outro item para trocar os dois de lugar.`,
+            avisoTrocaram: (um: string, outro: string) => `“${um}” e “${outro}” trocaram de lugar.`,
+            avisoPosicao: (texto: string, posicao: number, total: number) => `“${texto}” agora está na posição ${posicao} de ${total}.`,
+            moverParaCima: 'Mover para cima',
+            moverParaBaixo: 'Mover para baixo',
+            travadoRotulo: (texto: string, posicao: number) => `“${texto}”, na posição ${posicao}: já está certo.`
+        },
+        /** A linha de como responder, logo abaixo do enunciado, em todo exercício (spec 08, revisão de 19/11). */
+        comoResponder: {
+            multipla_escolha: 'Toque na resposta certa.',
+            lacuna: 'Escreva o que falta na frase.',
+            ordenar: 'Arraste para pôr em ordem ou toque em dois itens para trocar.',
+            /** Associar: dois passos, o atual em azul. */
+            associar: ['Escolha um item', 'Toque no par dele'] as const,
+            verdadeiro_falso: 'Diga se a frase é verdadeira ou falsa e por quê.',
+            aberta: 'Explique com as suas palavras, em uma ou duas frases.'
         },
         associar: {
             instrucao: 'Toque num item da esquerda e depois no par dele à direita.',
@@ -531,12 +1455,30 @@ export const mensagens = {
             escolha: 'Conte como foi para concluir a lição.'
         }
     },
+    /** "Resolva comigo" (spec 15, seção 4): os textos da web e do app; a frase de cada passo vem da IA. "Verificar" é o da lição. */
+    resolvaComigo: {
+        selo: 'Resolva comigo',
+        passo: (n: number, total: number) => `Passo ${n} de ${total}`,
+        proximo: 'Próximo passo',
+        voltar: 'Voltar um passo',
+        suaVez: 'Sua vez',
+        isso: 'Isso!',
+        tentarDeNovo: 'Tentar de novo',
+        metodo: 'O método',
+        agora: 'Agora é com você',
+        verificar: VERIFICAR
+    },
     erros: {
         material_invalido: 'Use imagem JPG/PNG/WebP, PDF, DOCX ou CSV de até 5 MB, respeitando os limites de páginas, texto e tabela.',
         material_ilegivel: 'Não consegui ler este material. Use uma foto mais nítida ou um PDF com texto.',
         reforco_indisponivel: 'Responda ao exercício para o Stu identificar onde ajudar.',
         limite_estudio: 'Você fez muitos pedidos. Aguarde um pouco e tente novamente.',
         voz_indisponivel: 'A transcrição está indisponível. Você pode escrever sua explicação.',
+        voz_vazia: 'Não foi possível ouvir sua fala. Tente gravar mais perto ou escreva sua explicação.',
+        voz_tempo: 'A transcrição demorou demais. Tente novamente ou escreva sua explicação.',
+        voz_falha: 'Não foi possível transcrever o áudio agora. Tente novamente ou escreva sua explicação.',
+        falar_voz_tempo: 'A conferência da fala demorou demais. Tente falar novamente.',
+        falar_voz_falha: 'Não foi possível conferir sua fala agora. Tente novamente.',
 
         google_indisponivel: "O login com Google está indisponível no momento.",
         google_invalido: "Não foi possível confirmar o login com Google. Tente novamente.",
@@ -546,23 +1488,132 @@ export const mensagens = {
         limite_recuperacao: "Aguarde alguns minutos antes de tentar novamente.",
         credenciais_invalidas: 'E-mail ou senha inválidos.',
         limite_login: 'E-mail ou senha inválidos.',
+        limite_visitante: 'Muita gente experimentando agora; tente de novo em alguns minutos ou entre com uma conta.',
         nao_autenticado: 'Sua sessão terminou. Entre para continuar.',
         invalido: 'Confira os dados e tente novamente.',
         nao_encontrado: 'Este conteúdo não está disponível. Volte às suas trilhas.',
         origem_invalida: 'Abra o Studoo pelo endereço do piloto para continuar.',
         proposta_invalida: 'Esta prévia expirou. Ajuste o pedido e gere a trilha de novo.',
         avaliacao_invalida: 'A confirmação expirou. Envie a resposta novamente.',
+        conteudo_nocivo: 'O Studoo não cria trilhas com instruções para machucar alguém ou cometer crimes. Você pode estudar o tema com foco em história ou prevenção.',
         ia_indisponivel: 'A geração está indisponível agora. Tente novamente.',
         limite_geracoes: 'Por agora, o limite de novas trilhas foi atingido. Tente de novo mais tarde. Suas trilhas salvas continuam disponíveis.',
+        link_inativo: 'Este link não está mais ativo.',
+        limite_compartilhar: 'Muitos pedidos de compartilhamento por agora. Tente de novo mais tarde.',
+        perfil_incompleto: 'Escolha como você quer aparecer antes de compartilhar.',
+        compartilhar_visitante: 'Para compartilhar, entre com uma conta.',
+        trilha_recebida: 'Esta trilha foi compartilhada com você e não pode ser compartilhada de novo.',
+        trilha_propria: 'Esta trilha é sua.',
+        foto_invalida: 'Use uma foto JPG, PNG ou WebP de até 2 MB.',
+        limite_foto: 'Você trocou de foto muitas vezes. Tente de novo daqui a pouco.',
+        explorar_material: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
+        limite_comunidade: 'Muitas ações por agora. Tente de novo daqui a pouco.',
+        seguir_invalido: 'Não dá para seguir este perfil.',
+        conteudo_recusado: 'Não deu para publicar: o texto não segue as regras da comunidade. Revise e tente de novo.',
+        consentimento_ia: 'Para continuar, permita o uso de IA.',
+        confirmacao_invalida: 'Digite EXCLUIR para confirmar.',
+        cadastro_indisponivel: 'Criar conta por e-mail está indisponível no momento.',
+        limite_cadastro: 'Aguarde alguns minutos antes de tentar novamente.',
+        email_nao_permitido: 'Este e-mail não pode ser usado neste ambiente do Studoo.',
+        apple_indisponivel: 'Iniciar sessão com a Apple está indisponível no momento.',
+        apple_invalido: 'Não foi possível confirmar o acesso com a Apple. Tente novamente.',
+        apple_conta_existente: 'Este e-mail já tem uma conta. Entre com o mesmo jeito de sempre ou recupere o acesso.',
         falha: 'Não foi possível continuar. Tente novamente.',
         rede: 'Confira a conexão e tente novamente.',
         conexao: 'Confira a conexão e tente novamente.',
         configuracao: 'O app precisa do endereço HTTPS do servidor do piloto.',
         armazenamento: 'Não foi possível acessar a sessão segura no aparelho. Tente novamente.'
     },
+    /**
+     * Segurança da comunidade (spec 14, 20/11; regra 1.2 da Apple): bloquear e desbloquear, a denúncia com protocolo, a
+     * revisão do que fica público, a ajuda com o suporte e a linha das regras na folha de compartilhar. Web e app usam os
+     * mesmos textos; a caixa da equipe (/equipe/moderacao) é só da web. Nenhum texto promete prazo.
+     */
+    seguranca: {
+        // As páginas do Studoo (no app, abrem no navegador do sistema, P20 da spec 07)
+        rotas: { suporte: '/suporte', regras: '/privacidade#regras-da-comunidade', politica: '/privacidade' },
+        /** O formulário do suporte com o alvo preenchido, para denunciar sem sessão (página pública /t ou /p). */
+        rotaDenunciaSemSessao: (alvoTipo: 'trilha' | 'perfil', alvo: string) => `/suporte?alvoTipo=${alvoTipo}&alvo=${encodeURIComponent(alvo)}`,
+        // Bloquear: o item do menu "•••", logo abaixo de "Denunciar"
+        bloquear: (nome: string) => `Bloquear ${nome}`,
+        bloquearTitulo: (nome: string) => `Bloquear ${nome}?`,
+        bloquearTexto: 'Você deixa de ver as trilhas e o perfil dessa pessoa, e ela deixa de ver os seus no Studoo. Ela não é avisada.',
+        bloquearAcao: 'Bloquear',
+        bloqueando: 'Bloqueando…',
+        cancelar: 'Cancelar',
+        bloqueada: 'Pessoa bloqueada.',
+        desfazer: 'Desfazer',
+        desbloqueada: 'Pessoa desbloqueada.',
+        // A lista no Perfil e o perfil de quem você bloqueou, aberto por um link
+        bloqueadasTitulo: 'Pessoas bloqueadas',
+        bloqueadasVazia: 'Ninguém bloqueado.',
+        desbloquear: 'Desbloquear',
+        desbloquearRotulo: (nome: string) => `Desbloquear ${nome}`,
+        perfilBloqueado: 'Você bloqueou esta pessoa.',
+        // Depois de denunciar: o aviso com o protocolo e a ação "Bloquear" (se a pessoa ainda não estiver bloqueada)
+        denunciaEnviada: (protocolo: string) => `Denúncia enviada (protocolo ${protocolo}). Obrigado por avisar.`,
+        // Revisão do que fica público: o que a dona vê
+        enviadaParaRevisao: 'Enviada para revisão. Aparece para outras pessoas depois da aprovação.',
+        recusadaNaHora: 'Não deu para publicar: o texto não segue as regras da comunidade. Revise e tente de novo.',
+        seloEmRevisao: 'Em revisão',
+        emRevisao: 'Em revisão pela equipe do Studoo. Por enquanto, só você vê.',
+        seloNaoPublicada: 'Não publicada',
+        naoPublicada: 'A equipe do Studoo não aprovou esta publicação. Ela continua só com você.',
+        fotoEmRevisao: 'Sua foto está em revisão. Até lá, os outros veem a sua inicial.',
+        capaEmRevisao: 'A capa está em revisão. Até lá, os outros veem a capa padrão.',
+        trilhaIndisponivel: 'Esta trilha não está disponível agora.',
+        /** O destino escolhido enquanto a publicação está em revisão: o lugar e o tema, sem afirmar que já está lá (Designer, 20/11). */
+        destinoDepoisDaAprovacao: (lugar: string) => `${lugar}, depois da aprovação`,
+        // Ajuda: a seção do Perfil e o botão da entrada e da recuperação de senha
+        ajudaTitulo: 'Ajuda',
+        falarComSuporte: 'Falar com o suporte',
+        regras: 'Regras da comunidade',
+        politica: 'Política de privacidade',
+        precisaDeAjuda: 'Precisa de ajuda? Fale com o suporte',
+        // A linha da folha de compartilhar (acima da ação que publica no perfil ou no Explorar; não em "Só com o link")
+        regrasAoPublicar: { antes: 'Ao publicar, você concorda com as ', link: 'Regras da comunidade', depois: '.' },
+    },
+    /**
+     * Privacidade (revisão Apple): o aceite antes de dados irem a uma IA de terceiro, a seção "Privacidade e dados" do
+     * Perfil, a exclusão da conta e o link da política. Web e app usam os mesmos textos.
+     */
+    privacidade: {
+        aceiteTitulo: 'Usar a IA para montar e corrigir seus estudos?',
+        aceiteTexto: 'Para montar trilhas, ler materiais, ouvir sua voz e comentar suas respostas, o Studoo envia esses dados a um serviço de IA de outra empresa. Nada é enviado sem a sua permissão.',
+        aceiteQuem: 'Quem recebe e o quê',
+        aceiteSemIa: 'Sem permitir, você ainda estuda as trilhas que já tem, e as respostas são corrigidas no próprio Studoo.',
+        politicaDe: (nome: string) => `Política de privacidade da ${nome}`,
+        politica: 'Política de privacidade do Studoo',
+        permitir: 'Permitir e continuar',
+        permitindo: 'Salvando…',
+        agoraNao: 'Agora não',
+        secaoTitulo: 'Privacidade e dados',
+        iaPermitida: (quando: string) => `Você permitiu o uso de IA em ${quando}.`,
+        iaNaoPermitida: 'Você ainda não permitiu o uso de IA. O Studoo pergunta antes de enviar qualquer dado.',
+        iaSimulada: 'Neste servidor, a IA roda no próprio Studoo: nenhum dado vai para outra empresa.',
+        verQuem: 'Ver quem recebe',
+        revogar: 'Parar de usar a IA',
+        revogado: 'Pronto: nada mais vai para a IA até você permitir de novo.',
+        permitirAgora: 'Permitir o uso de IA',
+        permitido: 'Uso de IA permitido.',
+        excluir: 'Excluir conta',
+        excluirTitulo: 'Excluir sua conta?',
+        excluirTexto: 'Isso apaga agora, sem volta, sua conta, suas trilhas, seu progresso, seus materiais, sua foto e seu perfil, os links que você compartilhou e quem você segue. Cópias que outras pessoas já adicionaram continuam com elas, sem o seu nome.',
+        excluirVisitante: 'Isso apaga agora, sem volta, esta sessão de visitante e tudo o que você fez nela.',
+        excluirDigite: 'Para confirmar, digite EXCLUIR',
+        excluirConfirmar: 'Excluir para sempre',
+        excluindo: 'Excluindo…',
+        excluirCancelar: 'Cancelar',
+        excluida: 'Sua conta foi excluída.',
+        rodapeLogin: 'Privacidade',
+    },
     marca: 'Studoo',
     voltar: 'Voltar',
     tentar: 'Tentar novamente',
+    /** Componentes do Studoo (spec 11). No app, o balão do menu de ações é anunciado com este rótulo e recebe o foco do leitor. */
+    componentes: {
+        menuRotulo: (opcoes: number) => `Menu, ${opcoes} ${opcoes === 1 ? 'opção' : 'opções'}`,
+    },
     boasVindas: {
         titulo: 'Aprenda qualquer coisa, um passo de cada vez',
         texto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',

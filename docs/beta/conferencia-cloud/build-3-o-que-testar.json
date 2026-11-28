@@ -1,0 +1,10 @@
+[
+  {
+    "locale": "pt-BR",
+    "whatsNew": "Neste beta, teste entrar e sair, montar uma trilha a partir de um objetivo de estudo, concluir exercícios e retomar o progresso. Erre uma resposta e use o reforço para voltar ao exercício. Confira o mapa, o Perfil, o compartilhamento de trilhas e as opções de privacidade e suporte. Relate falhas ou dúvidas pelo recurso Enviar Comentário do TestFlight."
+  },
+  {
+    "locale": "en-US",
+    "whatsNew": "In this beta, test signing in and out, creating a path from a learning goal, completing exercises, and resuming your progress. Try an incorrect answer and use the additional explanation before retrying. Check the path map, Profile, sharing, privacy, and support options. Report problems or confusing steps through TestFlight Send Feedback. The app interface is in Brazilian Portuguese."
+  }
+]

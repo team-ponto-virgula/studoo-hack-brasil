@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-21T00:14:45.262Z",
+  "appId": "6837508955",
+  "buildId": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+  "version": "3",
+  "processingState": "VALID",
+  "betaState": {
+    "autoNotifyEnabled": true,
+    "internalBuildState": "READY_FOR_BETA_TESTING",
+    "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+  },
+  "review": null,
+  "reviewContactComplete": true,
+  "reviewNotesPresent": true,
+  "demoAccountRequired": true,
+  "demoAccountComplete": false,
+  "localizations": [
+    {
+      "locale": "en-US",
+      "descriptionPresent": true,
+      "privacyPolicyPresent": true,
+      "feedbackEmailPresent": true
+    },
+    {
+      "locale": "pt-BR",
+      "descriptionPresent": true,
+      "privacyPolicyPresent": true,
+      "feedbackEmailPresent": true
+    }
+  ],
+  "limits": "Status de processamento e metadados; não comprova login real, funcionamento no iPhone ou aprovação externa."
+}

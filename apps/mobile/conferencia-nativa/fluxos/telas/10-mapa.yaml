@@ -1,0 +1,25 @@
+# Mapa da trilha em andamento: como o Studoo abre (rolado até a lição atual) e rolado, com o conteúdo passando por baixo
+# da barra de baixo e do cartão "Próxima lição".
+appId: host.exp.Exponent
+name: 10-mapa
+---
+- runFlow: ../partes/reabrir.yaml
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 10-mapa-da-trilha
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 65%
+    end: 50%, 40%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 11-mapa-rolado-sob-a-barra
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 65%
+    end: 50%, 35%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 12-mapa-rolado-mais

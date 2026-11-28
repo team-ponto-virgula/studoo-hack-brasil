@@ -1,0 +1,60 @@
+// Gerado por apps/mobile/scripts/stu-arquivos.mjs a partir de CATALOGO_STU (packages/contratos). Não edite à mão:
+// tests/mascote-mobile.test.mjs confere que este mapa e o catálogo têm os mesmos arquivos.
+
+/** A imagem parada de cada nome e faixa (`stu-feliz-m`): PNG @1x, com @2x e @3x ao lado, que o React Native escolhe. O
+ * require de uma imagem devolve o número do recurso registrado pelo Metro. */
+export const PARADO_STU: Readonly<Record<string, number>> = {
+  'stu-acolhida-m': require('../assets/marca/stu/stu-acolhida-m.png'),
+  'stu-acolhida-g': require('../assets/marca/stu/stu-acolhida-g.png'),
+  'stu-acolhida-xg': require('../assets/marca/stu/stu-acolhida-xg.png'),
+  'stu-feliz-p': require('../assets/marca/stu/stu-feliz-p.png'),
+  'stu-feliz-m': require('../assets/marca/stu/stu-feliz-m.png'),
+  'stu-feliz-g': require('../assets/marca/stu/stu-feliz-g.png'),
+  'stu-animado-p': require('../assets/marca/stu/stu-animado-p.png'),
+  'stu-animado-m': require('../assets/marca/stu/stu-animado-m.png'),
+  'stu-comemorando-p': require('../assets/marca/stu/stu-comemorando-p.png'),
+  'stu-comemorando-m': require('../assets/marca/stu/stu-comemorando-m.png'),
+  'stu-comemorando-g': require('../assets/marca/stu/stu-comemorando-g.png'),
+  'stu-concentrado-p': require('../assets/marca/stu/stu-concentrado-p.png'),
+  'stu-concentrado-m': require('../assets/marca/stu/stu-concentrado-m.png'),
+  'stu-curioso-p': require('../assets/marca/stu/stu-curioso-p.png'),
+  'stu-curioso-m': require('../assets/marca/stu/stu-curioso-m.png'),
+  'stu-encorajador-p': require('../assets/marca/stu/stu-encorajador-p.png'),
+  'stu-encorajador-m': require('../assets/marca/stu/stu-encorajador-m.png'),
+  'stu-surpreso-m': require('../assets/marca/stu/stu-surpreso-m.png'),
+  'stu-surpreso-g': require('../assets/marca/stu/stu-surpreso-g.png'),
+  'stu-tres-quartos-m': require('../assets/marca/stu/stu-tres-quartos-m.png'),
+  'stu-perfil-p': require('../assets/marca/stu/stu-perfil-p.png'),
+  'stu-estudando-m': require('../assets/marca/stu/stu-estudando-m.png'),
+  'stu-estudando-g': require('../assets/marca/stu/stu-estudando-g.png'),
+  'stu-celebrando-g': require('../assets/marca/stu/stu-celebrando-g.png'),
+  'stu-celebrando-xg': require('../assets/marca/stu/stu-celebrando-xg.png'),
+  'acessorio-trofeu-p': require('../assets/marca/stu/acessorio-trofeu-p.png'),
+  'acessorio-trofeu-m': require('../assets/marca/stu/acessorio-trofeu-m.png'),
+  'acessorio-fone-p': require('../assets/marca/stu/acessorio-fone-p.png'),
+  'acessorio-livro-m': require('../assets/marca/stu/acessorio-livro-m.png'),
+};
+
+/** A animada de cada nome e faixa: WebP animado só em @2x e @3x (spec 13, emenda), para o expo-image. */
+export const ANIMADO_STU: Readonly<Record<string, number>> = {
+  'stu-acolhida-m': require('../assets/marca/stu/stu-acolhida-m-animado.webp'),
+  'stu-acolhida-g': require('../assets/marca/stu/stu-acolhida-g-animado.webp'),
+  'stu-feliz-p': require('../assets/marca/stu/stu-feliz-p-animado.webp'),
+  'stu-feliz-m': require('../assets/marca/stu/stu-feliz-m-animado.webp'),
+  'stu-animado-p': require('../assets/marca/stu/stu-animado-p-animado.webp'),
+  'stu-animado-m': require('../assets/marca/stu/stu-animado-m-animado.webp'),
+  'stu-comemorando-p': require('../assets/marca/stu/stu-comemorando-p-animado.webp'),
+  'stu-comemorando-m': require('../assets/marca/stu/stu-comemorando-m-animado.webp'),
+  'stu-comemorando-g': require('../assets/marca/stu/stu-comemorando-g-animado.webp'),
+  'stu-concentrado-m': require('../assets/marca/stu/stu-concentrado-m-animado.webp'),
+  'stu-curioso-m': require('../assets/marca/stu/stu-curioso-m-animado.webp'),
+  'stu-encorajador-p': require('../assets/marca/stu/stu-encorajador-p-animado.webp'),
+  'stu-encorajador-m': require('../assets/marca/stu/stu-encorajador-m-animado.webp'),
+  'stu-surpreso-m': require('../assets/marca/stu/stu-surpreso-m-animado.webp'),
+  'stu-surpreso-g': require('../assets/marca/stu/stu-surpreso-g-animado.webp'),
+  'stu-tres-quartos-m': require('../assets/marca/stu/stu-tres-quartos-m-animado.webp'),
+  'stu-perfil-p': require('../assets/marca/stu/stu-perfil-p-animado.webp'),
+  'stu-estudando-m': require('../assets/marca/stu/stu-estudando-m-animado.webp'),
+  'stu-estudando-g': require('../assets/marca/stu/stu-estudando-g-animado.webp'),
+  'stu-celebrando-g': require('../assets/marca/stu/stu-celebrando-g-animado.webp'),
+};

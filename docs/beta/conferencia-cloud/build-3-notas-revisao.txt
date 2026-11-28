@@ -1,0 +1,12 @@
+Studoo is an educational app with an interface in Brazilian Portuguese.
+
+Review flow:
+1. Sign in with the dedicated password account supplied in Sign-In Information. "Experimentar sem conta" creates a temporary guest account with limited community access; it does not replace the reviewer account.
+2. In "Nova trilha", enter "SQL para iniciantes" and tap "Montar minha trilha". Accept the AI consent notice if shown, then wait for the proposal and tap "Começar a lição 1".
+3. Read the concept and example, answer the exercise and continue. Answer incorrectly to try "Ver outro jeito de entender". Return to the path to check saved progress.
+4. "Explorar" shows published paths. The "•••" menus provide "Denunciar" and "Bloquear". Profile > "Pessoas bloqueadas" allows unblocking.
+5. Profile > "Privacidade e dados" contains AI consent controls and "Excluir conta". Profile > "Ajuda" opens support.
+
+Study paths and lessons are generated server-side using DeepSeek. The app asks for permission before sending the learning request. The production service uses real AI, not the synthetic QA adapter.
+Privacy policy: https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io/privacidade
+Support: https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io/suporte

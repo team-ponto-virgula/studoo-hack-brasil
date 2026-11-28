@@ -1,0 +1,42 @@
+{
+  "expectedCommit": "0a96649e44c56feefa92a59daec950d4484756f0",
+  "exitCode": 0,
+  "before": {
+    "observedAt": "2026-11-24T20:18:29.384Z",
+    "head": "0a96649e44c56feefa92a59daec950d4484756f0",
+    "status": "",
+    "sourceHashes": {
+      "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+      "apps/mobile/src/abertura.tsx": "8b17bf67c51462d87d7b123487ec305451604303f550ef8458a0cfe59c9e0ed4",
+      "apps/mobile/src/movimento.ts": "066779e89f7872b79445505e0f441a60dcb8e3ffc28e88ce3ddd97e5dfd5fc59",
+      "packages/contratos/src/abertura-motion.json": "d0fbee62e79592155882cd49be46d3f940a9a636d1c29994cf8d9af6defc3dd7",
+      "packages/contratos/src/abertura.ts": "3932c63232b134f92cb9b463230b3afd75e80e40741353e25908e90823eda6c8",
+      "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+      "apps/mobile/eas.json": "369911c8721839716b49d50254e970a517c80d2d498887e48ee9ecbf09630dbb"
+    }
+  },
+  "after": {
+    "observedAt": "2026-11-24T20:18:50.032Z",
+    "head": "0a96649e44c56feefa92a59daec950d4484756f0",
+    "status": "",
+    "sourceHashes": {
+      "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+      "apps/mobile/src/abertura.tsx": "8b17bf67c51462d87d7b123487ec305451604303f550ef8458a0cfe59c9e0ed4",
+      "apps/mobile/src/movimento.ts": "066779e89f7872b79445505e0f441a60dcb8e3ffc28e88ce3ddd97e5dfd5fc59",
+      "packages/contratos/src/abertura-motion.json": "d0fbee62e79592155882cd49be46d3f940a9a636d1c29994cf8d9af6defc3dd7",
+      "packages/contratos/src/abertura.ts": "3932c63232b134f92cb9b463230b3afd75e80e40741353e25908e90823eda6c8",
+      "apps/mobile/app.json": "343496afc6064ef8450b3fab1dd4bf41cbc4c3783e34ea388d8a2286b945cbd4",
+      "apps/mobile/eas.json": "369911c8721839716b49d50254e970a517c80d2d498887e48ee9ecbf09630dbb"
+    }
+  },
+  "sourceStable": true,
+  "nativeExecuted": false,
+  "artifactCount": 168,
+  "hermesArtifacts": [
+    {
+      "path": "_expo/static/js/ios/entry-ea7fee53a4103140b249e4ea038fb0a7.hbc",
+      "bytes": 5988384,
+      "sha256": "1f56b0731d3c434b903398b0d9564ba5b25503425f812fb55d0ccbe5b9664bed"
+    }
+  ]
+}

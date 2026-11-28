@@ -1,0 +1,84 @@
+# Uma resposta errada e uma certa na primeira lição da trilha temporária da prova da criação (fluxo 90), para a linha do
+# tempo do som: o toque em "Verificar" (enviar-resposta), o retorno na tela, o comando do som do resultado no app (acerto
+# ou erro, que o app manda tocar quando a avaliação volta do servidor: é o instante da resposta confirmada) e o início que
+# o player relata. A saída no alto-falante não existe no CI. O fundo (o Lo-fi) segue por baixo: as amostras do reprodutor
+# dele dizem, na mesma linha do tempo, se ele continuou ao trocar de tela e no erro e no acerto, sem pausa, reinício nem
+# redução.
+# Roda logo depois do fluxo 90, que deixou o app no mapa da trilha nova, e antes de ela ser apagada; as trilhas do preparo
+# não são tocadas. As opções vêm de servidor/resposta-da-prova.mjs (RESPOSTA_ERRADA e RESPOSTA_CERTA), que as tira da
+# demonstração da IA simulada: o id de cada opção é o testID dela no app (opcao-<id>).
+appId: host.exp.Exponent
+name: 95-resposta-certa-e-errada
+---
+# Do mapa para a lição atual, a primeira, que continua de onde parou: o próprio nó ou o cartão "Próxima lição".
+- evalScript: ${output.abriuPeloNo = false}
+- runFlow:
+    when:
+      visible:
+        id: comecar-licao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: comecar-licao
+      - evalScript: ${output.abriuPeloNo = true}
+- runFlow:
+    when:
+      true: ${output.abriuPeloNo == false}
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "(Começar|Continuar): .*"
+- extendedWaitUntil:
+    visible: 'Etapa \d+ de \d+'
+    timeout: 30000
+# Pelo conceito e pelo exemplo até o primeiro exercício.
+- repeat:
+    while:
+      notVisible:
+        id: pergunta-exercicio
+    times: 10
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: ler-mais|avancar-licao
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: pergunta-exercicio
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 95-resposta-exercicio
+# A errada.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: opcao-${RESPOSTA_ERRADA}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: enviar-resposta
+- extendedWaitUntil:
+    visible:
+      id: tentar-de-novo
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 96-resposta-errada
+# A certa, na segunda tentativa.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: tentar-de-novo
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: opcao-${RESPOSTA_CERTA}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: enviar-resposta
+- extendedWaitUntil:
+    visible:
+      id: continuar-licao
+    timeout: 30000
+- assertNotVisible:
+    id: tentar-de-novo
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 97-resposta-certa

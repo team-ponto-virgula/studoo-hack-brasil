@@ -1,0 +1,780 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+/*
+ * Comunidade (spec 10, etapa B) na web: a capa gerada, o cartão de trilha (o mesmo no Explorar, no perfil e na
+ * prévia), a tela Explorar (no app e na página pública /explorar), o Valeu e o diálogo de Denunciar.
+ * Tudo só aparece com `comunidade` no /api/auth/config.
+ */
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import {
+  LIMITES_COMUNIDADE,
+  TEMAS,
+  ehCapaFoto,
+  marcacaoCapa,
+  type CartaoTrilha,
+  type PaginaExplorar,
+  type Tema,
+} from '@studoo/contratos';
+import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { mensagens, textoErro } from '../mensagens/pt-BR';
+import { Botao, Icone, Stu } from '../ui';
+import { Avatar, CHAVE_DEPOIS_DO_LOGIN, useAbrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
+import {
+  carregarPaginasOrigemExplorar,
+  encontrarLinkOrigemExplorar,
+  lerOrigemExplorar,
+  mesmaUrlExplorar,
+  normalizarPaginasOrigem,
+  paginaContemCodigoExplorar,
+  salvarOrigemExplorar,
+  urlDoExplorar,
+  type AbaExplorar,
+  type FiltroExplorarUrl,
+  type SecaoAlvoExplorar,
+  type TipoAlvoExplorar,
+} from './navegacao-web';
+import { tocaSons } from './sons';
+import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
+import { MenuPublicacao, useAtualizacaoComunidade } from './seguranca-comunidade';
+import './comunidade.css';
+
+const c = mensagens.comunidade;
+const temas = mensagens.temas;
+
+/** Leva ao login e volta para `caminho` depois (um link de trilha ou o Explorar). */
+function useEntrarEVoltar() {
+  const router = useRouter();
+  return (caminho: string) => {
+    guardar(CHAVE_DEPOIS_DO_LOGIN, caminho);
+    router.push('/login');
+  };
+}
+
+/** A capa: cor do tema e um padrão geométrico determinístico pelo código (sem imagem enviada, sem IA). */
+export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema | null; capa?: string | null }) {
+  // O SVG é gerado por uma função pura do contrato: só formas, com o código já restrito a [A-Za-z0-9_-].
+  return <span className="capa-trilha" aria-hidden="true" data-foto={ehCapaFoto(capa) || undefined} dangerouslySetInnerHTML={{ __html: marcacaoCapa({ codigo, tema, capa }) }} />;
+}
+
+export type AcoesCartao = {
+  /** Sem sessão, cada ação leva ao login (e volta). */
+  logado: boolean;
+  queroEstudar: (cartao: CartaoTrilha) => void;
+  abrir: (planoId: string) => void;
+  valeu: (cartao: CartaoTrilha) => void;
+  compartilhar: (cartao: CartaoTrilha) => void;
+  /** O código do cartão em andamento ("Adicionando…", valeu indo). */
+  ocupado: string | null;
+};
+
+type AlvoOrigemCartao = {
+  href: string;
+  codigo: string;
+  tipo: TipoAlvoExplorar;
+  secao: SecaoAlvoExplorar;
+};
+
+/**
+ * Cartão de trilha: capa (tema e, se for o caso, "Demonstração"), título (abre a prévia /t), quem fez (foto e nome,
+ * levam ao perfil), legenda, "6 lições · 3 partes", "12 estudando · 8 valeus" e as ações: Quero estudar / Continuar /
+ * Sua trilha, Valeu (liga e desliga), Compartilhar e "•••" com Denunciar.
+ */
+export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono = false, secao, aoAbrirOrigem }: {
+  cartao: CartaoTrilha;
+  acoes: AcoesCartao;
+  posicao?: number;
+  nivel?: 'h2' | 'h3';
+  semDono?: boolean;
+  secao?: SecaoAlvoExplorar;
+  aoAbrirOrigem?: (alvo: AlvoOrigemCartao) => void;
+}) {
+  const Titulo = nivel;
+  const tituloId = useId();
+  const sua = cartao.situacao === 'sua';
+  const ocupado = acoes.ocupado === cartao.codigo;
+  const registrarOrigem = (href: string, tipo: TipoAlvoExplorar) => {
+    if (aoAbrirOrigem && secao) {
+      aoAbrirOrigem({ href, codigo: cartao.codigo, tipo, secao });
+    } else if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      salvarOrigemExplorar(href, { codigo: cartao.codigo, tipo, secao });
+    }
+  };
+  const principal = sua
+    ? <Botao variante="secundario" onClick={() => cartao.planoId && acoes.abrir(cartao.planoId)}>{c.sua}</Botao>
+    : cartao.situacao === 'adicionada'
+      ? <Botao variante="secundario" onClick={() => cartao.planoId && acoes.abrir(cartao.planoId)}>{c.continuar}</Botao>
+      : <Botao disabled={ocupado} aria-busy={ocupado || undefined} onClick={() => acoes.queroEstudar(cartao)}>{ocupado ? c.adicionando : c.queroEstudar}</Botao>;
+  return (
+    <article className="cartao-trilha" aria-labelledby={tituloId} data-situacao={cartao.situacao}>
+      <div className="cartao-trilha__capa">
+        <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
+        {/* A capa leva só o selo do tema (no alto, à esquerda) e, no Em alta, a pílula pequena da posição ("1º", no alto, à direita: spec 16, itens 16 e 17). O "Exemplo" mora na linha de informações. */}
+        {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{c.posicaoSelo(posicao)}</span>}
+        {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
+      </div>
+      <div className="cartao-trilha__corpo">
+        {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
+        <Titulo id={tituloId} className="cartao-trilha__titulo">
+          <Link href={`/t/${cartao.codigo}`} data-origem-cartao={secao ? `${secao}:${cartao.codigo}:titulo` : undefined}
+            onClick={() => registrarOrigem(`/t/${cartao.codigo}`, 'titulo')}>
+            {cartao.titulo}
+          </Link>
+        </Titulo>
+        {!semDono && (
+          <p className="cartao-trilha__dono">
+            {cartao.dono.perfilId
+              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={`${c.por(cartao.dono.nome)}. ${c.perfilDe(cartao.dono.nome)}`}
+                data-origem-cartao={secao ? `${secao}:${cartao.codigo}:dono` : undefined}
+                onClick={() => { if (cartao.dono.perfilId) registrarOrigem(`/p/${cartao.dono.perfilId}`, 'dono'); }}>
+                <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
+                <span className="cartao-trilha__por">por </span><span className="cartao-trilha__nome">{cartao.dono.nome}</span>
+              </Link>
+              : <><Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} /><span>{c.por(cartao.dono.nome)}</span></>}
+          </p>
+        )}
+        {cartao.legenda && <p className="cartao-trilha__legenda">{cartao.legenda}</p>}
+        {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
+        <div className="cartao-trilha__rodape">
+          <p className="cartao-trilha__meta">
+            {c.contagem(cartao.totalLicoes, cartao.totalPartes)}
+            {cartao.demonstracao && (
+              // "6 lições · 3 partes · Exemplo": o selo neutro na tela e, para o leitor de tela, o nome inteiro (a palavra solta fica escondida dele, para não repetir).
+              <> <span aria-hidden="true">·</span>{' '}<span className="cartao-trilha__demo"><span aria-hidden="true">{c.demonstracao}</span><span className="somente-leitor">{c.demonstracaoRotulo}</span></span></>
+            )}
+          </p>
+          {cartao.estudando === 0 && cartao.valeus === 0
+            ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
+            // A contagem de valeus mora no próprio botão (na trilha própria, que não tem o botão, fica aqui).
+            : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
+        </div>
+        <div className="cartao-trilha__acoes" data-sua={sua || undefined}>
+          {principal}
+          {!sua && (
+            // Coração, "Valeu" e a contagem; marcado, o coração enche (com um pulo curto) e tocar de novo retira.
+            // O nome começa pelo que se vê ("Curtir 5"): sem contagem, o rótulo de sempre; com ela, "Curtir 5 curtidas: “Título”" (o nome contém o texto visível, WCAG 2.5.3).
+            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)}
+              aria-label={cartao.valeus > 0 ? `${c.valeu} ${c.valeus(cartao.valeus)}: “${cartao.titulo}”` : cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}
+              disabled={ocupado} onClick={() => acoes.valeu(cartao)}>
+              <Icone nome="valeu" /><span aria-hidden="true">{c.valeu}</span>
+              {cartao.valeus > 0 && <>{' '}<span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span></>}
+            </button>
+          )}
+          {sua
+            // Na própria trilha, o compartilhar ocupa a linha, com o ícone e a palavra.
+            ? <Botao variante="secundario" className="cartao-trilha__compartilhar" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" />{c.compartilhar}</Botao>
+            : <button type="button" className="cartao-trilha__icone" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" /></button>}
+          {!sua && <MenuPublicacao tipo="trilha" alvo={cartao.codigo} nome={cartao.dono.nome} titulo={cartao.titulo} logado={acoes.logado} />}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/**
+ * As ações dos cartões (Quero estudar, Valeu, Compartilhar, Denunciar) com o estado da lista: um só lugar para o
+ * Explorar e o perfil. `aoAdicionado` decide o que fazer depois (no app abre a trilha; na página pública vai ao app).
+ */
+export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, anunciar }: {
+  logado: boolean;
+  setCartoes: (mudar: (cartao: CartaoTrilha) => CartaoTrilha) => void;
+  aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
+  aoAbrir: (planoId: string) => void;
+  anunciar: (texto: string) => void;
+}) {
+  const entrarEVoltar = useEntrarEVoltar();
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [aviso, avisar] = useAvisoDoApp();
+  const acoes: AcoesCartao = {
+    logado,
+    ocupado,
+    abrir: aoAbrir,
+    async queroEstudar(cartao) {
+      if (!logado) return entrarEVoltar(`/t/${cartao.codigo}?adicionar=1`);
+      setOcupado(cartao.codigo);
+      try {
+        const feito = await cliente.adicionarTrilha(cartao.codigo);
+        setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, situacao: 'adicionada', planoId: feito.planoId, estudando: atual.estudando + (feito.jaTinha ? 0 : 1) } : atual));
+        aoAdicionado(feito.planoId, feito.dono.nome, feito.jaTinha);
+      } catch (falha) {
+        const codigo = codigoDoErro(falha);
+        if (codigo === 'nao_autenticado') return entrarEVoltar(`/t/${cartao.codigo}?adicionar=1`);
+        anunciar(textoErro(codigo));
+      } finally {
+        setOcupado(null);
+      }
+    },
+    async valeu(cartao) {
+      if (!logado) return entrarEVoltar('/explorar');
+      const ativo = !cartao.valeuMeu;
+      if (ativo) void tocaSons.tocarEfeito('valeu');
+      // Otimista: muda na hora e desfaz se falhar.
+      setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: ativo, valeus: Math.max(0, atual.valeus + (ativo ? 1 : -1)) } : atual));
+      try {
+        const r = await cliente.valeu(cartao.codigo, ativo);
+        setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
+        // Toda vez, o aviso do próprio app (com papel de status: o leitor de tela também ouve).
+        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso, null);
+      } catch (falha) {
+        setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
+        const codigo = codigoDoErro(falha);
+        if (codigo === 'nao_autenticado') return entrarEVoltar('/explorar');
+        anunciar(textoErro(codigo));
+      }
+    },
+    async compartilhar(cartao) {
+      const url = urlDoLink(cartao.codigo);
+      if (typeof navigator.share === 'function') {
+        try { await navigator.share({ title: cartao.titulo, text: mensagens.compartilhar.textoCompartilhar(cartao.titulo), url }); } catch { /* fechou */ }
+        return;
+      }
+      try { await navigator.clipboard.writeText(url); void tocaSons.tocarEfeito('link_copiado'); anunciar(c.linkCopiado); } catch { anunciar(mensagens.compartilhar.copiarFalhou); }
+    },
+  };
+  return { acoes, dialogo: aviso };
+}
+
+/**
+ * Fileira rolável (Em alta e fichas de tema): diz se rola, se está no começo ou no fim (para o esmaecimento nas bordas e
+ * as setas desligadas) e rola por "páginas".
+ */
+function useFileira<T extends HTMLElement>(dependencia: unknown) {
+  const ref = useRef<T>(null);
+  const [estado, setEstado] = useState({ rola: false, inicio: true, fim: true });
+  const medir = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rola = el.scrollWidth > el.clientWidth + 2;
+    setEstado({ rola, inicio: el.scrollLeft <= 2, fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    el.addEventListener('scroll', medir, { passive: true });
+    return () => { observador.disconnect(); el.removeEventListener('scroll', medir); };
+  }, [medir, dependencia]);
+  function rolar(direcao: 1 | -1) {
+    const el = ref.current;
+    if (!el) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({ left: direcao * el.clientWidth * 0.85, behavior: reduzido ? 'auto' : 'smooth' });
+  }
+  return { ref, ...estado, rolar };
+}
+
+/** As setas de uma fileira (só com ponteiro fino): a da esquerda desligada no começo, a da direita no fim. */
+function Setas({ fileira, rotulo }: { fileira: { rola: boolean; inicio: boolean; fim: boolean; rolar: (d: 1 | -1) => void }; rotulo?: string }) {
+  return (
+    <div className="fileira__setas" hidden={!fileira.rola} role={rotulo ? 'group' : undefined} aria-label={rotulo}>
+      <button type="button" className="cartao-trilha__icone" aria-label={c.anteriores} disabled={fileira.inicio} onClick={() => fileira.rolar(-1)}><Icone nome="setaVoltar" /></button>
+      <button type="button" className="cartao-trilha__icone" aria-label={c.proximas} disabled={fileira.fim} onClick={() => fileira.rolar(1)}><Icone nome="seta" /></button>
+    </div>
+  );
+}
+
+/**
+ * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha em 4,5 s.
+ * Tem papel de status, então o leitor de tela também anuncia.
+ */
+export function useAvisoDoApp(): [ReactNode, (texto: string, som?: IdEfeitoSonoro | null) => void] {
+  const [texto, setTexto] = useState('');
+  const [vez, setVez] = useState(0);
+  useEffect(() => {
+    if (!texto) return;
+    const relogio = window.setTimeout(() => setTexto(''), 4500);
+    return () => window.clearTimeout(relogio);
+  }, [texto, vez]);
+  /** `som`: o efeito do aviso (`aviso`, sem dizer nada); `null` quando o gesto já tocou o seu (como o curtir). */
+  const avisar = useCallback((novo: string, som: IdEfeitoSonoro | null = 'aviso') => {
+    if (som) void tocaSons.tocarEfeito(som);
+    setTexto(novo);
+    setVez((n) => n + 1);
+  }, []);
+  const elemento = (
+    <div className="aviso-app" role="status" aria-live="polite" data-visivel={texto ? true : undefined}>
+      {texto && <p key={vez}>{texto}</p>}
+    </div>
+  );
+  return [elemento, avisar];
+}
+
+/** Lista horizontal do "Em alta": numeral grande no canto da capa, com encaixe ao rolar e setas (com ponteiro fino). */
+function EmAlta({ cartoes, acoes, titulo, aoAbrirOrigem }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string; aoAbrirOrigem?: (alvo: AlvoOrigemCartao) => void }) {
+  const fileira = useFileira<HTMLOListElement>(cartoes.length);
+  const tituloId = useId();
+  return (
+    <section className="em-alta" aria-labelledby={tituloId}>
+      <div className="em-alta__topo">
+        <div>
+          <h2 id={tituloId} className="explorar__secao">{titulo}</h2>
+          <p className="campo-dica">{c.emAltaDica}</p>
+        </div>
+        <Setas fileira={fileira} />
+      </div>
+      <ol className="em-alta__lista fileira" ref={fileira.ref} data-poucas={cartoes.length < 3 || undefined}
+        data-rola={fileira.rola || undefined} data-inicio={fileira.inicio || undefined} data-fim={fileira.fim || undefined}>
+        {cartoes.map((cartao, indice) => (
+          <li key={cartao.codigo} className="em-alta__item">
+            <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} secao="em-alta" aoAbrirOrigem={aoAbrirOrigem} />
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/**
+ * Tela Explorar: título, "Em alta esta semana" (Top 10), fichas de tema, "Novas" (20 por página, "Ver mais"), vazios
+ * com o Stu. Igual no app e na página pública /explorar (ver não pede conta; agir pede).
+ */
+export function Explorar({
+  logado,
+  visitante = false,
+  inicial = null,
+  temaInicial = null,
+  abaInicial = 'todos',
+  buscaInicial = '',
+  aoMudarFiltro,
+  aoSair,
+  aoAdicionado,
+  aoAbrir,
+  irParaTrilhas,
+  topo,
+}: {
+  logado: boolean;
+  visitante?: boolean;
+  inicial?: PaginaExplorar | null;
+  temaInicial?: Tema | null;
+  abaInicial?: AbaExplorar;
+  buscaInicial?: string;
+  aoMudarFiltro?: (filtro: FiltroExplorarUrl) => void;
+  aoSair?: () => void;
+  aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
+  aoAbrir: (planoId: string) => void;
+  irParaTrilhas?: () => void;
+  /** Conteúdo acima do título (na página pública, o convite para entrar). */
+  topo?: ReactNode;
+}) {
+  const [tema, setTema] = useState<Tema | null>(temaInicial);
+  // Aba "Seguindo" (etapa C2, só com sessão): as trilhas de quem a pessoa segue, mais novas primeiro.
+  const [aba, setAba] = useState<AbaExplorar>(abaInicial);
+  const [buscaTexto, setBuscaTexto] = useState(buscaInicial);
+  const [buscaAtiva, setBuscaAtiva] = useState(buscaInicial.trim().slice(0, 80));
+  const [pagina, setPagina] = useState<PaginaExplorar | null>(inicial);
+  const [carregando, setCarregando] = useState(!inicial && !(visitante && abaInicial === 'seguindo'));
+  const [maisCarregando, setMaisCarregando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [anuncio, setAnuncio] = useState('');
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const { versao, confirmarLeitura } = useAtualizacaoComunidade();
+  const primeira = useRef(Boolean(inicial));
+  const inicialRef = useRef(inicial);
+  const filtroSincronizado = useRef(false);
+  const consultaAtual = useRef(0);
+  const restauracaoPronta = useRef(false);
+  const paginasCarregadas = useRef(1);
+  paginasCarregadas.current = Math.max(1, Math.ceil((pagina?.novas.length ?? 0) / LIMITES_COMUNIDADE.porPagina));
+  const anunciar = (texto: string) => setAnuncio((anterior) => (anterior === texto ? `${texto} ` : texto));
+  const aoAbrirOrigem = useCallback((alvo: AlvoOrigemCartao) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      salvarOrigemExplorar(alvo.href, {
+        codigo: alvo.codigo,
+        tipo: alvo.tipo,
+        secao: alvo.secao,
+        paginas: Math.max(1, paginasCarregadas.current),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    setTema(temaInicial);
+  }, [temaInicial]);
+  useEffect(() => {
+    setAba(abaInicial);
+  }, [abaInicial]);
+  useEffect(() => {
+    setBuscaTexto(buscaInicial);
+    setBuscaAtiva(buscaInicial.trim().slice(0, 80));
+  }, [buscaInicial]);
+
+  useEffect(() => {
+    const limpa = buscaTexto.trim().slice(0, 80);
+    if (limpa === buscaAtiva) return;
+    const relogio = window.setTimeout(() => setBuscaAtiva(limpa), 250);
+    return () => window.clearTimeout(relogio);
+  }, [buscaTexto, buscaAtiva]);
+
+  useEffect(() => {
+    if (!filtroSincronizado.current) {
+      filtroSincronizado.current = true;
+      return;
+    }
+    const filtro: FiltroExplorarUrl = { aba, tema, busca: buscaAtiva };
+    if (aoMudarFiltro) {
+      aoMudarFiltro(filtro);
+    } else if (typeof window !== 'undefined' && window.location.pathname === '/explorar') {
+      const proxima = urlDoExplorar(filtro);
+      if (`${window.location.pathname}${window.location.search}` !== proxima) {
+        window.history.replaceState(window.history.state, '', proxima);
+      }
+    }
+  }, [aba, tema, buscaAtiva, aoMudarFiltro]);
+
+  useEffect(() => {
+    const origem = lerOrigemExplorar(false);
+    const urlAtual = typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '';
+    if (!origem || !mesmaUrlExplorar(origem.url, urlAtual)) titulo.current?.focus({ preventScroll: true });
+  }, []);
+
+  const seguindoVisitante = visitante && aba === 'seguindo';
+
+  useEffect(() => {
+    const geracao = ++consultaAtual.current;
+    restauracaoPronta.current = false;
+    setMaisCarregando(false);
+    if (seguindoVisitante) {
+      paginasCarregadas.current = 0;
+      setCarregando(false);
+      setErro(null);
+      setPagina(null);
+      return;
+    }
+    const urlFiltro = urlDoExplorar({ aba, tema, busca: buscaAtiva });
+    const origemPendente = lerOrigemExplorar(false);
+    const restaurandoOrigem = Boolean(origemPendente && mesmaUrlExplorar(origemPendente.url, urlFiltro));
+    const paginasAlvo = restaurandoOrigem ? normalizarPaginasOrigem(origemPendente?.paginas) : 1;
+
+    let reutilizarInicial = false;
+    if (primeira.current) {
+      primeira.current = false;
+      if (!versao) {
+        const precisaMaisNoInicial = Boolean(
+          restaurandoOrigem &&
+          origemPendente &&
+          inicialRef.current?.cursor &&
+          (paginasAlvo > 1 || (origemPendente.alvoCodigo && !paginaContemCodigoExplorar(inicialRef.current, origemPendente.alvoCodigo))),
+        );
+        if (!precisaMaisNoInicial) {
+          restauracaoPronta.current = true;
+          return;
+        }
+        reutilizarInicial = Boolean(inicialRef.current);
+      }
+    }
+
+    let ativo = true;
+    setCarregando(true);
+    if (!reutilizarInicial) setPagina(null);
+    setErro(null);
+
+    (async () => {
+      try {
+        const primeiraPagina: PaginaExplorar = reutilizarInicial && inicialRef.current
+          ? inicialRef.current
+          : await cliente.explorar({ tema, seguindo: aba === 'seguindo', busca: buscaAtiva || undefined });
+        if (!ativo || geracao !== consultaAtual.current) return;
+        const acumulada = restaurandoOrigem && origemPendente
+          ? await carregarPaginasOrigemExplorar({
+              inicial: primeiraPagina,
+              origem: origemPendente,
+              buscarProxima: (cursor) => cliente.explorar({
+                tema,
+                cursor,
+                seguindo: aba === 'seguindo',
+                busca: buscaAtiva || undefined,
+              }),
+              ativo: () => ativo && geracao === consultaAtual.current,
+            })
+          : primeiraPagina;
+        if (acumulada && ativo && geracao === consultaAtual.current) {
+          restauracaoPronta.current = true;
+          setPagina(acumulada);
+        }
+      } catch (falha) {
+        if (ativo && geracao === consultaAtual.current) setErro(textoErro(codigoDoErro(falha)));
+      } finally {
+        if (ativo && geracao === consultaAtual.current) {
+          setCarregando(false);
+          confirmarLeitura(versao);
+        }
+      }
+    })();
+
+    return () => {
+      ativo = false;
+      if (consultaAtual.current === geracao) consultaAtual.current += 1;
+    };
+  }, [tema, aba, buscaAtiva, versao, confirmarLeitura, seguindoVisitante]);
+
+  useEffect(() => {
+    if (carregando || !pagina) return;
+    const origem = lerOrigemExplorar(false);
+    const urlFiltro = urlDoExplorar({ aba, tema, busca: buscaAtiva });
+    if (!origem || !mesmaUrlExplorar(origem.url, urlFiltro)) return;
+    const paginasDesejadas = normalizarPaginasOrigem(origem.paginas);
+    const faltaPagina = paginasDesejadas > 1 && paginasCarregadas.current < paginasDesejadas;
+    const faltaAlvo = Boolean(origem.alvoCodigo && !paginaContemCodigoExplorar(pagina, origem.alvoCodigo));
+    if ((faltaPagina || faltaAlvo) && pagina.cursor && !restauracaoPronta.current) return;
+    lerOrigemExplorar(true);
+    const aplicar = () => {
+      window.scrollTo(0, origem.scrollY);
+      const links = document.querySelectorAll<HTMLAnchorElement>('.painel--explorar a[href]');
+      const alvo = encontrarLinkOrigemExplorar(links, origem);
+      if (alvo) {
+        const caixa = alvo.getBoundingClientRect();
+        if (caixa.bottom <= 0 || caixa.top >= window.innerHeight) {
+          alvo.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+        alvo.focus({ preventScroll: true });
+      }
+    };
+    aplicar();
+    const timer = window.setTimeout(aplicar, 0);
+    const quadro = window.requestAnimationFrame(aplicar);
+    return () => {
+      window.clearTimeout(timer);
+      window.cancelAnimationFrame(quadro);
+    };
+  }, [carregando, pagina, aba, tema, buscaAtiva]);
+
+  async function verMais() {
+    if (!pagina?.cursor || maisCarregando) return;
+    const geracao = consultaAtual.current;
+    const cursorUsado = pagina.cursor;
+    setMaisCarregando(true);
+    try {
+      const proxima = await cliente.explorar({ tema, cursor: cursorUsado, seguindo: aba === 'seguindo', busca: buscaAtiva || undefined });
+      if (geracao !== consultaAtual.current) return;
+      setPagina((atual) => {
+        if (!atual || atual.cursor !== cursorUsado) return atual;
+        const vistos = new Set(atual.novas.map((item) => item.codigo));
+        return {
+          ...atual,
+          novas: [...atual.novas, ...proxima.novas.filter((item) => !vistos.has(item.codigo))],
+          cursor: proxima.cursor,
+        };
+      });
+    } catch (falha) {
+      if (geracao === consultaAtual.current) anunciar(textoErro(codigoDoErro(falha)));
+    } finally {
+      if (geracao === consultaAtual.current) setMaisCarregando(false);
+    }
+  }
+
+  const setCartoes = (mudar: (cartao: CartaoTrilha) => CartaoTrilha) =>
+    setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.map(mudar), novas: atual.novas.map(mudar) });
+  const { acoes, dialogo } = useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, anunciar });
+  const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
+  const fichas = useFileira<HTMLDivElement>(logado);
+  // Na aba Seguindo sem ninguém seguido (ou visitante), as fichas de tema não têm o que filtrar.
+  const semFichas = seguindoVisitante || (aba === 'seguindo' && pagina?.seguindoAlguem === false);
+
+  // Evita cartão duplicado quando um tema tem só 1 trilha ou já aparece no "Em alta" daquele tema.
+  const emAltaRaw = pagina?.emAlta ?? [];
+  const novasRaw = pagina?.novas ?? [];
+  const unicoIgual = emAltaRaw.length === 1 && novasRaw.length === 1 && emAltaRaw[0].codigo === novasRaw[0].codigo && !pagina?.cursor;
+  const emAltaVisiveis = unicoIgual ? [] : emAltaRaw;
+  const codigosEmAlta = tema && emAltaVisiveis.length > 0 ? new Set(emAltaVisiveis.map((item) => item.codigo)) : null;
+  const novasVisiveis = codigosEmAlta ? novasRaw.filter((item) => !codigosEmAlta.has(item.codigo)) : novasRaw;
+
+  return (
+    <section className="painel painel--explorar" aria-busy={carregando || undefined}>
+      <p className="somente-leitor" role="status" aria-live="polite">{anuncio}</p>
+      {topo}
+      <header className="explorar__topo">
+        <h1 ref={titulo} tabIndex={-1}>{c.titulo}</h1>
+        <p className="explorar__subtitulo">{c.subtitulo}</p>
+      </header>
+
+      {logado && (
+        <div className="explorar__abas" role="group" aria-label={c.abasRotulo}>
+          <button type="button" className="explorar__aba" aria-pressed={aba === 'todos'} onClick={() => setAba('todos')}>{c.abaTodos}</button>
+          <button type="button" className="explorar__aba" aria-pressed={aba === 'seguindo'} onClick={() => setAba('seguindo')}><Icone nome="pessoa" />{c.abaSeguindo}</button>
+        </div>
+      )}
+
+      {!semFichas && (
+        <form className="explorar__busca" role="search" onSubmit={(evento) => { evento.preventDefault(); setBuscaAtiva(buscaTexto.trim().slice(0, 80)); }}>
+          <label htmlFor="explorar-busca" className="somente-leitor">{c.buscaRotulo}</label>
+          <input id="explorar-busca" type="search" value={buscaTexto} maxLength={80} placeholder={c.buscaPlaceholder}
+            onChange={(evento) => setBuscaTexto(evento.target.value)} />
+          {buscaTexto && (
+            <button type="button" className="explorar__busca-limpar" aria-label={c.buscaLimpar}
+              onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>
+              ×
+            </button>
+          )}
+        </form>
+      )}
+
+      {!semFichas && (
+        <div className="explorar__fichas">
+          {/* Uma linha só, rolável, com esmaecimento na borda que ainda tem fichas e as mesmas setas do Em alta. */}
+          <div className="explorar__temas fileira" role="group" aria-label={c.temas} ref={fichas.ref}
+            data-rola={fichas.rola || undefined} data-inicio={fichas.inicio || undefined} data-fim={fichas.fim || undefined}>
+            <button type="button" className="ficha-tema" aria-pressed={tema === null} onClick={() => setTema(null)}>{c.todos}</button>
+            {TEMAS.map((opcao) => (
+              <button key={opcao} type="button" className="ficha-tema" aria-pressed={tema === opcao} onClick={() => setTema(opcao)}>{temas[opcao]}</button>
+            ))}
+          </div>
+          <Setas fileira={fichas} />
+        </div>
+      )}
+
+      {erro && <p className="campo-erro" role="alert">{erro}</p>}
+      {carregando && !pagina && <div className="explorar__esqueleto" aria-hidden="true"><span /><span /><span /></div>}
+
+      {seguindoVisitante && (
+        <div className="explorar__vazio">
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
+          <div>
+            <h2 className="explorar__secao">{c.seguindoVisitanteTitulo}</h2>
+            <p className="folha-texto">{c.seguindoVisitanteTexto}</p>
+            <div className="explorar__vazio-acoes">
+              <Botao variante="primario" onClick={() => { setTema(null); setAba('todos'); }}>{c.voltarComunidade}</Botao>
+              {aoSair && <Botao variante="secundario" onClick={aoSair}>{c.entrarOuCriar}</Botao>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!seguindoVisitante && pagina && vazio && aba === 'seguindo' && (
+        <div className="explorar__vazio">
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
+          <div>
+            <h2 className="explorar__secao">{buscaAtiva ? c.buscaVazio(buscaAtiva) : pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo}</h2>
+            {!buscaAtiva && !pagina.seguindoAlguem && <p className="folha-texto">{c.vazioSeguindoTexto}</p>}
+            {buscaAtiva
+              ? <Botao variante="secundario" onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>{c.buscaLimpar}</Botao>
+              : <Botao variante="secundario" onClick={() => { setTema(null); setAba('todos'); }}>{c.vazioSeguindoAcao}</Botao>}
+          </div>
+        </div>
+      )}
+      {!seguindoVisitante && pagina && vazio && aba === 'todos' && (
+        <div className="explorar__vazio">
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
+          <div>
+            <h2 className="explorar__secao">{buscaAtiva ? c.buscaVazio(buscaAtiva) : tema ? c.vazioTema(temas[tema]) : c.vazioTitulo}</h2>
+            <p className="folha-texto">{buscaAtiva || tema ? c.vazioTemaTexto : c.vazioTexto}</p>
+            {buscaAtiva
+              ? <Botao variante="secundario" onClick={() => { setBuscaTexto(''); setBuscaAtiva(''); }}>{c.buscaLimpar}</Botao>
+              : tema
+                ? <Botao variante="secundario" onClick={() => setTema(null)}>{c.vazioTemaAcao}</Botao>
+                : logado && irParaTrilhas && <Botao onClick={irParaTrilhas}>{c.vazioAcao}</Botao>}
+          </div>
+        </div>
+      )}
+
+      {!seguindoVisitante && pagina && emAltaVisiveis.length > 0 && <EmAlta cartoes={emAltaVisiveis} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} aoAbrirOrigem={aoAbrirOrigem} />}
+
+      {!seguindoVisitante && pagina && novasVisiveis.length > 0 && (
+        <section className="explorar__novas" aria-labelledby="explorar-novas">
+          <h2 id="explorar-novas" className="explorar__secao">{buscaAtiva ? c.buscaResultados(novasVisiveis.length, buscaAtiva) : aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</h2>
+          <ul className="grade-cartoes">
+            {novasVisiveis.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} secao="novas" aoAbrirOrigem={aoAbrirOrigem} /></li>)}
+          </ul>
+          {pagina.cursor
+            ? <Botao variante="secundario" className="explorar__mais" disabled={maisCarregando} aria-busy={maisCarregando || undefined} onClick={() => void verMais()}>{maisCarregando ? c.carregando : c.carregarMais}</Botao>
+            : novasVisiveis.length >= LIMITES_COMUNIDADE.porPagina && <p className="campo-dica">{c.fim}</p>}
+        </section>
+      )}
+      {dialogo}
+    </section>
+  );
+}
+
+/** Na página pública sem conta: o convite para entrar (ver não pede conta; agir pede). */
+export function ConviteEntrar() {
+  const entrarEVoltar = useEntrarEVoltar();
+  return (
+    <div className="explorar__convite">
+      <p>{c.entrarParaAgir}</p>
+      <Botao onClick={() => entrarEVoltar('/explorar')}>{c.entrar}</Botao>
+    </div>
+  );
+}
+
+/** Grade de cartões do perfil público (/p e a prévia da dona), com as mesmas ações do Explorar. */
+export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo, classeTitulo = 'perfil-publico__titulo', semDono = false }: {
+  /** Na página da própria pessoa, o "por …" do cartão repete o cabeçalho: sai. */
+  semDono?: boolean;
+  classeTitulo?: string;
+  inicial: CartaoTrilha[];
+  logado: boolean;
+  aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
+  aoAbrir: (planoId: string) => void;
+  titulo: string;
+}) {
+  const [cartoes, setLista] = useState(inicial);
+  const [anuncio, setAnuncio] = useState('');
+  const anunciar = (texto: string) => setAnuncio((anterior) => (anterior === texto ? `${texto} ` : texto));
+  const { acoes, dialogo } = useAcoesDeCartao({
+    logado, aoAdicionado, aoAbrir, anunciar,
+    setCartoes: (mudar) => setLista((atual) => atual.map(mudar)),
+  });
+  return (
+    <section className="perfil-cartoes" aria-labelledby="perfil-cartoes-titulo">
+      <p className="somente-leitor" role="status" aria-live="polite">{anuncio}</p>
+      <h2 id="perfil-cartoes-titulo" className={classeTitulo}>{titulo}</h2>
+      <ul className="grade-cartoes">
+        {cartoes.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} semDono={semDono} /></li>)}
+      </ul>
+      {dialogo}
+    </section>
+  );
+}
+
+/** /p/<id>: os cartões com as ações; sem o app aberto, adicionar e abrir levam ao app. */
+export function CartoesPublicos({ inicial, logado, titulo }: { inicial: CartaoTrilha[]; logado: boolean; titulo: string }) {
+  const abrirNoApp = useAbrirNoApp();
+  return (
+    <CartoesDoPerfil inicial={inicial} logado={logado} titulo={titulo} semDono
+      aoAbrir={(planoId) => abrirNoApp(planoId)}
+      aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))} />
+  );
+}
+
+/** /explorar: o mesmo Explorar do app, com o convite para entrar quando não há sessão. */
+export function ExplorarPublico({ inicial, logado, filtroInicial }: { inicial: PaginaExplorar | null; logado: boolean; filtroInicial?: FiltroExplorarUrl }) {
+  const abrirNoApp = useAbrirNoApp();
+  const router = useRouter();
+  return (
+    <Explorar logado={logado} inicial={inicial}
+      temaInicial={filtroInicial?.tema ?? null} abaInicial={filtroInicial?.aba ?? 'todos'} buscaInicial={filtroInicial?.busca ?? ''}
+      topo={logado ? undefined : <ConviteEntrar />}
+      aoAbrir={(planoId) => abrirNoApp(planoId)}
+      aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))}
+      irParaTrilhas={() => router.push('/')} />
+  );
+}
+
+/**
+ * "← Voltar" no topo do /p e do /t para quem está com a conta aberta: volta para de onde a pessoa veio (dentro do
+ * Studoo); sem histórico, vai para o Explorar (ou para o início, sem a comunidade).
+ */
+export function VoltarDaPagina({ destino }: { destino: string }) {
+  const router = useRouter();
+  function voltar() {
+    const origemExplorar = destino === '/explorar' ? lerOrigemExplorar(false) : null;
+    const entrada = performance.getEntriesByType('navigation')[0]?.name;
+    const veioDoStudoo = window.history.length > 1 && ((entrada && new URL(entrada).pathname !== location.pathname)
+      || (document.referrer && new URL(document.referrer).origin === location.origin));
+    if (veioDoStudoo) {
+      window.history.back();
+    } else if (origemExplorar) {
+      router.push(origemExplorar.url);
+    } else {
+      router.push(destino);
+    }
+  }
+  return (
+    <Botao variante="texto" className="voltar-pagina" onClick={voltar}>
+      <Icone nome="setaVoltar" />{mensagens.compartilhar.voltar}
+    </Botao>
+  );
+}

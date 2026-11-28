@@ -1,0 +1,37 @@
+# Abre o projeto no Expo Go, pelo Metro da própria máquina, e espera a entrada do Studoo.
+# No Expo Go não vale `launchApp`: o app do projeto roda dentro dele e abre por link (documentação do Maestro).
+appId: host.exp.Exponent
+---
+- stopApp
+- openLink: exp://127.0.0.1:8081
+# Na primeira vez de um simulador, o iOS pergunta se o link abre no Expo Go. A resposta vale para sempre nesse simulador.
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 12000
+    optional: true
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+# O primeiro carregamento baixa o pacote do Metro e as fontes: até 4 minutos para o app, ou o menu do Expo Go, aparecer.
+# O menu, se vier, é tratado antes de esperar a entrada.
+- runFlow:
+    file: sair-do-menu-do-expo-go.yaml
+    env:
+      ESPERA: "240000"
+# Fechado o menu, o app já está carregado por trás dele: a espera é curta. O `evalScript` zera a conta do Maestro antes
+# dela (ver reabrir.yaml): sem ele, os 30 s seriam o que sobrou depois da espera longa acima.
+- evalScript: ${output.esperaDaEntrada = true}
+- extendedWaitUntil:
+    visible:
+      id: titulo-entrada
+    timeout: 30000
+# Se o botão flutuante do Expo Go (a engrenagem azul, id "gearshape.fill") ficou sobre o app, ele sai em todas as
+# capturas: fica registrado numa imagem à parte, e o passo de coleta avisa no sumário.
+- runFlow:
+    when:
+      visible:
+        id: gearshape.fill
+    commands:
+      - takeScreenshot: aviso-botao-do-expo-go

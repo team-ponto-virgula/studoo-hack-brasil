@@ -1,0 +1,20 @@
+{
+  "scope": "Autoria R7 anterior à revisão independente f0c9b7f;216cenários/717verificações consolidadas com3 expectativas de harness retestadas, sem soma dupla. Não é aprovação por autor.",
+  "files": [
+    {
+      "file": "resultado.json",
+      "sha256": "b6cae8b9fb5fb6ec98eb097fe919e3bf14e17c506480dc87611c36a9398339c0",
+      "original": "/workspace/work/compartilhar-r7-author/resultado.json"
+    },
+    {
+      "file": "resultado-inicial.json",
+      "sha256": "4d8fc359c0c9ec3945a937ebad5bf78d1265290e3c580fdef2e789df7d4fe171",
+      "original": "/workspace/work/compartilhar-r7-author/resultado-inicial.json"
+    },
+    {
+      "file": "resultado-cancel-render.json",
+      "sha256": "0441bf89f91d7c740193a7e3f92d9d2fc20333bcecf4fe6efcdff1a76e3f8851",
+      "original": "/workspace/work/compartilhar-r7-author/resultado-cancel-render.json"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "fluxo": "F01",
+  "candidata": "048ae11",
+  "estado": "provisorio",
+  "metodo": "../../METODO-AVALIACAO.md",
+  "tipo": "revisao_especializada_interna",
+  "validacaoComPessoas": false,
+  "notaGlobal": null,
+  "motivo": "C10 aplicável ainda sem evidência completa; chegada normal no app e execução nativa pendentes. Não normalizar lacunas para obter 9,5.",
+  "criterios": [
+    {
+      "id": "C1",
+      "nome": "Clareza",
+      "peso": 12,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C2",
+      "nome": "Autonomia",
+      "peso": 12,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C3",
+      "nome": "Hierarquia/adaptação",
+      "peso": 12,
+      "web": 9.5,
+      "app_previa_web": 9.5,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C4",
+      "nome": "Identidade/acabamento",
+      "peso": 8,
+      "web": 9.5,
+      "app_previa_web": 9.5,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C5",
+      "nome": "Movimento/som",
+      "peso": 10,
+      "web": 9.5,
+      "app_previa_web": 9.5,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C6",
+      "nome": "Acessibilidade/foco",
+      "peso": 14,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C7",
+      "nome": "Resposta/espera",
+      "peso": 10,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C8",
+      "nome": "Erros/recuperação",
+      "peso": 10,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C9",
+      "nome": "Continuidade",
+      "peso": 6,
+      "web": 9.5,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    },
+    {
+      "id": "C10",
+      "nome": "Paridade/integração",
+      "peso": 6,
+      "web": null,
+      "app_previa_web": null,
+      "ios_nativo": null,
+      "android_nativo": null
+    }
+  ],
+  "coberturaPeso": {
+    "web": 94,
+    "app_previa_web": 30,
+    "ios_nativo": 0,
+    "android_nativo": 0
+  },
+  "gates": {
+    "web": {
+      "G1": "aprovado_no_escopo",
+      "G2": "aprovado_no_escopo",
+      "G3": "aprovado_no_escopo",
+      "G4": "aprovado_teclado_ax_chrome",
+      "G5": "aprovado_no_escopo",
+      "G6": "pendente_equivalencia_caminho_normal_app"
+    },
+    "app_previa_web": {
+      "G1": "pendente_destino_normal",
+      "G2": "aprovado_no_escopo_da_previa",
+      "G3": "aprovado_no_escopo_da_previa",
+      "G4": "parcial_ax_teclado",
+      "G5": "parcial_dispensas",
+      "G6": "parcial_geometria_movimento"
+    },
+    "ios_nativo": "pendente",
+    "android_nativo": "pendente"
+  },
+  "pareceres": [
+    "../../PARECER-VISUAL-INTRO.md",
+    "../../PARECER-FLUXO-INTRO.md",
+    "../../PARECER-QA-INTRO.md"
+  ],
+  "confirmacaoNotasAltas": {
+    "responsavel": "consolidador/root",
+    "evidencia": "Execução canônica independente dos revisores:25 casos web,10 casos RNWeb; inspeção visual dos pares; evidência adicional independente de QA e movimento. Não é pesquisa empírica.",
+    "limite": "A confirmação cobre os critérios e variantes descritos nos pareceres; não preenche C10 nem prova nativo."
+  }
+}

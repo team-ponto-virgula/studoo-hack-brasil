@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 import { banco } from '@/servidor/banco/cliente';
 import { cabecalhosSeguros, FalhaApi } from './http';
-import { cookieSessao, origemStudoo } from './origem';
+import { cookieSessao, origemStudoo, origemWebDoHost } from './origem';
 import { criarSessao, hashToken } from './sessao';
 import { consumirLimite, emailPermitido, iguais } from './seguranca';
 import { normalizarEmail } from './credenciais';
@@ -12,12 +12,15 @@ const formatoToken = /^[A-Za-z0-9_-]{43}$/;
 const chavesGoogle = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'), { timeoutDuration: 5000 });
 export const desafioPkce = (valor: string) => createHash('sha256').update(valor).digest('base64url');
 
+const CAMINHO_CALLBACK = '/api/auth/google/callback';
+
 export function configuracaoGoogle() {
   const id = process.env.GOOGLE_CLIENT_ID?.trim();
   const segredo = process.env.GOOGLE_CLIENT_SECRET?.trim();
   const origem = origemStudoo();
-  return id && segredo && origem ? { id, segredo, retorno: `${origem}/api/auth/google/retorno` } : null;
+  return id && segredo && origem ? { id, segredo, origem, callback: `${origem}${CAMINHO_CALLBACK}` } : null;
 }
+
 function retornoMobile() {
   const retorno = process.env.STUDOO_GOOGLE_MOBILE_REDIRECT_URI ?? 'studoo-dev://auth/google';
   try {
@@ -27,27 +30,42 @@ function retornoMobile() {
   } catch { /* configuração inválida */ }
   throw new FalhaApi('google_indisponivel');
 }
-function cookieGoogle(valor: string, idade = 600) {
-  const seguro = origemStudoo()?.startsWith('https:');
+// O cookie do estado é do host em que o Google começa e volta (por isso o __Host-): a origem é sempre passada, nunca presumida.
+function cookieGoogle(origem: string, valor: string, idade = 600) {
+  const seguro = origem.startsWith('https:');
   return `${seguro ? '__Host-' : ''}studoo-google=${valor}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${idade}${seguro ? '; Secure' : ''}`;
 }
-function lerNavegador(request: Request) {
-  const nome = `${origemStudoo()?.startsWith('https:') ? '__Host-' : ''}studoo-google=`;
+function lerNavegador(request: Request, origem: string) {
+  const nome = `${origem.startsWith('https:') ? '__Host-' : ''}studoo-google=`;
   return request.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(nome))?.slice(nome.length) ?? '';
 }
 function redirecionar(url: URL | string, cookie?: string) {
   return new Response(null, { status: 303, headers: { ...cabecalhosSeguros, Location: String(url), ...(cookie ? { 'Set-Cookie': cookie } : {}) } });
 }
 export async function iniciarGoogle(request: Request) {
+  const origemRequisicao = origemWebDoHost(request);
   const config = configuracaoGoogle();
-  if (!config) return redirecionar(new URL('/login?erro=google_indisponivel', origemStudoo()!));
+  if (!config) {
+    const destino = origemRequisicao ?? origemStudoo();
+    if (!destino) throw new FalhaApi('google_indisponivel');
+    return redirecionar(new URL('/login?erro=google_indisponivel', destino));
+  }
   const params = new URL(request.url).searchParams;
   const mobile = params.get('mobile') === '1';
   const desafioMobile = mobile ? params.get('desafio') : null;
   if (mobile) {
-    if (process.env.STUDOO_SESSAO_MOBILE_PILOTO !== '1' || !origemStudoo()?.startsWith('https:')) throw new FalhaApi('google_indisponivel');
+    if (process.env.STUDOO_SESSAO_MOBILE_PILOTO !== '1' || !config.origem.startsWith('https:')) throw new FalhaApi('google_indisponivel');
     if (!desafioMobile || !formatoToken.test(desafioMobile)) throw new FalhaApi('invalido');
     retornoMobile();
+  }
+  // O cookie do estado precisa ser gravado no host que recebe o callback.
+  if (origemRequisicao !== config.origem) {
+    const inicio = new URL('/api/auth/google/iniciar', config.origem);
+    if (desafioMobile) {
+      inicio.searchParams.set('mobile', '1');
+      inicio.searchParams.set('desafio', desafioMobile);
+    }
+    return redirecionar(inicio);
   }
   const estado = aleatorio(); const navegador = aleatorio(); const nonce = aleatorio(); const verificador = aleatorio();
   const permitido = await banco.$transaction(async tx => {
@@ -62,9 +80,9 @@ export async function iniciarGoogle(request: Request) {
   });
   if (!permitido) throw new FalhaApi('limite_login');
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  url.search = new URLSearchParams({ client_id: config.id, redirect_uri: config.retorno, response_type: 'code',
+  url.search = new URLSearchParams({ client_id: config.id, redirect_uri: config.callback, response_type: 'code',
     scope: 'openid email', state: estado, nonce, code_challenge: desafioPkce(verificador), code_challenge_method: 'S256', prompt: 'select_account' }).toString();
-  return redirecionar(url, cookieGoogle(navegador));
+  return redirecionar(url, cookieGoogle(config.origem, navegador));
 }
 
 export async function verificarTokenGoogle(token: string, nonce: string, chaves: JWTVerifyGetKey = chavesGoogle) {
@@ -86,7 +104,7 @@ async function trocarGoogle(codigo: string, verificador: string, nonce: string) 
     method: 'POST', cache: 'no-store', signal: AbortSignal.timeout(10_000),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ code: codigo, client_id: config.id, client_secret: config.segredo,
-      redirect_uri: config.retorno, grant_type: 'authorization_code', code_verifier: verificador }),
+      redirect_uri: config.callback, grant_type: 'authorization_code', code_verifier: verificador }),
   });
   if (!resposta.ok) throw new FalhaApi('google_invalido');
   const corpo = await resposta.json();
@@ -96,10 +114,13 @@ async function trocarGoogle(codigo: string, verificador: string, nonce: string) 
 
 /** O provedor pode ser substituído somente por testes no servidor, nunca por parâmetros HTTP. */
 export async function retornarGoogle(request: Request, provedor = trocarGoogle) {
+  const origem = origemStudoo();
+  if (!origem) throw new FalhaApi('google_indisponivel');
+  if (origemWebDoHost(request) !== origem) throw new FalhaApi('nao_encontrado');
   let destinoMobile: URL | null = null;
   try {
     const params = new URL(request.url).searchParams;
-    const estado = params.get('state') ?? ''; const navegador = lerNavegador(request);
+    const estado = params.get('state') ?? ''; const navegador = lerNavegador(request, origem);
     if (!formatoToken.test(estado) || !formatoToken.test(navegador)) throw new FalhaApi('google_invalido');
     const where = { estadoHash: hashToken(estado), navegadorHash: hashToken(navegador), expiraEm: { gt: new Date() } };
     const autorizacao = await banco.autorizacaoGoogle.findFirst({ where });
@@ -131,16 +152,16 @@ export async function retornarGoogle(request: Request, provedor = trocarGoogle) 
     });
     if (resultado.mobile) {
       destinoMobile!.searchParams.set('codigo', resultado.codigo);
-      return redirecionar(destinoMobile!, cookieGoogle('', 0));
+      return redirecionar(destinoMobile!, cookieGoogle(origem, '', 0));
     }
-    const resposta = redirecionar(new URL('/', origemStudoo()!), cookieGoogle('', 0));
+    const resposta = redirecionar(new URL('/', origem), cookieGoogle(origem, '', 0));
     resposta.headers.append('Set-Cookie', cookieSessao(resultado.token));
     return resposta;
   } catch (erro) {
     const codigo = erro instanceof FalhaApi ? erro.codigo : 'google_invalido';
-    const url = destinoMobile ?? new URL('/login', origemStudoo()!);
+    const url = destinoMobile ?? new URL('/login', origem);
     url.searchParams.set('erro', codigo);
-    return redirecionar(url, cookieGoogle('', 0));
+    return redirecionar(url, cookieGoogle(origem, '', 0));
   }
 }
 export async function trocarCodigoMobile(codigo: unknown, verificador: unknown) {

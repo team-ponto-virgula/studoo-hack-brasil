@@ -1,0 +1,849 @@
+{
+  "surface": "web real, viewport mobile",
+  "native": false,
+  "synthetic": true,
+  "checks": [
+    {
+      "name": "pedido-sem-overflow",
+      "passed": true,
+      "evidence": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Montar minha trilha",
+              "x": 20,
+              "y": 342,
+              "width": 350,
+              "height": 52,
+              "bottom": 394,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "O que você quer aprender?",
+              "font": "30px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Montar minha trilha",
+              "x": 20,
+              "y": 342,
+              "width": 320,
+              "height": 52,
+              "bottom": 394,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "O que você quer aprender?",
+              "font": "30px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proposta-cta-na-dobra",
+      "passed": true,
+      "evidence": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar a lição 1",
+              "x": 20,
+              "y": 722,
+              "width": 350,
+              "height": 52,
+              "bottom": 774,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "24px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar a lição 1",
+              "x": 20,
+              "y": 678,
+              "width": 320,
+              "height": 52,
+              "bottom": 730,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "24px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "erro-tem-feedback-real",
+      "passed": true,
+      "evidence": {
+        "status": 200,
+        "correct": false
+      }
+    },
+    {
+      "name": "correcao-aceita-operador-correto",
+      "passed": true,
+      "evidence": {
+        "status": 200,
+        "correct": true
+      }
+    },
+    {
+      "name": "conclusao-apos-post-salvo",
+      "passed": true,
+      "evidence": [
+        {
+          "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1/concluir",
+          "method": "POST",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "name": "conclusao-cta-na-dobra",
+      "passed": true,
+      "evidence": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Ir para a próxima lição",
+              "x": 20,
+              "y": 726,
+              "width": 350,
+              "height": 52,
+              "bottom": 778,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Lição concluída!",
+              "font": "30px"
+            },
+            {
+              "text": "Progresso na trilha",
+              "font": "17px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Ir para a próxima lição",
+              "x": 20,
+              "y": 682,
+              "width": 320,
+              "height": 52,
+              "bottom": 734,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Lição concluída!",
+              "font": "30px"
+            },
+            {
+              "text": "Progresso na trilha",
+              "font": "17px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "progresso-persiste-apos-reabrir",
+      "passed": true,
+      "evidence": {
+        "status": 200,
+        "progress": {
+          "concluidas": 1,
+          "total": 5,
+          "percentual": 20
+        }
+      }
+    },
+    {
+      "name": "retoma-proxima-licao-apos-reload",
+      "passed": true,
+      "evidence": {
+        "title": "Relacionar tabelas com INNER JOIN"
+      }
+    },
+    {
+      "name": "sem-erros-js",
+      "passed": true,
+      "evidence": {
+        "errors": []
+      }
+    }
+  ],
+  "responses": [
+    {
+      "path": "/api/sessao",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/sessao",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/propostas/ao-vivo",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/estudio/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/estudio/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1/avaliar",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/estudio/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/estudio/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1/avaliar",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/estudio/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-1/concluir",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/sessao",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/sessao",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/config",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/planos/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/aprendizado/licoes/c72cd1c2-3f39-422a-b57c-2d40cf4b5b9e-1-2",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "captures": [
+    {
+      "name": "pedido",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Montar minha trilha",
+              "x": 20,
+              "y": 342,
+              "width": 350,
+              "height": 52,
+              "bottom": 394,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "O que você quer aprender?",
+              "font": "30px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Montar minha trilha",
+              "x": 20,
+              "y": 342,
+              "width": 320,
+              "height": 52,
+              "bottom": 394,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "O que você quer aprender?",
+              "font": "30px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "geracao",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [],
+          "headings": [
+            {
+              "text": "Quero aprender SQL do zero para consultar tabelas",
+              "font": "24px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [],
+          "headings": [
+            {
+              "text": "Quero aprender SQL do zero para consultar tabelas",
+              "font": "24px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proposta",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar a lição 1",
+              "x": 20,
+              "y": 722,
+              "width": 350,
+              "height": 52,
+              "bottom": 774,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "24px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar a lição 1",
+              "x": 20,
+              "y": 678,
+              "width": 320,
+              "height": 52,
+              "bottom": 730,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "24px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "licao",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Avançar",
+              "x": 16,
+              "y": 778,
+              "width": 358,
+              "height": 52,
+              "bottom": 830,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Filtrar com WHERE incluindo o valor no limite",
+              "font": "30px"
+            },
+            {
+              "text": "O Stu explica",
+              "font": "18px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Avançar",
+              "x": 16,
+              "y": 734,
+              "width": 328,
+              "height": 52,
+              "bottom": 786,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Filtrar com WHERE incluindo o valor no limite",
+              "font": "30px"
+            },
+            {
+              "text": "O Stu explica",
+              "font": "18px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "correcao",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Enviar minha explicação",
+              "x": 36,
+              "y": 1271.484375,
+              "width": 318,
+              "height": 52,
+              "bottom": 1323.484375,
+              "visible": false
+            },
+            {
+              "label": "Ver outro jeito de entender",
+              "x": 16,
+              "y": 698.015625,
+              "width": 358,
+              "height": 52,
+              "bottom": 750.015625,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+              "font": "30px"
+            },
+            {
+              "text": "Não foi dessa vez Resposta incorreta.",
+              "font": "19px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Enviar minha explicação",
+              "x": 36,
+              "y": 1375.015625,
+              "width": 288,
+              "height": 52,
+              "bottom": 1427.015625,
+              "visible": false
+            },
+            {
+              "label": "Ver outro jeito de entender",
+              "x": 16,
+              "y": 636.03125,
+              "width": 328,
+              "height": 52,
+              "bottom": 688.03125,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
+              "font": "30px"
+            },
+            {
+              "text": "Não foi dessa vez Resposta incorreta.",
+              "font": "19px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "conclusao",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Ir para a próxima lição",
+              "x": 20,
+              "y": 726,
+              "width": 350,
+              "height": 52,
+              "bottom": 778,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Lição concluída!",
+              "font": "30px"
+            },
+            {
+              "text": "Progresso na trilha",
+              "font": "17px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Ir para a próxima lição",
+              "x": 20,
+              "y": 682,
+              "width": 320,
+              "height": 52,
+              "bottom": 734,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Lição concluída!",
+              "font": "30px"
+            },
+            {
+              "text": "Progresso na trilha",
+              "font": "17px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mapa",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar lição",
+              "x": 210.96875,
+              "y": 803.75,
+              "width": 155.03125,
+              "height": 52,
+              "bottom": 855.75,
+              "visible": false
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "18px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar lição",
+              "x": 180.96875,
+              "y": 759.75,
+              "width": 155.03125,
+              "height": 52,
+              "bottom": 811.75,
+              "visible": false
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "18px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retomada",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar lição",
+              "x": 210.96875,
+              "y": 803.75,
+              "width": 155.03125,
+              "height": 52,
+              "bottom": 855.75,
+              "visible": false
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "18px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Começar lição",
+              "x": 180.96875,
+              "y": 759.75,
+              "width": 155.03125,
+              "height": 52,
+              "bottom": 811.75,
+              "visible": false
+            }
+          ],
+          "headings": [
+            {
+              "text": "SQL para a prova",
+              "font": "18px"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retomar-licao",
+      "views": [
+        {
+          "width": 390,
+          "height": 844,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Avançar",
+              "x": 16,
+              "y": 778,
+              "width": 358,
+              "height": 52,
+              "bottom": 830,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Relacionar tabelas com INNER JOIN",
+              "font": "30px"
+            },
+            {
+              "text": "O Stu explica",
+              "font": "18px"
+            }
+          ]
+        },
+        {
+          "width": 360,
+          "height": 800,
+          "horizontalOverflow": false,
+          "primary": [
+            {
+              "label": "Avançar",
+              "x": 16,
+              "y": 734,
+              "width": 328,
+              "height": 52,
+              "bottom": 786,
+              "visible": true
+            }
+          ],
+          "headings": [
+            {
+              "text": "Relacionar tabelas com INNER JOIN",
+              "font": "30px"
+            },
+            {
+              "text": "O Stu explica",
+              "font": "18px"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "harnessCorrections": [
+    {
+      "cause": "Seletor inicial esperava título sem a pontuação final; corrigido para o texto real Lição concluída!.",
+      "productFailure": false
+    },
+    {
+      "cause": "Nome acessível do nó inclui o estado Começar; seletor foi ajustado para incluir esse prefixo.",
+      "productFailure": false
+    }
+  ]
+}

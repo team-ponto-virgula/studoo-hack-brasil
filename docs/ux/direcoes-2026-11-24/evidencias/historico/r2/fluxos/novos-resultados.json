@@ -1,0 +1,1401 @@
+{
+  "source": "31fb42736d15d75ed75d7c1cf046f01d81a9251d",
+  "startedAt": "2026-11-24T20:24:17.289Z",
+  "sourceHashesStart": {
+    "app.js": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+    "media-pages.js": "35aa4f8a274a8b4b7857bc33a7b6da9a2580fc18fddcb0a3ae6d6f072021d42a",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "cases": [
+    {
+      "direction": "jornada",
+      "name": "seis-formatos",
+      "checks": [
+        {
+          "name": "lacuna erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "lacuna acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "lacuna avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "multipla erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "multipla acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "multipla avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "ordenar ordem errada tem retorno",
+          "passed": true
+        },
+        {
+          "name": "ordenar anuncia posição",
+          "passed": true
+        },
+        {
+          "name": "ordenar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "ordenar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "associar pares errados têm retorno",
+          "passed": true
+        },
+        {
+          "name": "associar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "associar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "aberta resposta incompleta tem retorno",
+          "passed": true
+        },
+        {
+          "name": "aberta acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "aberta avança à explicação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:20.750Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "pular-e-rever",
+      "checks": [
+        {
+          "name": "pular pede confirmação",
+          "passed": true
+        },
+        {
+          "name": "revisão registrada antes de concluir",
+          "passed": true
+        },
+        {
+          "name": "conclusão avisa Vale rever",
+          "passed": true
+        },
+        {
+          "name": "revisão local persiste reload",
+          "passed": true
+        },
+        {
+          "name": "acerto limpa revisão",
+          "passed": true
+        },
+        {
+          "name": "nova conclusão não mantém aviso antigo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:22.014Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "audio-integrado",
+      "checks": [
+        {
+          "name": "não grava ao entrar",
+          "passed": true
+        },
+        {
+          "name": "gesto abre estado ativo sem mic",
+          "passed": true
+        },
+        {
+          "name": "cancelar restaura rascunho",
+          "passed": true
+        },
+        {
+          "name": "parar cria transcrição revisável",
+          "passed": true
+        },
+        {
+          "name": "envio abre retorno identificado",
+          "passed": true
+        },
+        {
+          "name": "Activity indisponível preserva texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:23.687Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "audio-historico",
+      "checks": [
+        {
+          "name": "Back deixa a página de gravação",
+          "passed": true
+        },
+        {
+          "name": "Forward não retoma gravação sem gesto",
+          "passed": false,
+          "evidence": {
+            "page": "explique",
+            "recordingVisible": 1
+          }
+        },
+        {
+          "name": "histórico mantém rascunho editável",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-audio-historico-forward.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:24.757Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "denuncia-pelo-card",
+      "checks": [
+        {
+          "name": "alvo corresponde ao cartão escolhido",
+          "passed": true
+        },
+        {
+          "name": "denúncia pelo cartão oculta seu alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:26.009Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "foto-interesses-cor",
+      "checks": [
+        {
+          "name": "foto tem enquadramento próprio",
+          "passed": true
+        },
+        {
+          "name": "zoom responde",
+          "passed": true
+        },
+        {
+          "name": "confirmar volta ao rascunho",
+          "passed": true
+        },
+        {
+          "name": "perfil salva foto interesses e cor",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaura foto",
+          "passed": true
+        },
+        {
+          "name": "subfluxo foto mantém rascunho sem descarte",
+          "passed": false,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-foto-interesses-cor-entrada-com-draft.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:28.325Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "codigo-e-clipboard",
+      "checks": [
+        {
+          "name": "código tem página própria",
+          "passed": true
+        },
+        {
+          "name": "QR e limite demonstrativo visíveis",
+          "passed": true
+        },
+        {
+          "name": "copiar link usa URL de exemplo",
+          "passed": true
+        },
+        {
+          "name": "folha tem cancelar sem envio",
+          "passed": true
+        },
+        {
+          "name": "cancelar volta ao código",
+          "passed": true
+        },
+        {
+          "name": "clipboard negado tem alternativa selecionável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:29.401Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "denuncia-e-publicacao",
+      "checks": [
+        {
+          "name": "denúncia tem contexto e quatro motivos",
+          "passed": true
+        },
+        {
+          "name": "sem motivo bloqueia revisão",
+          "passed": true
+        },
+        {
+          "name": "revisão mostra motivo e texto",
+          "passed": true
+        },
+        {
+          "name": "editar mantém detalhes",
+          "passed": true
+        },
+        {
+          "name": "envio local tem protocolo e não alega equipe",
+          "passed": true
+        },
+        {
+          "name": "denúncia oculta só trilha alvo",
+          "passed": false
+        },
+        {
+          "name": "publicação exige conferência",
+          "passed": true
+        },
+        {
+          "name": "cancelar não publica",
+          "passed": true
+        },
+        {
+          "name": "confirmar pública fica pendente e sem link",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva pendente",
+          "passed": true
+        },
+        {
+          "name": "retirar preserva trilha privada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-denuncia-e-publicacao-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:31.275Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "visitante-e-suporte",
+      "checks": [
+        {
+          "name": "entrada visitante identificada",
+          "passed": true
+        },
+        {
+          "name": "perfil visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "compartilhar visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "visitante não tem exclusão de conta",
+          "passed": true
+        },
+        {
+          "name": "voltar do suporte mantém visitante",
+          "passed": false,
+          "evidence": {
+            "isGuest": false,
+            "name": "Nina"
+          }
+        },
+        {
+          "name": "suporte não libera perfil sem login",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-visitante-e-suporte-apos-suporte.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:32.141Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "configuracao-descricao",
+      "checks": [
+        {
+          "name": "nome de trilha salvo",
+          "passed": true
+        },
+        {
+          "name": "descrição editável é preservada",
+          "passed": false,
+          "evidence": "Praticar filtros e junções em consultas."
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/jornada-configuracao-descricao-descricao-apos-salvar.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:32.556Z"
+    },
+    {
+      "direction": "jornada",
+      "name": "html-autossuficiente-http",
+      "checks": [
+        {
+          "name": "HTML abre viaHTTP sem assets externos",
+          "passed": true,
+          "evidence": [
+            "http://localhost:3012/docs/ux/direcoes-2026-11-24/entrega/direcao-a.html"
+          ]
+        },
+        {
+          "name": "HTML empacotado navega",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:33.071Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "seis-formatos",
+      "checks": [
+        {
+          "name": "lacuna erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "lacuna acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "lacuna avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "multipla erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "multipla acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "multipla avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "ordenar ordem errada tem retorno",
+          "passed": true
+        },
+        {
+          "name": "ordenar anuncia posição",
+          "passed": true
+        },
+        {
+          "name": "ordenar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "ordenar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "associar pares errados têm retorno",
+          "passed": true
+        },
+        {
+          "name": "associar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "associar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "aberta resposta incompleta tem retorno",
+          "passed": true
+        },
+        {
+          "name": "aberta acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "aberta avança à explicação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:35.845Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "pular-e-rever",
+      "checks": [
+        {
+          "name": "pular pede confirmação",
+          "passed": true
+        },
+        {
+          "name": "revisão registrada antes de concluir",
+          "passed": true
+        },
+        {
+          "name": "conclusão avisa Vale rever",
+          "passed": true
+        },
+        {
+          "name": "revisão local persiste reload",
+          "passed": true
+        },
+        {
+          "name": "acerto limpa revisão",
+          "passed": true
+        },
+        {
+          "name": "nova conclusão não mantém aviso antigo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:36.997Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "audio-integrado",
+      "checks": [
+        {
+          "name": "não grava ao entrar",
+          "passed": true
+        },
+        {
+          "name": "gesto abre estado ativo sem mic",
+          "passed": true
+        },
+        {
+          "name": "cancelar restaura rascunho",
+          "passed": true
+        },
+        {
+          "name": "parar cria transcrição revisável",
+          "passed": true
+        },
+        {
+          "name": "envio abre retorno identificado",
+          "passed": true
+        },
+        {
+          "name": "Activity indisponível preserva texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:38.805Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "audio-historico",
+      "checks": [
+        {
+          "name": "Back deixa a página de gravação",
+          "passed": true
+        },
+        {
+          "name": "Forward não retoma gravação sem gesto",
+          "passed": false,
+          "evidence": {
+            "page": "explique",
+            "recordingVisible": 1
+          }
+        },
+        {
+          "name": "histórico mantém rascunho editável",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-audio-historico-forward.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:39.959Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "denuncia-pelo-card",
+      "checks": [
+        {
+          "name": "alvo corresponde ao cartão escolhido",
+          "passed": true
+        },
+        {
+          "name": "denúncia pelo cartão oculta seu alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:41.099Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "foto-interesses-cor",
+      "checks": [
+        {
+          "name": "foto tem enquadramento próprio",
+          "passed": true
+        },
+        {
+          "name": "zoom responde",
+          "passed": true
+        },
+        {
+          "name": "confirmar volta ao rascunho",
+          "passed": true
+        },
+        {
+          "name": "perfil salva foto interesses e cor",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaura foto",
+          "passed": true
+        },
+        {
+          "name": "subfluxo foto mantém rascunho sem descarte",
+          "passed": false,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-foto-interesses-cor-entrada-com-draft.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:43.190Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "codigo-e-clipboard",
+      "checks": [
+        {
+          "name": "código tem página própria",
+          "passed": true
+        },
+        {
+          "name": "QR e limite demonstrativo visíveis",
+          "passed": true
+        },
+        {
+          "name": "copiar link usa URL de exemplo",
+          "passed": true
+        },
+        {
+          "name": "folha tem cancelar sem envio",
+          "passed": true
+        },
+        {
+          "name": "cancelar volta ao código",
+          "passed": true
+        },
+        {
+          "name": "clipboard negado tem alternativa selecionável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:44.101Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "denuncia-e-publicacao",
+      "checks": [
+        {
+          "name": "denúncia tem contexto e quatro motivos",
+          "passed": true
+        },
+        {
+          "name": "sem motivo bloqueia revisão",
+          "passed": true
+        },
+        {
+          "name": "revisão mostra motivo e texto",
+          "passed": true
+        },
+        {
+          "name": "editar mantém detalhes",
+          "passed": true
+        },
+        {
+          "name": "envio local tem protocolo e não alega equipe",
+          "passed": true
+        },
+        {
+          "name": "denúncia oculta só trilha alvo",
+          "passed": false
+        },
+        {
+          "name": "publicação exige conferência",
+          "passed": true
+        },
+        {
+          "name": "cancelar não publica",
+          "passed": true
+        },
+        {
+          "name": "confirmar pública fica pendente e sem link",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva pendente",
+          "passed": true
+        },
+        {
+          "name": "retirar preserva trilha privada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-denuncia-e-publicacao-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:45.840Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "visitante-e-suporte",
+      "checks": [
+        {
+          "name": "entrada visitante identificada",
+          "passed": true
+        },
+        {
+          "name": "perfil visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "compartilhar visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "visitante não tem exclusão de conta",
+          "passed": true
+        },
+        {
+          "name": "voltar do suporte mantém visitante",
+          "passed": false,
+          "evidence": {
+            "isGuest": false,
+            "name": "Nina"
+          }
+        },
+        {
+          "name": "suporte não libera perfil sem login",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-visitante-e-suporte-apos-suporte.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:46.689Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "configuracao-descricao",
+      "checks": [
+        {
+          "name": "nome de trilha salvo",
+          "passed": true
+        },
+        {
+          "name": "descrição editável é preservada",
+          "passed": false,
+          "evidence": "Praticar filtros e junções em consultas."
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/caderno-configuracao-descricao-descricao-apos-salvar.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:47.106Z"
+    },
+    {
+      "direction": "caderno",
+      "name": "html-autossuficiente-http",
+      "checks": [
+        {
+          "name": "HTML abre viaHTTP sem assets externos",
+          "passed": true,
+          "evidence": [
+            "http://localhost:3012/docs/ux/direcoes-2026-11-24/entrega/direcao-b.html"
+          ]
+        },
+        {
+          "name": "HTML empacotado navega",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:47.392Z"
+    },
+    {
+      "direction": "foco",
+      "name": "seis-formatos",
+      "checks": [
+        {
+          "name": "lacuna erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "lacuna acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "lacuna avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "multipla erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "multipla acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "multipla avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "ordenar ordem errada tem retorno",
+          "passed": true
+        },
+        {
+          "name": "ordenar anuncia posição",
+          "passed": true
+        },
+        {
+          "name": "ordenar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "ordenar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "associar pares errados têm retorno",
+          "passed": true
+        },
+        {
+          "name": "associar acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "associar avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro erro desenhado",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "verdadeiro avança à explicação",
+          "passed": true
+        },
+        {
+          "name": "aberta resposta incompleta tem retorno",
+          "passed": true
+        },
+        {
+          "name": "aberta acerto e próxima ação",
+          "passed": true
+        },
+        {
+          "name": "aberta avança à explicação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:50.463Z"
+    },
+    {
+      "direction": "foco",
+      "name": "pular-e-rever",
+      "checks": [
+        {
+          "name": "pular pede confirmação",
+          "passed": true
+        },
+        {
+          "name": "revisão registrada antes de concluir",
+          "passed": true
+        },
+        {
+          "name": "conclusão avisa Vale rever",
+          "passed": true
+        },
+        {
+          "name": "revisão local persiste reload",
+          "passed": true
+        },
+        {
+          "name": "acerto limpa revisão",
+          "passed": true
+        },
+        {
+          "name": "nova conclusão não mantém aviso antigo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:51.647Z"
+    },
+    {
+      "direction": "foco",
+      "name": "audio-integrado",
+      "checks": [
+        {
+          "name": "não grava ao entrar",
+          "passed": true
+        },
+        {
+          "name": "gesto abre estado ativo sem mic",
+          "passed": true
+        },
+        {
+          "name": "cancelar restaura rascunho",
+          "passed": true
+        },
+        {
+          "name": "parar cria transcrição revisável",
+          "passed": true
+        },
+        {
+          "name": "envio abre retorno identificado",
+          "passed": true
+        },
+        {
+          "name": "Activity indisponível preserva texto",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:53.556Z"
+    },
+    {
+      "direction": "foco",
+      "name": "audio-historico",
+      "checks": [
+        {
+          "name": "Back deixa a página de gravação",
+          "passed": true
+        },
+        {
+          "name": "Forward não retoma gravação sem gesto",
+          "passed": false,
+          "evidence": {
+            "page": "explique",
+            "recordingVisible": 1
+          }
+        },
+        {
+          "name": "histórico mantém rascunho editável",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-audio-historico-forward.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:54.949Z"
+    },
+    {
+      "direction": "foco",
+      "name": "denuncia-pelo-card",
+      "checks": [
+        {
+          "name": "alvo corresponde ao cartão escolhido",
+          "passed": true
+        },
+        {
+          "name": "denúncia pelo cartão oculta seu alvo",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:56.336Z"
+    },
+    {
+      "direction": "foco",
+      "name": "foto-interesses-cor",
+      "checks": [
+        {
+          "name": "foto tem enquadramento próprio",
+          "passed": true
+        },
+        {
+          "name": "zoom responde",
+          "passed": true
+        },
+        {
+          "name": "confirmar volta ao rascunho",
+          "passed": true
+        },
+        {
+          "name": "perfil salva foto interesses e cor",
+          "passed": true
+        },
+        {
+          "name": "perfil local restaura foto",
+          "passed": true
+        },
+        {
+          "name": "subfluxo foto mantém rascunho sem descarte",
+          "passed": false,
+          "evidence": {
+            "page": "editar",
+            "dialog": 1
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-foto-interesses-cor-entrada-com-draft.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:58.709Z"
+    },
+    {
+      "direction": "foco",
+      "name": "codigo-e-clipboard",
+      "checks": [
+        {
+          "name": "código tem página própria",
+          "passed": true
+        },
+        {
+          "name": "QR e limite demonstrativo visíveis",
+          "passed": true
+        },
+        {
+          "name": "copiar link usa URL de exemplo",
+          "passed": true
+        },
+        {
+          "name": "folha tem cancelar sem envio",
+          "passed": true
+        },
+        {
+          "name": "cancelar volta ao código",
+          "passed": true
+        },
+        {
+          "name": "clipboard negado tem alternativa selecionável",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:24:59.597Z"
+    },
+    {
+      "direction": "foco",
+      "name": "denuncia-e-publicacao",
+      "checks": [
+        {
+          "name": "denúncia tem contexto e quatro motivos",
+          "passed": true
+        },
+        {
+          "name": "sem motivo bloqueia revisão",
+          "passed": true
+        },
+        {
+          "name": "revisão mostra motivo e texto",
+          "passed": true
+        },
+        {
+          "name": "editar mantém detalhes",
+          "passed": true
+        },
+        {
+          "name": "envio local tem protocolo e não alega equipe",
+          "passed": true
+        },
+        {
+          "name": "denúncia oculta só trilha alvo",
+          "passed": false
+        },
+        {
+          "name": "publicação exige conferência",
+          "passed": true
+        },
+        {
+          "name": "cancelar não publica",
+          "passed": true
+        },
+        {
+          "name": "confirmar pública fica pendente e sem link",
+          "passed": true
+        },
+        {
+          "name": "cancelar retirada preserva pendente",
+          "passed": true
+        },
+        {
+          "name": "retirar preserva trilha privada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-denuncia-e-publicacao-retirada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:25:01.523Z"
+    },
+    {
+      "direction": "foco",
+      "name": "visitante-e-suporte",
+      "checks": [
+        {
+          "name": "entrada visitante identificada",
+          "passed": true
+        },
+        {
+          "name": "perfil visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "compartilhar visitante exige conta",
+          "passed": true
+        },
+        {
+          "name": "visitante não tem exclusão de conta",
+          "passed": true
+        },
+        {
+          "name": "voltar do suporte mantém visitante",
+          "passed": false,
+          "evidence": {
+            "isGuest": false,
+            "name": "Nina"
+          }
+        },
+        {
+          "name": "suporte não libera perfil sem login",
+          "passed": false
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-visitante-e-suporte-apos-suporte.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:25:02.586Z"
+    },
+    {
+      "direction": "foco",
+      "name": "configuracao-descricao",
+      "checks": [
+        {
+          "name": "nome de trilha salvo",
+          "passed": true
+        },
+        {
+          "name": "descrição editável é preservada",
+          "passed": false,
+          "evidence": "Praticar filtros e junções em consultas."
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r2/foco-configuracao-descricao-descricao-apos-salvar.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:25:03.102Z"
+    },
+    {
+      "direction": "foco",
+      "name": "html-autossuficiente-http",
+      "checks": [
+        {
+          "name": "HTML abre viaHTTP sem assets externos",
+          "passed": true,
+          "evidence": [
+            "http://localhost:3012/docs/ux/direcoes-2026-11-24/entrega/direcao-c.html"
+          ]
+        },
+        {
+          "name": "HTML empacotado navega",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T20:25:03.524Z"
+    }
+  ],
+  "findings": [
+    {
+      "direction": "jornada",
+      "scenario": "audio-historico",
+      "name": "Forward não retoma gravação sem gesto",
+      "evidence": {
+        "page": "explique",
+        "recordingVisible": 1
+      }
+    },
+    {
+      "direction": "jornada",
+      "scenario": "audio-historico",
+      "name": "histórico mantém rascunho editável"
+    },
+    {
+      "direction": "jornada",
+      "scenario": "foto-interesses-cor",
+      "name": "subfluxo foto mantém rascunho sem descarte",
+      "evidence": {
+        "page": "editar",
+        "dialog": 1
+      }
+    },
+    {
+      "direction": "jornada",
+      "scenario": "denuncia-e-publicacao",
+      "name": "denúncia oculta só trilha alvo"
+    },
+    {
+      "direction": "jornada",
+      "scenario": "visitante-e-suporte",
+      "name": "voltar do suporte mantém visitante",
+      "evidence": {
+        "isGuest": false,
+        "name": "Nina"
+      }
+    },
+    {
+      "direction": "jornada",
+      "scenario": "visitante-e-suporte",
+      "name": "suporte não libera perfil sem login"
+    },
+    {
+      "direction": "jornada",
+      "scenario": "configuracao-descricao",
+      "name": "descrição editável é preservada",
+      "evidence": "Praticar filtros e junções em consultas."
+    },
+    {
+      "direction": "caderno",
+      "scenario": "audio-historico",
+      "name": "Forward não retoma gravação sem gesto",
+      "evidence": {
+        "page": "explique",
+        "recordingVisible": 1
+      }
+    },
+    {
+      "direction": "caderno",
+      "scenario": "audio-historico",
+      "name": "histórico mantém rascunho editável"
+    },
+    {
+      "direction": "caderno",
+      "scenario": "foto-interesses-cor",
+      "name": "subfluxo foto mantém rascunho sem descarte",
+      "evidence": {
+        "page": "editar",
+        "dialog": 1
+      }
+    },
+    {
+      "direction": "caderno",
+      "scenario": "denuncia-e-publicacao",
+      "name": "denúncia oculta só trilha alvo"
+    },
+    {
+      "direction": "caderno",
+      "scenario": "visitante-e-suporte",
+      "name": "voltar do suporte mantém visitante",
+      "evidence": {
+        "isGuest": false,
+        "name": "Nina"
+      }
+    },
+    {
+      "direction": "caderno",
+      "scenario": "visitante-e-suporte",
+      "name": "suporte não libera perfil sem login"
+    },
+    {
+      "direction": "caderno",
+      "scenario": "configuracao-descricao",
+      "name": "descrição editável é preservada",
+      "evidence": "Praticar filtros e junções em consultas."
+    },
+    {
+      "direction": "foco",
+      "scenario": "audio-historico",
+      "name": "Forward não retoma gravação sem gesto",
+      "evidence": {
+        "page": "explique",
+        "recordingVisible": 1
+      }
+    },
+    {
+      "direction": "foco",
+      "scenario": "audio-historico",
+      "name": "histórico mantém rascunho editável"
+    },
+    {
+      "direction": "foco",
+      "scenario": "foto-interesses-cor",
+      "name": "subfluxo foto mantém rascunho sem descarte",
+      "evidence": {
+        "page": "editar",
+        "dialog": 1
+      }
+    },
+    {
+      "direction": "foco",
+      "scenario": "denuncia-e-publicacao",
+      "name": "denúncia oculta só trilha alvo"
+    },
+    {
+      "direction": "foco",
+      "scenario": "visitante-e-suporte",
+      "name": "voltar do suporte mantém visitante",
+      "evidence": {
+        "isGuest": false,
+        "name": "Nina"
+      }
+    },
+    {
+      "direction": "foco",
+      "scenario": "visitante-e-suporte",
+      "name": "suporte não libera perfil sem login"
+    },
+    {
+      "direction": "foco",
+      "scenario": "configuracao-descricao",
+      "name": "descrição editável é preservada",
+      "evidence": "Praticar filtros e junções em consultas."
+    }
+  ],
+  "surface": "Chromium mobile 390x844, protótipo sem API/nativo",
+  "browser": "156.0.8078.79",
+  "sourceHashesEnd": {
+    "app.js": "2ebf5cf30fca4f4b29e9af91a658c0692d85a809e16ae38f5f922a1bb62a6a15",
+    "media-pages.js": "35aa4f8a274a8b4b7857bc33a7b6da9a2580fc18fddcb0a3ae6d6f072021d42a",
+    "social-pages.js": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58"
+  },
+  "finishedAt": "2026-11-24T20:25:03.536Z"
+}

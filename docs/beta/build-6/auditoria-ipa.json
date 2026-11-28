@@ -1,0 +1,81 @@
+{
+  "origem": "pacote studoo-0.1.0-6.ipa (entitlements do perfil de provisão; os do binário só com codesign num Mac)",
+  "perfil": null,
+  "resultado": [
+    {
+      "nivel": "ok",
+      "item": "Bundle",
+      "detalhe": "com.studoo.mobile.dev"
+    },
+    {
+      "nivel": "ok",
+      "item": "Versão",
+      "detalhe": "0.1.0 (6; com appVersionSource remoto, o EAS troca o número do build)"
+    },
+    {
+      "nivel": "ok",
+      "item": "Entitlement Sign in with Apple (regra 4.8)",
+      "detalhe": "[\"Default\"]"
+    },
+    {
+      "nivel": "ok",
+      "item": "Criptografia declarada (ITSAppUsesNonExemptEncryption)",
+      "detalhe": "false"
+    },
+    {
+      "nivel": "ok",
+      "item": "ATS sem cargas arbitrárias",
+      "detalhe": "{\"NSAllowsArbitraryLoads\":false,\"NSAllowsLocalNetworking\":true}"
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSCameraUsageDescription",
+      "detalhe": "O Studoo usa a câmera para fotografar o seu material de estudo e a foto do perfil ou da capa da trilha."
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSPhotoLibraryUsageDescription",
+      "detalhe": "O Studoo usa as suas fotos para escolher o material de estudo e a foto do perfil ou da capa da trilha."
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSMicrophoneUsageDescription",
+      "detalhe": "O Studoo usa o microfone para gravar a sua explicação em voz alta, transcrever e revisar o que você disse."
+    },
+    {
+      "nivel": "ok",
+      "item": "NSFaceIDUsageDescription",
+      "detalhe": "ausente (o app não usa biometria; expo-secure-store com faceIDPermission: false)"
+    },
+    {
+      "nivel": "ok",
+      "item": "NSPrivacyTracking",
+      "detalhe": "false"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada UserDefaults",
+      "detalhe": "CA92.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada FileTimestamp",
+      "detalhe": "C617.1, 0A2A.1, 3B52.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada SystemBootTime",
+      "detalhe": "35F9.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada DiskSpace",
+      "detalhe": "E174.1, 85F4.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Esquemas de URL",
+      "detalhe": "studoo-dev, com.studoo.mobile.dev, exp+studoo-mobile"
+    }
+  ]
+}

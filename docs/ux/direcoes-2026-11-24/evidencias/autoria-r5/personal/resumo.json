@@ -1,0 +1,32 @@
+{
+  "status": "autor_concluido_revisao_independente_pendente",
+  "native": false,
+  "api": false,
+  "sources": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "sourceStable": true,
+  "suites": {
+    "principal": {
+      "checks": 588,
+      "passed": 588,
+      "failed": 0,
+      "pageErrors": 0
+    },
+    "fronteiras": {
+      "checks": 102,
+      "passed": 102,
+      "failed": 0,
+      "pageErrors": 0
+    },
+    "atividade_campos": {
+      "checks": 78,
+      "passed": 78,
+      "failed": 0,
+      "pageErrors": 0
+    }
+  },
+  "openMediumAuthorFindings": 0,
+  "history": "Falha real de persistencia da previa no Back corrigida; rodada negativa preservada."
+}

@@ -1,0 +1,156 @@
+{
+  "startedAt": "2026-11-23T20:45:50.828306+00:00",
+  "baseCommit": "048ae114622c73bd1ea138c597efc528cfac11c8",
+  "workingTree": true,
+  "sourceHashesBefore": {
+    "packages/contratos/src/abertura.ts": "493e042ca9334f0b864da55970098102cad6ec4466745c1c96de9fe43bfb59f8",
+    "src/ui/abertura.tsx": "65be739884ccfdd00951eb9f41764ca2ec531dcbfe3ee8ff4f13b661b7bf7037",
+    "src/ui/abertura.css": "97f874b6ff6752168755d3ea0dcc30f23bbdd3d9e6d2b44ea3d2ddc90cd422bb",
+    "src/app/layout.tsx": "22dde40f06f79754b9ccd3358651acd25d38f13ac34cc20472e5135d75e984ac",
+    "apps/mobile/src/abertura.tsx": "050ab9e54727edec99616d7a402e0da1430e1685e490230d8492b3683ea7cb64",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "ad585260debc72f35d2bda398799d8fc66f886471e3aee66d83238a155449806",
+    "tests/abertura.test.mjs": "4847351d457a7a01bde786d3701e092e983ad74656d6e1b395291040234cb167",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "environment": {
+    "databaseLocal": true,
+    "ia": "falsa",
+    "email": "falso"
+  },
+  "results": [
+    {
+      "suite": "test:estudio:interface",
+      "command": [
+        "npm",
+        "run",
+        "test:estudio:interface"
+      ],
+      "startedAt": "2026-11-23T20:45:50.831676+00:00",
+      "finishedAt": "2026-11-23T20:46:07.110156+00:00",
+      "durationMs": 16278.52,
+      "exitCode": 0,
+      "counts": {
+        "tests": 596,
+        "suites": 0,
+        "pass": 596,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/test-estudio-interface-048ae11.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:paridade",
+      "command": [
+        "npm",
+        "run",
+        "test:paridade"
+      ],
+      "startedAt": "2026-11-23T20:46:07.111463+00:00",
+      "finishedAt": "2026-11-23T20:46:07.708694+00:00",
+      "durationMs": 597.24,
+      "exitCode": 0,
+      "counts": {
+        "tests": 5,
+        "suites": 0,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/test-paridade-048ae11.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:movimento",
+      "command": [
+        "npm",
+        "run",
+        "test:movimento"
+      ],
+      "startedAt": "2026-11-23T20:46:07.709155+00:00",
+      "finishedAt": "2026-11-23T20:46:08.229136+00:00",
+      "durationMs": 520.11,
+      "exitCode": 0,
+      "counts": {
+        "tests": 4,
+        "suites": 0,
+        "pass": 4,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/test-movimento-048ae11.log",
+      "sanitized": true
+    },
+    {
+      "suite": "test:abertura",
+      "command": [
+        "npm",
+        "run",
+        "test:abertura"
+      ],
+      "startedAt": "2026-11-23T20:46:08.230847+00:00",
+      "finishedAt": "2026-11-23T20:46:08.701875+00:00",
+      "durationMs": 471.04,
+      "exitCode": 0,
+      "counts": {
+        "tests": 10,
+        "suites": 0,
+        "pass": 10,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "log": "/workspace/work/intro-ux/test-abertura-048ae11.log",
+      "sanitized": true
+    }
+  ],
+  "limits": [
+    "Testes de código/controlador não comprovam renderização, foco real, desempenho observado ou execução nativa."
+  ],
+  "finishedAt": "2026-11-23T20:46:08.702262+00:00",
+  "sourceHashesAfter": {
+    "packages/contratos/src/abertura.ts": "493e042ca9334f0b864da55970098102cad6ec4466745c1c96de9fe43bfb59f8",
+    "src/ui/abertura.tsx": "65be739884ccfdd00951eb9f41764ca2ec531dcbfe3ee8ff4f13b661b7bf7037",
+    "src/ui/abertura.css": "97f874b6ff6752168755d3ea0dcc30f23bbdd3d9e6d2b44ea3d2ddc90cd422bb",
+    "src/app/layout.tsx": "22dde40f06f79754b9ccd3358651acd25d38f13ac34cc20472e5135d75e984ac",
+    "apps/mobile/src/abertura.tsx": "050ab9e54727edec99616d7a402e0da1430e1685e490230d8492b3683ea7cb64",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "ad585260debc72f35d2bda398799d8fc66f886471e3aee66d83238a155449806",
+    "tests/abertura.test.mjs": "4847351d457a7a01bde786d3701e092e983ad74656d6e1b395291040234cb167",
+    "package.json": "d5af34eb54ffa458c608fc9d41b63dcf11282df48e80d43be99f11a504da94ce",
+    "apps/mobile/package.json": "b5598a0d644dd833cde0e0015323282213affd9d4e5e48b478d1ec3fd2ae44b9",
+    "packages/contratos/package.json": "8caebe79eccc6aff06f64b924633957c07437072e05842a0ef4a837bfa101d8d",
+    "package-lock.json": "8232285a3fd155a83be0393c59e43aac2bc3780464a65f860c88b4d5477218dd"
+  },
+  "sourceFilesChangedDuringChecks": [],
+  "allPassed": true,
+  "scopeOfPriorChecks": {
+    "sourceReport": "/workspace/work/intro-ux/checks.json",
+    "baseCommit": "281a3fea4e2c7c00bd6465e6420cc1bf5b6099a5",
+    "carriedAsRegressionEvidence": [
+      "test:visitante-mobile",
+      "test:formatos",
+      "test:dominio"
+    ],
+    "limits": [
+      "Earlier regression runs, not executions on 048ae11. Domain/formats/API contracts were not changed by the opening work.",
+      "Web typecheck preceded final proxy/component changes; final production build was performed separately by root."
+    ]
+  },
+  "finalProxySource": {
+    "path": "src/proxy.ts",
+    "sha256": "15f1a2b88fbbc7b8c7a1dd10a5593f4f96a8aae152aa05a350c047f845683579",
+    "basis": "Tracked at 048ae11; product source remained unchanged during this repeat."
+  }
+}

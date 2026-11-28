@@ -1,0 +1,102 @@
+# Spec 14, S9/S10 no simulador: bloquear quem publicou pelo "•••" do cartão no Explorar, confirmar, ver o aviso e desfazer.
+appId: host.exp.Exponent
+name: 61-bloquear
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-explorar
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-explorar
+    timeout: 30000
+# O "•••" do primeiro cartão de "Em alta esta semana", a última seção do Explorar. No iPhone, a busca o leva ao meio da
+# tela, longe da barra de baixo. No emulador do Android (720×1560), a página acaba com o botão em y=1140, abaixo do meio:
+# a centralização nunca se cumpre, e a busca estourava os 60 s com o botão inteiro à vista (execução 45947070355, fluxos
+# 61 e 62). Lá, a busca para assim que o acha (ainda sob a barra de baixo, em y=1368), e um arrasto leva a página até o
+# fim, com o botão acima da barra. O 62-denunciar faz o mesmo.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+          centerElement: true
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 60%
+          end: 50%, 30%
+          duration: 800
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Mais opções de .*"
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Bloquear .*"
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-confirmar
+    timeout: 10000
+- takeScreenshot: 61-bloquear-confirmacao
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    id: confirmacao-confirmar
+- extendedWaitUntil:
+    visible:
+      text: "Pessoa bloqueada."
+    timeout: 15000
+- takeScreenshot: 61-bloquear-aviso
+# Desfaz: a conta sintética volta a ver a pessoa, para os fluxos seguintes. O aviso some sozinho em poucos segundos e, com a
+# máquina carregada, já tinha saído quando a captura acima terminou (execução 44809026116: "Element not found: Desfazer").
+# Então: "Desfazer" se o aviso ainda estiver na tela; depois, sempre, a lista "Pessoas bloqueadas" do Perfil (S10), que
+# desbloqueia o que tiver sobrado e tem de terminar vazia.
+- runFlow:
+    when:
+      visible: "Desfazer"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 500
+          text: "Desfazer"
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-perfil
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-perfil
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: bloqueadas|bloqueadas-vazia
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+- runFlow:
+    when:
+      visible:
+        id: bloqueadas
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          text: "Desbloquear"
+- extendedWaitUntil:
+    visible:
+      id: bloqueadas-vazia
+    timeout: 15000

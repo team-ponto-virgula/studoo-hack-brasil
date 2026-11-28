@@ -1,0 +1,510 @@
+{
+  "date": "2026-11-24T17:50:16.000Z",
+  "surface": "app_previa_web",
+  "base": "http://localhost:8090",
+  "motionContract": {
+    "versao": 2,
+    "direcao": "Óculos em foco",
+    "largura": 210,
+    "fundo": "#FFFFFF",
+    "corLente": "#2563FF",
+    "sequenciaMs": 880,
+    "sequenciaMinimaMs": 680,
+    "margemQuadroMs": 48,
+    "saidaMs": 160,
+    "limiteMs": 1400,
+    "curva": [
+      0.42,
+      0,
+      0.58,
+      1
+    ],
+    "fonte": {
+      "largura": 560,
+      "altura": 184,
+      "divisao": 348,
+      "linhaSorriso": 134
+    },
+    "marcos": [
+      0,
+      0.26,
+      0.4,
+      0.56,
+      0.9,
+      1
+    ],
+    "oculosX": [
+      0,
+      -1,
+      -1,
+      -1,
+      0,
+      0
+    ],
+    "oculosY": [
+      0,
+      -12,
+      -12,
+      -12,
+      0,
+      0
+    ],
+    "oculosEscala": [
+      1,
+      2.15,
+      2.15,
+      2.15,
+      1,
+      1
+    ],
+    "oculosRotacao": [
+      0,
+      -5,
+      2,
+      0,
+      0,
+      0
+    ],
+    "palavraOpacidade": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "palavraX": [
+      0,
+      -16,
+      -16,
+      -16,
+      0,
+      0
+    ],
+    "sorrisoOpacidade": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1
+    ],
+    "sorrisoEscala": [
+      1,
+      0.3,
+      0.3,
+      0.3,
+      1,
+      1
+    ],
+    "lenteOpacidade": [
+      0,
+      0.1,
+      0.1,
+      0.05,
+      0,
+      0
+    ],
+    "reflexoOpacidade": [
+      0,
+      0,
+      0.95,
+      0,
+      0,
+      0
+    ],
+    "reflexoX": [
+      -18,
+      -18,
+      0,
+      18,
+      18,
+      18
+    ],
+    "lentes": [
+      {
+        "x": 400.5,
+        "y": 84,
+        "diametro": 52
+      },
+      {
+        "x": 505.5,
+        "y": 84,
+        "diametro": 52
+      }
+    ]
+  },
+  "sourceCommit": "worktree-freeze-oculos-suave-880",
+  "productionInstrumented": false,
+  "cacheScope": "Fresh browser context then two reloads in the same context. Expo dev can transfer assets again; this does not assert cache hits",
+  "environment": "Headless Chromium; local Expo development server; no CPU/network throttle; 390x844",
+  "observation": "MutationObserver DOM phases; external font/image/two-RAF estimates are not exact React pronta callbacks",
+  "results": [
+    {
+      "name": "cold-browser-cache-boot",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 32,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 2249.2000000029802
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 2282.900000002235
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 2285.800000000745,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 2311.60000000149,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 2311.800000000745,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 2329.400000002235
+          },
+          {
+            "name": "saindo",
+            "atMs": 3201.800000000745
+          },
+          {
+            "name": "concluida",
+            "atMs": 3360.60000000149
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 2236.7000000029802,
+            "endAtMs": 2275.2000000029802,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 2237.400000002235,
+            "endAtMs": 2275.5,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 2248.60000000149,
+            "endAtMs": 2254.5,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 2248.800000000745,
+            "endAtMs": 2254.60000000149,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 2269.400000002235,
+            "endAtMs": 2274.5,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795542606402.5,
+        "measured": {
+          "visibleToExitMs": 952.5999999977648,
+          "exitToRemovedMs": 158.80000000074506,
+          "visibleToRemovedMs": 1111.3999999985099
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-1",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 64.19999999925494,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 890.5
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 924.3000000007451
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 949.1999999992549,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 996.8000000007451,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 997,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 1010.6999999992549
+          },
+          {
+            "name": "saindo",
+            "atMs": 1808
+          },
+          {
+            "name": "concluida",
+            "atMs": 1961.199999999255
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 853,
+            "endAtMs": 869.8000000007451,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 868.8000000007451,
+            "endAtMs": 880,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 869.8999999985099,
+            "endAtMs": 923.8000000007451,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 875.3000000007451,
+            "endAtMs": 926.3000000007451,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 910.6000000014901,
+            "endAtMs": 923.1000000014901,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795542609949.6,
+        "measured": {
+          "visibleToExitMs": 917.5,
+          "exitToRemovedMs": 153.19999999925494,
+          "visibleToRemovedMs": 1070.699999999255
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-context-reload-2",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 58.600000001490116,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 685.5
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 705.7000000029802
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 711.6000000014901,
+            "complete": true
+          },
+          {
+            "name": "fonts-loadingdone",
+            "atMs": 748.3000000007451,
+            "faceCount": 2
+          },
+          {
+            "name": "local-dom-assets-ready-estimate",
+            "atMs": 748.4000000022352,
+            "fontFaces": [
+              {
+                "family": "StudooTitulo",
+                "status": "loaded"
+              },
+              {
+                "family": "StudooCorpo",
+                "status": "loaded"
+              }
+            ]
+          },
+          {
+            "name": "local-dom-two-raf-estimate",
+            "atMs": 761.8000000007451
+          },
+          {
+            "name": "saindo",
+            "atMs": 1649.5
+          },
+          {
+            "name": "concluida",
+            "atMs": 1805.800000000745
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 668.6000000014901,
+            "endAtMs": 675.2000000029802,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 673,
+            "endAtMs": 677.5,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 674,
+            "endAtMs": 719.9000000022352,
+            "transferSize": 125124
+          },
+          {
+            "name": "assets",
+            "startAtMs": 674.9000000022352,
+            "endAtMs": 721.6000000014901,
+            "transferSize": 277232
+          },
+          {
+            "name": "assets",
+            "startAtMs": 703,
+            "endAtMs": 718,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795542612103,
+        "measured": {
+          "visibleToExitMs": 964,
+          "exitToRemovedMs": 156.30000000074506,
+          "visibleToRemovedMs": 1120.300000000745
+        },
+        "destination": "Aprenda qualquer coisa, um passo de cada vez.\n!\nO app precisa do endereço HTTPS do servidor do piloto.\nTentar novamente"
+      }
+    },
+    {
+      "name": "same-document-query-return-no-replay",
+      "passed": true,
+      "evidence": {
+        "before": {
+          "timeOrigin": 1795542612103,
+          "eventCount": 1
+        },
+        "after": {
+          "timeOrigin": 1795542612103,
+          "eventCount": 1,
+          "overlayCount": 0
+        },
+        "scope": "Synthetic History API + popstate query change/return in same document, not real native navigation"
+      }
+    },
+    {
+      "name": "background-return-interrupts-without-replay",
+      "passed": true,
+      "evidence": {
+        "events": [
+          {
+            "name": "document-fonts-ready-initial",
+            "atMs": 57.20000000298023,
+            "faceCount": 0
+          },
+          {
+            "name": "visivel",
+            "atMs": 1198.300000000745
+          },
+          {
+            "name": "fonts-loading",
+            "atMs": 1237.7000000029802
+          },
+          {
+            "name": "brand-image-loaded",
+            "atMs": 1244.5,
+            "complete": true
+          },
+          {
+            "name": "simulated-background",
+            "atMs": 1287.300000000745
+          },
+          {
+            "name": "concluida",
+            "atMs": 1301.300000000745
+          },
+          {
+            "name": "simulated-foreground",
+            "atMs": 1311.4000000022352
+          }
+        ],
+        "resources": [
+          {
+            "name": "assets",
+            "startAtMs": 1197.4000000022352,
+            "endAtMs": 1216.300000000745,
+            "transferSize": 13106
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1197.800000000745,
+            "endAtMs": 1216.300000000745,
+            "transferSize": 54511
+          },
+          {
+            "name": "assets",
+            "startAtMs": 1228.300000000745,
+            "endAtMs": 1238.9000000022352,
+            "transferSize": 2770
+          }
+        ],
+        "timeOrigin": 1795542614459.5,
+        "overlayCount": 0,
+        "backgroundToRemovalMs": 14,
+        "scope": "Synthetic document.hidden/visibilityState and visibilitychange; does not prove real native AppState"
+      }
+    }
+  ]
+}

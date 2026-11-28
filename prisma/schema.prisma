@@ -13,17 +13,77 @@ enum CanalSessao {
   MOBILE
 }
 
+enum EstadoModeracao {
+  pendente
+  aprovado
+  recusado
+}
+
 model Usuario {
+  perfilModeracao EstadoModeracao @default(pendente)
+  perfilRevisao Int @default(1)
+  comunidadeSuspensa Boolean @default(false)
+  bloqueiosFeitos Bloqueio[] @relation("bloqueia")
+  bloqueiosRecebidos Bloqueio[] @relation("bloqueado")
   id        String             @id @default(uuid())
   email     String             @unique
   senhaHash String?
   googleSub String? @unique
+  /// Iniciar sessão com a Apple (App Review 4.8): `sub` do token. A conta é achada por ele, nunca só pelo e-mail.
+  appleSub  String? @unique
+  /// Token de renovação da Apple, cifrado (AES-256-GCM), e o bundle que o emitiu: usados para revogar na exclusão.
+  appleRenovacao String?
+  appleCliente   String?
   recuperacao RecuperacaoSenha?
   codigosMobile CodigoGoogleMobile[]
   fuso      String
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
+  diagnosticos DiagnosticoAprendizado[]
+  pedidosCriacao PedidoCriacao[]
+  diasDeEstudo DiaDeEstudo[]
   materiais MaterialEstudo[]
+  /// Perfil leve (spec 09): nome e cor do avatar; o id público (aleatório) é o da página /p/<id>.
+  perfilNome String?
+  perfilCor  String?
+  perfilId   String? @unique
+  /// Perfil rico (spec 10): resumo (até 160) e interesses (até 5 temas de TEMAS).
+  perfilResumo     String?
+  perfilInteresses String[] @default([])
+  foto             FotoPerfil?
+  eventos          EventoTrilha[]
+  denuncias        Denuncia[]
+  /// Perfil de demonstração (spec 10, etapa C): criado pelo comando da comunidade, sem senha e sem login; selo público.
+  perfilDemo       Boolean              @default(false)
+  /// Aceite do envio a IA de terceiros (App Review 5.1.2(i)): quando e qual versão do texto. Revogar zera os dois.
+  consentimentoIaEm     DateTime? @db.Timestamptz(3)
+  consentimentoIaVersao String?
+  segue            Seguir[]             @relation("seguidor")
+  seguidores       Seguir[]             @relation("seguido")
+}
+
+/// Seguir (spec 10, etapa C2): quem segue quem, com data (as Novidades contam os novos da semana). Sem lista pública.
+model Seguir {
+  seguidorId String
+  seguidoId  String
+  criadoEm   DateTime @default(now()) @db.Timestamptz(3)
+  seguidor   Usuario  @relation("seguidor", fields: [seguidorId], references: [id], onDelete: Cascade)
+  seguido    Usuario  @relation("seguido", fields: [seguidoId], references: [id], onDelete: Cascade)
+
+  @@id([seguidorId, seguidoId])
+  @@index([seguidoId, criadoEm])
+}
+
+/// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a
+/// cada troca; remover a foto apaga a linha.
+model FotoPerfil {
+  moderacao EstadoModeracao @default(pendente)
+  usuarioId String   @id
+  token     String   @unique
+  grande    Bytes
+  pequena   Bytes
+  criadaEm  DateTime @default(now()) @db.Timestamptz(3)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
 
 model Sessao {
@@ -48,12 +108,111 @@ model PlanoAprendizado {
   id        String
   titulo    String
   objetivo  String
+  diagnostico Json?
   origem    String
   criadoEm  DateTime @default(now()) @db.Timestamptz(3)
   usuario   Usuario  @relation(fields: [usuarioId], references: [id])
   fluxos    Fluxo[]
+  /// Trilha recebida por link: nome e id público de quem compartilhou (no momento da cópia) e o código do link.
+  origemNome     String?
+  origemPerfilId String?
+  origemCodigo   String?
+  links          LinkTrilha[]
+  /// Configurações (lote 4): descrição (o mesmo texto da legenda do link), tema e capa da galeria (id; null = a capa
+  /// padrão, a de hoje). Colunas anuláveis: nenhuma trilha existente muda.
+  descricao      String?
+  tema           String?
+  capa           String?
+  capaFoto       CapaFoto?
 
   @@id([usuarioId, id])
+  @@unique([usuarioId, origemCodigo])
+}
+
+/// Link de compartilhamento de uma trilha (um por trilha). Encerrar apaga a linha; apagar a trilha apaga o link.
+model LinkTrilha {
+  moderacao EstadoModeracao @default(pendente)
+  revisao Int @default(1)
+  codigo      String           @id
+  usuarioId   String
+  planoId     String
+  noPerfil    Boolean          @default(false)
+  adicoes     Int              @default(0)
+  criadoEm    DateTime         @default(now()) @db.Timestamptz(3)
+  /// Comunidade (spec 10, etapa B): publicada no Explorar (também aparece no perfil), com tema e legenda.
+  noExplorar  Boolean          @default(false)
+  tema        String?
+  legenda     String?
+  publicadaEm DateTime?        @db.Timestamptz(3)
+  /// Três contas distintas denunciaram: sai do Explorar até revisão.
+  oculta      Boolean          @default(false)
+  plano       PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+  eventos     EventoTrilha[]
+
+  @@unique([usuarioId, planoId])
+  @@index([usuarioId, noPerfil])
+  @@index([noExplorar, oculta, publicadaEm(sort: Desc), codigo(sort: Desc)])
+}
+
+/// Adição ("Quero estudar") e valeu, com data: um por conta por trilha. O "Em alta" soma os dos últimos 7 dias.
+/// Contas de visitante não geram evento. Desligar o valeu apaga a linha.
+model EventoTrilha {
+  codigo    String
+  usuarioId String
+  tipo      String
+  criadoEm  DateTime   @default(now()) @db.Timestamptz(3)
+  link      LinkTrilha @relation(fields: [codigo], references: [codigo], onDelete: Cascade)
+  usuario   Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([codigo, usuarioId, tipo])
+  @@index([tipo, criadoEm])
+  @@index([usuarioId, tipo])
+}
+
+/// Denúncia de trilha (código do link) ou perfil (id público), uma por conta por alvo. Sem painel: banco e log.
+model Denuncia {
+  id        String   @id @default(uuid())
+  alvoTipo  String
+  alvo      String
+  usuarioId String?
+  contaVerificada Boolean @default(false)
+  estado String @default("aberto")
+  resposta String?
+  motivo    String
+  criadoEm  DateTime @default(now()) @db.Timestamptz(3)
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([estado, criadoEm])
+  @@unique([alvoTipo, alvo, usuarioId])
+}
+
+model Bloqueio {
+  id String @id @default(uuid())
+  deId String
+  paraId String
+  de Usuario @relation("bloqueia", fields: [deId], references: [id], onDelete: Cascade)
+  para Usuario @relation("bloqueado", fields: [paraId], references: [id], onDelete: Cascade)
+  @@unique([deId, paraId])
+  @@index([paraId])
+}
+
+model Atendimento {
+  id String @id @default(uuid())
+  mensagem String
+  estado String @default("aberto")
+  resposta String?
+  criadoEm DateTime @default(now()) @db.Timestamptz(3)
+  @@index([estado, criadoEm])
+}
+
+model DecisaoModeracao {
+  id String @id @default(uuid())
+  operadorId String
+  tipo String
+  alvo String
+  acao String
+  criadoEm DateTime @default(now()) @db.Timestamptz(3)
+  @@index([tipo, alvo])
 }
 
 model Fluxo {
@@ -120,6 +279,22 @@ model CodigoGoogleMobile {
   @@index([expiraEm])
 }
 
+/// Código de posse do e-mail antes de criar a conta. A chave é um HMAC do e-mail (o endereço não fica salvo).
+model VerificacaoCadastro {
+  chave      String   @id
+  codigoHash String
+  expiraEm   DateTime @db.Timestamptz(3)
+  tentativas Int      @default(0)
+  @@index([expiraEm])
+}
+
+/// Nonce de uso único do Iniciar sessão com a Apple (guardado só o hash).
+model NonceApple {
+  nonceHash String   @id
+  expiraEm  DateTime @db.Timestamptz(3)
+  @@index([expiraEm])
+}
+
 model RecuperacaoSenha {
   usuarioId String @id
   codigoHash String
@@ -154,4 +329,71 @@ model ApoioLicao {
   atualizadoEm DateTime @updatedAt @db.Timestamptz(3)
   licao Licao @relation(fields: [usuarioId, licaoId], references: [usuarioId, id], onDelete: Cascade)
   @@id([usuarioId, licaoId])
+}
+
+/// Capa da trilha com foto (lote 4): a imagem enviada pela dona, já recortada em 2:1, regravada em WebP sem metadados em
+/// dois tamanhos. O token do endereço público muda a cada troca; a trilha guarda `capa = "foto:<token>"`.
+model CapaFoto {
+  moderacao EstadoModeracao @default(pendente)
+  usuarioId String
+  planoId   String
+  token     String           @unique
+  grande    Bytes
+  pequena   Bytes
+  criadaEm  DateTime         @default(now()) @db.Timestamptz(3)
+  plano     PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+
+  @@id([usuarioId, planoId])
+}
+
+
+model DiagnosticoAprendizado {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  objetivo  String
+  passo     Int      @default(1)
+  revisao   Int      @default(0)
+  estado    Json
+  expiraEm  DateTime @db.Timestamptz(3)
+  @@index([expiraEm])
+}
+
+
+/// O pedido de criação de uma trilha (spec 04, Retomada da criação): um por conta e proposta (o id é o da proposta e o do plano), registrado ANTES de gerar, para o
+/// cliente recuperar o resultado se a resposta se perder. Só estado, etapa, resultado e tempos: sem token, tema, e-mail nem conteúdo.
+/// `validoAte` é o prazo do dono do lote (ele renova a cada poucos segundos); vencido, o lote foi abandonado (reinício ou queda) e o pedido vira falha `interrompida`.
+model PedidoCriacao {
+  usuarioId String
+  id        String
+  /// em_preparo | pronto | falha
+  estado    String
+  /// triagem | licoes | revisao | gravacao, enquanto em preparo
+  etapa     String?
+  /// Quantos lotes foram iniciados para este pedido (1 no normal).
+  tentativas   Int      @default(1)
+  iniciadoEm   DateTime @default(now()) @db.Timestamptz(3)
+  atualizadoEm DateTime @default(now()) @db.Timestamptz(3)
+  validoAte    DateTime? @db.Timestamptz(3)
+  /// Até quando o comprovante da proposta vale (30 min); depois, não dá para repetir com o mesmo token.
+  propostaExpiraEm DateTime @db.Timestamptz(3)
+  concluidoEm DateTime? @db.Timestamptz(3)
+  duracaoMs   Int?
+  /// Na falha: o código de erro devolvido, a causa que o cliente diferencia e o motivo curto (só do servidor).
+  codigo String?
+  causa  String?
+  motivo String?
+  /// Na falha por limite: quando o limite acaba, se o servidor souber (o cliente recebe só o prazo restante).
+  aguardarAte DateTime? @db.Timestamptz(3)
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, id])
+  @@index([atualizadoEm])
+}
+
+model DiaDeEstudo {
+  usuarioId String
+  dia       String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  @@id([usuarioId, dia])
 }

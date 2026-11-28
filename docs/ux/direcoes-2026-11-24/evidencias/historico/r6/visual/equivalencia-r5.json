@@ -1,0 +1,110 @@
+{
+  "priorSource": "5ad1225f586af063d58f694d4ebe705fcabca081",
+  "currentSource": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "rows": [
+    {
+      "file": "app.js",
+      "before": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+      "after": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+      "unchanged": false
+    },
+    {
+      "file": "app.html",
+      "before": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "after": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "unchanged": true
+    },
+    {
+      "file": "index.html",
+      "before": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+      "after": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "unchanged": false
+    },
+    {
+      "file": "base.css",
+      "before": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "after": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "unchanged": true
+    },
+    {
+      "file": "accessibility.css",
+      "before": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+      "after": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "unchanged": false
+    },
+    {
+      "file": "directions/jornada.css",
+      "before": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "after": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "unchanged": true
+    },
+    {
+      "file": "directions/caderno.css",
+      "before": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "after": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "unchanged": true
+    },
+    {
+      "file": "directions/foco.css",
+      "before": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "after": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "unchanged": true
+    },
+    {
+      "file": "media-pages.js",
+      "before": "38dec9a5115332ec0c7ad4ba1e8ca9ea9ca443cb2c19181aca950458051c8cd3",
+      "after": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+      "unchanged": false
+    },
+    {
+      "file": "media-pages.css",
+      "before": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "after": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "unchanged": true
+    },
+    {
+      "file": "social-pages.js",
+      "before": "572a52154ab2a2d6aa681dfe6ee57b110826d8a12f461400e603039625e46a58",
+      "after": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+      "unchanged": false
+    },
+    {
+      "file": "social-pages.css",
+      "before": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "after": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "unchanged": true
+    },
+    {
+      "file": "material-pages.js",
+      "before": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "after": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "unchanged": true
+    },
+    {
+      "file": "material-pages.css",
+      "before": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "after": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "unchanged": true
+    },
+    {
+      "file": "personal-pages.js",
+      "before": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+      "after": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "unchanged": false
+    },
+    {
+      "file": "personal-pages.css",
+      "before": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3",
+      "after": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "unchanged": false
+    },
+    {
+      "file": "vendor/qrcode.js",
+      "before": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "after": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c",
+      "unchanged": true
+    }
+  ],
+  "unchanged": 10,
+  "changed": 7
+}

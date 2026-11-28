@@ -1,0 +1,584 @@
+{
+  "startedAt": "2026-11-24T21:14:33.055Z",
+  "sourceHashesBefore": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "checks": [
+    {
+      "pair": "jornada-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-390",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "forced approval targets own A",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "forced approval does not change active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "withdraw nonactive A keeps active B",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "undo nonactive A restores shown state",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "undo nonactive A preserves active B and metadata",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "approved own A counts as one public trail",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending own A does not count as public",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "pending still leaves private received copy unchanged",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel keeps B title draft available",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "cancel leaves both A and B appearance committed",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "local reload preserves B unsaved draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "browser Back discards unconfirmed appearance only",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "return after Back preserves title draft",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "explicit cancel restores committed B title",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "guest sees account gate",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "guest forced scenario cannot change posting state",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "name": "guest cannot reach post controls",
+      "pass": true
+    }
+  ],
+  "errors": [],
+  "pairs": [
+    {
+      "pair": "jornada-390",
+      "pass": true
+    },
+    {
+      "pair": "jornada-360",
+      "pass": true
+    },
+    {
+      "pair": "caderno-390",
+      "pass": true
+    },
+    {
+      "pair": "caderno-360",
+      "pass": true
+    },
+    {
+      "pair": "foco-390",
+      "pass": true
+    },
+    {
+      "pair": "foco-360",
+      "pass": true
+    }
+  ],
+  "finishedAt": "2026-11-24T21:14:46.348Z",
+  "sourceHashesAfter": {
+    "personal-pages.js": "451547b6e876aaa528a81ccb78b1e05b7d1e137bbbcb7a3b9082975fd8b08ff1",
+    "personal-pages.css": "d4fbe86e9123dadcea1f94d2dcc68dae91d311190dddf38c934625e42e099fc3"
+  },
+  "sourceStable": true,
+  "summary": {
+    "checks": 102,
+    "pass": 102,
+    "fail": 0,
+    "errors": 0,
+    "pairs": [
+      {
+        "pair": "jornada-390",
+        "pass": true
+      },
+      {
+        "pair": "jornada-360",
+        "pass": true
+      },
+      {
+        "pair": "caderno-390",
+        "pass": true
+      },
+      {
+        "pair": "caderno-360",
+        "pass": true
+      },
+      {
+        "pair": "foco-390",
+        "pass": true
+      },
+      {
+        "pair": "foco-360",
+        "pass": true
+      }
+    ]
+  }
+}

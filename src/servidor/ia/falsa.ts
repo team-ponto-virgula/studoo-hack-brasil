@@ -1,3 +1,4 @@
+import { GERADOR_DIAGNOSTICO_FALSO, planoFalsoDiagnostico } from './falsa-diagnostico';
 import type { ConteudoLicao, EsqueletoPlano, PlanoInterno } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
@@ -28,7 +29,7 @@ const planoSql: PlanoInterno = {
         {
           titulo: "Filtrar com WHERE incluindo o valor no limite",
           objetivo: "Filtrar linhas com WHERE incluindo o valor no limite.",
-          conceito: "WHERE seleciona as linhas que satisfazem a condição. Use <= para incluir valores até o limite e >= para incluir valores a partir dele. Nos dois casos, o próprio limite entra no resultado.",
+          conceito: "WHERE seleciona as linhas que satisfazem a condição. Use <= para incluir valores até o limite e >= para valores a partir dele: nos dois casos, o próprio limite entra no resultado.",
           exemplo: "Com produtos que custam 15, 20 e 25, o filtro WHERE preco <= 20 seleciona os de 15 e 20. O produto de 20 entra porque o operador inclui a igualdade.",
           origem,
           exercicio: {
@@ -39,7 +40,7 @@ const planoSql: PlanoInterno = {
             trechoTipo: "codigo",
             gabarito: [">="],
             feedbackCorreto: ">= inclui notas iguais ou maiores que 7. Bia e Caio aparecem no resultado.",
-            feedbackIncorreto: "Use >= para incluir a nota 7 de Bia e a nota 9 de Caio. Com >, apenas Caio aparece porque a condição exige uma nota acima de 7.",
+            feedbackIncorreto: "Bia tem nota 7 e precisa aparecer no resultado, junto com Caio. O operador tem de aceitar a nota igual a 7, e não só as notas acima dela.",
           },
         },
         {
@@ -155,6 +156,24 @@ function pausaConfigurada(): number {
   return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : PAUSA_PADRAO_MS;
 }
 
+/**
+ * Pausa entre o último nó e a proposta, em ms (padrão 0: a proposta vem logo depois do último nó, como com a IA de verdade). Só serve ao ensaio da rolagem da trilha
+ * pronta: com STUDOO_IA_FALSA_PAUSA_PROPOSTA_MS entre 100 e 250, a proposta chega com a rolagem suave do último nó ainda andando (a corrida da produção).
+ */
+function pausaDaPropostaConfigurada(): number {
+  const valor = Number(process.env.STUDOO_IA_FALSA_PAUSA_PROPOSTA_MS);
+  return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : 0;
+}
+
+/**
+ * Pausa antes de cada lição ficar pronta no aceite, em ms (padrão 0). Só serve ao ensaio da espera longa depois de "Começar a lição 1": com a IA real, escrever as lições leva de 15 a 18 s;
+ * com STUDOO_IA_FALSA_PAUSA_CONTEUDO_MS=16000 a IA falsa leva o mesmo tempo (as lições saem juntas, então o aceite todo leva uma pausa só).
+ */
+function pausaDoConteudoConfigurada(): number {
+  const valor = Number(process.env.STUDOO_IA_FALSA_PAUSA_CONTEUDO_MS);
+  return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 60_000) : 0;
+}
+
 /** Espera `ms`. Devolve false se o sinal abortou antes do fim. */
 function dormir(ms: number, sinal: AbortSignal): Promise<boolean> {
   if (sinal.aborted) return Promise.resolve(false);
@@ -206,19 +225,28 @@ function planoDoObjetivo(objetivo: string): { plano: EstruturaDoPlano & { origem
  */
 export function criarGeradorFalso(): GeradorTrilha {
   return {
-    async *gerarEstrutura(objetivo, sinal, { aoVivo }) {
-      const { plano, gerador } = planoDoObjetivo(objetivo);
+    async *gerarEstrutura(objetivo, sinal, { aoVivo, diagnostico }) {
+      const adaptado = diagnostico && planoFalsoDiagnostico(objetivo, diagnostico);
+      const { plano, gerador } = adaptado
+        ? { plano: adaptado, gerador: GERADOR_DIAGNOSTICO_FALSO }
+        : planoDoObjetivo(objetivo);
       const pausa = aoVivo ? pausaConfigurada() : 0;
       for (const evento of eventosDoPlano(plano)) {
         if (!await dormir(pausa, sinal)) return undefined;
         yield evento;
       }
+      if (aoVivo && !await dormir(pausaDaPropostaConfigurada(), sinal)) return undefined;
       const meta: MetaPlano = { gerador, origem: plano.origem };
       return meta;
     },
 
     async gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal) {
       sinal.throwIfAborted();
+      if (!await dormir(pausaDoConteudoConfigurada(), sinal)) sinal.throwIfAborted();
+      if (esqueleto.gerador === GERADOR_DIAGNOSTICO_FALSO && esqueleto.diagnostico) {
+        const plano = planoFalsoDiagnostico(esqueleto.objetivo, esqueleto.diagnostico);
+        if (plano) return conteudoDoPlano(plano, fluxo, licao);
+      }
       if (esqueleto.gerador === GERADOR_SQL) return conteudoDoPlano(planoSql, fluxo, licao);
       if (esqueleto.gerador === GERADOR_GENERICO) {
         const conteudo = conteudoGenerico(esqueleto.objetivo, fluxo, licao);

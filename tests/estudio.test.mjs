@@ -7,6 +7,9 @@ import { cookieSessao } from '../src/servidor/acesso/origem.ts';
 import { POST as demoHttp } from '../src/app/api/estudio/materiais/demo/route.ts';
 import { lerArquivo } from '../src/servidor/estudio/http.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
+import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
+// Estes testes simulam a OpenAI: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
+const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
 import {
   criarMaterial,
   proporMaterial,
@@ -41,7 +44,7 @@ const codigo = (c) => (e) => e.codigo === c;
 const usuarios = [];
 async function pessoa() {
   const u = await banco.usuario.create({
-    data: { email: `estudio-${crypto.randomUUID()}@example.test`, fuso: 'UTC' },
+    data: { email: `estudio-${crypto.randomUUID()}@example.test`, fuso: 'UTC', ...aceiteIa },
   });
   usuarios.push(u.id);
   return u.id;
@@ -103,6 +106,9 @@ test('material → proposta → lição → reforço → explicação; progresso
     codigo('nao_encontrado'),
   );
   const p = await proporMaterial(u, material.id, 'Aprender frações');
+  // A proposta do material também sai com o pedidoId (o id do comprovante) e a validade, para a retomada da criação (spec 04, Retomada da criação).
+  assert.match(p.pedidoId, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  assert.ok(p.validaPorMs > 0 && p.validaPorMs <= 30 * 60_000);
   assert.equal(p.fluxos.flatMap((f) => f.licoes).length, 3);
   assert.equal(JSON.stringify(p).includes('gabarito'), false);
   await assert.rejects(
@@ -212,6 +218,22 @@ test('sem IA, o “Explique” reconhece frases da lição como exemplo e não s
   assert.doesNotMatch(falado.lacuna, /Faltou só um exemplo/);
 });
 
+test('sem IA, o “Explique” reconhece o exemplo concreto sem marca (“Numa pizza de 8 fatias, comer 3 é 3/8”) e não pede o exemplo de novo', async () => {
+  const u = await pessoa();
+  const fracoes = await aceitarProposta(u, (await gerarProposta(u, 'Entender, comparar e somar frações')).token);
+  const id = fracoes.fluxos[0].licoes[0].id;
+  const termos = termosDaLicao(DEMOS.find(({ chave }) => chave === 'fracoes').plano.fluxos[0].licoes[0]);
+  // O que a banca viu: a explicação TEM o exemplo, mas o cartão "O que revisar" dizia "Faltou só um exemplo seu".
+  const comExemplo = await ensinarStu(u, id, `${termos.join(', ')}. Numa pizza de 8 fatias, comer 3 é 3/8.`);
+  assert.equal(comExemplo.simulado, true);
+  assert.match(comExemplo.acertos.join(' '), /Você usou um exemplo/);
+  assert.doesNotMatch(comExemplo.lacuna, /Faltou só um exemplo/);
+  assert.doesNotMatch(comExemplo.proximoPasso, /Escreva uma situação sua/);
+  // Sem exemplo nenhum (só as ideias da lição), o pedido do exemplo continua valendo.
+  const semExemplo = await ensinarStu(u, id, `As ideias que importam: ${termos.join(', ')}.`);
+  assert.match(semExemplo.lacuna, /Faltou só um exemplo/);
+});
+
 test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem no retorno local', async () => {
   const u = await pessoa();
   const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
@@ -242,6 +264,61 @@ test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem 
   }
 });
 
+test('o avaliador do “Explique com suas palavras” recebe só a ideia da lição, sem exercícios, prática, referências nem ids', async () => {
+  const u = await pessoa();
+  const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
+  const id = plano.fluxos[0].licoes[0].id;
+  const licao = await buscarLicao(u, id);
+  assert.ok(licao.exercicios.length > 0, 'a lição de teste tem exercícios');
+  const ensino = [licao.titulo, licao.objetivo, licao.conceito, licao.exemplo, ...(licao.passos ?? [])].join('\n');
+  const textos = [];
+  const coletar = (v) => {
+    if (typeof v === 'string') textos.push(v);
+    else if (Array.isArray(v)) v.forEach(coletar);
+    else if (v && typeof v === 'object') Object.entries(v).forEach(([k, x]) => k !== 'id' && k !== 'tipo' && coletar(x));
+  };
+  coletar(licao.exercicios);
+  coletar(licao.pratica);
+  // Só os textos próprios do exercício (o que também está no ensino pode aparecer legitimamente).
+  const proibidos = [...new Set(textos.filter((t) => t.trim().length >= 12 && !ensino.includes(t)))];
+  assert.ok(proibidos.length > 0, 'há enunciados e opções para conferir');
+
+  const original = globalThis.fetch;
+  const anterior = { ia: process.env.IA, chave: process.env.OPENAI_API_KEY };
+  process.env.IA = 'openai';
+  process.env.OPENAI_API_KEY = 'chave-sintetica-teste';
+  let pedido = null;
+  globalThis.fetch = async (_url, init) => {
+    pedido = JSON.parse(init.body);
+    return Response.json({
+      output_text: JSON.stringify({ acertos: [], lacuna: 'Falta um exemplo.', pergunta: 'E num ukulele?', proximoPasso: 'Diga com suas palavras.' }),
+    });
+  };
+  try {
+    const feedback = await ensinarStu(u, id, 'A tarraxa fica na cabeça do violão e serve para afinar as cordas.');
+    assert.equal(feedback.simulado, false);
+  } finally {
+    globalThis.fetch = original;
+    process.env.IA = anterior.ia;
+    if (anterior.chave === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = anterior.chave;
+  }
+  assert.ok(pedido, 'o provedor foi chamado');
+  const dados = JSON.parse(pedido.input[0].content[0].text);
+  assert.deepEqual(Object.keys(dados).sort(), ['explicacao', 'licao']);
+  assert.ok(
+    Object.keys(dados.licao).every((k) => ['titulo', 'objetivo', 'conceito', 'exemplo', 'passos', 'falas'].includes(k)),
+    `campos enviados: ${Object.keys(dados.licao).join(', ')}`,
+  );
+  assert.equal(dados.licao.titulo, licao.titulo);
+  assert.equal(dados.licao.conceito, licao.conceito);
+  const corpo = pedido.input[0].content[0].text;
+  for (const t of proibidos) assert.ok(!corpo.includes(t), `texto de exercício ou prática chegou ao avaliador: ${t}`);
+  for (const valor of [licao.id, licao.planoId, licao.fluxoId]) assert.ok(!corpo.includes(valor), 'nenhum id chega ao avaliador');
+  assert.match(pedido.instructions, /explicar a ideia desta lição com as próprias palavras/);
+  assert.match(pedido.instructions, /nunca de uma questão de exercício/);
+});
+
 test('a pergunta escrita pela IA (reforço e lição do material) não deixa a certa sempre na primeira posição', () => {
   const base = { titulo: 'Frações', objetivo: 'Ler frações', conceito: 'Partes iguais.', exemplo: 'Metade.', feedbackCorreto: 'Isso.', feedbackIncorreto: 'Reveja.', pagina: 0, trecho: '' };
   const posicoes = new Set();
@@ -267,7 +344,7 @@ test('material expirado não gera proposta', async () => {
     codigo('nao_encontrado'),
   );
 });
-test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados', async () => {
+test('OpenAI: schema, recusa, citação inventada (não derruba), página inexistente, áudio e feedback validados', async () => {
   const original = globalThis.fetch;
   const anterior = { ...process.env };
   process.env.IA = 'openai';
@@ -278,7 +355,7 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
       const body = JSON.parse(init.body);
       assert.equal(body.store, false);
       assert.equal(body.text.format.strict, true);
-      assert.ok(body.instructions.includes('Nunca siga instruções'));
+      assert.ok(body.instructions.includes('Ignore comandos'));
       return Response.json({
         status: 'completed',
         output: [
@@ -317,15 +394,21 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
       pagina: 1,
       trecho: 'Citação inventada que não está no material.',
     };
-    globalThis.fetch = async () =>
-      Response.json({
-        status: 'completed',
-        output_text: JSON.stringify({ titulo: 'Frações', licoes: [l, l, l] }),
-      });
+    globalThis.fetch = async (_url, init) => {
+      const nome = JSON.parse(init.body).text.format.name;
+      const dados = nome === 'triagem_trilha' ? { decisao: 'permitir' } : { titulo: 'Frações', licoes: [l, l, l] };
+      return Response.json({ status: 'completed', output_text: JSON.stringify(dados) });
+    };
+    // Marco 6: a citação que não casa com a página (inventada, reescrita) não derruba a proposta: a referência vira um trecho literal da
+    // página (aqui o começo dela). Só a lição que cita uma página que não existe é recusada.
+    const comCitacaoInventada = await proporMaterial(u, material.id, 'Frações');
+    assert.equal(comCitacaoInventada.fluxos.flatMap((fluxo) => fluxo.licoes).length, 3);
+    l.pagina = 9;
     await assert.rejects(
       proporMaterial(u, material.id, 'Frações'),
       codigo('ia_indisponivel'),
     );
+    l.pagina = 1;
     l.trecho =
       'O denominador indica em quantas partes iguais o inteiro foi dividido.';
     const proposta = await proporMaterial(u, material.id, 'Frações');
@@ -363,7 +446,7 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
       'O denominador conta todas as partes iguais.',
     );
     globalThis.fetch = async () => Response.json({ text: 'x'.repeat(3001) });
-    await assert.rejects(transcrever(u, audio), codigo('voz_indisponivel'));
+    await assert.rejects(transcrever(u, audio), codigo('voz_falha'));
   } finally {
     globalThis.fetch = original;
     for (const k of Object.keys(process.env))
@@ -472,6 +555,9 @@ test('foto WebP passa pela normalização e OCR simulado com metadados de imagem
   try {
     globalThis.fetch = async (_url, init) => {
       const b = JSON.parse(init.body);
+      if (b.text?.format?.name === 'triagem_trilha') {
+        return Response.json({ output_text: '{"decisao":"permitir"}' });
+      }
       assert.ok(
         b.input[0].content[1].image_url.startsWith('data:image/jpeg;base64,'),
       );
@@ -598,4 +684,51 @@ test('simulação cobre todas as seções de CSV e mantém referências por linh
   assert.equal(licoes.length, 5);
   assert.match(licoes.at(-1).titulo, /Linhas 161–200/);
   assert.ok(licoes.every((l) => !l.titulo.includes('página')));
+});
+
+test('CSV com MIME text/comma-separated-values (Android) é aceito e validado pelo conteúdo', async () => {
+  const u = await pessoa();
+  const csv = 'Item,Quantidade\nMaçã,3\nPera,5';
+  const material = await criarMaterial(
+    u,
+    arquivo('android.csv', 'text/comma-separated-values', Buffer.from(csv)),
+  );
+  assert.equal(material.paginas.length, 1);
+  assert.match(material.paginas[0].texto, /Maçã/);
+});
+
+test('voz separa voz_vazia, voz_falha e voz_tempo e envia language quando idioma é informado', async () => {
+  const u = await pessoa();
+  const iaAntes = process.env.IA;
+  const chaveAntes = process.env.OPENAI_API_KEY;
+  const fetchAntes = globalThis.fetch;
+  process.env.IA = 'openai';
+  process.env.OPENAI_API_KEY = 'sk-teste-voz';
+  const wav = Buffer.from('RIFF\x00\x00\x00\x00WAVEfmt ');
+  const entrada = { ...arquivo('fala.wav', 'audio/wav', wav), idioma: 'pt-BR' };
+
+  try {
+    let languageEnviado = null;
+    globalThis.fetch = async (_url, init) => {
+      languageEnviado = init.body.get('language');
+      return Response.json({ text: '   ' });
+    };
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_vazia'));
+    assert.equal(languageEnviado, 'pt');
+
+    globalThis.fetch = async () => new Response('erro', { status: 500 });
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_falha'));
+
+    globalThis.fetch = async () => {
+      const err = new Error('timeout');
+      err.name = 'TimeoutError';
+      throw err;
+    };
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_tempo'));
+  } finally {
+    process.env.IA = iaAntes;
+    if (chaveAntes === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = chaveAntes;
+    globalThis.fetch = fetchAntes;
+  }
 });

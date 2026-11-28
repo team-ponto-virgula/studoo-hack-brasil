@@ -1,4 +1,5 @@
-import type { ExercicioInterno, ResultadoAvaliacao } from "@/dominio/aprendizado/plano";
+import { normalizarResposta, type ExercicioInterno, type ResultadoAvaliacao } from "@/dominio/aprendizado/plano";
+import { provedorIaAtivo } from "@/servidor/ia/provedor";
 import { configuracaoOpenAi, pedirCorrecao } from "@/servidor/ia/openai";
 
 /*
@@ -48,8 +49,16 @@ function registrar(motivo: string) {
   console.error(JSON.stringify({ rota: "ia-correcao", codigo: "local", motivo }));
 }
 
+type PedirCorrecaoFn = (
+  nome: string,
+  esquema: Record<string, unknown>,
+  instrucoes: string,
+  dados: unknown,
+  ms?: number,
+) => Promise<unknown>;
+
 async function corrigirAberta(
-  config: NonNullable<ReturnType<typeof configuracaoOpenAi>>,
+  pedir: PedirCorrecaoFn,
   contexto: Contexto,
   exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>,
   resposta: string,
@@ -57,7 +66,7 @@ async function corrigirAberta(
 ): Promise<ResultadoAvaliacao> {
   const criterios = exercicio.criterios ?? exercicio.gabarito.map((grupo) => grupo.split("|").join(" ou "));
   const essenciais = exercicio.essenciais ?? [];
-  const bruto = await pedirCorrecao(config, "correcao_aberta", esquemaAberta, instrucoesAberta, {
+  const bruto = await pedir("correcao_aberta", esquemaAberta, instrucoesAberta, {
     licao: contexto.titulo,
     conceito: contexto.conceito,
     enunciado: exercicio.enunciado,
@@ -92,12 +101,12 @@ async function corrigirAberta(
 }
 
 async function desempatarLacuna(
-  config: NonNullable<ReturnType<typeof configuracaoOpenAi>>,
+  pedir: PedirCorrecaoFn,
   exercicio: Extract<ExercicioInterno, { tipo: "lacuna" }>,
   resposta: string,
   local: ResultadoAvaliacao,
 ): Promise<ResultadoAvaliacao> {
-  const bruto = await pedirCorrecao(config, "desempate_lacuna", esquemaLacuna, instrucoesLacuna, {
+  const bruto = await pedir("desempate_lacuna", esquemaLacuna, instrucoesLacuna, {
     enunciado: exercicio.enunciado,
     ...(exercicio.trecho ? { frase: exercicio.trecho } : {}),
     aceitas: exercicio.gabarito,
@@ -119,14 +128,16 @@ export async function refinarAvaliacao(
   resposta: string,
   local: ResultadoAvaliacao,
 ): Promise<ResultadoAvaliacao> {
-  if (process.env.IA !== "openai" || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
-  // Uma armadilha conhecida (“chave” por tarraxa) é um erro previsto pela lição: a IA não a transforma em acerto.
-  if (exercicio.tipo === "lacuna" && local.observacao && exercicio.armadilhas?.some(({ aviso }) => aviso === local.observacao)) return local;
+  if (provedorIaAtivo() !== "openai" || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
+  // Uma armadilha conhecida (“chave” por tarraxa) é um erro previsto pela lição: a IA não a transforma em acerto. Vale pela resposta (o termo da armadilha), e não pelo aviso: o aviso
+  // que dizia a resposta certa sai do retorno (spec 17, B5), e a armadilha continua sendo um erro previsto.
+  if (exercicio.tipo === "lacuna" && exercicio.armadilhas?.some(({ termos }) => termos.split("|").some((termo) => normalizarResposta(termo) === normalizarResposta(resposta)))) return local;
   const config = configuracaoOpenAi();
   if (!config) return local;
+  const pedir: PedirCorrecaoFn = (nome, esquema, instrucoes, dados, ms) => pedirCorrecao(config, nome, esquema, instrucoes, dados, ms);
   try {
-    if (exercicio.tipo === "aberta") return await corrigirAberta(config, contexto, exercicio, resposta, local);
-    if (exercicio.tipo === "lacuna") return await desempatarLacuna(config, exercicio, resposta, local);
+    if (exercicio.tipo === "aberta") return await corrigirAberta(pedir, contexto, exercicio, resposta, local);
+    if (exercicio.tipo === "lacuna") return await desempatarLacuna(pedir, exercicio, resposta, local);
   } catch {
     registrar("indisponivel");
   }

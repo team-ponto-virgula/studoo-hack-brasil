@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "buildNumber": "7",
+  "bundle": "com.studoo.mobile.dev",
+  "sourceCommit": "0a96649e44c56feefa92a59daec950d4484756f0",
+  "motionVersion": 3,
+  "preparationLimitMs": 2000,
+  "nativeLimitMs": 5000,
+  "introAssetIncluded": true,
+  "introAssetSha256": "a0d10f9429e5ef6f5fd5767323b96ab12f5b592b5d36c7a60f62ca4236652d5b",
+  "publishedApiPresent": true,
+  "qaApiStringsAbsent": true,
+  "bootContractFieldsInBundle": true,
+  "launchStoryboard": "SplashScreen",
+  "nativeExecuted": false
+}

@@ -9,6 +9,7 @@ import {
   respostaParaTentarDeNovo,
   etapasDaLicao,
   faltaParaVerificar,
+  ordemInicial,
   frequenciasDoAcorde,
   inferirTipoTrecho,
   linhasDePassos,
@@ -202,10 +203,10 @@ test("a barra de fração vale de 1 a 12 partes e nunca pinta mais que o total",
 
 test("as etapas da lição mudam com o número de exercícios e a prática", () => {
   const exercicio = { tipo: "lacuna", enunciado: "x" };
-  assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio"]);
+  assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio", "ensino"]);
   const completa = etapasDaLicao({ exercicio, exercicios: [exercicio, exercicio], pratica: { tarefa: "t", minutos: 3 } });
   assert.deepEqual(completa, [
-    { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "pratica" },
+    { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "ensino" }, { tipo: "pratica" },
   ]);
   assert.equal(ultimoExercicio(completa), 3, "com prática, a aula volta ao último exercício, não à prática");
 });
@@ -273,6 +274,8 @@ const objetivosDasDemos = {
   historia: "História do Brasil para a prova",
   fracoes: "Frações para a prova do 6º ano",
   fotografia: "Fotografia com o celular",
+  geometria: "Geometria analítica: do ponto ao alinhamento",
+  funcoes: "Funções: o gráfico da reta, da parábola e do seno",
 };
 
 test("cada demo com assunto monta a própria trilha e todas as lições passam pela aula", async () => {
@@ -348,8 +351,8 @@ test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", as
 
 test("o rodapé diz o que falta para verificar, em cada formato, e some com a resposta completa", async () => {
   const { textoDaFalta } = await import("@studoo/contratos/experiencia");
-  const dica = (exercicio, resposta) => {
-    const falta = faltaParaVerificar(exercicio, resposta);
+  const dica = (exercicio, resposta, inicial) => {
+    const falta = faltaParaVerificar(exercicio, resposta, inicial);
     return falta && textoDaFalta(falta);
   };
   const itens = [{ id: "a", texto: "A" }, { id: "b", texto: "B" }, { id: "c", texto: "C" }];
@@ -357,6 +360,15 @@ test("o rodapé diz o que falta para verificar, em cada formato, e some com a re
   assert.equal(dica(ordenar, ""), "Faltam 3 itens para colocar em ordem.");
   assert.equal(dica(ordenar, "b,a"), "Falta 1 item para colocar em ordem.");
   assert.equal(dica(ordenar, "b,a,c"), null);
+  // Lista única (spec 08, revisão de 19/11): a ordem do servidor já está completa, mas só verifica depois de mudar.
+  assert.equal(dica(ordenar, "a,b,c"), "Mude a ordem para verificar.");
+  assert.equal(respostaCompleta(ordenar, "a,b,c"), false, "a ordem do servidor nunca vai para a verificação");
+  assert.equal(ordemInicial(ordenar), "a,b,c");
+  // Nova tentativa: compara com a ordem com que ela começou (o que já mudou antes não conta).
+  assert.equal(respostaCompleta(ordenar, "b,a,c", "b,a,c"), false);
+  assert.equal(dica(ordenar, "b,a,c", "b,a,c"), "Mude a ordem para verificar.");
+  assert.equal(respostaCompleta(ordenar, "a,b,c", "b,a,c"), true, "voltar à ordem do servidor também é mudar");
+  assert.equal(dica(ordenar, "c,a,b", "b,a,c"), null);
   const associar = { tipo: "associar", enunciado: "Ligue", esquerda: itens.slice(0, 2), direita: [{ id: "1", texto: "1" }, { id: "2", texto: "2" }] };
   assert.equal(dica(associar, "a=2"), "Falta 1 par para ligar.");
   assert.equal(dica(associar, "a=2,b=1"), null);
@@ -500,9 +512,13 @@ test("tentar de novo mantém o que estava certo", () => {
   const avaliacao = (certos) => ({ correta: false, feedback: "", comprovante: "", certos });
   assert.equal(respostaParaTentarDeNovo(associar, "a=a,b=c,c=b", avaliacao(["a"])), "a=a");
   const ordenar = { tipo: "ordenar", enunciado: "Ordene", itens };
-  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a,,", "o certo fica; as outras posições viram vaga");
-  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), ",b,", "o do meio também fica no lugar");
-  assert.equal(respostaParaTentarDeNovo(ordenar, "c,a,b", avaliacao([])), "", "sem nada certo, recomeça");
+  // Lista única (spec 08, 19/11): a nova tentativa começa com a ordem toda como estava; os certos ficam travados pela
+  // avaliação e os outros continuam onde estavam, sem vagas.
+  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a,c,b", "a ordem fica inteira; o certo trava no lugar");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), "c,b,a", "o do meio também");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,a,b", avaliacao([])), "c,a,b", "sem nada certo, a ordem também fica");
+  assert.equal(respostaCompleta(ordenar, "a,c,b", "a,c,b"), false, "na nova tentativa, falta mudar a ordem com que ela começou");
+  assert.equal(respostaCompleta(ordenar, "a,b,c", "a,c,b"), true, "mudou: verifica");
   assert.equal(respostaCompleta(ordenar, "a,,"), false, "com vaga, ainda não dá para verificar");
   const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
   assert.equal(respostaParaTentarDeNovo(vf, "falso:b", avaliacao(["valor"])), "falso:");

@@ -1,0 +1,315 @@
+{
+  "review": "R6",
+  "reviewer": "revisao_visual_r1",
+  "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "sourceHashesBefore": {
+    "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "sourceHashesAfter": {
+    "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+    "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+    "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+    "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+    "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+    "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+    "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+    "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+    "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+  },
+  "sourceStable": true,
+  "directions": {
+    "jornada": {
+      "criteria": {
+        "D1": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D2": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D3": {
+          "weight": 12,
+          "score": 9,
+          "evidence": "resultado.json,longos.json,fontes.json,folhas.json,guards.json"
+        },
+        "D4": {
+          "weight": 8,
+          "score": 9,
+          "evidence": "6 pranchas e PNGs afetados abertos,equivalencia-r5.json"
+        },
+        "D5": {
+          "weight": 10,
+          "score": 9,
+          "evidence": "motion.json,resultado.json.motion"
+        },
+        "D6": {
+          "weight": 14,
+          "score": null,
+          "evidence": null
+        },
+        "D7": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D8": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D9": {
+          "weight": 6,
+          "score": null,
+          "evidence": null
+        },
+        "D10": {
+          "weight": 6,
+          "score": null,
+          "evidence": "matriz integral e provas de interação permanecem pendentes neste parecer"
+        }
+      },
+      "weightedScore": null,
+      "status": "provisoria",
+      "native": null,
+      "empirical": null,
+      "productCriteria": {
+        "C1": null,
+        "C2": null,
+        "C3": null,
+        "C4": null,
+        "C5": null,
+        "C6": null,
+        "C7": null,
+        "C8": null,
+        "C9": null,
+        "C10": null
+      }
+    },
+    "caderno": {
+      "criteria": {
+        "D1": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D2": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D3": {
+          "weight": 12,
+          "score": 9,
+          "evidence": "resultado.json,longos.json,fontes.json,folhas.json,guards.json"
+        },
+        "D4": {
+          "weight": 8,
+          "score": 9,
+          "evidence": "6 pranchas e PNGs afetados abertos,equivalencia-r5.json"
+        },
+        "D5": {
+          "weight": 10,
+          "score": 9,
+          "evidence": "motion.json,resultado.json.motion"
+        },
+        "D6": {
+          "weight": 14,
+          "score": null,
+          "evidence": null
+        },
+        "D7": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D8": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D9": {
+          "weight": 6,
+          "score": null,
+          "evidence": null
+        },
+        "D10": {
+          "weight": 6,
+          "score": null,
+          "evidence": "matriz integral e provas de interação permanecem pendentes neste parecer"
+        }
+      },
+      "weightedScore": null,
+      "status": "provisoria",
+      "native": null,
+      "empirical": null,
+      "productCriteria": {
+        "C1": null,
+        "C2": null,
+        "C3": null,
+        "C4": null,
+        "C5": null,
+        "C6": null,
+        "C7": null,
+        "C8": null,
+        "C9": null,
+        "C10": null
+      }
+    },
+    "foco": {
+      "criteria": {
+        "D1": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D2": {
+          "weight": 12,
+          "score": null,
+          "evidence": null
+        },
+        "D3": {
+          "weight": 12,
+          "score": 9,
+          "evidence": "resultado.json,longos.json,fontes.json,folhas.json,guards.json"
+        },
+        "D4": {
+          "weight": 8,
+          "score": 9,
+          "evidence": "6 pranchas e PNGs afetados abertos,equivalencia-r5.json"
+        },
+        "D5": {
+          "weight": 10,
+          "score": 9,
+          "evidence": "motion.json,resultado.json.motion"
+        },
+        "D6": {
+          "weight": 14,
+          "score": null,
+          "evidence": null
+        },
+        "D7": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D8": {
+          "weight": 10,
+          "score": null,
+          "evidence": null
+        },
+        "D9": {
+          "weight": 6,
+          "score": null,
+          "evidence": null
+        },
+        "D10": {
+          "weight": 6,
+          "score": null,
+          "evidence": "matriz integral e provas de interação permanecem pendentes neste parecer"
+        }
+      },
+      "weightedScore": null,
+      "status": "provisoria",
+      "native": null,
+      "empirical": null,
+      "productCriteria": {
+        "C1": null,
+        "C2": null,
+        "C3": null,
+        "C4": null,
+        "C5": null,
+        "C6": null,
+        "C7": null,
+        "C8": null,
+        "C9": null,
+        "C10": null
+      }
+    }
+  },
+  "closures": [
+    {
+      "id": "V1-R5",
+      "status": "closed",
+      "evidence": "fontes.json,longos.json"
+    },
+    {
+      "id": "B1-R5",
+      "status": "closed",
+      "evidence": "conferencia-final.json footerComparison,PNG novos"
+    },
+    {
+      "id": "B2-R5",
+      "status": "closed",
+      "evidence": "motion.json,6 pranchas R6"
+    }
+  ],
+  "openExternalFindings": [
+    {
+      "severity": "medium",
+      "criteria": [
+        "D1",
+        "D9"
+      ],
+      "summary": "Promessa absoluta sobre nome de material contradita pelo aviso de título",
+      "evidence": "copy-material.json,copy-material-*.png",
+      "adjudicator": "revisao_fluxos_r1"
+    },
+    {
+      "severity": "medium",
+      "criteria": [
+        "D9"
+      ],
+      "summary": "Callback async clipboard após mudança de contexto",
+      "origin": "comunicado pelo revisor de fluxos; não exercitado pelos guards visuais"
+    }
+  ],
+  "gates": {
+    "DG1": "pendente matriz/interacao",
+    "DG2": null,
+    "DG3": "faceta observada passou",
+    "DG4": "movimento observado passou; acesso exige parecer QA",
+    "DG5": "nao aprovado integral por achados externos D1/D9",
+    "DG6": "pendente"
+  },
+  "counts": {
+    "mainViews": 1524,
+    "distinctMainFrames": 127,
+    "longViews": 360,
+    "sourceCombinations": 12,
+    "sourceCaptures": 36,
+    "extraSheetViews": 108,
+    "guardViews": 216,
+    "guardChecks": 216,
+    "selectionProbes": 24,
+    "copyDiagnosticFrames": 3,
+    "openedBoards": 6
+  },
+  "report": "docs/ux/direcoes-2026-11-24/revisoes/PARECER-VISUAL-R6.md"
+}

@@ -1,0 +1,15 @@
+# Recomeça o app do zero, com a sessão que já existe: fecha o Expo Go, abre o projeto de novo e espera a barra de baixo
+# e o mapa da trilha em andamento (é onde o Studoo abre para quem tem trilhas). Cada fluxo de `telas/` começa por aqui,
+# para não depender de onde o fluxo anterior parou (uma folha aberta, uma lição pela metade).
+appId: host.exp.Exponent
+---
+- runFlow: reabrir-ate-abas.yaml
+# O Maestro desconta de toda espera pelo que está na tela, mesmo com `timeout`, o tempo passado desde o último comando que
+# ele conta como interação (adjustedToLatestInteraction, no Orchestra.kt da 2.12.1), e as esperas acima não contam. Na
+# execução 44565509060, o app levou 37 s para abrir e o mapa do fluxo 70 ficou com 6 s dos 45. O `evalScript` conta como
+# interação e não toca no aparelho: zera a conta antes da espera do mapa.
+- evalScript: ${output.esperaDoMapa = true}
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000

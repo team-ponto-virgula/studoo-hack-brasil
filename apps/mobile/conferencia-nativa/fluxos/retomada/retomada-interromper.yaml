@@ -1,0 +1,59 @@
+appId: host.exp.Exponent
+name: retomada-interromper
+---
+# Começa na sessão que o fluxo 02 abriu. A queda da resposta é externa ao app.
+- tapOn:
+    id: nav-objetivo
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: objetivo-estudo
+    timeout: 30000
+- tapOn:
+    id: objetivo-estudo
+    waitToSettleTimeoutMs: 1500
+- inputText: Astronomia para observar o ceu noturno
+- tapOn:
+    id: gerar-trilha
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: diagnostico-pular
+    timeout: 30000
+- tapOn:
+    id: diagnostico-pular
+    waitToSettleTimeoutMs: 1500
+# O formulário de entrada no diagnóstico é local. A primeira chamada à IA, neste fluxo, é depois de pular.
+- extendedWaitUntil:
+    visible:
+      id: consentimento-ia-titulo
+    timeout: 30000
+- tapOn:
+    id: confirmacao-confirmar
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha
+    timeout: 90000
+- assertVisible: 'Sua proposta tem 10 lições em 3 partes\.'
+- takeScreenshot: 86-retomada-proposta
+- tapOn:
+    id: comecar-trilha
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible:
+      id: criacao-verificar
+    timeout: 30000
+- assertVisible: 'Ainda não conseguimos confirmar se sua trilha foi salva\.'
+- assertNotVisible: 'Sem conexão.*'
+- assertVisible:
+    id: criacao-minhas-trilhas
+- tapOn:
+    id: criacao-verificar
+    waitToSettleTimeoutMs: 1500
+- extendedWaitUntil:
+    visible: 'Verificar status'
+    timeout: 15000
+- assertVisible: 'Ainda não conseguimos confirmar se sua trilha foi salva\.'
+- takeScreenshot: 87-retomada-sem-confirmacao
+- stopApp

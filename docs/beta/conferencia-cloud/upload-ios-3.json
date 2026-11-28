@@ -1,0 +1,30 @@
+{
+  "app": {
+    "id": "6837508955",
+    "nome": "Studoo",
+    "bundleId": "com.studoo.mobile.dev",
+    "idioma": "pt-BR"
+  },
+  "easBuild": {
+    "id": "20b7bdac-da61-4ed8-8003-ccc98d3f35cb",
+    "versao": "0.1.0",
+    "numero": "3",
+    "fonte": "6c8b1d2664e595cae49ec4ca020742ec51b2eef3",
+    "status": "FINISHED"
+  },
+  "easSubmission": {
+    "id": "fcf8f42b-864a-4bcf-ad52-6598a981a194",
+    "status": "FINISHED"
+  },
+  "appleBuild": {
+    "id": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+    "version": "3",
+    "processingState": "VALID"
+  },
+  "grupoExterno": {
+    "id": "34be86e5-92cb-4d59-9ffb-eafdd7d64a25",
+    "nome": "Studoo Beta Externo",
+    "linkPublicoAtivo": false
+  },
+  "revisaoBetaSolicitada": false
+}

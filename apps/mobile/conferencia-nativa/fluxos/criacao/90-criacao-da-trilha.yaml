@@ -1,0 +1,86 @@
+# A criação de uma trilha, do pedido à primeira aula (pedido do dono: confirmação → em criação → trilha pronta → primeira
+# aula), com dados sintéticos (IA simulada). Roda numa fase própria, antes das telas (comum.sh, fluxo_criacao), que depois
+# apaga a trilha criada pela API: os fluxos das telas encontram as seis trilhas do preparo, como sempre.
+# O caminho é o do app (estudo.tsx): o pedido é digitado no campo; "Montar minha trilha" (gerar-trilha) abre a
+# geração ao vivo (faixa-geracao), onde o caminho se forma; pronta, "Começar" (comecar-trilha) salva a trilha e abre
+# direto a etapa 1 da primeira lição, num toque só e sem outra tela; ao voltar (voltar-plano), o mapa da trilha salva.
+# Só testID e o contador da etapa: os textos da criação vão mudar (mensagens.geracao).
+# A transição, do toque em "Montar minha trilha" à etapa 1, fica num vídeo curto (criacao-transicao.mp4). Os carimbos dos
+# comandos (commands.json) entram na linha do tempo do som (servidor/linha-do-tempo-som.mjs), ao lado do registro do
+# sistema de áudio que a fase grava enquanto o fluxo roda.
+appId: host.exp.Exponent
+name: 90-criacao-da-trilha
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-objetivo
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo
+    timeout: 30000
+# O pedido é "Fracoes", sem acento (o Maestro não digita acento com segurança no Android): a IA simulada o reconhece como a
+# demonstração de frações, cuja primeira lição começa por um exercício de múltipla escolha, o que a resposta errada e a
+# certa do fluxo 95 usam. O campo tem várias linhas (o Enter não envia); o envio é o toque em "Montar minha trilha".
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: objetivo-estudo
+- inputText: Fracoes
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 90-criacao-pedido
+- startRecording: criacao-transicao
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: gerar-trilha
+# A prova da geração segue direto com o pedido já escrito. As perguntas ficam no percurso de diagnóstico.
+- extendedWaitUntil:
+    visible:
+      id: diagnostico-pular
+    timeout: 30000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: diagnostico-pular
+# Em criação: a faixa presa com o pedido (faixa-geracao) está na tela desde o primeiro evento da geração. O cartão do
+# título (titulo-geracao) só aparece com a proposta pronta, então não serve para provar "em criação".
+# A captura sai só com a faixa à vista. Pronta e no alto da página, a geração troca a faixa pelo cartão do título
+# (estudo.tsx, cartaoDeVolta), e no emulador do Android a proposta já estava pronta quando o fluxo procurou a faixa: o
+# toque em "Pular perguntas" levou quase 10 s (execução 45942548694). Sem a faixa, o fluxo segue para a proposta pronta,
+# a coleta acusa a 91 como faltando e o "em criação" fica no vídeo da transição.
+- runFlow:
+    when:
+      visible:
+        id: faixa-geracao
+    commands:
+      - takeScreenshot: 91-criacao-em-andamento
+# Pronta: o "Começar" aparece quando a última lição entra no caminho.
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha
+    timeout: 120000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 92-criacao-pronta
+# Um toque só: o aceite salva a trilha e a etapa 1 da primeira lição abre sem outra tela nem outro botão.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: comecar-trilha
+- extendedWaitUntil:
+    visible: 'Etapa 1 de \d+'
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 93-criacao-primeira-aula
+- stopRecording
+# Ao voltar, o mapa da trilha salva.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: voltar-plano
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 94-criacao-mapa-ao-voltar

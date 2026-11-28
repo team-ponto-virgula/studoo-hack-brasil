@@ -1,0 +1,2319 @@
+{
+  "candidate": "a6f2e09b559b3c531b66fbc404839d661d304f48",
+  "rows": [
+    {
+      "dir": "jornada",
+      "zoom": 100,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 9.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 53.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 12,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 16,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 15,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 13,
+          "weight": 800,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 12,
+          "weight": 900,
+          "color": "rgb(36, 87, 221)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.03,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 30,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 17,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 15,
+          "weight": 500,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 15,
+          "weight": 900,
+          "color": "rgb(36, 87, 221)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 5.417,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 15,
+          "weight": 500,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 14,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Repare em quem tem nota exatamente 7.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 16,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            36,
+            87,
+            221
+          ],
+          "ratio": 6.03,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(21, 39, 91) none 3px"
+      },
+      "main": {
+        "clientHeight": 653,
+        "scrollHeight": 742
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-jornada-100.png"
+    },
+    {
+      "dir": "jornada",
+      "zoom": 200,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 718.41,
+          "w": 320,
+          "h": 65.59,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 29.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 73.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 718.41,
+          "w": 320,
+          "h": 65.59,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 718.41,
+          "w": 320,
+          "h": 65.59,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 24,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 16,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 30,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 26,
+          "weight": 800,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 24,
+          "weight": 900,
+          "color": "rgb(36, 87, 221)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.03,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 60,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 34,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 30,
+          "weight": 500,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 30,
+          "weight": 900,
+          "color": "rgb(36, 87, 221)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 5.417,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 30,
+          "weight": 500,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 28,
+          "weight": 700,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.255,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(80, 96, 122)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.373,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Repare em quem tem nota exatamente 7.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(21, 39, 91)",
+          "background": [
+            237,
+            243,
+            255
+          ],
+          "ratio": 12.806,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 32,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            36,
+            87,
+            221
+          ],
+          "ratio": 6.03,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(21, 39, 91) none 3px"
+      },
+      "main": {
+        "clientHeight": 599,
+        "scrollHeight": 1818
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-jornada-200.png"
+    },
+    {
+      "dir": "caderno",
+      "zoom": 100,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 9.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 53.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 12,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 15,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 15,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 13,
+          "weight": 800,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 12,
+          "weight": 900,
+          "color": "rgb(36, 78, 171)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 7.143,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 30,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 17,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 17,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 15,
+          "weight": 500,
+          "color": "rgb(23, 60, 119)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 9.677,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 15,
+          "weight": 900,
+          "color": "rgb(36, 85, 206)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 5.776,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 15,
+          "weight": 500,
+          "color": "rgb(23, 60, 119)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 9.677,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 14,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.821,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.071,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 16,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            36,
+            85,
+            206
+          ],
+          "ratio": 6.431,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(23, 37, 80) none 3px"
+      },
+      "main": {
+        "clientHeight": 653,
+        "scrollHeight": 653
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-caderno-100.png"
+    },
+    {
+      "dir": "caderno",
+      "zoom": 200,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.41,
+          "w": 320,
+          "h": 67.59,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 29.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 73.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.41,
+          "w": 320,
+          "h": 67.59,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.41,
+          "w": 320,
+          "h": 67.59,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 24,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 15,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 30,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 26,
+          "weight": 800,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 24,
+          "weight": 900,
+          "color": "rgb(36, 78, 171)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 7.143,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 60,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 34,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 5.685,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 34,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            251,
+            247,
+            240
+          ],
+          "ratio": 13.879,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 30,
+          "weight": 500,
+          "color": "rgb(23, 60, 119)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 9.677,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 30,
+          "weight": 900,
+          "color": "rgb(36, 85, 206)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 5.776,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 30,
+          "weight": 500,
+          "color": "rgb(23, 60, 119)",
+          "background": [
+            238,
+            243,
+            252
+          ],
+          "ratio": 9.677,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 28,
+          "weight": 700,
+          "color": "rgb(23, 37, 80)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 14.821,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(92, 98, 117)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.071,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 32,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            36,
+            85,
+            206
+          ],
+          "ratio": 6.431,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(23, 37, 80) none 3px"
+      },
+      "main": {
+        "clientHeight": 597,
+        "scrollHeight": 1570
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-caderno-200.png"
+    },
+    {
+      "dir": "foco",
+      "zoom": 100,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 9.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 53.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 732,
+          "w": 320,
+          "h": 52,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 12,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 15,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 15,
+          "weight": 700,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 15.044,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 13,
+          "weight": 800,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 5.744,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 12,
+          "weight": 900,
+          "color": "rgb(22, 59, 155)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 9.185,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 28,
+          "weight": 850,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 17,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 5.744,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 18,
+          "weight": 850,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 16,
+          "weight": 400,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 14,
+          "weight": 500,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 13.298,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 14,
+          "weight": 900,
+          "color": "rgb(38, 88, 217)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 5.334,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 14,
+          "weight": 500,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 13.298,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 14,
+          "weight": 700,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 13,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 16,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            38,
+            88,
+            217
+          ],
+          "ratio": 6.034,
+          "minimum": 4.5,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(17, 33, 92) none 3px"
+      },
+      "main": {
+        "clientHeight": 653,
+        "scrollHeight": 653
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-foco-100.png"
+    },
+    {
+      "dir": "foco",
+      "zoom": 200,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 360,
+        "overflow": false
+      },
+      "footerControls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.81,
+          "w": 320,
+          "h": 67.19,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "viewport": {
+        "w": 360,
+        "h": 800
+      },
+      "bodyWidth": 360,
+      "horizontalOverflow": false,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "icon-button",
+          "label": "Sair da lição",
+          "x": 16,
+          "y": 29.5,
+          "w": 44,
+          "h": 44,
+          "right": 60,
+          "bottom": 73.5,
+          "name": "Sair da lição",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.81,
+          "w": 320,
+          "h": 67.19,
+          "right": 340,
+          "bottom": 784,
+          "name": "Vamos praticar",
+          "disabled": false,
+          "role": null,
+          "checked": null,
+          "pressed": null
+        }
+      ],
+      "smallTargets": [],
+      "unnamedControls": [],
+      "primary": [
+        {
+          "tag": "BUTTON",
+          "id": null,
+          "cls": "primary",
+          "label": "Vamos praticar",
+          "x": 20,
+          "y": 716.81,
+          "w": 320,
+          "h": 67.19,
+          "right": 340,
+          "bottom": 784,
+          "entireInViewport": true
+        }
+      ],
+      "minFont": 24,
+      "smallTexts": [],
+      "contrastFailures": [],
+      "horizontalTextClips": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        }
+      ],
+      "textCount": 15,
+      "allTextMetrics": [
+        {
+          "text": "SQL_BibliotecasComunitarias_ConsultasRelacionadas",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": true
+        },
+        {
+          "text": "Lição 1 · WHERE",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 30,
+          "weight": 700,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 15.044,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "1 / 3",
+          "tag": "DIV",
+          "cls": "lesson-step",
+          "size": 26,
+          "weight": 800,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 5.744,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Entenda a ideia",
+          "tag": "DIV",
+          "cls": "eyebrow",
+          "size": 24,
+          "weight": 900,
+          "color": "rgb(22, 59, 155)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 9.185,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "O limite também entra.",
+          "tag": "H1",
+          "cls": "",
+          "size": 56,
+          "weight": 850,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "WHERE seleciona as linhas que satisfazem uma condição.",
+          "tag": "P",
+          "cls": "lead",
+          "size": 34,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 5.744,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Use >= para incluir valores a partir do limite. O sinal de igualdade faz toda a diferença.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Veja um exemplo",
+          "tag": "H3",
+          "cls": "",
+          "size": 36,
+          "weight": 850,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Para notas de pelo menos 7, as notas 7 e 9 entram. A nota 6 fica de fora.",
+          "tag": "P",
+          "cls": "",
+          "size": 32,
+          "weight": 400,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            245,
+            247,
+            252
+          ],
+          "ratio": 14.036,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "SELECT nome FROM alunos\nWHERE nota",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 28,
+          "weight": 500,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 13.298,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ">= 7",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 28,
+          "weight": 900,
+          "color": "rgb(38, 88, 217)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 5.334,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": ";",
+          "tag": "PRE",
+          "cls": "code",
+          "size": 28,
+          "weight": 500,
+          "color": "rgb(17, 33, 92)",
+          "background": [
+            237,
+            241,
+            250
+          ],
+          "ratio": 13.298,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Exemplo de demonstração",
+          "tag": "STRONG",
+          "cls": "",
+          "size": 28,
+          "weight": 700,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Conteúdo sintético de SQL do Studoo.",
+          "tag": "SMALL",
+          "cls": "",
+          "size": 26,
+          "weight": 400,
+          "color": "rgb(83, 98, 125)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.157,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        },
+        {
+          "text": "Vamos praticar",
+          "tag": "BUTTON",
+          "cls": "primary",
+          "size": 32,
+          "weight": 900,
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            38,
+            88,
+            217
+          ],
+          "ratio": 6.034,
+          "minimum": 3,
+          "disabled": false,
+          "horizontalClipped": false
+        }
+      ],
+      "focus": {
+        "tag": "H1",
+        "label": "O limite também entra.",
+        "outline": "rgb(17, 33, 92) none 3px"
+      },
+      "main": {
+        "clientHeight": 598,
+        "scrollHeight": 1491
+      },
+      "animations": [
+        {
+          "name": "enter",
+          "duration": "0.18s",
+          "opacity": "1"
+        }
+      ],
+      "screenshot": "titulo-cabecalho-foco-200.png"
+    }
+  ]
+}

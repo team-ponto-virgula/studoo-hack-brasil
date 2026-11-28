@@ -107,8 +107,8 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           `Complete a frase sobre como começar a estudar ${aspas}.`,
           "Antes de estudar, desenhe o ___ do assunto e liste as suas partes.",
           "mapa",
-          "Isso mesmo: o mapa mostra as partes e a ordem em que elas se ligam.",
-          "A palavra é mapa. Ele organiza as partes do assunto antes de você entrar nos detalhes.",
+          "O mapa mostra as partes e a ordem em que elas se ligam.",
+          "Releia o conceito: é o desenho que mostra as partes do assunto e como elas se ligam.",
         ),
       };
     case "0.1":
@@ -139,7 +139,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Depois de ler um exemplo, tente ___ o exemplo sem olhar.",
           "refazer",
           "Refazer sem olhar mostra o que você entendeu e o que ainda falta.",
-          "A palavra é refazer. Repetir o exemplo sem olhar é o que mostra se você entendeu.",
+          "Releia o exemplo: o que você faz com ele quando cobre a solução e tenta chegar sozinho ao resultado?",
         ),
       };
     case "1.0":
@@ -159,7 +159,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
             op("conferir", "Conferir o resultado"),
           ],
           gabarito: ["pedido", "sabe", "acao", "conferir"],
-          feedbackCorreto: "Isso: entender o pedido, juntar o que já sabe, agir e conferir.",
+          feedbackCorreto: "Entender o pedido, juntar o que já sabe, agir e conferir.",
           feedbackIncorreto: "Comece pelo pedido: diga o que o problema quer. Depois liste o que já sabe, escolha a primeira ação e confira no fim.",
         },
       };
@@ -179,7 +179,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
             op("sorte", "Acertar ou errar depende só de sorte"),
           ],
           gabarito: ["falso", "pista"],
-          feedbackCorreto: "Isso: errar faz parte. O erro anotado vira um guia do que revisar.",
+          feedbackCorreto: "Errar faz parte. O erro anotado vira um guia do que revisar.",
           feedbackIncorreto: "É falsa: o erro não mede talento. Anotado, ele mostra exatamente onde vale a pena voltar.",
         },
       };
@@ -232,8 +232,8 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Complete a frase sobre revisão ativa.",
           "Na revisão ativa, você tenta lembrar antes de ___ as anotações.",
           "consultar",
-          "Isso: tentar lembrar primeiro dá mais resultado do que reler.",
-          "A palavra é consultar. A revisão ativa pede o esforço de lembrar antes de abrir as anotações.",
+          "Tentar lembrar primeiro dá mais resultado do que reler.",
+          "Releia o conceito: o esforço de lembrar vem antes. Que verbo diz o que você faz com as anotações depois?",
         ),
       };
     case "2.2":

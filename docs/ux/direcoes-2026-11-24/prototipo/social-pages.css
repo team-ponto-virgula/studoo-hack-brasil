@@ -1,0 +1,43 @@
+/* Componentes compartilhados pelas três direções; sem cores que substituam os temas. */
+.report-context{display:flex;align-items:flex-start;gap:14px;padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);min-width:0}
+.report-context>svg{color:var(--primary);flex:0 0 24px;margin-top:2px}
+.report-context>div{min-width:0;flex:1}
+.report-context strong{display:block;overflow-wrap:anywhere;line-height:1.4}
+.report-context small{display:block;margin-top:4px;font-size:.8125rem;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.report-options,.publication-visibility{display:flex;flex-direction:column;gap:10px;min-width:0}
+.report-options h2,.publication-visibility h2{font-size:1.0625rem;margin-bottom:2px;overflow-wrap:anywhere}
+.report-option,.publication-option{display:flex;align-items:flex-start;gap:12px;min-height:56px;width:100%;max-width:100%;padding:14px 16px;border:1.5px solid #8996b1;border-radius:16px;background:var(--surface);color:var(--ink);text-align:left;font-size:1rem;line-height:1.45;font-weight:800}
+.report-option>span:last-child,.publication-option>span:last-child{min-width:0;flex:1;overflow-wrap:anywhere}
+.report-option[aria-pressed=true],.publication-option[aria-pressed=true]{border:2px solid var(--primary);background:var(--soft);color:var(--ink)}
+.report-option-mark{width:24px;height:24px;border:2px solid #8996b1;border-radius:50%;flex:0 0 24px;margin-top:0}
+.report-option[aria-pressed=true]>.report-option-mark,.publication-option[aria-pressed=true]>.report-option-mark{border:7px solid var(--primary)}
+.publication-option strong{display:block;font-size:1rem;line-height:1.4}
+.publication-option small{display:block;margin-top:3px;color:var(--muted);font-size:.8125rem;line-height:1.5;font-weight:600;overflow-wrap:anywhere}
+.report-optional{font-size:.8125rem;font-weight:600;color:var(--muted)}
+.report-helper{margin-top:6px;font-size:.8125rem;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+.report-details{min-height:112px;max-width:100%}
+.report-summary{padding:18px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow-wrap:anywhere;display:flex;flex-direction:column;gap:10px}
+.report-summary h2{font-size:1.125rem;line-height:1.4}
+.report-summary p{white-space:pre-wrap;font-size:1rem;line-height:1.5;overflow-wrap:anywhere}
+.report-confirmed{display:flex;align-items:flex-start;gap:14px;padding:20px;border-radius:var(--radius);background:var(--success-bg);color:var(--success);min-width:0}
+.report-confirmed>svg{flex:0 0 28px;width:28px;height:28px;margin-top:2px}
+.report-confirmed>div{min-width:0;flex:1}
+.report-confirmed h2{font-size:1.125rem;line-height:1.4}
+.report-confirmed p{font-size:.9375rem;line-height:1.5;margin-top:8px;overflow-wrap:anywhere}
+.report-confirmed .report-protocol{font-size:1.125rem;font-weight:900;letter-spacing:.01em;overflow-wrap:anywhere}
+.publication-note{display:flex;align-items:flex-start;gap:12px;padding:16px;background:var(--soft);color:var(--ink);border-radius:16px;min-width:0}
+.publication-note>svg{flex:0 0 22px;width:22px;height:22px;color:var(--primary);margin-top:2px}
+.publication-note p{flex:1;min-width:0;font-size:.9375rem;line-height:1.5;overflow-wrap:anywhere}
+.publication-status{display:flex;align-items:flex-start;gap:14px;padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--soft);color:var(--ink);min-width:0}
+.publication-status>svg{width:24px;height:24px;flex:0 0 24px;color:var(--primary);margin-top:2px}
+.publication-status>div{flex:1;min-width:0}
+.publication-status h2{font-size:1.125rem;line-height:1.4;overflow-wrap:anywhere}
+.publication-status p{font-size:.9375rem;line-height:1.5;margin-top:8px;overflow-wrap:anywhere}
+.publication-status.publication-erro{background:var(--error-bg);color:var(--error);border-color:var(--error)}
+.publication-status.publication-erro>svg{color:var(--error)}
+.publication-status.publication-aprovado{background:var(--success-bg);color:var(--success);border-color:transparent}
+.publication-status.publication-aprovado>svg{color:var(--success)}
+.publication-rules{font-size:.875rem;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.publication-rules button{font:inherit;font-weight:900;min-height:44px;min-width:44px;border:0;background:transparent;color:var(--primary);text-decoration:underline;text-underline-offset:3px;padding:8px 0;white-space:normal;text-align:left}
+.screen[data-page=denunciar],.screen[data-page=compartilhar]{min-width:0}
+@media(prefers-reduced-motion:reduce){.report-option,.publication-option{transition:none;animation:none}}

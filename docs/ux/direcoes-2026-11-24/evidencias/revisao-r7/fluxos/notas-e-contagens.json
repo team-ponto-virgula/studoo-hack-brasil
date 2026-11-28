@@ -1,0 +1,193 @@
+{
+  "source": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+  "completedAt": "2026-11-24T22:19:17.775150+00:00",
+  "suites": [
+    {
+      "artifact": "resultado.json",
+      "scenarios": 3,
+      "checks": 69,
+      "passed": 69,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "fronteiras-resultados.json",
+      "scenarios": 6,
+      "checks": 111,
+      "passed": 111,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "compartilhar-resultados.json",
+      "scenarios": 42,
+      "checks": 150,
+      "passed": 150,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "assincronia-resultados.json",
+      "scenarios": 165,
+      "checks": 330,
+      "passed": 330,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    },
+    {
+      "artifact": "positivos-resultados.json",
+      "scenarios": 105,
+      "checks": 252,
+      "passed": 252,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0
+    }
+  ],
+  "directions": {
+    "jornada": {
+      "scenarios": 107,
+      "checks": 304,
+      "passed": 304,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 9,
+        "D2": 9,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 9,
+        "D10": null
+      },
+      "minimumCompetentScore": 9,
+      "globalScore": null
+    },
+    "caderno": {
+      "scenarios": 107,
+      "checks": 304,
+      "passed": 304,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 9,
+        "D2": 9,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 9,
+        "D10": null
+      },
+      "minimumCompetentScore": 9,
+      "globalScore": null
+    },
+    "foco": {
+      "scenarios": 107,
+      "checks": 304,
+      "passed": 304,
+      "failed": 0,
+      "pageerrors": 0,
+      "exceptions": 0,
+      "hashesBefore": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "hashesAfter": {
+        "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+        "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+        "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+        "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+        "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+      },
+      "scores": {
+        "D1": 9,
+        "D2": 9,
+        "D3": null,
+        "D4": null,
+        "D5": null,
+        "D6": null,
+        "D7": null,
+        "D8": 9,
+        "D9": 9,
+        "D10": null
+      },
+      "minimumCompetentScore": 9,
+      "globalScore": null
+    }
+  },
+  "openFindings": [],
+  "closedFindings": [
+    "R6-F1",
+    "R6-F2",
+    "R6-F3"
+  ],
+  "minimumCompetentDesignScore": 9,
+  "scope": "D1,D2,D8,D9: facetas de desenho interagidas e comparação pontual, não produto/nativo/uso com pessoas",
+  "globalScore": null,
+  "historicalEvidence": "equivalencia-r6.json; provas R6 não somadas à contagem R7",
+  "productScores": {
+    "C1": null,
+    "C2": null,
+    "C3": null,
+    "C4": null,
+    "C5": null,
+    "C6": null,
+    "C7": null,
+    "C8": null,
+    "C9": null,
+    "C10": null
+  },
+  "native": "nao executado",
+  "realUsers": "nao realizado",
+  "totals": {
+    "scenarios": 321,
+    "checks": 912,
+    "passed": 912,
+    "failed": 0,
+    "pageerrors": 0,
+    "exceptions": 0
+  }
+}

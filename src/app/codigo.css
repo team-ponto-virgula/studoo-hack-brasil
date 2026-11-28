@@ -1,0 +1,39 @@
+/* Código Studoo (spec 10, etapa C1): painel na folha e no perfil, e o modo apresentação. */
+.painel-codigo { display: grid; justify-items: center; gap: 10px; padding: 16px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.painel-codigo__codigo { display: block; width: min(100%, 240px); aspect-ratio: 1; padding: 10px; border-radius: 28px; background: #fff; box-shadow: 0 0 0 6px var(--acao) inset, 0 8px 20px rgb(11 27 92 / 0.12); }
+.painel-codigo__codigo { overflow: hidden; }
+/* O quadrado branco do código fica dentro da curva da moldura: canto arredondado, sem sobra nos cantos internos. */
+.painel-codigo__codigo svg { display: block; width: 100%; height: 100%; border-radius: 20px; }
+.painel-codigo__dica { margin: 0; color: var(--texto2); font-size: 0.9375rem; font-weight: 800; text-align: center; }
+.painel-codigo__dica, .painel-codigo__mostra { text-wrap: balance; }
+.painel-codigo__mostra { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.45; text-align: center; }
+/* As ações numa grade de duas colunas de largura igual, com o mesmo vão nas duas direções (10 px). */
+.painel-codigo__acoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.painel-codigo__acoes .botao { width: 100%; min-height: 48px; padding-inline: 12px; gap: 8px; white-space: nowrap; }
+.painel-codigo__acoes .botao .icone { width: 18px; height: 18px; flex: none; }
+/* Abaixo de 400 px, um por linha: "Baixar imagem" não encosta na borda do botão. */
+@media (max-width: 399px) { .painel-codigo__acoes { grid-template-columns: minmax(0, 1fr); } }
+.painel-codigo .folha-status { margin: 0; }
+.folha--codigo { width: min(100%, 30rem); }
+
+/* Modo apresentação: fundo branco (contraste máximo para a câmera), código o maior possível. */
+.apresentacao-codigo {
+  position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto 1fr; justify-items: center; align-items: center; gap: 8px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: #fff; color: var(--texto); overflow: auto;
+}
+.apresentacao-codigo__fechar {
+  justify-self: end; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; border: 2px solid var(--gelo); border-radius: 14px;
+  background: #fff; color: var(--texto); font: inherit; font-weight: 800; cursor: pointer;
+}
+.apresentacao-codigo__fechar .icone { width: 20px; height: 20px; }
+.apresentacao-codigo__fechar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.apresentacao-codigo__bloco { display: grid; justify-items: center; gap: 20px; padding-bottom: 48px; }
+.apresentacao-codigo__titulo { margin: 0; max-width: 40ch; font-size: clamp(1.5rem, 4vw, 3rem); text-align: center; text-wrap: balance; }
+/* O selo "Exemplo" fica centrado sob o título, colado a ele. Duas classes (0,2,0) para vencer o `.selo-demo` de comunidade.css (justify-self: start; margin: 0), que tem uma só:
+   com uma classe só, quem ganhava era o arquivo que chegasse depois à página, e o selo ia para a borda esquerda. */
+.apresentacao-codigo__bloco .apresentacao-codigo__demo { justify-self: center; margin: -8px 0 0; }
+.apresentacao-codigo__codigo { display: block; width: min(92vw, calc(100svh - 330px)); max-width: 900px; aspect-ratio: 1; }
+.apresentacao-codigo__marca { display: block; width: 120px; height: auto; }
+.apresentacao-codigo__codigo svg { display: block; width: 100%; height: 100%; }
+.apresentacao-codigo__dica { margin: 0; font-size: clamp(1.125rem, 2.6vw, 1.75rem); text-align: center; text-wrap: balance; }

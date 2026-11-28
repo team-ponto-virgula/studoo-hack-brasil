@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-11-23T14:43:50.362Z",
+  "organization": "studoo",
+  "organizationId": "006e5145-dd10-4fca-b745-147fc7cf53ef",
+  "source": "apps/mobile/assets/marca/icone-ios-1024.png",
+  "sourceSha256": "a5267421f4aff6779c1d6316bac7d061df1b4346468b9fcea02a8b63022c2cd1",
+  "uploaded": true,
+  "profileImageChanged": true,
+  "imageHttpStatus": 200,
+  "imageContentType": "image/jpeg",
+  "imageBytes": 3183,
+  "downloadedSha256": "09f54047a73a52232a4676ba2003bf4824a455548c01e5a79801b9416a4d81c3",
+  "visualInspectionPassed": true,
+  "remoteImageDimensions": {
+    "width": 160,
+    "height": 160
+  },
+  "snapshot": "docs/beta/conferencia-cloud/expo-avatar-verificado.jpg"
+}

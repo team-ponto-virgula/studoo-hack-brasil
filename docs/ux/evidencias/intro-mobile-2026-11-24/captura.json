@@ -1,0 +1,24 @@
+{
+  "surface": "React Native Web para prévia do componente mobile; não captura nativa",
+  "fontResponseDelayMs": 600,
+  "purpose": "tornar movimento do componente mobile observável; não medir latência real",
+  "errors": [],
+  "phases": [
+    {
+      "phase": "ausente",
+      "t": 70.20000000001164
+    },
+    {
+      "phase": "visivel",
+      "t": 2177.0999999999767
+    },
+    {
+      "phase": "saindo",
+      "t": 2827.5999999999767
+    },
+    {
+      "phase": "ausente",
+      "t": 2945.7000000000116
+    }
+  ]
+}

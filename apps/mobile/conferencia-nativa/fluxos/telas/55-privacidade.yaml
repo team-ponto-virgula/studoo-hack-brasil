@@ -1,0 +1,62 @@
+# Perfil, Privacidade (Apple 5.1.2(i)) e Excluir conta (5.1.1(v)) na conta sintética. Com IA=falsa no piloto nada sai do
+# servidor: a seção Privacidade e dados mostra a frase da IA simulada. A política fica em Ajuda e é conferida no fluxo 63.
+# Em Conta, a exclusão abre o cartão destrutivo (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois).
+# O fluxo cancela: a conta sintética serve aos outros fluxos e não pode ser apagada.
+appId: host.exp.Exponent
+name: 55-privacidade
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-perfil
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-perfil
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: privacidade-estado
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 55-perfil-privacidade
+- scrollUntilVisible:
+    element:
+      id: excluir-conta
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: excluir-conta
+- extendedWaitUntil:
+    visible:
+      id: excluir-conta-confirmacao
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 56-excluir-conta-confirmacao
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    id: excluir-conta-campo
+- inputText: EXCLUIR
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 57-excluir-conta-digitado
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    id: confirmacao-cancelar
+# Só a arrumação depois das capturas: na execução 44809026116, o cartão ainda estava na árvore ao fim da espera, com as três
+# capturas já feitas; o fluxo seguinte reabre o app de qualquer jeito.
+- extendedWaitUntil:
+    notVisible:
+      id: excluir-conta-confirmacao
+    timeout: 15000
+    optional: true

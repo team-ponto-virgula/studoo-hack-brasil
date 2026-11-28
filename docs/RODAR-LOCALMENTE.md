@@ -25,28 +25,19 @@ Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL
 
 ## IA da OpenAI
 
-Com `IA=openai`, a [Responses API](https://platform.openai.com/docs/api-reference/responses) da OpenAI escreve a trilha e as lições. A estrutura chega por streaming, então a trilha nasce na tela enquanto o modelo escreve. O conteúdo de cada lição é escrito no **Começar**, com Structured Outputs (JSON Schema estrito), e passa pela mesma validação da IA falsa. O pedido leva só o objetivo e os títulos da trilha, nunca dados da conta. A chave fica só no servidor; o app usa a IA pelo servidor, sem configuração própria.
+Com `IA=openai`, a [Responses API](https://developers.openai.com/api/docs/models/gpt-6-luna) usa `gpt-6-luna` e `reasoning.effort=max` em todos os pedidos de texto e imagem. A seleção antiga ou ausente de provedor resolve para OpenAI. Só `IA=falsa` ativa a demonstração. Falhas da OpenAI avisam que a geração está indisponível. A configuração antiga de modelo, esforço e reserva não altera esses pedidos.
 
-O `npm run db:local` exige `IA=falsa` no `.env`. Para ligar a OpenAI, crie um `.env.local` na raiz. Ele fica fora do Git e vale por cima do `.env`.
+O `npm run db:local` prepara um ambiente determinístico. Para testar a OpenAI, defina `IA=openai` e `OPENAI_API_KEY` em seu ambiente local (ou `.env.local`, fora do Git). A chave fica no servidor. Use `OPENAI_BASE_URL` com um servidor HTTP em loopback para testes simulados. Com a API oficial, o endereço padrão é `https://api.openai.com/v1`.
 
-```sh
-IA=openai
-OPENAI_API_KEY=sua-chave
-```
+- `IA=openai npm run ia:conferir -- --triagem` confere duas recusas e uma permissão com objetivos sintéticos e sem banco.
+- `IA=openai npm run ia:conferir` monta e confere uma estrutura e sua primeira lição. Os comandos fazem chamadas à API na configuração real e imprimem apenas o resultado.
+- `OPENAI_MODELO_TRANSCRICAO` (`gpt-transcribe`) e `OPENAI_REALTIME_MODELO` (`gpt-realtime-2.1`) continuam exclusivos de áudio.
 
-Para conferir a chave antes de abrir o Studoo, rode `npm run ia:conferir` (ou `npm run ia:conferir -- "seu objetivo"`). O comando usa o mesmo adaptador do servidor: mostra a trilha chegando por streaming, escreve a primeira lição e diz se tudo veio no formato do Studoo, sem gravar nada no banco. Se falhar, a linha `ia-openai` mostra o status da OpenAI (por exemplo, 401 para chave inválida e 404 para modelo inexistente).
+### Segurança e consentimento
 
-Depois, reinicie o `npm run dev`. Na trilha gerada, a origem passa a mostrar "IA da OpenAI" e o modelo.
+A versão de consentimento para OpenAI inclui triagem de segurança dos objetivos e materiais. O servidor confere o pedido antes de gerar e o conteúdo produzido antes de expor ou salvar. A recusa `conteudo_nocivo` permite revisar o tema. A ausência de um veredito válido devolve `ia_indisponivel`. Estudos de história, direito e prevenção podem seguir quando não ensinam a prática de dano ou crime. O modo de demonstração tem filtro local de pedidos explícitos e usa conteúdo determinístico.
 
-| Variável | Padrão | Efeito |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | (nenhum) | Chave da API. Sem ela, vale a reserva. |
-| `OPENAI_MODELO` | `gpt-4.1` | Modelo da Responses API. O padrão aceita Structured Outputs. |
-| `OPENAI_ESFORCO` | `low` nos modelos de raciocínio | Esforço de raciocínio (`reasoning.effort`). Vazio tira o campo do pedido. Se o modelo recusar o valor, o Studoo pede de novo sem ele. |
-| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Outro endereço compatível. Só HTTPS, ou HTTP no próprio computador. |
-| `STUDOO_IA_RESERVA` | `falsa` | Sem chave, ou se a OpenAI falhar antes da primeira linha da trilha, `falsa` usa a IA falsa, para a demonstração não parar. `nenhuma` mostra o erro de IA indisponível. |
-
-Uma falha no meio da geração mostra o erro de IA indisponível, e o pedido continua no campo. Se a escrita das lições falhar no **Começar**, a trilha continua na tela com o erro, e **Começar** tenta de novo. Os logs registram só o código e o status, sem objetivo, conteúdo ou chave.
+O servidor mantém a cota antes das chamadas, envia `store: false` na Responses API e não registra o conteúdo das verificações. A estrutura real é liberada via NDJSON depois da revisão. Cada pedido de lição tem até 25 mil tokens, ou 32 mil tokens para matemática. Na conferência avulsa, cada tentativa tem até 150 s, ou 180 s em matemática. Durante o aceite, as lições usam o tempo restante do prazo compartilhado. O limite inclui o raciocínio e o JSON visível. Se o provedor reportar que esgotou os tokens, o servidor descarta a resposta parcial e pode pedir uma versão mais curta uma única vez, com o mesmo modelo e esforço. O aceite reserva até 220 s por onda de lições, com teto de 240 s para gerar e revisar e até 25 s em cada uma das duas verificações de segurança. [Como a OpenAI contabiliza tokens de raciocínio](https://developers.openai.com/api/docs/guides/reasoning#allocating-space-for-reasoning) Limites de taxa 429 da geração podem ser repetidos até duas vezes sob o mesmo prazo. Em contas com limite baixo por minuto, configure `STUDOO_GERACAO_PARALELA` entre 1 e 2 (intervalo aceito: 1 a 10).
 
 ## Testes
 
@@ -61,11 +52,13 @@ npm run test:marco
 npm run test:trilha
 ```
 
-`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere o adaptador da OpenAI com um servidor local que imita a Responses API, sem chave e sem rede: a trilha por streaming, o conteúdo da lição, a reserva e as falhas. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
+`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere a Responses API da OpenAI com servidores locais simulados: estrutura, conteúdo, triagem e falhas, sem chave real. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Ele também roda o percurso do site publicado (`scripts/verificar-publicado.mjs`, usado pelo agendamento `studoo-verificar` com `node scripts/verificar-publicado.mjs`) contra o servidor local, com cada tipo de exercício forçado como o primeiro da lição. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
 
 O GitHub Actions roda a mesma verificação em cada PR e em cada push para `development` e `main` (`.github/workflows/verificacao.yml`): os dois typechecks, `test:dominio`, `test:paridade`, `test:movimento`, `test:ia`, o build e, com um PostgreSQL de serviço, `test:marco` e `test:trilha`. O CI usa só os adaptadores falsos e credenciais geradas na hora.
 
 ## App Android em modo de desenvolvimento
+
+Para levar o app ao celular da demo (build de desenvolvimento do EAS ou APK falando com o site publicado), veja [Build Android para a demo](BUILD-ANDROID.md).
 
 Use um emulador iniciado, um JDK e o SDK Android configurados para o Expo. Tenha `adb` no PATH e OpenSSL 3 disponível. Mantenha o banco local ativo. Para rodar web e API móvel ao mesmo tempo, use o build web em `http://localhost:3000` com `npm run build` e `npm start`. A API móvel roda em outro processo, em `https://127.0.0.1:3443`.
 
@@ -152,3 +145,23 @@ npm run test:mobile
 O login Google e o fluxo **Esqueci minha senha** estão disponíveis na web e no Android. Consulte a [configuração completa de acesso](specs/06-acesso-google-recuperacao.md) para cadastrar o callback Google, configurar Resend e reconstruir o app. Os campos estão nos `.env.example` da raiz e do app.
 
 Localmente, `EMAIL=falso` grava o código de recuperação em `.studoo-local/emails/`, somente para origem loopback. `npm run test:acesso` testa os fluxos com o banco migrado, sem Google ou Resend externos; `npm run test:google-mobile` testa o retorno ao app com módulos nativos simulados.
+
+## Experimentar sem conta (`STUDOO_VISITANTE=1`)
+
+Atrás de proxy reverso (ex.: Traefik/Dokploy), `STUDOO_VISITANTE=1` exige `STUDOO_PROXY_HTTPS=1` para identificar o endereço real (`x-forwarded-for` / `x-real-ip`); sem isso, todas as requisições compartilham o mesmo balde `loopback`. Os limites por endereço (`STUDOO_LIMITE_VISITANTES_IP`), janela (`STUDOO_JANELA_VISITANTES_MIN`), teto global (`STUDOO_LIMITE_VISITANTES_GLOBAL`), cota de gerações por visitante (`STUDOO_LIMITE_GERACOES_VISITANTE`) e teto diário de gerações de visitantes (`STUDOO_LIMITE_GERACOES_VISITANTES_DIA`) estão documentados em `.env.example`.
+
+
+## Página de apresentação na raiz (`STUDOO_ENTRADA_APRESENTACAO=1`)
+
+A página de apresentação (`/conheca`, spec 18) e o redirecionamento de aparelhos (`/baixar`) ficam sempre no ar. Em produção, `hellostudoo.com.br` e `www.hellostudoo.com.br` abrem a apresentação. `app.hellostudoo.com.br` abre o app com sessão ou o login. O domínio público do servidor (`STUDOO_ORIGEM`) e a API dos apps apontam para `https://app.hellostudoo.com.br`. O Google volta por `/api/auth/google/callback`. Veja a [spec 06](specs/06-acesso-google-recuperacao.md).
+
+No endereço anterior e no ambiente local, a variável `STUDOO_ENTRADA_APRESENTACAO` controla a raiz para quem chega sem sessão. O servidor lê a variável a cada pedido.
+
+| Variável | `/` sem sessão | `/` com sessão (visitante incluído) |
+|---|---|---|
+| `STUDOO_ENTRADA_APRESENTACAO=1` | a página de apresentação, no próprio `/` | o app |
+| ausente (o padrão) ou qualquer outro valor | vai ao `/login` (307), como era antes da página | o app |
+
+Quem decide é o cookie de sessão (o mesmo formato da API), sem ir ao banco. Atrás de proxy HTTPS (Traefik/Dokploy) nada depende de `X-Forwarded-Proto` nem do `Host`: a raiz nunca é reescrita pelo proxy do Next. O QR do cartão usa `STUDOO_ORIGEM` (HTTPS público) e o botão do Android, `STUDOO_APK_URL` (padrão: o APK do build 4); com `STUDOO_TESTFLIGHT_URL` o iPhone instala pelo TestFlight, e sem ela a página diz que o app para iPhone chega em breve.
+
+Para conferir os dois estados num site de produção (numa cópia, para não apagar o `.next` do `next dev`): `node scripts/qa/raiz-atras-de-proxy.mjs --base=http://127.0.0.1:3000 --entrada=1` (e `--entrada=0` com a variável desligada). Veja `scripts/qa/LEIA-ME.md`.

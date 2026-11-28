@@ -1,0 +1,114 @@
+{
+  "candidate": "048ae11",
+  "branch": "feat/intro-avaliacao-ux",
+  "generatedAt": "2026-11-23T21:00:16.016Z",
+  "environment": {
+    "web": "Next16.4.6 production local; Chromium headless",
+    "appPreview": "Expo SDK58 React Native Web; dev, not native",
+    "IA": "falsa",
+    "EMAIL": "falso",
+    "database": "PostgreSQL local; synthetic fixtures"
+  },
+  "additionalChecks": {
+    "webTypecheck": "passed final",
+    "mobileTypecheck": "passed final",
+    "nextProductionBuild": "passed final",
+    "iosHermesExport": "passed final; ~6MB; not an IPA"
+  },
+  "sourceFiles": {
+    "src/proxy.ts": "15f1a2b88fbbc7b8c7a1dd10a5593f4f96a8aae152aa05a350c047f845683579",
+    "src/app/layout.tsx": "22dde40f06f79754b9ccd3358651acd25d38f13ac34cc20472e5135d75e984ac",
+    "src/ui/abertura.tsx": "65be739884ccfdd00951eb9f41764ca2ec531dcbfe3ee8ff4f13b661b7bf7037",
+    "src/ui/abertura.css": "97f874b6ff6752168755d3ea0dcc30f23bbdd3d9e6d2b44ea3d2ddc90cd422bb",
+    "apps/mobile/src/abertura.tsx": "050ab9e54727edec99616d7a402e0da1430e1685e490230d8492b3683ea7cb64",
+    "apps/mobile/app/_layout.tsx": "a5e3dd6214f3527cbe5e7dd912e1046e117dea77ecdcac9b23d008c5826e311d",
+    "apps/mobile/app.json": "ad585260debc72f35d2bda398799d8fc66f886471e3aee66d83238a155449806",
+    "packages/contratos/src/abertura.ts": "493e042ca9334f0b864da55970098102cad6ec4466745c1c96de9fe43bfb59f8"
+  },
+  "artifacts": {
+    "app-preview-360x800.png": {
+      "bytes": 8380,
+      "sha256": "de3c06dddfa6860bd193b54de9d8f171094a98594e2dbcdff5a1d5f76356b489"
+    },
+    "app-preview-390x667.png": {
+      "bytes": 8140,
+      "sha256": "77db3857e969bd48d1f92b4b3a09411370e0345c0e0187969cbc9233934ad459"
+    },
+    "app-preview-390x844.png": {
+      "bytes": 8775,
+      "sha256": "699f48660faad9721af427f6875c6146ee25d65c1564e441bd9bd4fa97517ec0"
+    },
+    "app-preview-abertura.mp4": {
+      "bytes": 53381,
+      "sha256": "207366dade1726e536b740bfec63e5b2b0bd8c6db258d1f3e511087eabbbc267"
+    },
+    "app-preview-abertura.webm": {
+      "bytes": 121831,
+      "sha256": "e43b51ec2949f45f587c38eb857281d4d760c921b6286c5e5386f145e7cf4733"
+    },
+    "app-preview-destino.png": {
+      "bytes": 32467,
+      "sha256": "f3187ab310675f9c5557b5661e7bffa344d38c2d60cb443574f005bc0e7875ce"
+    },
+    "avaliacao-consolidada.json": {
+      "bytes": 3486,
+      "sha256": "9d112eec2b4c6f903b044233deccf2d4864ea9a7916900c2988ce574db23c8b3"
+    },
+    "browser-app-motion-independent.json": {
+      "bytes": 10005,
+      "sha256": "c9d7fff0beed1c2a30965cf688579a2ba1edfdfa2140789c9b22d66733dcbfda"
+    },
+    "browser-app-preview.json": {
+      "bytes": 2463,
+      "sha256": "e51a39e8ab3da5a6b1cf78c0e7cb3ef0bffef59aa5a347512434c06aa4a3d9d9"
+    },
+    "browser-web.json": {
+      "bytes": 5960,
+      "sha256": "54221b4a61a1b150e8b85a53d9e7f844898bcd771a048736f4602dd4587c765f"
+    },
+    "checks-048ae11.json": {
+      "bytes": 5926,
+      "sha256": "81fca3712cd3f2ea71b6c7d8a3b484faa73f0ab9348d268d58ee66289da5fa1f"
+    },
+    "checks-f0c2b6d.json": {
+      "bytes": 5961,
+      "sha256": "b5a316a9e10279e33fe4f7e2a6d9ec4937f019811bfddd002b3c5efba70aa5a8"
+    },
+    "qa-independente-web.json": {
+      "bytes": 6385,
+      "sha256": "419b3816d04c6e758a8d4c18a6addf93164654134ae7cabb84a730de821d5a3d"
+    },
+    "web-1440x900.png": {
+      "bytes": 12263,
+      "sha256": "d929532670691ceb3349b04eace52a36dd4479d1b95083f7f1e9665c269b308f"
+    },
+    "web-360x800.png": {
+      "bytes": 8594,
+      "sha256": "257db34a79d1964914e31e744c3afadeffaf330b742d06d7c7928991eb4ad0bd"
+    },
+    "web-390x667.png": {
+      "bytes": 8140,
+      "sha256": "77db3857e969bd48d1f92b4b3a09411370e0345c0e0187969cbc9233934ad459"
+    },
+    "web-390x844.png": {
+      "bytes": 8966,
+      "sha256": "2befc642d593e3b6e68f6bfbb315f4d52d83c01b44301498e0ea9c44fe0c92bd"
+    },
+    "web-768x1024.png": {
+      "bytes": 10831,
+      "sha256": "36e4a5f2e8c2fde37bf31897bb584ee12d6704b85f9719bf60780787db29ff28"
+    },
+    "web-abertura.mp4": {
+      "bytes": 118011,
+      "sha256": "4b3be44ec169decafc0e574f04aab916bc9fa7daf2d387af4ee04dded76c53b7"
+    },
+    "web-abertura.webm": {
+      "bytes": 160512,
+      "sha256": "8f534f7a0b025912a266533329572ed97922ba16c154817bfe54024f53d97a29"
+    },
+    "web-reduced-motion.png": {
+      "bytes": 47606,
+      "sha256": "dcfb8a8f16524925c9570f1e5a37cbca369a5e513e2e17b76cd3aacfee67795f"
+    }
+  }
+}

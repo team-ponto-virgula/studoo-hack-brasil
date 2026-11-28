@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./abertura": {
+      "types": "./src/abertura.ts",
+      "default": "./src/abertura.ts"
+    },
     ".": {
       "types": "./src/aprendizado.ts",
       "default": "./src/aprendizado.ts"
@@ -11,6 +15,14 @@
     "./experiencia": {
       "types": "./src/experiencia.ts",
       "default": "./src/experiencia.ts"
+    },
+    "./privacidade": {
+      "types": "./src/privacidade.ts",
+      "default": "./src/privacidade.ts"
+    },
+    "./autenticacao": {
+      "types": "./src/autenticacao.ts",
+      "default": "./src/autenticacao.ts"
     }
   }
 }

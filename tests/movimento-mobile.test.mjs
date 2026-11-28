@@ -7,7 +7,7 @@ import ts from 'typescript';
 // Exercita o ciclo de vida das assinaturas nativas, sem emulador ou temporizadores reais.
 const fonte = await readFile(new URL('../apps/mobile/src/movimento.ts', import.meta.url), 'utf8');
 const { outputText } = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
-function ambiente() {
+function ambiente(estadoInicial = 'active') {
   const eventos = new Map();
   let resolver, rejeitar;
   let consultas = 0;
@@ -17,7 +17,7 @@ function ambiente() {
     return { remove: () => eventos.delete(nome) };
   };
   const nativo = {
-    AppState: { currentState: 'active', addEventListener: adicionar },
+    AppState: { currentState: estadoInicial, addEventListener: adicionar },
     AccessibilityInfo: {
       addEventListener: adicionar,
       isReduceMotionEnabled: () => {
@@ -30,7 +30,7 @@ function ambiente() {
   runInNewContext(outputText, { exports, require: (nome) => nome === 'react-native' ? nativo : {
     useSyncExternalStore: (assinar, ler, servidor) => ({ assinar, ler, servidor }),
   } });
-  return { store: exports.useMovimentoReduzido(), eventos, consultas: () => consultas,
+  return { store: exports.useMovimentoReduzido(), preferencia: exports.usePreferenciaMovimentoReduzido(), eventos, consultas: () => consultas,
     resolver: (valor) => resolver(valor), rejeitar: () => rejeitar(new Error('indisponível')) };
 }
 
@@ -86,4 +86,38 @@ test('falha ao consultar a preferência conserva a tela estática', async () => 
   assert.equal(a.store.ler(), true);
   assert.equal(a.store.servidor(), true);
   limpar();
+});
+
+test('boot inactive/null não se passa por preferência de movimento reduzido', async () => {
+  for (const estadoInicial of [null, 'unknown', 'inactive']) {
+    const a = ambiente(estadoInicial);
+    const limpar = a.preferencia.assinar(() => {});
+    assert.equal(a.store.ler(), true, 'decorativo continua suspenso antes de active');
+    assert.equal(a.preferencia.ler(), null, 'consulta nativa ainda não respondeu');
+    a.resolver(false);
+    await Promise.resolve();
+    assert.equal(a.preferencia.ler(), false, 'preferência real é false mesmo durante o boot');
+    assert.equal(a.store.ler(), true, 'o hook decorativo não começa em segundo plano');
+    a.eventos.get('change')('active');
+    assert.equal(a.store.ler(), false);
+    assert.equal(a.preferencia.ler(), false);
+    limpar();
+  }
+});
+
+test('a abertura e animações decorativas compartilham a consulta sem confluir seus snapshots', async () => {
+  const a = ambiente('inactive');
+  const limparDecorativo = a.store.assinar(() => {});
+  const limparPreferencia = a.preferencia.assinar(() => {});
+  assert.equal(a.consultas(), 1);
+  assert.equal(a.eventos.size, 2);
+  a.resolver(false); await Promise.resolve();
+  assert.equal(a.store.ler(), true);
+  assert.equal(a.preferencia.ler(), false);
+  a.eventos.get('reduceMotionChanged')(true);
+  assert.equal(a.preferencia.ler(), true);
+  a.eventos.get('change')('active');
+  assert.equal(a.store.ler(), true);
+  limparDecorativo(); assert.equal(a.eventos.size, 2);
+  limparPreferencia(); assert.equal(a.eventos.size, 0);
 });

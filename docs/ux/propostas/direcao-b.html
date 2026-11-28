@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Studoo · Direção B · Caderno vivo</title>
+    <style>
+      @font-face {
+        font-family: Quicksand;
+        src: url("/marca/quicksand-wght.woff2") format("woff2");
+        font-weight: 300 700;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: Nunito;
+        src: url("/marca/nunito-wght.woff2") format("woff2");
+        font-weight: 200 1000;
+        font-display: swap;
+      }
+      :root {
+        --ink: #0b1b5c;
+        --blue: #2563ff;
+        --cream: #fff4e7;
+        --lavender: #e9e7ff;
+        --paper: #ffffff;
+        --muted: #535c77;
+        --line: #dcd5cc;
+        --success: #17653f;
+        --success-bg: #e9f6ee;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        font-family: Nunito, sans-serif;
+        color: var(--ink);
+        background: #ece6de;
+        font-synthesis: none;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      textarea {
+        font: inherit;
+      }
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        color: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid var(--ink);
+        outline-offset: 4px;
+      }
+      button:disabled {
+        cursor: default;
+      }
+      a {
+        color: var(--ink);
+      }
+      .prototype-bar {
+        position: relative;
+        z-index: 2;
+        background: var(--ink);
+        color: #fff;
+        text-align: center;
+        font-size: 12px;
+        line-height: 24px;
+        min-height: 24px;
+        letter-spacing: 0.02em;
+      }
+      .prototype-bar a {
+        color: inherit;
+        text-decoration: none;
+        position: absolute;
+        left: 12px;
+        top: 0;
+        min-width: 44px;
+        min-height: 24px;
+        font-size: 11px;
+      }
+      .state-nav {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 6px 10px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        max-width: 440px;
+        margin: auto;
+        min-height: 56px;
+      }
+      .state-nav button {
+        min-height: 44px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        font-weight: 800;
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+      .state-nav button[aria-pressed="true"] {
+        background: var(--lavender);
+        color: var(--ink);
+      }
+      .art-note {
+        max-width: 440px;
+        margin: auto;
+        padding: 5px 12px;
+        background: #f8f7fb;
+        color: #535c77;
+        font-size: 11px;
+        line-height: 15px;
+        text-align: center;
+        border-bottom: 1px solid var(--line);
+      }
+      .book {
+        max-width: 440px;
+        margin: auto;
+        min-height: calc(100dvh - 122px);
+        background: var(--cream);
+        box-shadow: 0 0 0 1px #ddd5ca;
+      }
+      .screen {
+        min-height: calc(100dvh - 122px);
+        padding: 18px 22px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .screen[hidden] {
+        display: none;
+      }
+      .appbar {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .brand {
+        display: block;
+        width: 104px;
+        height: auto;
+      }
+      .section-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--muted);
+      }
+      .content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 1;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: Quicksand, sans-serif;
+        font-weight: 700;
+      }
+      h1 {
+        font-size: 30px;
+        line-height: 1.17;
+        letter-spacing: -0.045em;
+        max-width: 310px;
+      }
+      h2 {
+        font-size: 22px;
+        line-height: 1.25;
+        letter-spacing: -0.025em;
+      }
+      h3 {
+        font-size: 17px;
+        line-height: 1.3;
+        letter-spacing: -0.015em;
+      }
+      p {
+        font-size: 16px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 900;
+        line-height: 18px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #204ed2;
+        margin-bottom: 8px;
+      }
+      .intro {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .intro-copy {
+        flex: 1;
+      }
+      .intro-copy p {
+        margin-top: 10px;
+      }
+      .stu {
+        flex: none;
+        object-fit: contain;
+        filter: drop-shadow(0 5px 6px #0b1b5c0b);
+      }
+      .stu-welcome {
+        width: 110px;
+        height: 122px;
+        margin-right: -8px;
+      }
+      .field-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 17px 17px 14px;
+        box-shadow: 0 5px 0 #0b1b5c05;
+      }
+      .field-card label {
+        display: block;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 18px;
+        margin-bottom: 9px;
+        color: var(--muted);
+      }
+      textarea {
+        display: block;
+        resize: vertical;
+        width: 100%;
+        min-height: 92px;
+        border: 0;
+        background: transparent;
+        border-radius: 6px;
+        color: var(--ink);
+        padding: 0 0 8px;
+        font-size: 19px;
+        line-height: 1.4;
+        font-weight: 700;
+        border-bottom: 1px solid #8992a9;
+      }
+      textarea:focus {
+        outline-offset: 6px;
+      }
+      .field-note {
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .context-note {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 0 2px;
+      }
+      .context-note svg {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        color: var(--blue);
+        margin-top: 1px;
+      }
+      .context-note p {
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .context-note strong {
+        color: var(--ink);
+        font-weight: 900;
+      }
+      .bottom-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: auto;
+        padding-top: 4px;
+      }
+      .primary,
+      .secondary {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-weight: 900;
+        font-size: 16px;
+        line-height: 22px;
+        padding: 13px 16px;
+        text-align: center;
+      }
+      .primary {
+        background: var(--blue);
+        color: #fff;
+        border: 1px solid var(--blue);
+        box-shadow: 0 3px 0 #0b1b5c15;
+      }
+      .primary:hover {
+        background: #1c50dc;
+      }
+      .primary:active {
+        transform: translateY(1px);
+        box-shadow: none;
+      }
+      .primary svg {
+        width: 19px;
+        height: 19px;
+        flex: none;
+      }
+      .secondary {
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        min-height: 44px;
+        font-size: 14px;
+      }
+      .secondary:hover {
+        background: #0b1b5c07;
+      }
+      .subtle {
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--muted);
+        text-align: center;
+      }
+      .paper-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 5px 0 #0b1b5c05;
+      }
+      .paper-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .paper-top .stu {
+        width: 90px;
+        height: 96px;
+      }
+      .paper-top h1 {
+        font-size: 29px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: var(--lavender);
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 900;
+        margin-top: 14px;
+      }
+      .tag svg {
+        width: 14px;
+        height: 14px;
+      }
+      .lesson-list {
+        list-style: none;
+        margin: 20px 0 0;
+        padding: 0;
+        position: relative;
+      }
+      .lesson-list:before {
+        content: "";
+        position: absolute;
+        left: 17px;
+        top: 20px;
+        bottom: 29px;
+        width: 1px;
+        background: #d3ddfb;
+      }
+      .lesson {
+        position: relative;
+        display: flex;
+        gap: 13px;
+        align-items: center;
+        padding: 10px 0;
+      }
+      .lesson-number {
+        display: grid;
+        place-items: center;
+        width: 35px;
+        height: 35px;
+        border-radius: 11px;
+        flex: none;
+        background: var(--cream);
+        border: 1px solid #ded4c6;
+        font-size: 13px;
+        font-weight: 900;
+        z-index: 1;
+      }
+      .lesson:first-child .lesson-number {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+      }
+      .lesson-text {
+        flex: 1;
+      }
+      .lesson-text p {
+        font-size: 13px;
+        line-height: 18px;
+        margin-top: 3px;
+      }
+      .lesson code {
+        font-size: 12px;
+        font-weight: 700;
+        background: #f1f4ff;
+        border-radius: 5px;
+        padding: 3px 6px;
+        font-family: Nunito, sans-serif;
+        color: #243f8d;
+      }
+      .lesson.done .lesson-number {
+        background: var(--success-bg);
+        color: var(--success);
+        border-color: #b8d7c4;
+      }
+      .lesson.done .lesson-number svg {
+        width: 18px;
+        height: 18px;
+      }
+      .lesson.current .lesson-number {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      .lesson-hint {
+        font-size: 13px;
+        line-height: 19px;
+        color: var(--muted);
+        padding-top: 14px;
+        margin-top: 9px;
+        border-top: 1px solid #eee7df;
+      }
+      .generation-hero {
+        text-align: center;
+        padding-top: 2px;
+      }
+      .generation-hero .stu {
+        width: 132px;
+        height: 132px;
+        margin-bottom: 12px;
+      }
+      .generation-hero h1 {
+        margin: auto;
+        max-width: 290px;
+      }
+      .generation-hero p {
+        max-width: 290px;
+        margin: 12px auto 0;
+      }
+      .generation-card {
+        padding: 18px 20px;
+      }
+      .generation-line {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 21px;
+        padding: 8px 0;
+      }
+      .generation-line svg {
+        width: 21px;
+        height: 21px;
+        color: var(--blue);
+        flex: none;
+      }
+      .pending-dot {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #b7c7f6;
+        border-radius: 50%;
+        flex: none;
+      }
+      .generation-caption {
+        padding-top: 12px;
+        border-top: 1px solid #eee7df;
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+      .completion {
+        text-align: center;
+      }
+      .completion .stu {
+        width: 112px;
+        height: 112px;
+        margin: 0 auto 8px;
+      }
+      .completion .eyebrow {
+        color: var(--success);
+        margin-bottom: 8px;
+      }
+      .completion h1 {
+        max-width: 310px;
+        margin: 0 auto;
+      }
+      .completion p {
+        margin: 8px auto 0;
+        max-width: 290px;
+        font-size: 15px;
+      }
+      .summary {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 18px;
+      }
+      .summary-top {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+      }
+      .check-circle {
+        display: grid;
+        place-items: center;
+        background: var(--success-bg);
+        color: var(--success);
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        flex: none;
+      }
+      .check-circle svg {
+        height: 19px;
+        width: 19px;
+      }
+      .summary small {
+        font-size: 13px;
+        line-height: 18px;
+        display: block;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .progress-track {
+        margin-top: 18px;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: #eee8e1;
+        overflow: hidden;
+      }
+      .progress-track span {
+        display: block;
+        width: 33.333%;
+        height: 100%;
+        background: var(--blue);
+        border-radius: 3px;
+      }
+      .progress-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 18px;
+        margin-top: 8px;
+        color: var(--muted);
+      }
+      .next-lesson {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        border-top: 1px solid #eee7df;
+        margin-top: 16px;
+        padding-top: 16px;
+      }
+      .next-lesson p {
+        font-size: 12px;
+        line-height: 18px;
+        margin-bottom: 3px;
+      }
+      .next-lesson h3 {
+        font-size: 16px;
+      }
+      .next-lesson svg {
+        width: 20px;
+        height: 20px;
+        color: var(--blue);
+      }
+      .lesson-example {
+        margin: 18px 0 0;
+        padding: 16px;
+        background: #f6f5ff;
+        border-radius: 12px;
+        border: 1px solid #d9d6f4;
+        font-size: 15px;
+        line-height: 1.65;
+        overflow-x: auto;
+        color: var(--ink);
+      }
+      .lesson-example code {
+        font-family: ui-monospace, SFMono-Regular, monospace;
+      }
+      .lesson-example b {
+        color: #244fcd;
+      }
+      .live {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+      }
+      @media (min-width: 600px) {
+        .state-nav {
+          margin-top: 22px;
+          border: 1px solid var(--line);
+          border-radius: 14px 14px 0 0;
+        }
+        .book {
+          margin-bottom: 24px;
+          border-radius: 0 0 24px 24px;
+          overflow: hidden;
+          box-shadow:
+            0 20px 60px #0b1b5c0d,
+            0 0 0 1px #ddd5ca;
+        }
+        .screen {
+          min-height: 740px;
+        }
+        .prototype-bar a {
+          left: 24px;
+        }
+      }
+      @media (max-width: 375px) {
+        .screen {
+          padding: 16px 20px 18px;
+          gap: 18px;
+        }
+        .content {
+          gap: 17px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        .intro-copy p {
+          font-size: 15px;
+        }
+        .stu-welcome {
+          width: 94px;
+          height: 112px;
+        }
+        .paper-card {
+          padding: 17px;
+        }
+        .paper-top .stu {
+          width: 76px;
+          height: 90px;
+        }
+        .paper-top h1 {
+          font-size: 26px;
+        }
+        .lesson-list {
+          margin-top: 15px;
+        }
+        .lesson {
+          padding: 9px 0;
+        }
+        .completion .stu {
+          width: 104px;
+          height: 104px;
+        }
+        .generation-hero .stu {
+          width: 120px;
+          height: 120px;
+        }
+        .prototype-bar a {
+          font-size: 10px;
+          left: 8px;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .screen:not([hidden]) .content {
+          animation: enter 160ms var(--ease) 1;
+        }
+        @keyframes enter {
+          from {
+            opacity: 0;
+            transform: translateY(3px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="prototype-bar">
+      <a href="/">← Direções</a>Protótipo · dados sintéticos
+    </div>
+    <nav class="state-nav" aria-label="Estados do protótipo">
+      <button type="button" data-go="pedido" aria-pressed="true">Pedido</button>
+      <button type="button" data-go="geracao" aria-pressed="false">
+        Geração
+      </button>
+      <button type="button" data-go="proposta" aria-pressed="false">
+        Proposta
+      </button>
+      <button type="button" data-go="conclusao" aria-pressed="false">
+        Conclusão
+      </button>
+    </nav>
+    <p class="art-note">
+      Arte provisória do kit atual.<br />Referência final: Stu caderno.
+    </p>
+    <div class="book">
+      <section
+        class="screen"
+        data-screen="pedido"
+        aria-labelledby="pedido-title"
+      >
+        <header class="appbar">
+          <img
+            class="brand"
+            src="/marca/logo-com-sorriso.png"
+            alt="Studoo"
+            width="104"
+            height="34"
+          /><span class="section-name">Nova trilha</span>
+        </header>
+        <main class="content">
+          <div class="intro">
+            <div class="intro-copy">
+              <p class="eyebrow">Seu próximo passo</p>
+              <h1 id="pedido-title" tabindex="-1">O que você quer aprender?</h1>
+              <p>Uma ideia sua.<br />Uma trilha para começar.</p>
+            </div>
+            <img
+              class="stu stu-welcome"
+              src="/marca/stu/stu-acolhida-160.webp"
+              alt=""
+              width="110"
+              height="122"
+            />
+          </div>
+          <div class="field-card">
+            <label for="objetivo">Meu objetivo</label
+            ><textarea id="objetivo" rows="3">
+Quero aprender SQL para consultar dados</textarea
+            >
+            <p class="field-note">Pode escrever do seu jeito.</p>
+          </div>
+          <div class="context-note">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4V5.5Z"
+              />
+              <path d="M14 7a3 3 0 0 1 3-3h3v13h-3a3 3 0 0 0-3 3" />
+            </svg>
+            <p>
+              <strong>Você confere antes de começar.</strong><br />O Studoo
+              organiza o caminho. Você escolhe se faz sentido.
+            </p>
+          </div>
+        </main>
+        <footer class="bottom-actions">
+          <button class="primary" type="button" data-go="geracao">
+            Gerar minha trilha
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m14 6 6 6-6 6M4 12h16" />
+            </svg></button
+          ><button class="secondary" type="button" data-go="proposta">
+            Ver um exemplo de trilha
+          </button>
+        </footer>
+      </section>
+      <section
+        class="screen"
+        data-screen="geracao"
+        aria-labelledby="geracao-title"
+        hidden
+      >
+        <header class="appbar">
+          <img
+            class="brand"
+            src="/marca/logo-com-sorriso.png"
+            alt="Studoo"
+            width="104"
+            height="34"
+          /><span class="section-name">Seu caminho</span>
+        </header>
+        <main class="content">
+          <div class="generation-hero">
+            <img
+              class="stu"
+              src="/marca/stu/stu-concentrado-192.webp"
+              alt=""
+              width="132"
+              height="132"
+            />
+            <p class="eyebrow">Uma ideia ganhando forma</p>
+            <h1 id="geracao-title" tabindex="-1">
+              Preparando sua trilha de SQL
+            </h1>
+            <p>Lições curtas, na ordem que ajuda você a aprender.</p>
+          </div>
+          <div class="paper-card generation-card">
+            <div class="generation-line">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="m5 12 4 4L19 6" /></svg
+              ><span>Objetivo entendido</span>
+            </div>
+            <div class="generation-line">
+              <span class="pending-dot" aria-hidden="true"></span
+              ><span>Organizando os próximos passos</span>
+            </div>
+            <p class="generation-caption">
+              Você poderá conferir o caminho antes de começar.
+            </p>
+          </div>
+        </main>
+        <footer class="bottom-actions">
+          <button class="primary" type="button" data-go="proposta">
+            Ver proposta de exemplo
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m14 6 6 6-6 6M4 12h16" />
+            </svg></button
+          ><button class="secondary" type="button" data-go="pedido">
+            Cancelar e editar meu pedido
+          </button>
+        </footer>
+      </section>
+      <section
+        class="screen"
+        data-screen="proposta"
+        aria-labelledby="proposta-title"
+        hidden
+      >
+        <header class="appbar">
+          <img
+            class="brand"
+            src="/marca/logo-com-sorriso.png"
+            alt="Studoo"
+            width="104"
+            height="34"
+          /><span class="section-name">Sua trilha</span>
+        </header>
+        <main class="content">
+          <div class="paper-card">
+            <div class="paper-top">
+              <div>
+                <p class="eyebrow">Um começo possível</p>
+                <h1 id="proposta-title" tabindex="-1">
+                  Primeiros passos em SQL
+                </h1>
+              </div>
+              <img
+                class="stu"
+                src="/marca/stu/stu-encorajador-192.webp"
+                alt=""
+                width="90"
+                height="96"
+              />
+            </div>
+            <div class="tag">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M3 3h10v10H3zM5.5 6h5M5.5 9h3" /></svg
+              >3 lições · do primeiro comando à consulta
+            </div>
+            <ol class="lesson-list">
+              <li class="lesson" data-first-lesson>
+                <span class="lesson-number">01</span>
+                <div class="lesson-text">
+                  <h3>SELECT</h3>
+                  <p>Escolha as colunas de uma tabela.</p>
+                </div>
+              </li>
+              <li class="lesson" data-second-lesson>
+                <span class="lesson-number">02</span>
+                <div class="lesson-text">
+                  <h3>WHERE</h3>
+                  <p>Encontre os resultados que importam.</p>
+                </div>
+              </li>
+              <li class="lesson">
+                <span class="lesson-number">03</span>
+                <div class="lesson-text">
+                  <h3>ORDER BY</h3>
+                  <p>Organize o que você encontrou.</p>
+                </div>
+              </li>
+            </ol>
+            <p class="lesson-hint" data-plan-note>
+              Comece pelo básico. Os próximos passos vêm depois.
+            </p>
+          </div>
+        </main>
+        <footer class="bottom-actions">
+          <button
+            class="primary"
+            type="button"
+            data-action="accept"
+            data-plan-primary
+          >
+            Começar primeira lição
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m14 6 6 6-6 6M4 12h16" />
+            </svg></button
+          ><button class="secondary" type="button" data-go="pedido">
+            Ajustar o que quero estudar
+          </button>
+          <p class="subtle">Uma lição de cada vez, no seu ritmo.</p>
+        </footer>
+      </section>
+      <section
+        class="screen"
+        data-screen="conclusao"
+        aria-labelledby="conclusao-title"
+        hidden
+      >
+        <header class="appbar">
+          <img
+            class="brand"
+            src="/marca/logo-com-sorriso.png"
+            alt="Studoo"
+            width="104"
+            height="34"
+          /><span class="section-name">Um passo dado</span>
+        </header>
+        <main class="content">
+          <div class="completion">
+            <img
+              class="stu"
+              src="/marca/stu/stu-comemorando-160.webp"
+              alt=""
+              width="136"
+              height="136"
+            />
+            <p class="eyebrow">Você começou</p>
+            <h1 id="conclusao-title" tabindex="-1">
+              Primeira lição concluída.
+            </h1>
+            <p>Você já sabe escolher colunas de uma tabela com SELECT.</p>
+          </div>
+          <div class="summary">
+            <div class="summary-top">
+              <span class="check-circle"
+                ><svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.3"
+                >
+                  <path d="m5 12 4 4L19 6" /></svg
+              ></span>
+              <div>
+                <h3>Seu caminho continua aqui</h3>
+                <small>Progresso salvo</small>
+              </div>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              aria-label="Lições concluídas"
+              aria-valuenow="1"
+              aria-valuemin="0"
+              aria-valuemax="3"
+            >
+              <span></span>
+            </div>
+            <div class="progress-label">
+              <span>Primeiros passos em SQL</span><span>1 de 3</span>
+            </div>
+            <div class="next-lesson">
+              <div>
+                <p>NA PRÓXIMA LIÇÃO</p>
+                <h3>Encontre o que importa · WHERE</h3>
+              </div>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="m9 5 7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </main>
+        <footer class="bottom-actions">
+          <button class="primary" type="button" data-go="retomar">
+            Continuar para WHERE
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m14 6 6 6-6 6M4 12h16" />
+            </svg></button
+          ><button class="secondary" type="button" data-action="saved-plan">
+            Voltar à minha trilha
+          </button>
+        </footer>
+      </section>
+      <section
+        class="screen"
+        data-screen="retomar"
+        aria-labelledby="retomar-title"
+        hidden
+      >
+        <header class="appbar">
+          <img
+            class="brand"
+            src="/marca/logo-com-sorriso.png"
+            alt="Studoo"
+            width="104"
+            height="34"
+          /><span class="section-name">Lição 2 de 3</span>
+        </header>
+        <main class="content">
+          <div>
+            <p class="eyebrow">Encontre o que importa</p>
+            <h1 id="retomar-title" tabindex="-1">Uma consulta com foco.</h1>
+            <p style="margin-top: 14px">
+              O WHERE seleciona apenas os registros que atendem a uma condição.
+            </p>
+            <pre class="lesson-example"><code><b>SELECT</b> nome, cidade
+<b>FROM</b> pessoas
+<b>WHERE</b> cidade = 'Recife';</code></pre>
+            <p style="margin-top: 16px">
+              Aqui, aparecem somente as pessoas de Recife.
+            </p>
+          </div>
+          <div class="context-note">
+            <img
+              class="stu"
+              src="/marca/stu/stu-encorajador-96.webp"
+              alt=""
+              width="64"
+              height="64"
+            />
+            <p>
+              <strong>Um passo se conecta ao outro.</strong><br />Você já
+              escolheu as colunas. Agora vai filtrar as linhas.
+            </p>
+          </div>
+        </main>
+        <footer class="bottom-actions">
+          <button class="primary" type="button" data-action="saved-plan">
+            Voltar à trilha de exemplo</button
+          ><button class="secondary" type="button" data-go="conclusao">
+            Rever a conclusão
+          </button>
+        </footer>
+      </section>
+    </div>
+    <p class="live" role="status" aria-live="polite" id="state-status"></p>
+    <script>
+      (() => {
+        const states = [
+          "pedido",
+          "geracao",
+          "proposta",
+          "conclusao",
+          "retomar",
+        ];
+        const labels = {
+          pedido: "Pedido",
+          geracao: "Geração de exemplo",
+          proposta: "Proposta",
+          conclusao: "Conclusão",
+          retomar: "Retomada ilustrada",
+        };
+        let completed = false;
+        function updatePlan() {
+          const first = document.querySelector("[data-first-lesson]");
+          const second = document.querySelector("[data-second-lesson]");
+          first.classList.toggle("done", completed);
+          second.classList.toggle("current", completed);
+          first.querySelector(".lesson-number").innerHTML = completed
+            ? '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m5 12 4 4L19 6"/></svg>'
+            : "01";
+          document.querySelector("[data-plan-note]").textContent = completed
+            ? "Primeira lição concluída. Retome em WHERE."
+            : "Comece pelo básico. Os próximos passos vêm depois.";
+          document.querySelector("[data-plan-primary]").innerHTML =
+            (completed ? "Continuar para WHERE" : "Começar primeira lição") +
+            ' <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 6 6 6-6 6M4 12h16"/></svg>';
+        }
+        function show(state, focus = true) {
+          if (!states.includes(state)) state = "pedido";
+          if (state === "geracao") completed = false;
+          if (state === "conclusao" || state === "retomar") completed = true;
+          updatePlan();
+          document.body.dataset.estado = state;
+          for (const section of document.querySelectorAll("[data-screen]"))
+            section.hidden = section.dataset.screen !== state;
+          for (const button of document.querySelectorAll(
+            ".state-nav [data-go]",
+          ))
+            button.setAttribute(
+              "aria-pressed",
+              String(
+                button.dataset.go === state ||
+                  (state === "retomar" && button.dataset.go === "proposta"),
+              ),
+            );
+          document.getElementById("state-status").textContent =
+            labels[state] + ". Protótipo local com dados sintéticos.";
+          const address = new URL(location.href);
+          address.searchParams.set("estado", state);
+          address.hash = "";
+          history.replaceState(null, "", address);
+          if (focus)
+            document
+              .querySelector('[data-screen="' + state + '"] h1')
+              .focus({ preventScroll: true });
+          window.scrollTo({ top: 0, behavior: "instant" });
+        }
+        document.addEventListener("click", (event) => {
+          const button = event.target.closest("button");
+          if (!button) return;
+          if (button.dataset.go) show(button.dataset.go);
+          if (button.dataset.action === "accept")
+            show(completed ? "retomar" : "conclusao");
+          if (button.dataset.action === "saved-plan") {
+            completed = true;
+            show("proposta");
+          }
+        });
+        const requested =
+          new URLSearchParams(location.search).get("estado") ||
+          location.hash.slice(1) ||
+          "pedido";
+        show(states.includes(requested) ? requested : "pedido", false);
+      })();
+    </script>
+  </body>
+</html>

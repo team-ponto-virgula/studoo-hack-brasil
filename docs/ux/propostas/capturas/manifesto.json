@@ -1,0 +1,17 @@
+{
+  "tipo": "propostas_html_locais",
+  "notaUXGlobal": null,
+  "arte": "provisória; referência final Stu caderno da conversa",
+  "capturas": "24 estados/larguras e duas galerias; dados sintéticos, sem API",
+  "fonte": {
+    "direcao-a.html": "434cf6ef6d2dac80bb0858e7fb4e17cae4f04160993f2f7e1f220ea94f4935bc",
+    "direcao-b.html": "c64c98237b83e8fc43be64ce504c1b8c484e184ba615056e5b6e7ee69cb211a1",
+    "direcao-c.html": "878237df7b76be69e245716ee769e469a55ae18e8bf782dc96c721c7f84ce56b",
+    "index.html": "a176208c1b7ce6e80284c2db0ac40b1fb647af88c5c9e76f0b40e800aeb972a4"
+  },
+  "galeria390": {
+    "overflowHorizontal": false,
+    "seletorConclusao": "passou"
+  },
+  "aprovacaoProduto": false
+}

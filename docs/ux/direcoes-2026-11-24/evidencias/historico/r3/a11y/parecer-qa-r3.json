@@ -1,0 +1,89 @@
+{
+  "candidate": "902eca4e3a8e8ac374d79972677a1ed3edc83859",
+  "sourceStable": true,
+  "canonicalViews": 210,
+  "screenshotDeviceScaleFactor": 2,
+  "emailCases360": 18,
+  "emailCasesPositive": 6,
+  "emailNoteFailures": 12,
+  "directedChecks": {
+    "positive": 186,
+    "total": 186
+  },
+  "additionalImageFixture": {
+    "cases": 6,
+    "focusPreserved": 0
+  },
+  "closedFindings": [
+    "K1 named modal menus",
+    "K2 reorder focus/announcements",
+    "K3 record-start focus",
+    "standalone toolbar target44"
+  ],
+  "openFindings": [
+    {
+      "id": "R3-A1",
+      "severity": "medium",
+      "criteria": [
+        "D3",
+        "D6"
+      ],
+      "issue": "Long email overflows note span in expired code/recovery sent"
+    },
+    {
+      "id": "K4",
+      "severity": "medium",
+      "criteria": [
+        "D6"
+      ],
+      "issue": "Asynchronous local image read loses focus to BODY"
+    }
+  ],
+  "scores": {
+    "jornada": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    },
+    "caderno": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    },
+    "foco": {
+      "D1": null,
+      "D2": null,
+      "D3": 8,
+      "D4": null,
+      "D5": 9,
+      "D6": 8,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null
+    }
+  },
+  "gates": {
+    "DG3": false,
+    "DG4": false
+  },
+  "globalScore": null,
+  "nativeExecuted": false,
+  "actualMicrophoneOpened": false,
+  "realFileChooserValidated": false,
+  "realApiExecuted": false
+}

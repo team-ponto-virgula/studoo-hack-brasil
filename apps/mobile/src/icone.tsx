@@ -1,14 +1,56 @@
-import { View, type ViewStyle } from 'react-native';
+import { Platform, View, type ViewStyle } from 'react-native';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import type { NomeIcone } from './trilha';
+
+/** Ícones do perfil e do compartilhar: os mesmos elementos SVG da web (src/ui/caminho.tsx), na grade de 24, traço redondo. */
+const DESENHOS_SVG = {
+  pessoa: <><Circle cx="12" cy="8.5" r="3.8" /><Path d="M4.8 20c.9-3.8 3.7-5.8 7.2-5.8s6.3 2 7.2 5.8" /></>,
+  compartilhar: <><Circle cx="17.5" cy="5.5" r="2.5" /><Circle cx="6.5" cy="12" r="2.5" /><Circle cx="17.5" cy="18.5" r="2.5" /><Path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4" /></>,
+  copiar: <><Rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><Path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></>,
+  camera: <><Path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><Circle cx="12" cy="13" r="3.5" /></>,
+  imagem: <><Rect x="4" y="4.5" width="16" height="15" rx="3" /><Circle cx="9" cy="9.5" r="1.6" /><Path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
+  lapis: <Path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
+  // Gráfico (spec 15, seção 13): os eixos e uma linha que sobe, na frente do alt da figura que não coube.
+  grafico: <Path d="M5 4.5V19h14.5M8.5 15l3.5-4 3 2.5 4-5.5" />,
+  lixeira: <Path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
+  bussola: <><Circle cx="12" cy="12" r="8.5" /><Path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+  // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).
+  valeu: <Path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
+  mais: <><Circle cx="6" cy="12" r="1.3" fill="currentColor" /><Circle cx="12" cy="12" r="1.3" fill="currentColor" /><Circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
+  bandeirinha: <><Path d="M6 20.5V4" /><Path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
+  // Bloquear (spec 14): o círculo cortado.
+  bloquear: <><Circle cx="12" cy="12" r="8.5" /><Path d="M6 18L18 6" /></>,
+  // Alerta (spec 11): o círculo com a exclamação dos erros de campo, da barra de salvar e do aviso.
+  alerta: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 7.8v5.2" /><Circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></>,
+  // Configurações da trilha (spec 10, lote 4): os mesmos desenhos de `engrenagem`, `elo` e `setaVoltar` da web.
+  engrenagem: <><Circle cx="12" cy="12" r="3" /><Path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
+  elo: <Path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  setaVoltar: <Path d="M19 12H5M11 6l-6 6 6 6" />,
+  // Controle de som (spec 12): os mesmos desenhos da web (src/ui/caminho.tsx). O alto-falante de duas ondas da web é o
+  // `somDuasOndas` aqui: o `som` do app é outro desenho, usado nos botões de ouvir das lições.
+  somDuasOndas: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9a4 4 0 0 1 0 6M18.3 6.3a8 8 0 0 1 0 11.4" /></>,
+  somUmaOnda: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9a4 4 0 0 1 0 6" /></>,
+  somCortado: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9.5l5 5M20.5 9.5l-5 5" /></>,
+  ondas: <Path d="M3.5 9.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0M3.5 14.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0" />,
+  chuva: <><Path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.6 1.5 3.3 3.3 0 0 1-.5 6.5z" /><Path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" /></>,
+  fones: <><Path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" /><Rect x="3.5" y="13.5" width="4" height="6.5" rx="1.8" /><Rect x="16.5" y="13.5" width="4" height="6.5" rx="1.8" /></>,
+  livros: <><Rect x="4" y="5" width="4" height="14.5" rx="1" /><Rect x="9.5" y="7" width="4" height="12.5" rx="1" /><Path d="M15.2 8.4l3.6-1 3 11.8-3.6 1z" /></>,
+  folha: <><Path d="M5.5 18.5C5 11 9.5 5.5 19 5c.3 8.8-4.7 13.6-13.5 13.5z" /><Path d="M5.5 18.5L13 11" /></>,
+  info: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 11v5.5" /><Circle cx="12" cy="7.8" r="0.6" fill="currentColor" /></>,
+} as const;
+type NomeIconeSvg = keyof typeof DESENHOS_SVG;
+const ehSvg = (nome: NomeIcone): nome is NomeIconeSvg => Object.hasOwn(DESENHOS_SVG, nome);
 
 /*
  * Ícones da trilha, os mesmos da web (src/ui/caminho.tsx), desenhados com View porque o app não usa SVG.
  * Cada medida está na grade de 24 da versão web, com traço de 2,5, e é escalada pelo tamanho pedido.
  */
 
-type Peca = ViewStyle & { traco?: boolean };
+/** `traco`: barra cheia (a espessura é o lado de 2,5); `recorte` + `filho`: um pedaço de círculo (arco) recortado. */
+type Peca = ViewStyle & { traco?: boolean; recorte?: boolean; filho?: Peca };
 
-const desenhos: Record<NomeIcone, Peca[]> = {
+const desenhos: Record<Exclude<NomeIcone, NomeIconeSvg>, Peca[]> = {
   check: [
     { left: 4.44, top: 6.98, width: 15, height: 7.25, borderLeftWidth: 2.5, borderBottomWidth: 2.5, transform: [{ rotate: '-45deg' }] },
   ],
@@ -43,39 +85,50 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 10.75, top: 14, width: 2.5, height: 4.75, traco: true },
     { left: 7.25, top: 18.75, width: 9.5, height: 2.5, borderRadius: 1.25, traco: true },
   ],
+  // "M7 7l10 10M17 7L7 17" da web: cada diagonal com 14,14 + 2,5 das pontas redondas, centrada em (12, 12).
   fechar: [
-    { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
-    { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
+    { left: 3.68, top: 10.75, width: 16.64, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+    { left: 3.68, top: 10.75, width: 16.64, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  // Olho como o da web: a amêndoa de 2,5 a 21,5 (dois arcos de círculo de raio 10,2 que se encontram nas pontas, cada um
+  // recortado na sua metade) e a pupila em contorno (círculo de raio 3), não cheia.
   olho: [
-    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
-    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+    { left: 0, top: 0, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: 4.37, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 0, top: 11.4, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: -14.41, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 7.75, top: 7.75, width: 8.5, height: 8.5, borderWidth: 2.5, borderRadius: 4.25 },
   ],
   olhoFechado: [
-    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
-    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+    { left: 0, top: 0, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: 4.37, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 0, top: 11.4, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: -14.41, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 7.75, top: 7.75, width: 8.5, height: 8.5, borderWidth: 2.5, borderRadius: 4.25 },
     { left: 1.5, top: 10.75, width: 21, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
   ],
+  // "M5 12h14M13 6l6 6-6 6" da web com as pontas redondas do traço: a haste de 3,75 a 20,25 e cada lado da ponta com
+  // 8,49 + 2,5 de comprimento, centrado em (16, 9) e (16, 15).
   seta: [
-    { left: 4.25, top: 10.75, width: 15.5, height: 2.5, borderRadius: 1.25, traco: true },
-    { left: 11.5, top: 7.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
-    { left: 11.5, top: 13.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
+    { left: 3.75, top: 10.75, width: 16.5, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 10.51, top: 7.75, width: 10.99, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+    { left: 10.51, top: 13.75, width: 10.99, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  // Lâmpada como o caminho da web: o bulbo (círculo de raio 5,5) aberto embaixo, o gargalo que afunila até a base cheia
+  // (a linha do gargalo e a de y 18 juntas) e a tampinha em y 21.
   lampada: [
-    { left: 6.5, top: 2.75, width: 11, height: 11, borderWidth: 2.5, borderRadius: 5.5 },
-    { left: 9.25, top: 12.5, width: 5.5, height: 3.75, borderLeftWidth: 2.5, borderRightWidth: 2.5 },
-    { left: 8.75, top: 16, width: 6.5, height: 2.5, borderRadius: 1.25, traco: true },
-    { left: 10, top: 19.5, width: 4, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 5.25, top: 2.25, width: 13.5, height: 13.5, borderWidth: 2.5, borderRadius: 6.75, borderBottomColor: 'transparent' },
+    { left: 8, top: 12.3, width: 2.5, height: 4.2, borderRadius: 1.25, traco: true, transform: [{ rotate: '-22deg' }] },
+    { left: 13.5, top: 12.3, width: 2.5, height: 4.2, borderRadius: 1.25, traco: true, transform: [{ rotate: '22deg' }] },
+    { left: 8.25, top: 14.9, width: 7.5, height: 4.35, borderRadius: 1.6, traco: true },
+    { left: 9.25, top: 19.75, width: 5.5, height: 2.5, borderRadius: 1.25, traco: true },
   ],
   relogio: [
     { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
     { left: 10.75, top: 7, width: 2.5, height: 6.25, borderRadius: 1.25, traco: true },
     { left: 10.45, top: 11.75, width: 6.1, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '33.7deg' }] },
   ],
+  // Os círculos da web (r 8,5, 4,5 e 0,8 com traço de 2,5 centrado na linha): por fora, 19,5, 11,5 e o ponto de 4,1.
   alvo: [
-    { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
-    { left: 7.5, top: 7.5, width: 9, height: 9, borderWidth: 2.5, borderRadius: 4.5 },
-    { left: 11, top: 11, width: 2, height: 2, borderRadius: 1, traco: true },
+    { left: 2.25, top: 2.25, width: 19.5, height: 19.5, borderWidth: 2.5, borderRadius: 9.75 },
+    { left: 6.25, top: 6.25, width: 11.5, height: 11.5, borderWidth: 2.5, borderRadius: 5.75 },
+    { left: 9.95, top: 9.95, width: 4.1, height: 4.1, borderRadius: 2.05, traco: true },
   ],
   // Alto-falante com duas ondas (a mesma ideia da web): ouvir uma frase, um áudio ou um acorde.
   som: [
@@ -84,6 +137,14 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 11.5, top: 8.25, width: 5.5, height: 7.5, borderRightWidth: 2.5, borderRadius: 3.75 },
     { left: 13, top: 5, width: 8, height: 14, borderRightWidth: 2.5, borderRadius: 7 },
   ],
+  // O microfone do "Conversar com o Stu", como o SVG da web (traço de 2): a cápsula, o arco de baixo, a haste e a base.
+  microfone: [
+    { left: 8, top: 1, width: 8, height: 14, borderWidth: 2, borderRadius: 4 },
+    { left: 4, top: 2, width: 16, height: 16, borderWidth: 2, borderRadius: 8, borderTopColor: 'transparent', borderLeftColor: 'transparent',
+      transform: [{ rotate: '45deg' }] },
+    { left: 11, top: 17, width: 2, height: 5, borderRadius: 1, traco: true },
+    { left: 7, top: 21, width: 10, height: 2, borderRadius: 1, traco: true },
+  ],
 };
 
 const medidas = [
@@ -91,22 +152,87 @@ const medidas = [
   'borderRadius', 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius',
 ] as const;
 
-function escalar({ traco, ...peca }: Peca, escala: number, cor: string): ViewStyle {
+const BORDAS = ['borderWidth', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'] as const;
+
+/**
+ * Escala a peça da grade de 24 para o tamanho pedido. `fator` é o traço pedido sobre o de desenho (2,5): engrossa as bordas
+ * e as barras (a barra cresce em volta do próprio centro), como o stroke-width da web em cada uso.
+ */
+function escalar({ traco: barra, recorte, filho, ...peca }: Peca, escala: number, cor: string, fator: number): ViewStyle {
+  const base: Record<string, unknown> = { ...peca };
+  for (const borda of BORDAS) if (typeof base[borda] === 'number') base[borda] = (base[borda] as number) * fator;
+  if (barra) {
+    if (base.width === 2.5) { base.width = 2.5 * fator; base.left = (base.left as number) - (2.5 * fator - 2.5) / 2; }
+    if (base.height === 2.5) { base.height = 2.5 * fator; base.top = (base.top as number) - (2.5 * fator - 2.5) / 2; }
+    if (base.borderRadius === 1.25) base.borderRadius = 1.25 * fator;
+  }
   const escaladas: Partial<Record<(typeof medidas)[number], number>> = {};
   for (const medida of medidas) {
-    const valor = peca[medida];
+    const valor = base[medida];
     if (typeof valor === 'number') escaladas[medida] = valor * escala;
   }
-  return { ...peca, ...escaladas, position: 'absolute', borderColor: cor, ...(traco ? { backgroundColor: cor } : {}) };
+  const corBorda = recorte ? undefined : { borderColor: cor };
+  return { ...(base as ViewStyle), ...escaladas, position: 'absolute', ...corBorda, ...(barra ? { backgroundColor: cor } : {}), ...(recorte ? { overflow: 'hidden' } : {}),
+    ...(peca.borderBottomColor === 'transparent' ? { borderBottomColor: 'transparent' } : {}) };
 }
 
-/** Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. */
-export function Icone({ nome, tamanho = 24, cor, cheio = false }: { nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean }) {
+/**
+ * Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. `traco` é o stroke-width da web
+ * naquele uso, na grade de 24 (2,5 por padrão; 3 no X da aula, 3,2 no visto do retorno, 2,25 no olho da senha).
+ */
+/**
+ * Ícones da moldura no iPhone: os SF Symbols do sistema no lugar dos desenhos, só onde quem chama pede `sistema` (a barra de
+ * baixo, os botões de ícone do cabeçalho e a seta dos botões). Os ícones de conteúdo (nós do mapa, etapas da aula, blocos
+ * da conclusão) seguem com os desenhos, iguais aos da web. No Android e na prévia web, sempre os desenhos.
+ */
+const SIMBOLOS: Partial<Record<NomeIcone, { nome: SFSymbol; cheio?: SFSymbol }>> = {
+  livro: { nome: 'book', cheio: 'book.fill' },
+  lampada: { nome: 'lightbulb', cheio: 'lightbulb.fill' },
+  fechar: { nome: 'xmark' },
+  olho: { nome: 'eye' },
+  olhoFechado: { nome: 'eye.slash' },
+  seta: { nome: 'arrow.right' },
+  pessoa: { nome: 'person', cheio: 'person.fill' },
+  // A bússola do Explorar na barra de baixo (a do Safari é o símbolo de bússola do sistema).
+  bussola: { nome: 'safari', cheio: 'safari.fill' },
+};
+
+export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sistema = false }: {
+  nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean; traco?: number;
+  /** Só no iPhone: `true` usa o SF Symbol do ícone; `'cheio'`, a variante preenchida (a aba selecionada). */
+  sistema?: boolean | 'cheio';
+}) {
+  const simbolo = sistema && Platform.OS === 'ios' ? SIMBOLOS[nome] : undefined;
+  if (simbolo) {
+    return (
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:sf`}
+        style={{ width: tamanho, height: tamanho }}>
+        <SymbolView name={(sistema === 'cheio' && simbolo.cheio) || simbolo.nome} size={tamanho} tintColor={cor} weight="semibold"
+          style={{ width: tamanho, height: tamanho }} />
+      </View>
+    );
+  }
+  if (ehSvg(nome)) {
+    return (
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:${traco}`}
+        style={{ width: tamanho, height: tamanho }}>
+        {/* `cheio` preenche o desenho na cor (o Valeu marcado, como `fill: currentColor` da web); `color` serve o currentColor. */}
+        <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" color={cor} fill={cheio ? cor : 'none'} stroke={cor} strokeWidth={traco} strokeLinecap="round" strokeLinejoin="round">
+          {DESENHOS_SVG[nome]}
+        </Svg>
+      </View>
+    );
+  }
   const escala = tamanho / 24;
+  const fator = traco / 2.5;
   return (
-    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:${traco}`}
       style={{ width: tamanho, height: tamanho }}>
-      {desenhos[nome].map((peca, indice) => <View key={indice} style={[escalar(peca, escala, cor), cheio && indice === 0 && { backgroundColor: cor }]} />)}
+      {desenhos[nome].map((peca, indice) => (
+        <View key={indice} style={[escalar(peca, escala, cor, fator), cheio && indice === 0 && { backgroundColor: cor }]}>
+          {peca.filho && <View style={escalar(peca.filho, escala, cor, fator)} />}
+        </View>
+      ))}
     </View>
   );
 }

@@ -1,0 +1,1471 @@
+{
+  "metadata": {
+    "commit": "f0c9b7fb3fb962827fd743096fee935b4873ed29",
+    "scope": "Independent HTML prototype geometry/contrast, clipboard keyboard and delimited equivalence with R6; not integrated mobile app approval",
+    "sourceStable": true,
+    "runtimeFileCount": 17,
+    "allRuntimeFilesMatchCommit": true,
+    "httpRuntimeFilesMatchCommit": true,
+    "hashesBefore": {
+      "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+      "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+      "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+      "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+    },
+    "hashesAfter": {
+      "accessibility.css": "b5e4383c3697d1c5eb9f8d431237365708a7e98d1bedfe1a7a4133a1e601c784",
+      "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+      "app.js": "c966f5b7eeeaefb50986651611c01d3c21050d31b02061f8c57c9da940b1815e",
+      "base.css": "521be8114a6c02d8b91bf74b9d1ba2a903472fc7959ac57c6fe49b9e83c1207b",
+      "directions/caderno.css": "781e22ae783a0d7a1b7af77fbc793826010212b13c5b0c8dd419395495de635d",
+      "directions/foco.css": "7e79f3a66db34001b3f6e33cd51cee932755415bf9cf0eb41418ac3e23c0ecb6",
+      "directions/jornada.css": "cf20e039dd9f3b2e71464b82e482346d30e8d662cd5eba17340f90d6733267b3",
+      "index.html": "683703d84ad4b56563dcac2466cfddcc4ea6fd78fef7f02d1d10a09ca7dfd338",
+      "material-pages.css": "0d7ff01e360c956700f84faa3051f7412a7d2f3042ef8f369fb02283c4ba456f",
+      "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+      "media-pages.css": "61b5426cd3d4a8d3c06618bd3475d4fe7622e46b56f54d7a70e8c48444eb9e3c",
+      "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c",
+      "personal-pages.css": "87bc4ab2eec0c8298738bd241a8968fd44591dce3cc9352e09f05c773a5d72b8",
+      "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e",
+      "social-pages.css": "8badea9270eee1c0345407ea069d3ad25fbf699bd01192838380cbc10ea6ddfe",
+      "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+      "vendor/qrcode.js": "79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c"
+    },
+    "chromium": "156.0.8078.79",
+    "native": false,
+    "screenReader": false,
+    "api": false,
+    "realClipboard": false,
+    "realFileChooser": false,
+    "microphone": false,
+    "testsStoppedBeforeSourceRelease": true,
+    "reportDerivedFromSavedR7Results": true
+  },
+  "newR7Evidence": {
+    "canonical": {
+      "views": 210,
+      "dpr": 2,
+      "dimensionsAllValid": true,
+      "pngs": [
+        {
+          "file": "jornada-boasvindas-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-apresentacao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-interesses-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-entrar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-cadastro-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-codigo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-senha-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-recuperar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-inicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-pedido-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-material-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-consentimento-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-geracao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-proposta-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-mapa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-licao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-exercicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-reforco-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-explique-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-retorno-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-conclusao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-explorar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-previa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-publico-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-perfil-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-editar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-foto-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-compartilhar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-codigostudoo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-denunciar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-configurar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-preferencias-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-privacidade-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-ajuda-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-bloqueados-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "jornada-boasvindas-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-apresentacao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-interesses-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-entrar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-cadastro-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-codigo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-senha-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-recuperar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-inicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-pedido-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-material-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-consentimento-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-geracao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-proposta-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-mapa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-licao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-exercicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-reforco-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-explique-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-retorno-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-conclusao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-explorar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-previa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-publico-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-perfil-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-editar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-foto-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-compartilhar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-codigostudoo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-denunciar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-configurar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-preferencias-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-privacidade-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-ajuda-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "jornada-bloqueados-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-boasvindas-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-apresentacao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-interesses-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-entrar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-cadastro-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-codigo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-senha-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-recuperar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-inicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-pedido-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-material-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-consentimento-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-geracao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-proposta-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-mapa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-licao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-exercicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-reforco-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-explique-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-retorno-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-conclusao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-explorar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-previa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-publico-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-perfil-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-editar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-foto-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-compartilhar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-codigostudoo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-denunciar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-configurar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-preferencias-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-privacidade-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-ajuda-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-bloqueados-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "caderno-boasvindas-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-apresentacao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-interesses-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-entrar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-cadastro-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-codigo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-senha-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-recuperar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-inicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-pedido-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-material-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-consentimento-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-geracao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-proposta-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-mapa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-licao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-exercicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-reforco-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-explique-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-retorno-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-conclusao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-explorar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-previa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-publico-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-perfil-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-editar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-foto-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-compartilhar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-codigostudoo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-denunciar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-configurar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-preferencias-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-privacidade-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-ajuda-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "caderno-bloqueados-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-boasvindas-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-apresentacao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-interesses-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-entrar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-cadastro-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-codigo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-senha-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-recuperar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-inicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-pedido-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-material-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-consentimento-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-geracao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-proposta-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-mapa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-licao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-exercicio-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-reforco-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-explique-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-retorno-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-conclusao-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-explorar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-previa-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-publico-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-perfil-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-editar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-foto-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-compartilhar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-codigostudoo-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-denunciar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-configurar-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-preferencias-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-privacidade-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-ajuda-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-bloqueados-390.png",
+          "width": 780,
+          "height": 1688,
+          "valid": true
+        },
+        {
+          "file": "foco-boasvindas-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-apresentacao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-interesses-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-entrar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-cadastro-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-codigo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-senha-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-recuperar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-inicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-pedido-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-material-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-consentimento-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-geracao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-proposta-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-mapa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-licao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-exercicio-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-reforco-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-explique-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-retorno-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-conclusao-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-explorar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-previa-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-publico-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-perfil-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-editar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-foto-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-compartilhar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-codigostudoo-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-denunciar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-configurar-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-preferencias-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-privacidade-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-ajuda-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        },
+        {
+          "file": "foco-bloqueados-360.png",
+          "width": 720,
+          "height": 1600,
+          "valid": true
+        }
+      ],
+      "problems": []
+    },
+    "sharingNotice": {
+      "views": 36,
+      "normal": 18,
+      "text200": 18,
+      "dpr": 1,
+      "fixtures": [
+        {
+          "id": "material-nome-no-titulo",
+          "title": "SQL com GUIA.PDF",
+          "material": true,
+          "expected": "O título traz o nome do seu arquivo."
+        },
+        {
+          "id": "material-titulo-generico",
+          "title": "SQL para a prova",
+          "material": true,
+          "expected": "Confira o título: ele pode conter o nome do arquivo."
+        },
+        {
+          "id": "titulo-com-extensao-sem-material",
+          "title": "SQL com guia.pdf",
+          "material": false,
+          "expected": "Compartilhar leva o conteúdo da trilha. Seu progresso, respostas e explicações pessoais não vão junto."
+        }
+      ],
+      "problems": []
+    },
+    "clipboardKeyboard": {
+      "passed": 138,
+      "total": 138,
+      "pageErrors": [],
+      "proof": "teclado/resultado.json"
+    },
+    "equivalence": {
+      "files": 17,
+      "byteIdenticalFiles": 14,
+      "changedFiles": 3,
+      "units": 26,
+      "identicalUnits": 26,
+      "allCSSIdentical": true,
+      "allHTMLIdentical": true,
+      "materialPersonalIdentical": true,
+      "addonApiOnlyAddsRenderToken": true,
+      "materialPersonalIgnoreNewApi": true,
+      "newBrowserTests": 0,
+      "proof": "equivalencia/equivalencia.json"
+    }
+  },
+  "historicalR6Evidence": {
+    "candidate": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+    "root": "/workspace/work/revisao-a11y-r6",
+    "executedInR7": false,
+    "proof": "parecer-qa-r6.json",
+    "sets": [
+      "1200 material/personal records",
+      "120 exercise focus transitions",
+      "270 colors/previous-step records",
+      "24 explicit long-data scenarios/36 PNGs",
+      "90 common states and105 text200 captures",
+      "156 directed variants including114 text200",
+      "186 common keyboard,42photo guards,66partial-workbench checks"
+    ],
+    "basis": "Delimiting diff and byte equivalence of14/17 files,26 relevant app units; fresh210 canonical and affected clipboard/notice proof. No unchanged test set rerun or relabelled."
+  },
+  "harnessCorrection": {
+    "scope": "sharing notice assertion",
+    "initialWrongSelector": ".note",
+    "correctSelector": ".publication-note",
+    "initialRawPreserved": "aviso-compartilhamento-harness-inicial.json",
+    "correctionRerunSameCandidate": true,
+    "notProductFinding": true,
+    "notAddedToUniqueCounts": true
+  },
+  "scores": {
+    "jornada": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": null,
+      "D5": 9,
+      "D6": 9,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null,
+      "canonicalMinTarget": 44,
+      "canonicalMinCTA": 52,
+      "minFont": 12,
+      "minCanonicalNormalTextContrast": 5.417,
+      "minNormalTextContrastWithNotices": 5.417
+    },
+    "caderno": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": null,
+      "D5": 9,
+      "D6": 9,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null,
+      "canonicalMinTarget": 44,
+      "canonicalMinCTA": 52,
+      "minFont": 12,
+      "minCanonicalNormalTextContrast": 5.254,
+      "minNormalTextContrastWithNotices": 5.254
+    },
+    "foco": {
+      "D1": null,
+      "D2": null,
+      "D3": 9,
+      "D4": null,
+      "D5": 9,
+      "D6": 9,
+      "D7": 9,
+      "D8": null,
+      "D9": null,
+      "D10": null,
+      "canonicalMinTarget": 44,
+      "canonicalMinCTA": 52,
+      "minFont": 12,
+      "minCanonicalNormalTextContrast": 5.318,
+      "minNormalTextContrastWithNotices": 5.318
+    }
+  },
+  "openFindingsInExaminedScope": [],
+  "gates": {
+    "DG1": null,
+    "DG2": null,
+    "DG3": true,
+    "DG4": true,
+    "DG5": null,
+    "DG6": null,
+    "scope": "DG3/DG4 in specialist set, with R6-equivalent branches and new affected R7 checks; final global consolidation belongs to lead reviewer"
+  },
+  "globalScore": null,
+  "productScore": null,
+  "limits": [
+    "R6 history is not new R7 browser execution",
+    "Canonical screenshot queries do not prove all substate cycles",
+    "D9/D10/global remain unscored by this specialty",
+    "No real reader, device, clipboard/chooser/microphone/API or people evidence"
+  ],
+  "evidenceRoot": "/workspace/work/revisao-a11y-r7"
+}

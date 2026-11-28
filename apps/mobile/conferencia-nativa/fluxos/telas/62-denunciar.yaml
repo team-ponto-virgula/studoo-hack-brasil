@@ -1,0 +1,63 @@
+# Spec 14, S4 no simulador: denunciar uma trilha pelo "•••" do cartão e ver o aviso com o protocolo (e a ação Bloquear).
+appId: host.exp.Exponent
+name: 62-denunciar
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-explorar
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-explorar
+    timeout: 30000
+# O "•••" do primeiro cartão de "Em alta esta semana": no iPhone, centralizado; no Android, achado e levado acima da barra
+# de baixo por um arrasto até o fim da página (o porquê está no 61-bloquear.yaml).
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+          centerElement: true
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - scrollUntilVisible:
+          element:
+            text: "Mais opções de .*"
+          direction: DOWN
+          timeout: 60000
+          speed: 50
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 60%
+          end: 50%, 30%
+          duration: 800
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Mais opções de .*"
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Denunciar"
+- extendedWaitUntil:
+    visible:
+      id: denuncia-spam
+    timeout: 10000
+- tapOn:
+    waitToSettleTimeoutMs: 500
+    id: denuncia-spam
+- takeScreenshot: 62-denuncia-motivo
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    id: denuncia-enviar
+- extendedWaitUntil:
+    visible:
+      text: "Denúncia enviada \\(protocolo .*"
+    timeout: 15000
+- takeScreenshot: 62-denuncia-protocolo

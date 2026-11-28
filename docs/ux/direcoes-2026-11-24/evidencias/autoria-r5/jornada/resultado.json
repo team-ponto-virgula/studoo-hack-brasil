@@ -1,0 +1,265 @@
+{
+  "createdAt": "2026-11-24T21:16:58.183Z",
+  "scope": "Author smoke, not independent approval/native",
+  "hashesBefore": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+    "exportar.py": "462a6dd9a9a3e66cf93d2b702de697161aafb0be961cd7993d4c8c909649d408"
+  },
+  "hashesAfter": {
+    "app.js": "730e325477a440f59ebd5eb9581af73ceb0c4dd89e332466f1341ae5edd2995b",
+    "app.html": "74542b3fd53e0cd3732a4eeaa2afe68dc425ac50073fb79218cb1dcd504e3265",
+    "accessibility.css": "8e8c619517a1107d2409db4789d28569b32782e5e4aa75743abd8ee833b44497",
+    "index.html": "feabf1a51762b178be5fcaa5e6070e8194c001bc1b7cff51600fe459da8f4e7e",
+    "exportar.py": "462a6dd9a9a3e66cf93d2b702de697161aafb0be961cd7993d4c8c909649d408"
+  },
+  "sourceStable": true,
+  "checks": 180,
+  "scenarios": 48,
+  "failed": 0,
+  "errors": [],
+  "rows": [
+    {
+      "d": "jornada",
+      "name": "sessao-expirada",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "visitante-nao-apaga-conta",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "geracao-eventos-cancelados",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "aceite-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "pares-parciais",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "aberta-criterios",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "reforco-vencido",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "reinicio-tentativa",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "mapa-fontes-apoio",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "explorar-ordem-paginacao",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "explicacao-erro-retomar",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "ponte-e-revisao",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "envio-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "gravacao-limite60",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "perfil-contrato",
+      "pass": true
+    },
+    {
+      "d": "jornada",
+      "name": "tentativas-isoladas",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "sessao-expirada",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "visitante-nao-apaga-conta",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "geracao-eventos-cancelados",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "aceite-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "pares-parciais",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "aberta-criterios",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "reforco-vencido",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "reinicio-tentativa",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "mapa-fontes-apoio",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "explorar-ordem-paginacao",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "explicacao-erro-retomar",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "ponte-e-revisao",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "envio-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "gravacao-limite60",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "perfil-contrato",
+      "pass": true
+    },
+    {
+      "d": "caderno",
+      "name": "tentativas-isoladas",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "sessao-expirada",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "visitante-nao-apaga-conta",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "geracao-eventos-cancelados",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "aceite-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "pares-parciais",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "aberta-criterios",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "reforco-vencido",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "reinicio-tentativa",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "mapa-fontes-apoio",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "explorar-ordem-paginacao",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "explicacao-erro-retomar",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "ponte-e-revisao",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "envio-pendente-cancelado",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "gravacao-limite60",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "perfil-contrato",
+      "pass": true
+    },
+    {
+      "d": "foco",
+      "name": "tentativas-isoladas",
+      "pass": true
+    }
+  ]
+}

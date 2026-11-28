@@ -1,0 +1,19 @@
+{
+  "cliVersion": "27.11.0",
+  "profile": "testflight-individual",
+  "schemaResolved": true,
+  "individualEnvironmentVariablesResolved": true,
+  "adminEnvironmentVariablesAbsent": true,
+  "localKeySourceSelected": true,
+  "issuerOmitted": true,
+  "serializedSubmissionConfigurationValidated": true,
+  "credentialsUsed": "synthetic temporary individual key",
+  "temporaryKeyRemoved": true,
+  "networkCalls": 0,
+  "uploadPerformed": false,
+  "testBeta": {
+    "passed": 22,
+    "failed": 0
+  },
+  "limits": "Valida configuração e roteamento com as classes reais do CLI; não comprova autenticação Apple da chave futura de Julio nem upload no TestFlight."
+}

@@ -1,0 +1,33 @@
+{
+  "type": "filme de conceito, não captura do app",
+  "style": {
+    "direction": "Flat vector — assinatura óptica",
+    "message": "Os óculos são o foco e voltam a formar o nome Studoo.",
+    "palette": {
+      "background": "#FFFFFF",
+      "lens": "#2563FF",
+      "wordmark": "pixels originais"
+    },
+    "typography": "wordmark fornecido, sem texto recomposto",
+    "exclusions": [
+      "sem partículas",
+      "sem confete",
+      "sem som",
+      "sem loop no app",
+      "sem API",
+      "sem novo mascote"
+    ],
+    "timing": "extração → foco → recomposição → dissolve"
+  },
+  "source": "apps/mobile/assets/marca/logo-com-sorriso.png",
+  "motionContract": "packages/contratos/src/abertura-motion.json",
+  "fps": 60,
+  "resolution": [
+    780,
+    1688
+  ],
+  "mobileNominalMs": 680,
+  "conceptHoldMs": 500,
+  "durationMs": 1340,
+  "nativeValidated": false
+}

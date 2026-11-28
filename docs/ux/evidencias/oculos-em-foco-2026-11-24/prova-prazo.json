@@ -1,0 +1,12 @@
+{
+  "scope": "React Native Web complementar; fontes retidas; relógio controlado; não valida temporização iOS/Android",
+  "metrics": {
+    "inicio": 5,
+    "montou": 5,
+    "concluiu": 906,
+    "agora": 906
+  },
+  "productionSourceChanged": false,
+  "bundleMetricInjectionOnly": true,
+  "passed": true
+}

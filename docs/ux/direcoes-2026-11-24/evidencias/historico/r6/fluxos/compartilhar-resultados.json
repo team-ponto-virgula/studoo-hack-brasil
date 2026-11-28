@@ -1,0 +1,1609 @@
+{
+  "source": "28b003e6c29728e1fd8c96f14efbb497353b0d10",
+  "startedAt": "2026-11-24T21:56:15.441Z",
+  "hashesStart": {
+    "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "surface": "Chromium360x800, API interna de protótipo capturada por wrapper do factory, sem alteração de fonte",
+  "cases": [
+    {
+      "dir": "jornada",
+      "name": "R5-F2-recebida-menu-url-handlers",
+      "checks": [
+        {
+          "name": "menu de cópia não oferece republicar",
+          "passed": true
+        },
+        {
+          "name": "URL de compartilhar explica propriedade e não expõe link",
+          "passed": true
+        },
+        {
+          "name": "URL de código não prepara QR nem link",
+          "passed": true
+        },
+        {
+          "name": "handlers bloqueados não produzem clipboard SVG Blob ou folha",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handlers preservam cópia e progresso",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-R5-F2-recebida-menu-url-handlers-privada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:49.520Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "ownership-marcador",
+      "checks": [
+        {
+          "name": "marcador não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "marcador não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "marcador mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:25.950Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "ownership-sem-registro",
+      "checks": [
+        {
+          "name": "sem-registro não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "sem-registro não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "sem-registro mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:29.524Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "ownership-visitante",
+      "checks": [
+        {
+          "name": "visitante não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "visitante não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "visitante mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:32.270Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "ownership-inativa",
+      "checks": [
+        {
+          "name": "inativa não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "inativa não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "inativa mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:34.433Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "propria-com-material-de-outro-pedido",
+      "checks": [
+        {
+          "name": "arquivo global não bloqueia própria sem origem",
+          "passed": true
+        },
+        {
+          "name": "aviso não atribui material de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "própria sem material aceita Explorar",
+          "passed": true
+        },
+        {
+          "name": "pendente não oferece copiar por handler",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-propria-com-material-de-outro-pedido-pendente.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:37.032Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "material-origem-ativa-link-perfil",
+      "checks": [
+        {
+          "name": "material do registro desabilita Explorar",
+          "passed": true
+        },
+        {
+          "name": "handler não muda destino proibido",
+          "passed": true
+        },
+        {
+          "name": "aviso reconhece nome da fonte ativa no título",
+          "passed": true
+        },
+        {
+          "name": "link permitido pode ser aprovado localmente",
+          "passed": true
+        },
+        {
+          "name": "QR permitido é preparado",
+          "passed": true
+        },
+        {
+          "name": "clipboard permitido usa URL demonstrativa",
+          "passed": true
+        },
+        {
+          "name": "perfil é alternativa válida em revisão",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-material-origem-ativa-link-perfil-perfil.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:51.386Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "material-legado-explorar-query-handlers",
+      "checks": [
+        {
+          "name": "legado não apresenta link aprovado",
+          "passed": true
+        },
+        {
+          "name": "destino legado bloqueia todos efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handler não converte legado em pendente",
+          "passed": true
+        },
+        {
+          "name": "aprovação por query não contorna origem",
+          "passed": true
+        },
+        {
+          "name": "recuperação exige novo destino sem aprovação herdada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-material-legado-explorar-query-handlers-recuperado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:47.374Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:51.002Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:54.635Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "copy-link-fallback-apos-mudar-propriedade",
+      "checks": [
+        {
+          "name": "pedido de clipboard começou em própria elegível",
+          "passed": true
+        },
+        {
+          "name": "fallback atrasado não revela link em recebida",
+          "passed": false,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "dialogs": [
+              "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+            ]
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-copy-link-fallback-apos-mudar-propriedade-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:56:56.561Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "confirmacao-revalida-origem-e-trilha",
+      "checks": [
+        {
+          "name": "confirmação não publica material que mudou após abrir diálogo",
+          "passed": true
+        },
+        {
+          "name": "confirmação iniciada em outra trilha não altera recebida",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-confirmacao-revalida-origem-e-trilha-revalidada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:52.280Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "retirada-nao-altera-outra-trilha",
+      "checks": [
+        {
+          "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+          "passed": false,
+          "evidence": {
+            "before": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": "retirado"
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-retirada-nao-altera-outra-trilha-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:06.136Z"
+    },
+    {
+      "dir": "jornada",
+      "name": "parcial-generico-preserva-outra-tentativa",
+      "checks": [
+        {
+          "name": "parcial sem formato normaliza associação de WHERE",
+          "passed": true
+        },
+        {
+          "name": "normalização não muda tentativa de outra lição",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            },
+            "after": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            }
+          }
+        },
+        {
+          "name": "retry parcial coloca foco no par ainda corrigível",
+          "passed": true
+        },
+        {
+          "name": "verificar acerto mantém CTA focado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/jornada-parcial-generico-preserva-outra-tentativa-parcial-corrigido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:09.912Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "R5-F2-recebida-menu-url-handlers",
+      "checks": [
+        {
+          "name": "menu de cópia não oferece republicar",
+          "passed": true
+        },
+        {
+          "name": "URL de compartilhar explica propriedade e não expõe link",
+          "passed": true
+        },
+        {
+          "name": "URL de código não prepara QR nem link",
+          "passed": true
+        },
+        {
+          "name": "handlers bloqueados não produzem clipboard SVG Blob ou folha",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handlers preservam cópia e progresso",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-R5-F2-recebida-menu-url-handlers-privada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:53.501Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "ownership-marcador",
+      "checks": [
+        {
+          "name": "marcador não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "marcador não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "marcador mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:13.626Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "ownership-sem-registro",
+      "checks": [
+        {
+          "name": "sem-registro não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "sem-registro não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "sem-registro mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:14.725Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "ownership-visitante",
+      "checks": [
+        {
+          "name": "visitante não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "visitante não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "visitante mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:16.402Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "ownership-inativa",
+      "checks": [
+        {
+          "name": "inativa não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "inativa não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "inativa mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:18.150Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "propria-com-material-de-outro-pedido",
+      "checks": [
+        {
+          "name": "arquivo global não bloqueia própria sem origem",
+          "passed": true
+        },
+        {
+          "name": "aviso não atribui material de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "própria sem material aceita Explorar",
+          "passed": true
+        },
+        {
+          "name": "pendente não oferece copiar por handler",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-propria-com-material-de-outro-pedido-pendente.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:20.879Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "material-origem-ativa-link-perfil",
+      "checks": [
+        {
+          "name": "material do registro desabilita Explorar",
+          "passed": true
+        },
+        {
+          "name": "handler não muda destino proibido",
+          "passed": true
+        },
+        {
+          "name": "aviso reconhece nome da fonte ativa no título",
+          "passed": true
+        },
+        {
+          "name": "link permitido pode ser aprovado localmente",
+          "passed": true
+        },
+        {
+          "name": "QR permitido é preparado",
+          "passed": true
+        },
+        {
+          "name": "clipboard permitido usa URL demonstrativa",
+          "passed": true
+        },
+        {
+          "name": "perfil é alternativa válida em revisão",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-material-origem-ativa-link-perfil-perfil.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:55.027Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "material-legado-explorar-query-handlers",
+      "checks": [
+        {
+          "name": "legado não apresenta link aprovado",
+          "passed": true
+        },
+        {
+          "name": "destino legado bloqueia todos efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handler não converte legado em pendente",
+          "passed": true
+        },
+        {
+          "name": "aprovação por query não contorna origem",
+          "passed": true
+        },
+        {
+          "name": "recuperação exige novo destino sem aprovação herdada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-material-legado-explorar-query-handlers-recuperado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:30.932Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:33.016Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:34.999Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "copy-link-fallback-apos-mudar-propriedade",
+      "checks": [
+        {
+          "name": "pedido de clipboard começou em própria elegível",
+          "passed": true
+        },
+        {
+          "name": "fallback atrasado não revela link em recebida",
+          "passed": false,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "dialogs": [
+              "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+            ]
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-copy-link-fallback-apos-mudar-propriedade-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:37.138Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "confirmacao-revalida-origem-e-trilha",
+      "checks": [
+        {
+          "name": "confirmação não publica material que mudou após abrir diálogo",
+          "passed": true
+        },
+        {
+          "name": "confirmação iniciada em outra trilha não altera recebida",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-confirmacao-revalida-origem-e-trilha-revalidada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:55.790Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "retirada-nao-altera-outra-trilha",
+      "checks": [
+        {
+          "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+          "passed": false,
+          "evidence": {
+            "before": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": "retirado"
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-retirada-nao-altera-outra-trilha-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:47.407Z"
+    },
+    {
+      "dir": "caderno",
+      "name": "parcial-generico-preserva-outra-tentativa",
+      "checks": [
+        {
+          "name": "parcial sem formato normaliza associação de WHERE",
+          "passed": true
+        },
+        {
+          "name": "normalização não muda tentativa de outra lição",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            },
+            "after": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            }
+          }
+        },
+        {
+          "name": "retry parcial coloca foco no par ainda corrigível",
+          "passed": true
+        },
+        {
+          "name": "verificar acerto mantém CTA focado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/caderno-parcial-generico-preserva-outra-tentativa-parcial-corrigido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:51.357Z"
+    },
+    {
+      "dir": "foco",
+      "name": "R5-F2-recebida-menu-url-handlers",
+      "checks": [
+        {
+          "name": "menu de cópia não oferece republicar",
+          "passed": true
+        },
+        {
+          "name": "URL de compartilhar explica propriedade e não expõe link",
+          "passed": true
+        },
+        {
+          "name": "URL de código não prepara QR nem link",
+          "passed": true
+        },
+        {
+          "name": "handlers bloqueados não produzem clipboard SVG Blob ou folha",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handlers preservam cópia e progresso",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "SQL sem complicação",
+              "completed": 0,
+              "received": true,
+              "sourceTitle": "SQL sem complicação",
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-R5-F2-recebida-menu-url-handlers-privada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:56.473Z"
+    },
+    {
+      "dir": "foco",
+      "name": "ownership-marcador",
+      "checks": [
+        {
+          "name": "marcador não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "marcador não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "marcador mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:57:57.473Z"
+    },
+    {
+      "dir": "foco",
+      "name": "ownership-sem-registro",
+      "checks": [
+        {
+          "name": "sem-registro não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "sem-registro não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "sem-registro mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:00.648Z"
+    },
+    {
+      "dir": "foco",
+      "name": "ownership-visitante",
+      "checks": [
+        {
+          "name": "visitante não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "visitante não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "visitante mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:03.122Z"
+    },
+    {
+      "dir": "foco",
+      "name": "ownership-inativa",
+      "checks": [
+        {
+          "name": "inativa não expõe controles de compartilhar",
+          "passed": true
+        },
+        {
+          "name": "inativa não gera efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "inativa mantém visibilidade/moderação",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:05.571Z"
+    },
+    {
+      "dir": "foco",
+      "name": "propria-com-material-de-outro-pedido",
+      "checks": [
+        {
+          "name": "arquivo global não bloqueia própria sem origem",
+          "passed": true
+        },
+        {
+          "name": "aviso não atribui material de outro pedido",
+          "passed": true
+        },
+        {
+          "name": "própria sem material aceita Explorar",
+          "passed": true
+        },
+        {
+          "name": "pendente não oferece copiar por handler",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-propria-com-material-de-outro-pedido-pendente.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:08.466Z"
+    },
+    {
+      "dir": "foco",
+      "name": "material-origem-ativa-link-perfil",
+      "checks": [
+        {
+          "name": "material do registro desabilita Explorar",
+          "passed": true
+        },
+        {
+          "name": "handler não muda destino proibido",
+          "passed": true
+        },
+        {
+          "name": "aviso reconhece nome da fonte ativa no título",
+          "passed": true
+        },
+        {
+          "name": "link permitido pode ser aprovado localmente",
+          "passed": true
+        },
+        {
+          "name": "QR permitido é preparado",
+          "passed": true
+        },
+        {
+          "name": "clipboard permitido usa URL demonstrativa",
+          "passed": true
+        },
+        {
+          "name": "perfil é alternativa válida em revisão",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-material-origem-ativa-link-perfil-perfil.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:57.694Z"
+    },
+    {
+      "dir": "foco",
+      "name": "material-legado-explorar-query-handlers",
+      "checks": [
+        {
+          "name": "legado não apresenta link aprovado",
+          "passed": true
+        },
+        {
+          "name": "destino legado bloqueia todos efeitos",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "handler não converte legado em pendente",
+          "passed": true
+        },
+        {
+          "name": "aprovação por query não contorna origem",
+          "passed": true
+        },
+        {
+          "name": "recuperação exige novo destino sem aprovação herdada",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-material-legado-explorar-query-handlers-recuperado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:21.800Z"
+    },
+    {
+      "dir": "foco",
+      "name": "afterClose-recebida",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-afterClose-recebida-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:25.157Z"
+    },
+    {
+      "dir": "foco",
+      "name": "afterClose-material-invalido",
+      "checks": [
+        {
+          "name": "QR próprio inicial existe",
+          "passed": true
+        },
+        {
+          "name": "afterClose revalida e não copia",
+          "passed": true,
+          "evidence": {
+            "copies": [],
+            "qr": 0,
+            "blobs": 0,
+            "downloads": 0
+          }
+        },
+        {
+          "name": "folha antiga fechada e QR não reaproveitado",
+          "passed": true
+        },
+        {
+          "name": "download direto posterior também bloqueado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-afterClose-material-invalido-bloqueado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:29.857Z"
+    },
+    {
+      "dir": "foco",
+      "name": "copy-link-fallback-apos-mudar-propriedade",
+      "checks": [
+        {
+          "name": "pedido de clipboard começou em própria elegível",
+          "passed": true
+        },
+        {
+          "name": "fallback atrasado não revela link em recebida",
+          "passed": false,
+          "evidence": {
+            "id": "recebida-sql-sem-complica--o",
+            "dialogs": [
+              "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+            ]
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-copy-link-fallback-apos-mudar-propriedade-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:33.045Z"
+    },
+    {
+      "dir": "foco",
+      "name": "confirmacao-revalida-origem-e-trilha",
+      "checks": [
+        {
+          "name": "confirmação não publica material que mudou após abrir diálogo",
+          "passed": true
+        },
+        {
+          "name": "confirmação iniciada em outra trilha não altera recebida",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-confirmacao-revalida-origem-e-trilha-revalidada.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T22:00:58.474Z"
+    },
+    {
+      "dir": "foco",
+      "name": "retirada-nao-altera-outra-trilha",
+      "checks": [
+        {
+          "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+          "passed": false,
+          "evidence": {
+            "before": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": ""
+            },
+            "after": {
+              "title": "Cópia recebida",
+              "completed": 0,
+              "received": true,
+              "description": "Praticar filtros e junções em consultas.",
+              "reviewNeeded": [],
+              "visibility": "link",
+              "publicationStatus": "retirado"
+            }
+          }
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-retirada-nao-altera-outra-trilha-resultado.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:45.147Z"
+    },
+    {
+      "dir": "foco",
+      "name": "parcial-generico-preserva-outra-tentativa",
+      "checks": [
+        {
+          "name": "parcial sem formato normaliza associação de WHERE",
+          "passed": true
+        },
+        {
+          "name": "normalização não muda tentativa de outra lição",
+          "passed": true,
+          "evidence": {
+            "before": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            },
+            "after": {
+              "selected": "bia",
+              "order": [
+                "Filtrar as linhas",
+                "Selecionar as colunas",
+                "Ler a tabela"
+              ],
+              "pairs": {},
+              "correctPairs": {},
+              "reason": "",
+              "openAnswer": "",
+              "explanation": "Tentativa privada de INNER JOIN.",
+              "reinforce": 0,
+              "exerciseFormat": "multipla"
+            }
+          }
+        },
+        {
+          "name": "retry parcial coloca foco no par ainda corrigível",
+          "passed": true
+        },
+        {
+          "name": "verificar acerto mantém CTA focado",
+          "passed": true
+        }
+      ],
+      "errors": [],
+      "captures": [
+        "/workspace/work/revisao-fluxos-r6/foco-parcial-generico-preserva-outra-tentativa-parcial-corrigido.png"
+      ],
+      "finished": true,
+      "finishedAt": "2026-11-24T21:58:49.401Z"
+    }
+  ],
+  "failures": [
+    {
+      "dir": "jornada",
+      "scenario": "copy-link-fallback-apos-mudar-propriedade",
+      "name": "fallback atrasado não revela link em recebida",
+      "passed": false,
+      "evidence": {
+        "id": "recebida-sql-sem-complica--o",
+        "dialogs": [
+          "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+        ]
+      }
+    },
+    {
+      "dir": "jornada",
+      "scenario": "retirada-nao-altera-outra-trilha",
+      "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": ""
+        },
+        "after": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": "retirado"
+        }
+      }
+    },
+    {
+      "dir": "caderno",
+      "scenario": "copy-link-fallback-apos-mudar-propriedade",
+      "name": "fallback atrasado não revela link em recebida",
+      "passed": false,
+      "evidence": {
+        "id": "recebida-sql-sem-complica--o",
+        "dialogs": [
+          "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+        ]
+      }
+    },
+    {
+      "dir": "caderno",
+      "scenario": "retirada-nao-altera-outra-trilha",
+      "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": ""
+        },
+        "after": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": "retirado"
+        }
+      }
+    },
+    {
+      "dir": "foco",
+      "scenario": "copy-link-fallback-apos-mudar-propriedade",
+      "name": "fallback atrasado não revela link em recebida",
+      "passed": false,
+      "evidence": {
+        "id": "recebida-sql-sem-complica--o",
+        "dialogs": [
+          "Link de exemplohttps://studoo.example.test/t/sql-exemploEntendiCancelar"
+        ]
+      }
+    },
+    {
+      "dir": "foco",
+      "scenario": "retirada-nao-altera-outra-trilha",
+      "name": "retirada pendente não altera estado de cópia que não iniciou pedido",
+      "passed": false,
+      "evidence": {
+        "before": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": ""
+        },
+        "after": {
+          "title": "Cópia recebida",
+          "completed": 0,
+          "received": true,
+          "description": "Praticar filtros e junções em consultas.",
+          "reviewNeeded": [],
+          "visibility": "link",
+          "publicationStatus": "retirado"
+        }
+      }
+    }
+  ],
+  "browser": "156.0.8078.79",
+  "hashesEnd": {
+    "app.js": "67c55890d7cddb9ed3aed4fcb7e2fc694f6ae078b01c61b5028141ac85415ef6",
+    "media-pages.js": "cc7839fa3492e21de099732f6fbf35051ac9e7ecdd63f2cdf87b7b9981c799cc",
+    "social-pages.js": "da6e68fbda274321effdcd065b6be7866073f2210ba2ed544e9f66ed31e46645",
+    "material-pages.js": "5fbfd822ad40d4c9f3a58425e139662f5e386b90ac387739c8b50f86b63ccbe9",
+    "personal-pages.js": "a2ac757d552a0498ab66ec1a4fd52b02c4ad13d37e4437a2bc2e83c8a892027e"
+  },
+  "finishedAt": "2026-11-24T22:00:58.482Z",
+  "recheck": {
+    "history": "compartilhar-resultados-adaptacao-inicial.json",
+    "replacements": "compartilhar-rechecagem.json",
+    "scenariosReplaced": 9,
+    "notAddedToTotal": true
+  }
+}

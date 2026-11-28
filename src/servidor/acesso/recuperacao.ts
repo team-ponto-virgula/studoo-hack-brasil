@@ -4,9 +4,10 @@ import { criarHashSenha, normalizarEmail, senhaValida } from './credenciais';
 import { FalhaApi } from './http';
 import { assinatura, consumirLimite, emailPermitido, iguais } from './seguranca';
 import { enviarRecuperacao, recuperacaoDisponivel } from '../email/recuperacao';
+import { emailInterno } from './cadastro';
 
 const validadeMs = 15 * 60_000;
-export async function solicitarRecuperacao(entrada: unknown) {
+export async function solicitarRecuperacao(entrada: unknown, origem?: string | null) {
   const email = normalizarEmail(entrada);
   if (!email) throw new FalhaApi('invalido');
   if (!recuperacaoDisponivel()) throw new FalhaApi('recuperacao_indisponivel');
@@ -15,15 +16,17 @@ export async function solicitarRecuperacao(entrada: unknown) {
   const resultado = await banco.$transaction(async (tx) => {
     if (!await consumirLimite(tx, `recuperar\0${email}`, 3, validadeMs)) return { limitado: true };
     // O mesmo orçamento é consumido para e-mails que não existem.
-    const usuario = emailPermitido(email) ? await tx.usuario.findUnique({ where: { email }, select: { id: true } }) : null;
-    if (!usuario) return { limitado: false };
+    // Endereços internos (visitante, Apple sem e-mail) não recebem mensagem: a resposta é a mesma.
+    const usuario = emailPermitido(email) && !emailInterno(email) ? await tx.usuario.findUnique({ where: { email }, select: { id: true, perfilDemo: true } }) : null;
+    // Perfil de demonstração não entra por login: nem código de recuperação ele recebe (a resposta é a mesma).
+    if (!usuario || usuario.perfilDemo) return { limitado: false };
     const data = { codigoHash, expiraEm: new Date(Date.now() + validadeMs), tentativas: 0 };
     await tx.recuperacaoSenha.upsert({ where: { usuarioId: usuario.id }, create: { usuarioId: usuario.id, ...data }, update: data });
     return { limitado: false, usuarioId: usuario.id };
   });
   if (resultado.limitado) throw new FalhaApi('limite_recuperacao');
   if (resultado.usuarioId) {
-    try { await enviarRecuperacao(email, codigo); }
+    try { await enviarRecuperacao(email, codigo, origem); }
     catch {
       await banco.recuperacaoSenha.deleteMany({ where: { usuarioId: resultado.usuarioId, codigoHash } });
       // Resposta neutra também quando o provedor de e-mail falha, para não revelar quais e-mails existem.

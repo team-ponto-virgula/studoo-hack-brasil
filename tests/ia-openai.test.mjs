@@ -10,9 +10,11 @@ process.env.DATABASE_URL ??= "postgresql://teste:teste@127.0.0.1:5432/teste";
 // A proposta pronta sai com um token assinado; sem o .env, uma chave fictícia de teste.
 process.env.STUDOO_CHAVE_ASSINATURA ??= "0123456789abcdef".repeat(4);
 const { iniciarGeracao } = await import("../src/servidor/aprendizado/geracao.ts");
+const { lerComprovante } = await import("../src/servidor/aprendizado/comprovantes.ts");
 const { obterGerador } = await import("../src/servidor/ia/gerador.ts");
 const { GERADOR_OPENAI, MODELO_PADRAO, normalizarConteudo } = await import("../src/servidor/ia/openai.ts");
 const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.ts");
+const { FalhaApi } = await import("../src/servidor/acesso/http.ts");
 
 /*
  * Adaptador da OpenAI (Responses API) contra um servidor local que imita a API: streaming SSE para a estrutura e
@@ -50,10 +52,25 @@ const licaoDeEscolha = {
     feedbackIncorreto: "As tarraxas ficam na cabeça, a ponta do braço.",
   },
 };
+const desafioDaEquacao = 'Escolher a equação que representa uma taxa fixa mais um preço por unidade.';
+const licaoComDiagnostico = {
+  objetivo: desafioDaEquacao,
+  conceito: 'Uma taxa fixa é somada ao custo por unidade multiplicado pela quantidade.',
+  exemplo: 'Um total de R$ 18 com entrada de R$ 8 e R$ 2 por quilo se escreve como 8 + 2k = 18.',
+  exercicio: {
+    ...licaoDeEscolha.exercicio,
+    enunciado: 'Uma corrida custa R$ 5 fixos e R$ 3 por quilômetro. Qual equação representa o total de R$ 20?',
+    opcoes: [{ id: 'a', texto: '5 + 3k = 20' }, { id: 'b', texto: '3 + 5k = 20' }, { id: 'c', texto: '5k + 3k = 20' }],
+    gabarito: ['a'], feedbackCorreto: 'Some a taxa fixa ao preço por quilômetro vezes a distância.',
+    feedbackIncorreto: 'Separe o valor inicial do valor por quilômetro.',
+  },
+};
 
 let servidor;
 let pedidos = [];
 let modo = "normal";
+/** Quantos pedidos de lição o servidor falso já recebeu (o modo "leitura-estoura-*" muda a resposta pela ordem). */
+let pedidosDeLicao = 0;
 
 function responderStreaming(resposta, linhas) {
   resposta.writeHead(200, { "Content-Type": "text/event-stream" });
@@ -79,6 +96,7 @@ function responderStreaming(resposta, linhas) {
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
+    resposta.shouldKeepAlive = false; // cada resposta fecha a conexão: nada de socket velho reaproveitado (ECONNRESET ao acaso)
     // Conexões cortadas pelo cliente (cancelamento) não derrubam o servidor de teste.
     pedido.on("error", () => undefined);
     resposta.on("error", () => undefined);
@@ -98,13 +116,37 @@ before(async () => {
         resposta.end(JSON.stringify({ error: { message: "Unsupported parameter: 'reasoning.effort' is not supported with this model." } }));
         return;
       }
+      if (dados.text?.format?.name === "triagem_trilha") {
+        const dadosDaTriagem = JSON.parse(dados.input[0].content[0].text);
+        const saida = modo === "triagem-invalida" ? { decisao: true }
+          : { decisao: modo === "recusar-objetivo" || (modo === "recusar-estrutura" && dadosDaTriagem.estrutura) ? "recusar" : "permitir" };
+        resposta.writeHead(200, { "Content-Type": "application/json" });
+        resposta.end(JSON.stringify({ status: "completed", output_text: JSON.stringify(saida) }));
+        return;
+      }
       if (dados.stream) {
         responderStreaming(resposta, linhasDaTrilha);
+        return;
+      }
+      // O JSON da lição aninhado a ponto de estourar a pilha na leitura (RangeError dentro de normalizarLicao): na primeira vez (ou sempre), e depois a lição boa.
+      if (modo === "leitura-estoura-depois-ok" || modo === "leitura-estoura-sempre") {
+        pedidosDeLicao += 1;
+        const texto = modo === "leitura-estoura-sempre" || pedidosDeLicao === 1 ? licaoQueEstouraALeitura : JSON.stringify(licaoDeEscolha);
+        resposta.writeHead(200, { "Content-Type": "application/json" });
+        resposta.end(JSON.stringify({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: texto }] }] }));
         return;
       }
       // Correções durante a aula: cada pedido diz o seu formato pelo nome do esquema.
       const formato = dados.text?.format?.name;
       let saida = licaoDeEscolha;
+      if (modo === 'diagnostico') {
+        if (formato === 'diagnostico_curriculo') saida = { fluxos: [{ titulo: 'Aplicações', licoes: [
+          { titulo: 'Traduzir uma situação em equação', resumo: desafioDaEquacao },
+          { titulo: 'Conferir uma solução', resumo: 'Verificar se a solução faz sentido no contexto.' },
+        ] }] };
+        else if (formato === 'diagnostico_verificar_curriculo') saida = { avaliacoes: [{ numero: 1, resultado: 'avanca', motivo: '' }, { numero: 2, resultado: 'avanca', motivo: '' }] };
+        else saida = licaoComDiagnostico;
+      }
       if (formato === "correcao_aberta") saida = { criterios: [{ atendido: true }, { atendido: false }], correta: true, feedback: "Boa ideia, faltou o exemplo." };
       if (formato === "desempate_lacuna") saida = { equivalente: dados.input[1].content.includes("dois") };
       resposta.writeHead(200, { "Content-Type": "application/json" });
@@ -124,6 +166,7 @@ after(async () => {
 });
 
 beforeEach(() => {
+  pedidosDeLicao = 0;
   process.env.IA = "openai";
   process.env.OPENAI_API_KEY = "chave-de-teste";
   delete process.env.OPENAI_MODELO;
@@ -141,17 +184,15 @@ async function coletar(geracao, sinal = new AbortController().signal) {
   return eventos;
 }
 
-const MODELO_RACIOCINIO = "gpt-5.6-luna";
-
 test("a estrutura vem por streaming e vira eventos válidos, com índices calculados e sem trecho vazio", async () => {
-  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
+  process.env.OPENAI_MODELO = "modelo-antigo";
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
   for (const evento of eventos) assert.deepEqual(interpretarEventoGeracao(JSON.stringify(evento)), evento);
   assert.deepEqual(eventos.map(({ tipo }) => tipo), ["plano", "fluxo", "licao", "licao", "fluxo", "licao", "licao", "fluxo", "licao", "pronto"]);
   assert.deepEqual(eventos.filter(({ tipo }) => tipo === "licao").map(({ fluxo, licao }) => [fluxo, licao]), [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0]]);
   const pronto = eventos.at(-1);
   assert.equal(pronto.proposta.titulo, "Violão do zero");
-  assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_RACIOCINIO})`);
+  assert.equal(pronto.proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.ok(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => titulo.startsWith("Revisão")));
   // O resumo que o modelo escreve para a prévia vai junto, no evento e na proposta; sem ele, a lição vem só com o título.
   const [primeira, segunda] = eventos.filter(({ tipo }) => tipo === "licao");
@@ -159,12 +200,12 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.equal("resumo" in segunda, false);
   assert.equal(pronto.proposta.fluxos[0].licoes[0].resumo, primeira.resumo);
 
-  const [pedido] = pedidos;
+  const pedido = pedidos.find(p => p.dados.stream);
   assert.equal(pedido.caminho, "/v1/responses");
   assert.equal(pedido.autorizacao, "Bearer chave-de-teste");
-  assert.equal(pedido.dados.model, MODELO_RACIOCINIO);
+  assert.equal(pedido.dados.model, MODELO_PADRAO);
   assert.equal(pedido.dados.stream, true);
-  assert.deepEqual(pedido.dados.reasoning, { effort: "low" });
+  assert.deepEqual(pedido.dados.reasoning, { effort: "max" });
   // Só o objetivo vai para a IA, com as regras de ordem no prompt de sistema.
   assert.match(pedido.dados.input[0].content, /pré-requisitos/);
   assert.match(pedido.dados.input[0].content, /"resumo"/);
@@ -183,7 +224,7 @@ test("o conteúdo da lição vem com Structured Outputs e é normalizado para o 
   assert.ok(esqueletoValido(esqueleto));
   const conteudo = await gerador.gerarConteudo(esqueleto, 0, 0, new AbortController().signal);
   assert.ok(conteudoValido(conteudo));
-  assert.equal(conteudo.origem, "IA da OpenAI (teste)");
+  assert.equal(conteudo.origem, "Conteúdo gerado pelo Studoo");
   assert.deepEqual(conteudo.exercicio.opcoes.map(({ id }) => id), ["a", "b", "c"]);
   assert.deepEqual(conteudo.exercicio.gabarito, ["a"]);
   assert.equal("contexto" in conteudo.exercicio, false, "campo nulo sai do conteúdo");
@@ -457,47 +498,56 @@ test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
   assert.equal(pedidos.length, antes, "com a IA falsa, nenhum pedido sai");
 });
 
-test("o modelo padrão não recebe o campo de raciocínio", async () => {
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
-  assert.equal(eventos.at(-1).proposta.origem, `IA da OpenAI (${MODELO_PADRAO})`);
-  assert.equal(pedidos[0].dados.model, MODELO_PADRAO);
-  assert.equal(pedidos[0].dados.reasoning, undefined);
-});
-
-test("sem o campo de raciocínio aceito pelo modelo, o pedido é repetido sem ele", async () => {
-  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
-  modo = "sem-raciocinio";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
+test("Luna Max e store false são enviados na triagem e na geração, mesmo com overrides antigos", async () => {
+  process.env.OPENAI_MODELO = "modelo-antigo";
+  process.env.OPENAI_ESFORCO = "low";
+  process.env.OPENAI_MODELO_ESTUDIO = "modelo-antigo";
+  const eventos = await coletar(iniciarGeracao("luna-max", "Estudar a história dos assaltos a banco"));
   assert.equal(eventos.at(-1).tipo, "pronto");
-  assert.ok(pedidos[0].dados.reasoning);
-  assert.equal(pedidos[1].dados.reasoning, undefined);
+  assert.deepEqual(pedidos.map(p => p.dados.text?.format?.name ?? "estrutura"),
+    ["triagem_trilha", "estrutura", "triagem_trilha"]);
+  for (const { dados } of pedidos) {
+    assert.equal(dados.model, "gpt-6-luna");
+    assert.deepEqual(dados.reasoning, { effort: "max" });
+    assert.equal(dados.store, false);
+  }
 });
 
-test("se a OpenAI falha antes do primeiro evento, a IA falsa monta a trilha (reserva padrão)", async () => {
-  modo = "falha";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
-  const pronto = eventos.at(-1);
-  assert.equal(pronto.tipo, "pronto");
-  assert.match(pronto.proposta.origem, /Modo demonstração/);
-});
-
-test("sem reserva, a falha da OpenAI vira o evento de erro ia_indisponivel", async () => {
-  modo = "falha";
-  process.env.STUDOO_IA_RESERVA = "nenhuma";
-  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
+test("OpenAI rejeitando o esforço não faz outro pedido, nem usa a demonstração", async () => {
+  modo = "sem-raciocinio";
+  const eventos = await coletar(iniciarGeracao("sem-raciocinio", "Frações"));
   assert.deepEqual(eventos, [{ tipo: "erro", codigo: "ia_indisponivel" }]);
+  assert.equal(pedidos.length, 1);
+  assert.deepEqual(pedidos[0].dados.reasoning, { effort: "max" });
 });
 
-test("sem chave, a reserva assume; sem chave e sem reserva, a geração nem começa", () => {
+test("recusa do pedido, da estrutura ou resposta inválida emite só o erro", async () => {
+  for (const [cenario, codigo, esperados] of [
+    ["recusar-objetivo", "conteudo_nocivo", 1],
+    ["recusar-estrutura", "conteudo_nocivo", 3],
+    ["triagem-invalida", "ia_indisponivel", 1],
+    ["falha", "ia_indisponivel", 1],
+  ]) {
+    pedidos = [];
+    modo = cenario;
+    const eventos = await coletar(iniciarGeracao(cenario, "Aprender um assunto"));
+    assert.deepEqual(eventos, [{ tipo: "erro", codigo }]);
+    assert.equal(pedidos.length, esperados);
+  }
+});
+
+test("seleção legada e valor ausente usam OpenAI, e falta de chave impede a geração", async () => {
+  process.env.IA = "provedor-legado";
+  const eventos = await coletar(iniciarGeracao("legado", "Aprender frações"));
+  assert.equal(eventos.at(-1).tipo, "pronto");
+  delete process.env.IA;
+  assert.doesNotThrow(() => obterGerador());
   delete process.env.OPENAI_API_KEY;
-  assert.doesNotThrow(() => iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
-  process.env.STUDOO_IA_RESERVA = "nenhuma";
-  assert.throws(() => iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"), (erro) => erro.codigo === "ia_indisponivel");
-  // Endereço sem HTTPS fora do próprio computador também não serve.
+  assert.throws(() => obterGerador(), { codigo: "ia_indisponivel" });
   process.env.OPENAI_API_KEY = "chave-de-teste";
   const base = process.env.OPENAI_BASE_URL;
   process.env.OPENAI_BASE_URL = "http://exemplo.test/v1";
-  assert.throws(() => obterGerador(), (erro) => erro.codigo === "ia_indisponivel");
+  assert.throws(() => obterGerador(), { codigo: "ia_indisponivel" });
   process.env.OPENAI_BASE_URL = base;
 });
 
@@ -510,4 +560,113 @@ test("cancelar no meio para a leitura, sem pronto e sem erro", async () => {
   }
   assert.ok(eventos.length >= 3);
   assert.ok(!eventos.some(({ tipo }) => tipo === "pronto" || tipo === "erro"));
+});
+
+test("429 da OpenAI: retry-after respeitado, uma nova tentativa e resposta normal; leitura do retry-after", async () => {
+  const { comNovasTentativas, esperaPedida } = await import("../src/servidor/ia/novas-tentativas.ts");
+  assert.equal(esperaPedida(new Headers({ "retry-after": "2" })), 2000);
+  assert.equal(esperaPedida(new Headers({ "retry-after-ms": "350", "retry-after": "9" })), 350);
+  assert.equal(esperaPedida(new Headers({ "retry-after": new Date(10_000 + 3_000).toUTCString() }), 10_000), 3000);
+  assert.equal(esperaPedida(new Headers({})), null);
+
+  const original = console.error;
+  console.error = () => {};
+  try {
+    let chamadas = 0;
+    const resposta = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return chamadas === 1
+        ? new Response("{}", { status: 429, headers: { "retry-after-ms": "20" } })
+        : Response.json({ ok: true });
+    }, { rota: "ia-openai" });
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(await resposta.json(), { ok: true });
+    assert.equal(chamadas, 2);
+
+    // Sempre 429: 1 pedido + no máximo 2 novas tentativas.
+    chamadas = 0;
+    const limite = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return new Response("{}", { status: 429, headers: { "retry-after": "0" } });
+    }, { rota: "ia-openai" });
+    assert.equal(limite.status, 429);
+    assert.equal(chamadas, 3);
+  } finally {
+    console.error = original;
+  }
+});
+
+// O 500 do aceite (Lead, 23/11): uma exceção de dentro de normalizarLicao subia crua até o tratarRota e virava HTTP 500, sem a segunda tentativa de formato. Um campo aninhado demais no JSON do modelo
+// estoura a pilha da leitura (RangeError, medido a partir de 2 000 níveis). Agora vale como formato inválido: pede de novo e, falhando de novo, é ia_indisponivel (503).
+const aninhado = (niveis) => {
+  let texto = "1";
+  for (let i = 0; i < niveis; i += 1) texto = `{"a":${texto}}`;
+  return texto;
+};
+const licaoQueEstouraALeitura = JSON.stringify({ ...licaoDeEscolha, resolucao: "@@" }).replace('"@@"', aninhado(20_000));
+const esqueletoDeViolao = () => ({
+  gerador: GERADOR_OPENAI,
+  titulo: "Violão do zero",
+  objetivo: "Tocar as primeiras músicas no violão.",
+  origem: "IA da OpenAI (teste)",
+  fluxos: [{ titulo: "Primeiros passos", licoes: [{ titulo: "Conhecer as partes do violão" }, { titulo: "Afinar as cordas" }] }],
+});
+
+test("OpenAI: JSON que estoura a pilha na leitura da lição vale como formato inválido: pede de novo e a lição sai (nada de 500)", async () => {
+  modo = "leitura-estoura-depois-ok";
+  const conteudo = await obterGerador().gerarConteudo(esqueletoDeViolao(), 0, 0, new AbortController().signal);
+  assert.ok(conteudoValido(conteudo));
+  assert.equal(pedidosDeLicao, 2, "a segunda tentativa, de formato");
+});
+
+test("OpenAI: se a leitura estoura nas duas tentativas, o erro é ia_indisponivel (503, motivo formato), nunca uma exceção crua (500)", async () => {
+  modo = "leitura-estoura-sempre";
+  const erro = await obterGerador().gerarConteudo(esqueletoDeViolao(), 0, 0, new AbortController().signal).catch((falha) => falha);
+  assert.ok(erro instanceof FalhaApi, `veio ${erro instanceof Error ? erro.name : typeof erro}`);
+  assert.equal(erro.codigo, "ia_indisponivel");
+  assert.equal(erro.motivo, "formato");
+  assert.equal(pedidosDeLicao, 2);
+});
+
+test('o diagnóstico separa evidência e intenção, encurta a estrutura e chega ao prompt da lição', async () => {
+  modo = 'diagnostico';
+  const diagnostico = {
+    nivel: 'basico', escopo: 'Equação do primeiro grau',
+    demonstrados: ['Isolar a incógnita', 'Resolver equações com x dos dois lados'],
+    lacunas: [],
+  };
+  const eventos = await coletar(iniciarGeracao('teste-diagnostico', 'Equação do primeiro grau', { diagnostico }));
+  const p = eventos.at(-1).proposta;
+  assert.equal(p.objetivo, 'Equação do primeiro grau');
+  assert.deepEqual(p.diagnostico, diagnostico);
+  assert.equal(p.fluxos.flatMap(f => f.licoes).length, 2);
+  const estrutura = pedidos.find(p => p.dados.stream).dados;
+  assert.match(estrutura.input[0].content, /até 2 lições/);
+  assert.match(estrutura.input[1].content, /Isolar a incógnita/);
+
+  const plano = lerComprovante('proposta', 'teste-diagnostico', p.token).plano;
+  assert.equal(plano.curriculoAdaptado, true);
+  assert.equal(plano.fluxos[0].licoes[0].resumo, desafioDaEquacao);
+  const gerador = obterGerador();
+  const sinal = new AbortController().signal;
+  const conteudo = await gerador.gerarConteudo(plano, 0, 0, sinal);
+  assert.ok(conteudoValido(conteudo));
+  await gerador.revisarConteudos(plano, [[conteudo, conteudo]], sinal);
+  const pedidoDaLicao = pedidos.find(pedido => pedido.dados.input[1]?.content.includes('Decisão a praticar nesta lição'));
+  assert.match(pedidoDaLicao.dados.input[1].content, /Use apenas demonstrados como evidência/);
+  assert.match(pedidoDaLicao.dados.input[1].content, /Resolver equações com x dos dois lados/);
+  const verificacao = pedidos.at(-1).dados;
+  assert.equal(verificacao.text.format.name, 'diagnostico_verificar_curriculo');
+  assert.match(JSON.parse(verificacao.input[0].content[0].text).licoes[0].exercicios[0].enunciado, /Qual equação representa/);
+});
+
+test('uma falha do provedor não substitui uma adaptação com evidência por uma trilha de reserva', async () => {
+  modo = 'falha';
+  const diagnostico = { nivel: 'intermediario', escopo: 'Exposição', demonstrados: ['Ajustar o obturador'], lacunas: [] };
+  for (const chaveAusente of [false, true]) {
+    if (chaveAusente) delete process.env.OPENAI_API_KEY;
+    const iniciar = () => iniciarGeracao(`falha-adaptacao-${chaveAusente}`, 'Compensar a exposição com o obturador', { diagnostico });
+    if (chaveAusente) assert.throws(iniciar, { codigo: 'ia_indisponivel' });
+    else assert.deepEqual(await coletar(iniciar()), [{ tipo: 'erro', codigo: 'ia_indisponivel' }]);
+  }
 });

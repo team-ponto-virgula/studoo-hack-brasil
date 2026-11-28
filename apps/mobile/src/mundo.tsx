@@ -1,10 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { coresMundo, desenhosMundo, regiaoDoTrecho, type Forma, type NomeDesenho } from './mundo-desenhos';
+import { degrade } from './interface';
 
 /*
- * Mundo da trilha no app: os desenhos de mundo-desenhos.ts (o mesmo arquivo da web) feitos com View, porque o app não
- * usa SVG. A web desenha os mesmos dados em SVG (src/ui/mundo.tsx). Tudo aqui é decorativo e fica fora do leitor de tela.
+ * Mundo da trilha no app: os desenhos de mundo-desenhos.ts (o mesmo arquivo da web) feitos com View; as ondas (começo da
+ * trilha e fronteira entre partes) usam os mesmos caminhos SVG da web, com react-native-svg. A web desenha os mesmos dados
+ * em SVG (src/ui/mundo.tsx). Tudo aqui é decorativo e fica fora do leitor de tela.
  */
 
 function estiloDaForma(forma: Forma, escala: number): ViewStyle {
@@ -68,24 +71,34 @@ export function coresDaRegiao(trecho: number) {
   return { chao: coresMundo[regiao.chao], relevo: coresMundo[regiao.relevo] };
 }
 
-/** Bolhas que fazem a borda ondulada: posição em % da largura e deslocamento vertical, em pontos. */
-const bolhas = [
-  { x: -10, y: 8 }, { x: 6, y: 0 }, { x: 22, y: 10 }, { x: 38, y: 2 }, { x: 54, y: 12 }, { x: 70, y: 3 }, { x: 86, y: 9 },
-] as const;
-
 /**
- * Borda ondulada de 48 pontos de altura: uma fileira de bolhas no tom do relevo e, um pouco abaixo, outra no tom do chão.
- * A parte de baixo da faixa já é o chão, para emendar com o que vem embaixo.
+ * As ondas da web (os caminhos SVG de src/ui/mundo.tsx e src/ui/caminho.tsx), com as mesmas curvas Bézier em
+ * react-native-svg e esticadas como `preserveAspectRatio="none"`: o relevo atrás e o chão na frente. A fronteira entre
+ * partes ocupa 48 de altura (viewBox 400 × 48); o começo da trilha, 76 (viewBox 400 × 64 esticado).
  */
-export function Onda({ chao, relevo, estilo }: { chao: string; relevo: string; estilo?: StyleProp<ViewStyle> }) {
+const formasDaOnda: Record<'fronteira' | 'inicio', { altura: number; caixa: string; relevo: string; chao: string }> = {
+  fronteira: {
+    altura: 48,
+    caixa: '0 0 400 48',
+    relevo: 'M0 22C36 6 70 4 104 14S170 36 212 22 290 2 332 12 380 26 400 18V48H0Z',
+    chao: 'M0 32C40 16 76 14 110 24S176 44 218 30 296 10 338 20 384 34 400 28V48H0Z',
+  },
+  inicio: {
+    altura: 76,
+    caixa: '0 0 400 64',
+    relevo: 'M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18V64H0Z',
+    chao: 'M0 44C44 28 90 26 140 38S228 60 286 44 364 26 400 34V64H0Z',
+  },
+};
+
+export function Onda({ chao, relevo, estilo, forma = 'fronteira' }: { chao: string; relevo: string; estilo?: StyleProp<ViewStyle>; forma?: 'fronteira' | 'inicio' }) {
+  const onda = formasDaOnda[forma];
   return (
-    <View pointerEvents="none" style={[mundoEstilos.onda, estilo]}>
-      {bolhas.map(({ x, y }, indice) => (
-        <View key={`relevo-${indice}`} style={[mundoEstilos.bolha, { left: `${x}%` as DimensionValue, top: y, backgroundColor: relevo }]} />
-      ))}
-      {bolhas.map(({ x, y }, indice) => (
-        <View key={`chao-${indice}`} style={[mundoEstilos.bolha, { left: `${x + 8}%` as DimensionValue, top: y + 12, backgroundColor: chao }]} />
-      ))}
+    <View pointerEvents="none" style={[mundoEstilos.onda, { height: onda.altura }, estilo]}>
+      <Svg width="100%" height="100%" viewBox={onda.caixa} preserveAspectRatio="none">
+        <Path d={onda.relevo} fill={relevo} />
+        <Path d={onda.chao} fill={chao} />
+      </Svg>
     </View>
   );
 }
@@ -114,6 +127,28 @@ export function Fronteira({ trechoSeguinte, topo }: { trechoSeguinte: number; to
   );
 }
 
+const degradeDaPaisagem = degrade('linear-gradient(180deg, #d4e3ff 0%, #e6efff 52%, #f3f7ff 100%)');
+
+/**
+ * Colina como .paisagem__colina da web: a caixa (posição e tamanho da web) com o topo em meia elipse de raio horizontal igual
+ * à metade da largura e raio vertical de `raioVertical` da altura; abaixo do arco, os lados retos. A elipse é um círculo
+ * achatado (scaleY), recortado pela caixa.
+ */
+export function ColinaElipse({ esquerda, largura, baixo, altura, raioVertical = 1, cor, estilo }: {
+  esquerda?: number; largura: number; baixo: number; altura: number; raioVertical?: number; cor: string;
+  /** Posição de fora (como left 50% com a margem negativa), no lugar de `esquerda`. */
+  estilo?: StyleProp<ViewStyle>;
+}) {
+  const ry = altura * raioVertical;
+  return (
+    <View style={[{ position: 'absolute', left: esquerda, bottom: baixo, width: largura, height: altura, overflow: 'hidden' }, estilo]}>
+      <View style={{ position: 'absolute', left: 0, top: ry - largura / 2, width: largura, height: largura, borderRadius: largura / 2,
+        backgroundColor: cor, transform: [{ scaleY: (2 * ry) / largura }] }} />
+      {raioVertical < 1 && <View style={{ position: 'absolute', left: 0, right: 0, top: ry, bottom: 0, backgroundColor: cor }} />}
+    </View>
+  );
+}
+
 /**
  * Paisagem vista de lado, como a da web: céu, sol, nuvens, balão, montanhas, colinas e árvores. As medidas acompanham a
  * largura da caixa, medida no primeiro layout. `children` fica por cima (o Stu, temas…), já com a largura.
@@ -128,24 +163,23 @@ export function Paisagem({ altura, compacta = false, estilo, children }: {
   const l = (fracao: number) => Math.round(largura * fracao);
 
   return (
-    <View style={[mundoEstilos.paisagem, { height: altura }, estilo]}
+    // .paisagem da web: céu em degradê (#d4e3ff, #e6efff aos 52%, #f3f7ff). A ordem segue as camadas da web: os picos (z-index
+    // -1) atrás de tudo, o sol, as nuvens e o balão na frente deles, as colinas (z 0) e os enfeites (z 1) por cima.
+    <View style={[mundoEstilos.paisagem, degradeDaPaisagem, { height: altura }, estilo]}
       onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
-      <View style={[StyleSheet.absoluteFill, mundoEstilos.ceuMeio]} pointerEvents="none" />
       {largura > 0 && (
         <>
           <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-            <Desenho nome="sol" largura={l(0.13)} estilo={{ position: 'absolute', top: altura * 0.08, right: l(0.08) }} />
-            <Desenho nome="nuvem" largura={l(0.2)} estilo={{ position: 'absolute', top: altura * 0.09, left: l(0.07) }} />
-            <Desenho nome="nuvem" largura={l(0.14)} estilo={{ position: 'absolute', top: altura * 0.2, left: l(0.46), opacity: 0.9 }} />
-            {!compacta && <Desenho nome="nuvem" largura={l(0.11)} estilo={{ position: 'absolute', top: altura * 0.04, left: l(0.64), opacity: 0.8 }} />}
-            {!compacta && <Desenho nome="balao" largura={l(0.07)} estilo={{ position: 'absolute', top: altura * 0.14, left: l(0.28) }} />}
             <Desenho nome="picos" largura={l(0.4)} estilo={{ position: 'absolute', bottom: altura * 0.33, right: l(0.02) }} />
-            <View style={[mundoEstilos.colina, { bottom: altura * 0.16, left: -l(0.14), width: l(0.78), height: altura * 0.4,
-              borderTopLeftRadius: l(0.39), borderTopRightRadius: l(0.39), backgroundColor: coresMundo.florestaRelevo }]} />
-            <View style={[mundoEstilos.colina, { bottom: altura * 0.08, right: -l(0.18), width: l(0.84), height: altura * 0.38,
-              borderTopLeftRadius: l(0.42), borderTopRightRadius: l(0.42), backgroundColor: coresMundo.campoRelevo }]} />
-            <View style={[mundoEstilos.colina, { bottom: -altura * 0.06, left: -l(0.06), right: -l(0.06), height: altura * 0.26,
-              borderTopLeftRadius: l(0.6), borderTopRightRadius: l(0.6), backgroundColor: coresMundo.campo }]} />
+            <Desenho nome="sol" largura={l(0.13)} estilo={{ position: 'absolute', top: altura * 0.08, right: l(0.1) }} />
+            <Desenho nome="nuvem" largura={l(0.2)} estilo={{ position: 'absolute', top: altura * 0.09, left: l(0.08) }} />
+            <Desenho nome="nuvem" largura={l(0.14)} estilo={{ position: 'absolute', top: altura * 0.2, left: l(0.46), opacity: 0.9 }} />
+            {!compacta && <Desenho nome="nuvem" largura={l(0.11)} estilo={{ position: 'absolute', top: altura * 0.04, left: l(0.62), opacity: 0.8 }} />}
+            {!compacta && <Desenho nome="balao" largura={l(0.07)} estilo={{ position: 'absolute', top: altura * 0.14, left: l(0.28) }} />}
+            {/* .paisagem__colina: meia elipse (border-radius 50% 50% 0 0 / 100% 100% 0 0); a da frente, com o raio vertical de 60%. */}
+            <ColinaElipse esquerda={-l(0.14)} largura={l(0.78)} baixo={altura * 0.16} altura={altura * 0.4} cor={coresMundo.florestaRelevo} />
+            <ColinaElipse esquerda={l(0.34)} largura={l(0.84)} baixo={altura * 0.08} altura={altura * 0.38} cor={coresMundo.campoRelevo} />
+            <ColinaElipse esquerda={-l(0.06)} largura={l(1.12)} baixo={-altura * 0.06} altura={altura * 0.24} raioVertical={0.6} cor={coresMundo.campo} />
             <Desenho nome="pinheiro" largura={l(0.08)} estilo={{ position: 'absolute', bottom: altura * 0.41, left: l(0.08) }} />
             <Desenho nome="pinheiro" largura={l(0.06)} estilo={{ position: 'absolute', bottom: altura * 0.43, left: l(0.17) }} />
             <Desenho nome="arvore" largura={l(0.09)} estilo={{ position: 'absolute', bottom: altura * 0.33, right: l(0.18) }} />
@@ -163,13 +197,10 @@ export function Paisagem({ altura, compacta = false, estilo, children }: {
 
 const mundoEstilos = StyleSheet.create({
   onda: { position: 'absolute', left: 0, right: 0, top: 0, height: 48, overflow: 'hidden' },
-  bolha: { position: 'absolute', width: '22%', aspectRatio: 1, borderRadius: 9999 },
   fronteira: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   metade: { position: 'absolute', left: 0, right: 0, top: '50%', height: 48, marginTop: -24 },
   resto: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: 23, bottom: 0 },
   enfeites: { position: 'absolute', left: 0, right: 0, top: 0, bottom: '50%', marginBottom: -4 },
   enfeite: { position: 'absolute', bottom: 0 },
-  paisagem: { overflow: 'hidden', backgroundColor: '#DCE7FF' },
-  ceuMeio: { top: '45%', backgroundColor: '#E9F0FF' },
-  colina: { position: 'absolute' },
+  paisagem: { overflow: 'hidden', backgroundColor: '#E6EFFF' },
 });

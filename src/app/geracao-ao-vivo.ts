@@ -1,11 +1,14 @@
-import { ErroStudoo, interpretarEventoGeracao, type EventoGeracao, type PropostaPlano } from '@studoo/contratos';
+import { CABECALHO_CAPACIDADES, ErroStudoo, interpretarEventoGeracao, type EventoGeracao, type PropostaPlano } from '@studoo/contratos';
 import type { NoCaminho } from '../ui';
+import { comAceiteIa } from './aceite-ia';
+import { CAPACIDADES_DO_SITE } from '../contratos/capacidades';
 
 const rota = '/api/aprendizado/propostas/ao-vivo';
 
 /** Trilha que está sendo montada na tela: o que já chegou do fluxo e, no fim, a proposta para o aceite. */
 export type TrilhaEmGeracao = {
   objetivo: string;
+  diagnosticoId?: string;
   titulo: string | null;
   /** `resumos[i]`: o que a lição i ensina, quando o gerador diz (aparece na prévia). */
   fluxos: { titulo: string; licoes: string[]; resumos?: (string | undefined)[] }[];
@@ -24,19 +27,20 @@ function codigoDaResposta(corpo: unknown) {
  * Um erro antes do início (JSON, como `limite_geracoes`) vira `ErroStudoo` com o código da API.
  * Abortar o sinal interrompe a leitura, e o servidor para a geração sem guardar nada.
  */
-export async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal): AsyncGenerator<EventoGeracao> {
-  const resposta = await fetch(rota, {
+export async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, diagnosticoId?: string): AsyncGenerator<EventoGeracao> {
+  // Sem o aceite de IA vigente, o servidor responde 428 antes de abrir o fluxo: a folha pergunta e o pedido é refeito.
+  const resposta = await comAceiteIa(() => fetch(rota, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-    body: JSON.stringify({ objetivo }),
+    headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson', [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_SITE },
+    body: JSON.stringify({ objetivo, ...(diagnosticoId && { diagnosticoId }) }),
     credentials: 'same-origin',
     cache: 'no-store',
     signal: sinal,
-  });
+  }));
 
   if (!resposta.ok || !resposta.body || !resposta.headers.get('content-type')?.includes('application/x-ndjson')) {
     const corpo: unknown = await resposta.json().catch(() => null);
-    throw new ErroStudoo(codigoDaResposta(corpo));
+    throw new ErroStudoo(codigoDaResposta(corpo), corpo ?? undefined);
   }
 
   const leitor = resposta.body.getReader();
@@ -86,6 +90,7 @@ export function aplicarEvento(trilha: TrilhaEmGeracao, evento: EventoGeracao): T
       const { proposta } = evento;
       return {
         objetivo: proposta.objetivo,
+        diagnosticoId: trilha.diagnosticoId,
         titulo: proposta.titulo,
         fluxos: proposta.fluxos.map((fluxo) => ({
           titulo: fluxo.titulo,

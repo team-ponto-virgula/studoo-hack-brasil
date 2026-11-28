@@ -1,0 +1,31 @@
+{
+  "sourceStable": true,
+  "canonical": 210,
+  "stateCases": 90,
+  "expandedCases": 105,
+  "canonicalProblems": [],
+  "stateProblems": [],
+  "expandedProblems": [
+    {
+      "dir": "caderno",
+      "page": "conclusao",
+      "s": "longa",
+      "w": 360,
+      "smallTargets": [],
+      "primaryOutside": [],
+      "contrast": [],
+      "font": 24,
+      "overflow": false,
+      "internal": {
+        "width": 360,
+        "scrollWidth": 362,
+        "overflow": true
+      },
+      "footerOutside": [],
+      "clips": [
+        "Seu"
+      ],
+      "errors": []
+    }
+  ]
+}

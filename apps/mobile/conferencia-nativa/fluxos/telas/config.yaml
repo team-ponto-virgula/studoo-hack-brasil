@@ -1,0 +1,31 @@
+# Conjunto das telas: um fluxo por tela, na ordem abaixo. Cada um recomeça o app, então a falha de um não derruba o próximo.
+flows:
+  - '*'
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    # Primeiro, a barra de baixo (a prova da cápsula, spec 05). Ela termina no mapa da última trilha da lista, mas não
+    # deixa nada para os fluxos seguintes: cada um recomeça o app (partes/reabrir.yaml), abrir uma trilha só lê os dados, e
+    # nenhuma preferência do app muda.
+    - 80-ilha-de-abas
+    # Depois, a conferência da correção 37c302e ("Continuar lendo"), no ramo conferencia/continuar-lendo-iphone.
+    - 70-exemplo-curto
+    - 72-exemplo-longo
+    - 10-mapa
+    - 20-minhas-trilhas
+    - 30-exercicio-ordenar
+    - 31-exercicio-associar
+    - 32-exercicio-multipla-escolha
+    - 33-exercicio-verdadeiro-falso
+    - 34-exercicio-lacuna
+    - 35-exercicio-aberta
+    - 40-explorar
+    - 50-perfil
+    # Privacidade e o cartão de excluir a conta (cancelado: a conta sintética continua).
+    - 55-privacidade
+    - 60-configuracoes
+    # Segurança da comunidade (spec 14), no fim: a Ajuda não muda nada; o bloqueio é desfeito no próprio fluxo; a denúncia
+    # tira um cartão da demonstração só para a conta sintética, e nenhum fluxo depois depende dele.
+    - 63-ajuda
+    - 61-bloquear
+    - 62-denunciar

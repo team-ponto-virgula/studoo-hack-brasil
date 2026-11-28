@@ -1,0 +1,33 @@
+{
+  "scope": "R7 author HTTP controlled Promise/DOM-dialog callbacks; no native or server execution",
+  "hashesBefore": {
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c"
+  },
+  "hashesAfter": {
+    "social-pages.js": "b6ab28dba376a6f6e22b598a60e36911480dd4e76a89d243ba817fe770656b27",
+    "media-pages.js": "91976dcd188ff8a7402a9e1e3791584ccb9e3888294317eb8ae048d7a0f76c8c"
+  },
+  "sourceStable": true,
+  "checks": 3,
+  "scenarios": 3,
+  "failed": 0,
+  "errors": [],
+  "rows": [
+    {
+      "direction": "jornada",
+      "name": "review-cancel-render",
+      "pass": true
+    },
+    {
+      "direction": "caderno",
+      "name": "review-cancel-render",
+      "pass": true
+    },
+    {
+      "direction": "foco",
+      "name": "review-cancel-render",
+      "pass": true
+    }
+  ]
+}

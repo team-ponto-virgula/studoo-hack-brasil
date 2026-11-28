@@ -25,7 +25,7 @@
   cursor: pointer;
 }
 
-.pedido-como:hover:not(:disabled) { background: var(--nevoa); }
+@media (hover: hover) { .pedido-como:hover:not(:disabled) { background: var(--nevoa); } }
 .pedido-como:disabled { color: var(--texto2); cursor: default; }
 
 .pedido-como__sinal {
@@ -109,7 +109,7 @@
   cursor: pointer;
 }
 
-.pedido-surpresa .desenho { --tam: 18px; }
+.pedido-surpresa .mundo-desenho { --tam: 18px; }
 .pedido-surpresa:active:not(:disabled) { box-shadow: 0 1px 0 #ffe3a3; transform: translateY(2px); }
 .pedido-surpresa:disabled { color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); box-shadow: none; cursor: default; }
 
@@ -145,8 +145,8 @@
   transition: border-color 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out;
 }
 
-.pedido-tema .desenho { --tam: 22px; }
-.pedido-tema[aria-pressed='true'] .desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+.pedido-tema .mundo-desenho { --tam: 22px; }
+.pedido-tema[aria-pressed='true'] .mundo-desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
 .pedido-tema[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f0f4ff; }
 .pedido-tema:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
@@ -172,7 +172,7 @@
 }
 
 .pedido-exemplo__icone { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: var(--nevoa); }
-.pedido-exemplo__icone .desenho { --tam: 26px; }
+.pedido-exemplo__icone .mundo-desenho { --tam: 26px; }
 .pedido-exemplo__texto { overflow-wrap: anywhere; }
 .pedido-exemplo__acao { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: var(--texto2); }
 .pedido-exemplo__acao .icone { width: 18px; height: 18px; }
@@ -216,6 +216,8 @@
 }
 
 /* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
+
+
 @media (min-width: 768px) {
   .painel--pedido { justify-self: center; gap: 28px; }
   .pedido-stu .stu { width: 76px; }
@@ -246,7 +248,7 @@
 .descoberta-ponto { position:absolute; bottom:10px; left:9px; width:17px; height:17px; background:#a9dbc7; border-radius:50%; }
 .descoberta-modos { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .descoberta-modo { display:flex; align-items:center; text-align:left; gap:12px; min-height:90px; padding:17px; background:white; border:2px solid var(--gelo); border-radius:20px; color:var(--texto); cursor:pointer; transition:background .18s,border-color .18s,transform .18s; }
-.descoberta-modo:hover { transform:translateY(-2px); }
+@media (hover: hover) { .descoberta-modo:hover { transform:translateY(-2px); } }
 .descoberta-modo[aria-pressed=true] { border-color:var(--acao); background:#f0f3ff; }
 .descoberta-modo strong { display:block; font-size:1rem; }
 .descoberta-modo small { display:block; margin-top:5px; color:var(--texto2); line-height:1.3; }
@@ -320,13 +322,27 @@
   transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
 }
 
+/* O campo cresce com o texto e com o exemplo (o placeholder), até meia tela, também com a letra ampliada: a cópia invisível do texto, na mesma célula da grade, dá a altura (banca P2-5).
+   Os recuos, a borda e a letra da cópia repetem os do campo (a de baixo muda no celular junto com o campo). */
+.pedido-novo .pedido-campo__caixa { display: grid; }
+.pedido-novo .pedido-campo__caixa > textarea, .pedido-novo .pedido-campo__caixa::after { grid-area: 1 / 1; }
+.pedido-novo .pedido-campo__caixa::after {
+  content: attr(data-replica) ' ';
+  box-sizing: border-box; max-height: 50svh; overflow: hidden; visibility: hidden; pointer-events: none;
+  padding: 18px 20px; border: 3px solid transparent;
+  font-size: 1.1875rem; font-weight: 700; line-height: 1.4; white-space: pre-wrap; overflow-wrap: break-word;
+}
+.pedido-novo .pedido-campo__caixa[data-vazio]::after { font-weight: 600; }
 .pedido-novo .pedido-campo textarea:focus { border-color: var(--acao); box-shadow: 0 5px 0 #b9c7f5; outline: none; }
 .pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
 .pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
 
-/* Ideias: fichas que quebram linha (veja abaixo). */
+/* A primeira ideia fica alinhada ao campo. As demais ficam ao alcance da rolagem horizontal. */
 .pedido-ideias {
   display: flex;
+  min-width: 0;
+  flex-wrap: nowrap;
+  scroll-padding-inline: var(--espaco-pagina);
   gap: 10px;
   margin: 2px calc(-1 * var(--espaco-pagina)) 0;
   padding: 4px var(--espaco-pagina) 8px;
@@ -342,7 +358,7 @@
   flex: none;
   align-items: center;
   gap: 8px;
-  min-height: 46px;
+  min-height: 44px;
   padding: 8px 16px 8px 10px;
   border: 2px solid var(--gelo);
   border-radius: 999px;
@@ -358,7 +374,7 @@
   transition: transform 110ms ease-out, box-shadow 110ms ease-out, border-color 140ms ease-out;
 }
 
-.pedido-ideia .desenho { --tam: 24px; }
+.pedido-ideia .mundo-desenho { --tam: 24px; }
 .pedido-ideia:active:not(:disabled) { box-shadow: 0 0 0 var(--gelo); transform: translateY(3px); }
 .pedido-ideia[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
 .pedido-ideia--surpresa { border-color: #ffe08a; color: #7a4a00; background: #fff8e1; box-shadow: 0 3px 0 #ffe08a; }
@@ -386,13 +402,50 @@
 .pedido-alternar__texto strong { font-weight: 800; }
 .pedido-alternar__texto small { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .pedido-alternar > .icone { width: 20px; height: 20px; color: var(--texto2); }
-.pedido-novo .pedido-como { justify-self: center; }
+.pedido-novo .pedido-como { justify-self: center; margin-left: 0; }
 
 @media (hover: hover) {
   .pedido-ideia:hover:not(:disabled) { border-color: #b9c7f5; }
   .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
 }
 
-/* As fichas quebram linha em qualquer tela: rolando para o lado (com a barra escondida), as últimas ideias passavam
-   despercebidas no celular. */
-.pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+
+
+@media (min-width: 768px) {
+  .painel--pedido.pedido-novo { width: min(100%, 44rem); gap: 16px; }
+  .pedido-heroi {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    justify-items: start;
+    align-items: center;
+    column-gap: 18px;
+    row-gap: 4px;
+    padding-top: 0;
+    text-align: start;
+  }
+  .pedido-heroi__stu { grid-row: 1 / span 2; width: 88px; height: 88px; }
+  .pedido-heroi__stu .stu { width: 72px; }
+  .pedido-heroi h1 { font-size: clamp(1.625rem, 3vw, 2.125rem); }
+}
+
+.pedido-alternar {
+  border-style: solid;
+  border-color: #c3cdf2;
+  background: linear-gradient(135deg, #f4f7ff 0%, var(--fundo) 70%);
+  box-shadow: 0 3px 0 var(--gelo);
+}
+@media (max-width: 767px) {
+  .painel--pedido.pedido-novo { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .pedido-heroi { padding-top: 0; }
+  .pedido-heroi__stu { width: 82px; height: 82px; }
+  .pedido-heroi__stu .stu { width: 72px; }
+  .pedido-novo .pedido-campo textarea { min-height: 88px; padding: 12px 16px; }
+  .pedido-novo .pedido-campo__caixa::after { padding: 12px 16px; }
+  .pedido-novo .pedido-criar { min-height: 48px; }
+  .pedido-alternar { min-height: 64px; padding-block: 8px; }
+}
+@media (max-width: 767px) and (max-height: 700px) {
+  .pedido-heroi__stu { width: 64px; height: 64px; }
+  .pedido-heroi__stu .stu { width: 56px; }
+  .pedido-novo[data-modo='ideia'] .pedido-heroi__fala { display: none; }
+}

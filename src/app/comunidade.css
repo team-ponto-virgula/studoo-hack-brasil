@@ -1,0 +1,305 @@
+/* Comunidade (spec 10, etapa B). 360 px é o mínimo; toques de 44 px; hover só com ponteiro fino; movimento reduzido. */
+
+/* Capa gerada (SVG do contrato). */
+.capa-trilha { display: block; width: 100%; height: 100%; }
+.capa-trilha svg { display: block; width: 100%; height: 100%; }
+
+/* Cartão de trilha. */
+.cartao-trilha {
+  position: relative; display: grid; grid-template-rows: auto 1fr; height: 100%; overflow: hidden;
+  border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); box-shadow: 0 4px 0 var(--gelo);
+}
+.cartao-trilha__capa { position: relative; aspect-ratio: 2 / 1; overflow: hidden; }
+/* A capa leva só o selo do tema, sempre inteiro no alto, à esquerda (spec 16, item 17); no Em alta, a pílula da posição fica no alto, à direita (item 16), e o tema deixa a vez dela. */
+.cartao-trilha__tema {
+  position: absolute; top: 10px; left: 10px; max-width: calc(100% - 20px); display: inline-block; line-height: 20px; padding: 3px 10px; border-radius: 999px; background: #fff;
+  color: var(--texto); font-size: 0.8125rem; font-weight: 900; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
+}
+.cartao-trilha__capa:has(.cartao-trilha__posicao) .cartao-trilha__tema { max-width: 72%; }
+/* "Exemplo" (spec 16, itens 9 e 17) vai para a linha de informações: "6 lições · 3 partes · Exemplo", no selo neutro da spec 10 (spec 14, linha 63): #F1F4FD, texto #5E6A85, 13 px 800, como no app. */
+.cartao-trilha__demo { display: inline-block; padding: 0 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; line-height: 20px; vertical-align: 1px; white-space: nowrap; }
+.cartao-trilha__corpo { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; min-width: 0; }
+.cartao-trilha__titulo { margin: 0; font-size: 1.125rem; line-height: 1.3; overflow-wrap: anywhere; }
+/* Em fileira ou grade de várias colunas, o título reserva exatamente duas linhas: o resto do cartão bate com o vizinho. */
+.em-alta__item .cartao-trilha__titulo a, .grade-cartoes .cartao-trilha__titulo a { min-height: calc(2.6em + 2px); }
+@media (max-width: 599px) { .grade-cartoes .cartao-trilha__titulo a { min-height: 44px; } }
+.cartao-trilha__titulo a { display: inline-flex; align-items: flex-start; min-height: 44px; padding-top: 2px; color: var(--texto); text-decoration: none; }
+.cartao-trilha__titulo a:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
+@media (hover: hover) { .cartao-trilha__titulo a:hover { color: var(--acao); text-decoration: underline; } }
+.cartao-trilha__dono { display: flex; align-items: center; gap: 8px; margin: 0; min-height: 32px; font-weight: 800; color: var(--texto2); overflow-wrap: anywhere; }
+.cartao-trilha__dono a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--acao); text-decoration: none; }
+/* "por" em cinza, sem negrito; só o nome sublinhado. O retrato faz parte do link (alvo de 44 px de altura). */
+.cartao-trilha__por { color: var(--texto2); font-weight: 600; }
+.cartao-trilha__nome { text-decoration: underline; text-underline-offset: 3px; }
+.cartao-trilha__legenda { margin: 0; line-height: 1.45; overflow-wrap: anywhere; }
+.cartao-trilha__meta, .cartao-trilha__numeros { margin: 0; color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
+.cartao-trilha__nova { display: inline-block; padding: 2px 10px; border-radius: 999px; background: #fff3c4; color: #6b4a00; font-weight: 900; }
+.selo-demo { justify-self: start; align-self: flex-start; margin: 0; padding: 2px 10px; border: 1.5px dashed #c9a227; border-radius: 999px; background: #fffaea; color: #6b4a00; font-size: 0.8125rem; font-weight: 900; }
+.cartao-trilha__rodape { display: grid; gap: 4px; margin-top: auto; }
+.cartao-trilha__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; }
+.cartao-trilha__acoes > .botao { flex: 1 1 100%; min-height: 44px; }
+/* Contornos dos controles com 3:1 sobre o branco; o do cartão continua claro. */
+.cartao-trilha .botao--secundario, .cartao-trilha__icone, .cartao-trilha__valeu { border-color: #8792bd; }
+/* "Continuar" (trilha que a pessoa já tem): azul claro da marca, mais forte que o Valeu e diferente do "Quero estudar". */
+.cartao-trilha[data-situacao='adicionada'] .cartao-trilha__acoes > .botao { background: var(--ceu); }
+.cartao-trilha__valeu { flex: 1 1 auto; justify-content: center; }
+.cartao-trilha__icone, .cartao-trilha__valeu {
+  display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid var(--gelo); border-radius: 14px;
+  color: var(--texto); background: var(--fundo); font: inherit; font-weight: 800; cursor: pointer;
+}
+.cartao-trilha__valeu { display: inline-flex; align-items: center; gap: 6px; }
+.cartao-trilha__icone .icone, .cartao-trilha__valeu .icone { width: 20px; height: 20px; }
+.cartao-trilha__valeu[aria-pressed='true'] { border-color: #f2b8c6; background: #fde8ee; color: #a3204a; }
+.cartao-trilha__valeu[aria-pressed='true'] .icone { fill: currentColor; }
+.cartao-trilha__icone:focus-visible, .cartao-trilha__valeu:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.cartao-trilha__icone:disabled, .cartao-trilha__valeu:disabled { opacity: 0.6; cursor: default; }
+@media (hover: hover) { .cartao-trilha__icone:hover:not(:disabled), .cartao-trilha__valeu:hover:not(:disabled) { background: var(--nevoa); } }
+.cartao-trilha__menu { position: relative; }
+.cartao-trilha__opcoes {
+  position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 10; display: grid; min-width: 11rem; padding: 6px;
+  border: 1px solid var(--gelo); border-radius: 12px; background: var(--fundo); box-shadow: 0 8px 20px rgb(15 23 42 / 0.14);
+}
+.cartao-trilha__opcoes button {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: none;
+  color: #b3261e; font: inherit; font-weight: 800; text-align: start; cursor: pointer;
+}
+.cartao-trilha__opcoes button .icone { width: 18px; height: 18px; }
+.cartao-trilha__opcoes button:focus-visible { outline: 3px solid var(--acao); outline-offset: 1px; }
+@media (hover: hover) { .cartao-trilha__opcoes button:hover { background: var(--nevoa); } }
+
+.grade-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.grade-cartoes > li { min-width: 0; }
+
+/* Tela Explorar. */
+.painel--explorar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; width: min(100%, 76rem); }
+.painel--explorar > * { min-width: 0; }
+.explorar__topo { display: grid; gap: 4px; }
+.explorar__topo h1:focus { outline: none; }
+.explorar__subtitulo { margin: 0; color: var(--texto2); font-size: 1.0625rem; text-wrap: balance; }
+.explorar__secao { margin: 0; font-size: 1.25rem; }
+/* Fichas: uma linha só, rolável (também no computador, com as setas do Em alta). */
+.explorar__fichas { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.explorar__temas { position: relative; display: flex; flex: 1 1 auto; gap: 8px; min-width: 0; padding: 2px 4px 6px; overflow-x: auto; scrollbar-width: none; }
+.explorar__temas::-webkit-scrollbar { display: none; }
+/* Fileiras roláveis: esmaecimento de 24 px na borda que ainda tem conteúdo. */
+.fileira[data-rola] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%); }
+.fileira[data-rola][data-inicio] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%); }
+.fileira[data-rola][data-fim] { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px); mask-image: linear-gradient(to right, transparent 0, #000 24px); }
+.fileira[data-rola][data-inicio][data-fim] { -webkit-mask-image: none; mask-image: none; }
+/* No celular, as duas fileiras vão até as bordas da tela, na mesma linha: o conteúdo some sob a borda. */
+@media (max-width: 767px) {
+  .explorar__temas, .em-alta__lista { margin-inline: calc(-1 * var(--espaco-pagina)); padding-inline: var(--espaco-pagina); scroll-padding-inline: var(--espaco-pagina); }
+}
+.fileira__setas { display: none; flex: none; gap: 8px; }
+@media (hover: hover) and (min-width: 768px) { .fileira__setas { display: flex; } }
+.fileira__setas[hidden] { display: none !important; }
+.fileira__setas .cartao-trilha__icone .icone { width: 20px; height: 20px; }
+.fileira__setas .cartao-trilha__icone:disabled { opacity: 0.35; }
+.ficha-tema {
+  flex: none; min-height: 44px; padding: 0 16px; border: 2px solid #8792bd; border-radius: 999px; background: var(--fundo);
+  color: var(--texto); font: inherit; font-weight: 800; white-space: nowrap; cursor: pointer;
+}
+.ficha-tema[aria-pressed='true'] { border-color: var(--texto); background: var(--texto); color: #fff; }
+.ficha-tema:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .ficha-tema:hover:not([aria-pressed='true']) { background: var(--nevoa); } }
+.explorar__esqueleto { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 16px; }
+.explorar__esqueleto span { height: 280px; border-radius: var(--raio-bloco); background: var(--nevoa); }
+.explorar__vazio { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 22px; border: 2px dashed var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.explorar__vazio .stu { width: 96px; height: auto; flex: none; }
+.explorar__vazio > div { display: grid; flex: 1 1 16rem; gap: 8px; justify-items: start; }
+.explorar__vazio-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.explorar__busca { position: relative; display: flex; align-items: center; width: min(100%, 30rem); }
+.explorar__busca input {
+  width: 100%; min-height: 44px; padding: 8px 44px 8px 14px; border: 2px solid #8792bd; border-radius: 14px;
+  background: var(--fundo); color: var(--texto); font: inherit; font-weight: 700;
+}
+.explorar__busca input::placeholder { color: var(--texto2); font-weight: 600; }
+.explorar__busca input:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-color: var(--acao); }
+.explorar__busca-limpar {
+  position: absolute; right: 2px; display: inline-grid; place-items: center; min-width: 44px; min-height: 44px;
+  border: 0; border-radius: 12px; background: transparent; color: var(--texto2); font-size: 1.25rem; font-weight: 900; cursor: pointer;
+}
+.explorar__busca-limpar:focus-visible { outline: 3px solid var(--acao); outline-offset: -2px; }
+@media (hover: hover) { .explorar__busca-limpar:hover { color: var(--texto); } }
+.explorar__novas { display: grid; gap: 12px; }
+.explorar__mais { justify-self: center; min-width: 14rem; min-height: 48px; }
+.explorar__convite {
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 10px 12px 10px 16px;
+  border-radius: 16px; background: var(--ceu); border: 2px solid var(--gelo); font-weight: 800;
+}
+.explorar__convite p { flex: 1 1 auto; margin: 0; }
+.explorar__convite .botao { flex: none; min-height: 44px; }
+
+/* Em alta: numeral grande ao lado de cada cartão, lista com encaixe. */
+.em-alta { display: grid; gap: 10px; }
+.em-alta__topo { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.em-alta__topo .campo-dica { margin-top: 2px; }
+.em-alta__lista {
+  /* Posicionada: os textos só para leitor de tela (absolutos) ficam presos à rolagem, sem alargar a página. */
+  position: relative; display: flex; gap: 8px; margin: 0 calc(-1 * var(--espaco-borda, 0px)); padding: 6px 2px 14px; list-style: none;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; scrollbar-width: thin; overscroll-behavior-x: contain;
+}
+.em-alta { container-type: inline-size; }
+.em-alta__item { flex: none; width: min(86%, 21rem); scroll-snap-align: start; }
+/* Telas largas: 3 cartões inteiros por vez a partir de 44 rem de lista, 4 a partir de 60 rem (cerca de 1280 px de janela). */
+@container (min-width: 44rem) { .em-alta__item { width: calc((100% - 16px) / 3); } }
+@container (min-width: 60rem) { .em-alta__item { width: calc((100% - 24px) / 4); } }
+.em-alta__item .cartao-trilha { height: 100%; }
+/* O lugar no top (spec 16, item 16): uma pílula pequena no canto superior direito da capa, "1º" em 13 px 800 #0B1B5C sobre branco, com 24 px de altura e raio de 12 (antes, um numeral gigante
+   que esbarrava nos selos). O leitor de tela ouve "1º em alta", no corpo do cartão. */
+.cartao-trilha__posicao {
+  position: absolute; top: 10px; right: 10px; z-index: 1; display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box;
+  border-radius: 12px; background: #fff; color: #0b1b5c; font-size: 0.8125rem; font-weight: 800; line-height: 1; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12); user-select: none;
+}
+
+/* Folha de compartilhar: os três níveis e a publicação. */
+.niveis { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.niveis legend { margin-bottom: 6px; padding: 0; font-size: 0.875rem; font-weight: 900; }
+.nivel { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; padding: 12px 14px; border: 2px solid var(--gelo); border-radius: 16px; cursor: pointer; }
+.nivel input { margin: 3px 0 0; width: 20px; height: 20px; accent-color: var(--acao); grid-row: span 2; }
+.nivel strong { font-weight: 900; }
+.nivel span { grid-column: 2; color: var(--texto2); font-size: 0.875rem; line-height: 1.4; }
+.nivel:has(input:checked) { border-color: var(--acao); background: #f3f6ff; }
+.nivel:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 2px; }
+.nivel:has(input:disabled) { opacity: 0.6; cursor: default; }
+@media (hover: hover) { .nivel:hover:not(:has(input:disabled)) { background: var(--nevoa); } }
+.publicacao { display: grid; gap: 14px; padding: 14px; border-radius: 16px; background: var(--nevoa); }
+.publicacao .interesses__lista { gap: 6px; }
+.publicacao .interesse span { min-height: 44px; padding: 0 12px; font-size: 0.9375rem; }
+.publicacao__trocar {
+  min-height: 44px; padding: 0 14px; border: 2px dashed var(--borda-campo); border-radius: 999px; background: none; color: var(--acao);
+  font: inherit; font-weight: 800; cursor: pointer;
+}
+.publicacao__trocar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .publicacao__trocar:hover { background: #fff; } }
+.publicacao__sugerido { color: var(--texto2); font-size: 0.8125rem; font-weight: 700; }
+.interesse input:checked + span .publicacao__sugerido { color: rgb(255 255 255 / 0.9); }
+.publicacao .campo textarea { min-height: 72px; }
+
+/* Denúncia. */
+.folha--denuncia { width: min(100%, 26rem); }
+.denuncia__motivos { display: grid; gap: 6px; margin: 0; padding: 0; border: 0; }
+.denuncia__motivo { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; border: 2px solid var(--gelo); border-radius: 14px; font-weight: 800; cursor: pointer; }
+.denuncia__motivo input { width: 20px; height: 20px; accent-color: var(--acao); }
+.denuncia__motivo:has(input:checked) { border-color: var(--acao); background: #f3f6ff; }
+.denuncia__motivo:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 2px; }
+
+/* Perfil: visibilidade na lista da dona e grade de cartões em /p. */
+.selo-visibilidade { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 3px 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto); font-size: 0.8125rem; font-weight: 900; }
+.selo-visibilidade[data-nivel='explorar']:not([data-em-revisao]) { background: #e3f6ea; color: #14513b; }
+.selo-visibilidade .icone { width: 14px; height: 14px; }
+.perfil-cartoes { display: grid; gap: 4px; }
+.denunciar-perfil { display: grid; justify-items: start; margin-top: 24px; }
+.denunciar-perfil .botao { display: inline-flex; align-items: center; gap: 6px; }
+.denunciar-perfil .icone { width: 16px; height: 16px; }
+.pagina-publica__corpo:has(.perfil-cartoes), .pagina-publica__corpo:has(.painel--explorar) { width: min(100%, 76rem); }
+
+
+/* Explorar na navegação lateral. */
+.por-link__abrir + .por-link__abrir, .por-link + .por-link__abrir { margin-top: 8px; }
+
+/* Seguir (etapa C2). */
+.botao-seguir { min-height: 44px; }
+.botao-seguir .icone { width: 18px; height: 18px; }
+.quem-compartilhou__seguir { margin-top: 6px; }
+.explorar__abas { display: inline-flex; justify-self: start; gap: 4px; padding: 4px; border-radius: 16px; background: var(--nevoa); }
+.explorar__aba {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: none;
+  color: var(--texto2); font: inherit; font-weight: 900; cursor: pointer;
+}
+.explorar__aba .icone { width: 18px; height: 18px; }
+.explorar__aba[aria-pressed='true'] { background: var(--fundo); color: var(--texto); box-shadow: 0 2px 8px rgb(11 27 92 / 0.12); }
+.explorar__aba:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .explorar__aba:not([aria-pressed='true']):hover { color: var(--texto); } }
+
+/* Novidades (etapa C2): lista agrupada; sem novidade, uma linha discreta. */
+.novidades { display: grid; gap: 10px; }
+.novidades__topo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.novidades__semana { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
+.novidades__lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.novidade { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--gelo); border-radius: 16px; background: var(--fundo); }
+.novidade__icone { display: grid; flex: none; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--ceu); color: var(--acao-escura); }
+.novidade[data-tipo='valeus'] .novidade__icone { background: #fde8ee; color: #a3204a; }
+.novidade[data-tipo='seguidores'] .novidade__icone { background: #e3f6ea; color: #14513b; }
+.novidade__icone .icone { width: 20px; height: 20px; }
+.novidade__corpo { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
+.novidade__texto { margin: 0; color: var(--texto); font: inherit; font-weight: 600; line-height: 1.35; text-align: start; overflow-wrap: anywhere; }
+.novidade__texto strong { font-weight: 800; }
+/* O mesmo respiro em todos os tipos: o alvo de toque do link cresce para fora, sem mudar a altura do cartão. */
+.novidade__texto--link { position: relative; padding: 0; border: 0; background: none; cursor: pointer; }
+.novidade__texto--link::after { content: ''; position: absolute; inset: -12px -8px; }
+.novidade__texto--link:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
+@media (hover: hover) { .novidade__texto--link:hover { color: var(--acao); text-decoration: underline; } }
+.novidade__quando { color: var(--texto2); font-size: 0.8125rem; font-weight: 700; }
+.novidade__rostos { display: flex; flex: none; }
+.novidade__rostos .avatar { width: 32px; height: 32px; margin-left: -8px; border: 2px solid #fff; }
+.novidade__rostos .avatar:first-child { margin-left: 0; }
+.novidades__vazio { margin: 0; padding: 10px 14px; border-left: 4px solid var(--gelo); color: var(--texto2); font-size: 0.9375rem; line-height: 1.45; }
+.novidades--carregando { display: grid; gap: 8px; }
+.novidades--carregando span { height: 56px; border-radius: 16px; background: var(--nevoa); }
+
+/* Capas mais baixas no celular: cabe mais de uma trilha por tela e o botão aparece antes. */
+@media (max-width: 767px) {
+  .grade-cartoes .cartao-trilha__capa { aspect-ratio: auto; height: 112px; }
+  .em-alta__item .cartao-trilha__capa { aspect-ratio: auto; height: 104px; }
+}
+.denuncia__alvo { margin: -6px 0 0; color: var(--texto); font-weight: 800; overflow-wrap: anywhere; }
+.denuncia__motivo input { accent-color: var(--texto); }
+.voltar-pagina { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 0 4px -8px; padding-inline: 8px; }
+.voltar-pagina .icone { width: 20px; height: 20px; }
+/* Folha de compartilhar: "Agora" dentro do cartão do nível que vale; aviso de que ainda não está no Explorar. */
+.nivel__agora { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #e3f6ea; color: #14513b; font-size: 0.75rem; font-weight: 900; vertical-align: 2px; }
+.publicacao__ainda { margin: 0; padding: 10px 12px; border-radius: 12px; background: #fff; color: var(--texto); font-weight: 800; }
+.publicacao__acoes { position: sticky; bottom: calc(-20px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -14px -14px; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); border-radius: 0 0 16px 16px; background: var(--nevoa); box-shadow: 0 -8px 16px rgb(238 243 255 / 0.95); }
+.publicacao .campo textarea { resize: none; }
+
+/* Valeu (lote 4): coração, palavra e contagem no botão; o coração enche com um pulo curto (até 300 ms). */
+.cartao-trilha__valeu-n { min-width: 1.25em; font-variant-numeric: tabular-nums; }
+.cartao-trilha__valeu[aria-pressed='true'] .cartao-trilha__valeu-n { color: #a3204a; }
+@media (prefers-reduced-motion: no-preference) {
+  .cartao-trilha__valeu[aria-pressed='true'] .icone { animation: valeu-pulo-curto 280ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+  @keyframes valeu-pulo-curto { 45% { transform: scale(1.32); } }
+}
+@media (prefers-reduced-motion: reduce) { .cartao-trilha__valeu .icone { transition: none; animation: none; } }
+
+/* Valeu com número: a linha de ações (Valeu, compartilhar, "•••") cabe numa linha só também no cartão estreito do Em
+   alta (237 px): o Valeu encolhe primeiro, com respiros menores. */
+.cartao-trilha__acoes { column-gap: 6px; }
+.cartao-trilha__valeu { flex: 1 1 0; min-width: 0; gap: 5px; padding-inline: 8px; white-space: nowrap; }
+
+.seguranca-publica { display: flex; justify-content: flex-end; align-items: center; min-height: 44px; }
+.seguranca-publica .cartao-trilha__menu { position: relative; inset: auto; }
+.seguranca-aviso { position: fixed; z-index: 120; bottom: max(6rem, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(32rem, 92vw); box-sizing: border-box; padding: .8rem 1rem; background: #fff; color: #162748; box-shadow: 0 4px 24px #17284c33; border: 1px solid #cad4e4; border-radius: 1rem; overflow-wrap: anywhere; }
+.seguranca-aviso button, .seguranca-aviso a, .seguranca-ajuda a, .seguranca-publica > a { display: inline-flex; align-items: center; min-height: 44px; margin-right: .8rem; font: inherit; font-weight: 750; color: #234cb7; background: none; border: 0; }
+.seguranca-ajuda { display: grid; }
+.seguranca-linha { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.seguranca-estado strong { display: inline-block; padding: .25rem .65rem; border-radius: 1rem; color: #5e6a85; background: #f1f4fd; font-size: .8125rem; font-weight: 800; }
+.seguranca-estado[data-recusado] strong { color: #9a5b00; background: #fff6ea; }
+.cartao-trilha__opcoes [role=menuitem] { min-height: 44px; white-space: normal; }
+
+.aviso-app.seguranca-faixa {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 80;
+}
+body:has(.navegacao-mobile) .seguranca-faixa { bottom: var(--espaco-rodape, calc(94px + env(safe-area-inset-bottom))); }
+.aviso-app.seguranca-faixa p {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+  min-height: 48px; background: var(--fundo-aviso-comunidade); color: var(--fundo);
+  font-size: 15px; line-height: 22px; pointer-events: auto; overflow-wrap: anywhere;
+}
+.seguranca-faixa .icone { flex: none; width: 20px; height: 20px; }
+.seguranca-faixa span { flex: 1; }
+.seguranca-faixa button {
+  min-height: 44px; padding: 0 4px; border: 0; color: #afc2ff;
+  background: transparent; font: inherit; cursor: pointer;
+}
+.seguranca-faixa button:focus-visible { outline: 2px solid white; border-radius: 6px; }
+.seguranca-lista { border: 2px solid var(--gelo); border-radius: 16px; overflow: hidden; }
+.seguranca-ajuda > a, .seguranca-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 56px; margin: 0; padding: 8px 16px;
+  font-weight: 800; color: var(--texto); text-decoration: none;
+}
+.seguranca-lista > :not(:last-child) { border-bottom: 1px solid var(--gelo); }
+.seguranca-ajuda .icone { width: 18px; height: 18px; color: var(--texto2); }
+.seguranca-linha .botao { min-height: 44px; padding: 6px 12px; }

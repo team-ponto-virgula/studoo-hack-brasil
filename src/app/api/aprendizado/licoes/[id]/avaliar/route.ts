@@ -1,3 +1,4 @@
+import { CABECALHO_CAPACIDADES, lerCapacidades } from "@studoo/contratos";
 import { FalhaApi, responder, rotaPrivada } from "@/servidor/acesso/http";
 import { lerObjeto } from "@/servidor/aprendizado/http";
 import { avaliarLicao } from "@/servidor/aprendizado/servico";
@@ -10,6 +11,9 @@ export function POST(request: Request, context: { params: Promise<{ id: string }
     if (typeof resposta !== "string" || typeof indice !== "number" || !Number.isInteger(indice) || indice < 0 || indice > 2) {
       throw new FalhaApi("invalido");
     }
-    return responder(await avaliarLicao(usuarioId, id, resposta, indice));
+    const capacidades = lerCapacidades(request.headers.get(CABECALHO_CAPACIDADES));
+    const resultado = responder(await avaliarLicao(usuarioId, id, resposta, indice, capacidades));
+    resultado.headers.append("Vary", CABECALHO_CAPACIDADES);
+    return resultado;
   });
 }
