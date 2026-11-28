@@ -16,8 +16,10 @@ import { enviarAvisoContaExistente, enviarCodigoCadastro, enviarRecuperacao } fr
 // Os modelos dos e-mails (issue #114): o HTML e o texto simples de cada mensagem, sem servidor, sem banco e sem envio.
 const SITE = 'https://app.hellostudoo.com.br';
 const ORIGEM = 'https://studoo.example.test';
-const enderecos = { recuperar: `${ORIGEM}/recuperar`, entrar: `${ORIGEM}/login`, suporte: `${ORIGEM}/suporte` };
+const enderecos = { cadastro: `${ORIGEM}/cadastro`, recuperar: `${ORIGEM}/recuperar`, entrar: `${ORIGEM}/login`, suporte: `${ORIGEM}/suporte` };
 const CODIGO = '482913';
+/** Os botões dos e-mails com código: a tela com o código no fragmento, que não sai do aparelho. */
+const comOCodigo = { cadastro: `${ORIGEM}/cadastro#codigo=${CODIGO}`, recuperacao: `${ORIGEM}/recuperar#codigo=${CODIGO}` };
 const cadastro = emailCodigoCadastro({ codigo: CODIGO, enderecos });
 const recuperacao = emailRecuperacao({ codigo: CODIGO, enderecos });
 const existente = emailContaExistente({ enderecos });
@@ -98,7 +100,25 @@ test('cadastro e recuperação destacam o código e a validade, no HTML, na pré
     // É assim que os testes com banco e o roteiro de QA leem o código da caixa falsa.
     assert.equal(/é: (\d{6})/.exec(texto)[1], CODIGO, nome);
     assert.equal(texto.match(/\b\d{6}\b/)[0], CODIGO, nome);
-    assert.equal(texto.split(CODIGO).length - 1, 1, nome);
+    // Além da primeira linha, o código só aparece no link do botão, no fragmento.
+    assert.equal(texto.split(CODIGO).length - 1, 2, nome);
+    assert.deepEqual(linhas.filter((l) => l.includes(CODIGO)), [linhas[0], comOCodigo[nome]], nome);
+  }
+});
+
+test('o botão principal abre a tela com o código já preenchido, no app ou no site', () => {
+  const rotulos = { cadastro: 'Criar minha conta', recuperacao: 'Criar nova senha' };
+  for (const [nome, { html, texto }] of Object.entries(comCodigo)) {
+    const botoes = [...html.matchAll(/<td align="center" bgcolor="(#[0-9A-F]{6})" class="(s-botao2?)"[^>]*><a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map((m) => m.slice(1));
+    assert.deepEqual(botoes, [[CORES_EMAIL.claro.acao, 's-botao', comOCodigo[nome], rotulos[nome]]], nome);
+    // O código vai no fragmento, nunca na query: o fragmento não chega ao servidor, aos registros nem ao Referer.
+    assert.doesNotMatch(html, /\?codigo=/, nome);
+    assert.doesNotMatch(texto, /\?codigo=/, nome);
+    // O botão vem logo depois do código, e digitar o código na tela continua sendo um caminho.
+    const corpo = lido(html);
+    assert.ok(corpo.indexOf('Para copiar') < corpo.indexOf(rotulos[nome]), nome);
+    assert.ok(corpo.includes(`${rotulos[nome]} Abre o app, se ele estiver instalado, ou o site, já com o código preenchido. Ou volte para a tela`), nome);
+    assert.ok(texto.includes(`\n\n${rotulos[nome]} (abre o app, se ele estiver instalado, ou o site, já com o código preenchido):\n${comOCodigo[nome]}\n\n`), nome);
   }
 });
 
@@ -107,14 +127,15 @@ test('cada mensagem diz por que chegou e o que fazer a seguir', () => {
     cadastro: [
       'Falta pouco para criar sua conta',
       'Recebemos um pedido para criar uma conta no Studoo com este e-mail. O código confirma que ele é seu.',
-      'Volte para a tela Criar sua conta, no app ou no site, digite o código e crie sua senha.',
+      'Criar minha conta Abre o app, se ele estiver instalado, ou o site, já com o código preenchido.',
+      'Ou volte para a tela Criar sua conta, no app ou no site, digite o código e crie sua senha.',
       'Não foi você? Pode ignorar este e-mail. Sem o código, nenhuma conta é criada. Não compartilhe este código com ninguém.',
     ],
     recuperacao: [
       'Vamos recuperar seu acesso',
       'Recebemos um pedido para trocar a senha da sua conta no Studoo. Com o código, você cria uma nova senha.',
-      'Volte para a tela Recuperar acesso, no app ou no site, digite o código e escolha a nova senha.',
-      'Fechou a tela? Abra a recuperação de senha e toque em “Já tenho um código”. Abrir a recuperação de senha',
+      'Criar nova senha Abre o app, se ele estiver instalado, ou o site, já com o código preenchido.',
+      'Ou volte para a tela Recuperar acesso, no app ou no site, digite o código e escolha a nova senha.',
       'Não pediu a troca? Pode ignorar este e-mail. Sua senha continua a mesma. Não compartilhe este código com ninguém.',
     ],
     existente: [
@@ -140,15 +161,16 @@ test('cada mensagem diz por que chegou e o que fazer a seguir', () => {
   const noTexto = {
     cadastro: [
       'Recebemos um pedido para criar uma conta no Studoo com este e-mail. O código confirma que ele é seu.',
+      'Criar minha conta (abre o app, se ele estiver instalado, ou o site, já com o código preenchido):', comOCodigo.cadastro,
       'Volte para a tela “Criar sua conta”, no app ou no site, digite o código e crie sua senha.',
       'Pediu mais de um código? Só o mais recente funciona.',
       'Não foi você?', 'Pode ignorar este e-mail. Sem o código, nenhuma conta é criada.', 'Não compartilhe este código com ninguém.',
     ],
     recuperacao: [
       'Recebemos um pedido para trocar a senha da sua conta no Studoo. Com o código, você cria uma nova senha.',
+      'Criar nova senha (abre o app, se ele estiver instalado, ou o site, já com o código preenchido):', comOCodigo.recuperacao,
       'Volte para a tela “Recuperar acesso”, no app ou no site, digite o código e escolha a nova senha.',
       'Pediu mais de um código? Só o mais recente funciona.',
-      'Fechou a tela? Abra a recuperação de senha e toque em “Já tenho um código”:',
       'Não pediu a troca?', 'Pode ignorar este e-mail. Sua senha continua a mesma.', 'Não compartilhe este código com ninguém.',
     ],
     existente: [
@@ -198,8 +220,8 @@ test('o aviso de conta existente explica como entrar e como recuperar a senha, s
 
 test('os links levam ao destino certo, na origem recebida, e não há outros', () => {
   const esperados = {
-    cadastro: [enderecos.suporte],
-    recuperacao: [enderecos.recuperar, enderecos.suporte],
+    cadastro: [comOCodigo.cadastro, enderecos.suporte],
+    recuperacao: [comOCodigo.recuperacao, enderecos.suporte],
     existente: [enderecos.entrar, enderecos.recuperar, enderecos.suporte],
   };
   for (const [nome, { html, texto }] of Object.entries(modelos)) {
@@ -217,10 +239,11 @@ test('os links levam ao destino certo, na origem recebida, e não há outros', (
       .filter((u) => !esperados[nome].includes(u) && !Object.values(IMAGENS_EMAIL).includes(u) && !Object.values(FONTES_EMAIL).includes(u));
     assert.deepEqual(outros, ['http://www.w3.org/1999/xhtml'], nome);
   }
-  // A origem vem de quem chama: outra origem permitida leva os três links junto, e o código de cadastro segue sem link de retorno.
-  const outra = { recuperar: 'http://localhost:3100/recuperar', entrar: 'http://localhost:3100/login', suporte: 'http://localhost:3100/suporte' };
+  // A origem vem de quem chama: outra origem permitida leva os links junto, com o código no fragmento.
+  const outra = { cadastro: 'http://localhost:3100/cadastro', recuperar: 'http://localhost:3100/recuperar', entrar: 'http://localhost:3100/login', suporte: 'http://localhost:3100/suporte' };
   assert.deepEqual(tags(emailContaExistente({ enderecos: outra }).html, 'a').map((a) => atributo(a, 'href')), [outra.entrar, outra.recuperar, outra.suporte]);
-  assert.equal(emailCodigoCadastro({ codigo: CODIGO, enderecos: outra }).html.includes('/cadastro'), false);
+  assert.deepEqual(tags(emailCodigoCadastro({ codigo: CODIGO, enderecos: outra }).html, 'a').map((a) => atributo(a, 'href')), [`${outra.cadastro}#codigo=${CODIGO}`, outra.suporte]);
+  assert.deepEqual(tags(emailRecuperacao({ codigo: CODIGO, enderecos: outra }).html, 'a').map((a) => atributo(a, 'href')), [`${outra.recuperar}#codigo=${CODIGO}`, outra.suporte]);
 });
 
 test('regras de e-mail: tabelas, estilos inline, até 600 px, sem JavaScript nem recurso que o cliente bloqueia', () => {
@@ -351,7 +374,7 @@ test('modo escuro: declarado, com as cores da versão escura, e contraste AA nos
 test('botões: largura toda, área de toque de 48 px e rótulo que diz aonde leva', () => {
   for (const [nome, { html }] of Object.entries(modelos)) {
     const botoes = [...html.matchAll(/<table role="presentation" width="100%"[^>]*>\s*<tr><td align="center" bgcolor="[^"]+" class="s-botao2?" style="([^"]*)"><a [^>]*style="([^"]*)">([^<]+)<\/a>/g)];
-    assert.equal(botoes.length, { cadastro: 0, recuperacao: 1, existente: 2 }[nome], nome);
+    assert.equal(botoes.length, { cadastro: 1, recuperacao: 1, existente: 2 }[nome], nome);
     for (const [, celula, link, rotulo] of botoes) {
       const [, cima, lados] = /padding:(\d+)px (\d+)px;/.exec(link);
       const altura = Number(cima) * 2 + Number(/line-height:(\d+)px/.exec(link)[1]);
@@ -381,17 +404,18 @@ test('o texto simples é legível sozinho: sem marcação, sem caractere invisí
       'Você recebeu este e-mail porque este endereço foi informado no Studoo.',
     ].join('\n'), nome);
   }
-  assert.ok(recuperacao.texto.includes(`Fechou a tela? Abra a recuperação de senha e toque em “Já tenho um código”:\n${enderecos.recuperar}\n`));
+  assert.ok(recuperacao.texto.includes(`Criar nova senha (abre o app, se ele estiver instalado, ou o site, já com o código preenchido):\n${comOCodigo.recuperacao}\n`));
   assert.equal(existente.texto.split('\n')[0], 'Você já tem uma conta no Studoo');
 });
 
 test('valores vindos de fora entram escapados no HTML', () => {
-  const hostil = { recuperar: 'https://studoo.example.test/recuperar?a=1&b="2"><img src=x>', entrar: enderecos.entrar, suporte: "https://studoo.example.test/suporte?x='y'" };
+  const hostil = { cadastro: enderecos.cadastro, recuperar: 'https://studoo.example.test/recuperar?a=1&b="2"><img src=x>', entrar: enderecos.entrar, suporte: "https://studoo.example.test/suporte?x='y'" };
   const { html, texto } = emailRecuperacao({ codigo: '<b>1"&\'', enderecos: hostil });
   assert.equal(html.includes('<b>1'), false);
   assert.equal(html.includes('<img src=x>'), false);
   assert.ok(html.includes('&#60;b&#62;1&#34;&#38;&#39;</p>'));
-  assert.ok(html.includes('href="https://studoo.example.test/recuperar?a=1&#38;b=&#34;2&#34;&#62;&#60;img src=x&#62;"'));
+  // O código entra no fragmento codificado para URL, e o endereço inteiro, escapado para HTML.
+  assert.ok(html.includes('href="https://studoo.example.test/recuperar?a=1&#38;b=&#34;2&#34;&#62;&#60;img src=x&#62;#codigo=%3Cb%3E1%22%26&#39;"'));
   assert.ok(html.includes('href="https://studoo.example.test/suporte?x=&#39;y&#39;"'));
   assert.equal(tags(html, 'img').length, 2);
   // O texto simples não é HTML: o valor vai como veio.
@@ -432,7 +456,8 @@ test('nenhum dado da pessoa ou do servidor entra na mensagem, e a caixa falsa gu
     assert.match(porAssunto['Seu código para criar a conta no Studoo'].html, />135790<\/p>/);
     assert.match(porAssunto['Seu código para criar a conta no Studoo'].text, /^Seu código do Studoo é: 135790\n/);
     assert.match(porAssunto['Seu código para recuperar a senha do Studoo'].html, />246801<\/p>/);
-    assert.ok(porAssunto['Seu código para recuperar a senha do Studoo'].text.includes('\nhttp://localhost:3100/recuperar\n'));
+    assert.ok(porAssunto['Seu código para recuperar a senha do Studoo'].text.includes('\nhttp://localhost:3100/recuperar#codigo=246801\n'));
+    assert.ok(porAssunto['Seu código para criar a conta no Studoo'].text.includes('\nhttp://localhost:3100/cadastro#codigo=135790\n'));
     assert.ok(porAssunto['Você já tem uma conta no Studoo'].text.includes('\nhttp://localhost:3100/login\n'));
   } finally {
     for (const chave of Object.keys(process.env)) if (!(chave in anterior)) delete process.env[chave];

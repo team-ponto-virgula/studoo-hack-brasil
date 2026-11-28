@@ -34,7 +34,7 @@ test('Resend envia o código pelo servidor para um único destinatário', async 
     assert.match(corpo.html, /^<!DOCTYPE html>\n<html lang="pt-BR"/);
     assert.match(corpo.html, />123456<\/p>/);
     assert.match(corpo.html, /Vale por 15&nbsp;minutos/);
-    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar"/);
+    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar#codigo=123456"/);
     assert.match(corpo.text, /^Seu código do Studoo é: 123456\n/);
     for (const parte of [corpo.subject, corpo.html, corpo.text]) {
       for (const segredo of [process.env.RESEND_API_KEY, 'pessoa@example.test', 'acesso@example.test']) assert.equal(parte.includes(segredo), false);

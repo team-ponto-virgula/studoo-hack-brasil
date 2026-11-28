@@ -6,8 +6,10 @@ import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo } from '../../ui';
+import { emailDoCodigo, esquecerEmailDoCodigo, lembrarEmailDoCodigo, tomarCodigoDoLink } from '../codigo-do-link';
 
 const m = mensagens.acesso;
+/** Pelo botão do e-mail (`/recuperar#codigo=…`), a tela já abre no passo da nova senha com o código e o e-mail lembrado. */
 export function Recuperar() {
   const [etapa, setEtapa] = useState<'email' | 'codigo' | 'pronto'>('email');
   const [email, setEmail] = useState('');
@@ -20,6 +22,8 @@ export function Recuperar() {
   const [mostrar, setMostrar] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [espera, setEspera] = useState(0);
+  /** O código veio do link do e-mail: com o e-mail lembrado neste navegador ou sem ele. */
+  const [doLink, setDoLink] = useState<'com-email' | 'sem-email' | null>(null);
   const emCurso = useRef(false);
   const titulo = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -27,6 +31,11 @@ export function Recuperar() {
       setEmail(sessionStorage.getItem('studoo.recuperar.email') ?? '');
       sessionStorage.removeItem('studoo.recuperar.email');
     } catch { /* Sem armazenamento, a pessoa informa o e-mail novamente. */ }
+    const codigoDoLink = tomarCodigoDoLink();
+    if (!codigoDoLink) return;
+    const lembrado = emailDoCodigo();
+    if (lembrado) setEmail(lembrado);
+    setCodigo(codigoDoLink); setDoLink(lembrado ? 'com-email' : 'sem-email'); setEtapa('codigo');
   }, []);
   useEffect(() => { titulo.current?.focus(); }, [etapa]);
   useEffect(() => {
@@ -46,7 +55,8 @@ export function Recuperar() {
     if (!emailValido()) { setValidacao(m.emailInvalido); return; }
     void executar(async () => {
       await cliente.recuperarSenha(email.trim());
-      setEtapa('codigo'); setEnviado(true); setEspera(60);
+      lembrarEmailDoCodigo(email.trim());
+      setEtapa('codigo'); setEnviado(true); setEspera(60); setDoLink(null);
     });
   }
   function salvar(evento: FormEvent) {
@@ -57,6 +67,7 @@ export function Recuperar() {
     if (senha !== confirmacao) { setValidacao(m.senhasDiferentes); return; }
     void executar(async () => {
       await cliente.redefinirSenha(email.trim(), codigo, senha);
+      esquecerEmailDoCodigo();
       setSenha(''); setConfirmacao(''); setCodigo(''); setEtapa('pronto');
     });
   }
@@ -72,6 +83,7 @@ export function Recuperar() {
           <input id="recuperar-email" type="email" autoComplete="email" autoCapitalize="none" value={email}
             disabled={ocupado} onChange={e => { setEmail(e.target.value); setEnviado(false); setValidacao(''); setErro(null); }} maxLength={254} required /></div>
         {enviado && <p role="status" className="recuperar-aviso">{m.enviado}</p>}
+        {doLink && <p role="status" className="recuperar-aviso">{doLink === 'com-email' ? m.codigoDoLink : m.codigoDoLinkSemEmail}</p>}
         {etapa === 'codigo' && <>
           <div className="campo"><label htmlFor="recuperar-codigo">{m.codigo}</label>
             <input id="recuperar-codigo" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}

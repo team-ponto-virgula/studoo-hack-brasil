@@ -1,4 +1,4 @@
-import { VALIDADE_CODIGO_MIN } from '@studoo/contratos/autenticacao';
+import { VALIDADE_CODIGO_MIN, linkComCodigo } from '@studoo/contratos/autenticacao';
 import { mensagens } from '@studoo/contratos/experiencia';
 import { ORIGEM_APP_STUDOO } from '@/enderecos-publicos';
 
@@ -16,7 +16,9 @@ import { ORIGEM_APP_STUDOO } from '@/enderecos-publicos';
  */
 
 export type EnderecosEmail = {
-  /** A recuperação de senha (`/recuperar`), na origem de quem pediu. */
+  /** O cadastro (`/cadastro`). O botão do e-mail de cadastro leva o código no fragmento. */
+  cadastro: string;
+  /** A recuperação de senha (`/recuperar`), na origem de quem pediu. O botão do e-mail de recuperação leva o código no fragmento. */
   recuperar: string;
   /** A entrada (`/login`). */
   entrar: string;
@@ -68,6 +70,8 @@ const USO_UNICO = 'Só pode ser usado uma vez.';
 const SO_O_MAIS_RECENTE = 'Pediu mais de um código? Só o mais recente funciona.';
 const NAO_COMPARTILHE = 'Não compartilhe este código com ninguém.';
 const COMO_COPIAR = 'Para copiar, toque no código e segure. No computador, dê dois cliques nele.';
+/** Embaixo do botão com o código: com o app instalado, o link abre o app (links universais e App Links, src/links-do-app.ts). */
+const ABRE_O_APP = 'abre o app, se ele estiver instalado, ou o site, já com o código preenchido';
 
 const esc = (texto: string) => texto.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 /** Texto corrido: escapado e com "e-mail" inteiro na mesma linha (no produto, o hífen também não quebra). */
@@ -252,22 +256,25 @@ function rodapeDoTexto(suporte: string) {
   return `${MARCA_NOME} · ${t.login.titulo}\n${t.seguranca.precisaDeAjuda}:\n${suporte}\n${MOTIVO}`;
 }
 
-/** As duas mensagens com código têm o mesmo desenho; muda o porquê, o que fazer e o que acontece se a pessoa ignorar. */
+/**
+ * As duas mensagens com código têm o mesmo desenho; muda o porquê, o que fazer e o que acontece se a pessoa ignorar.
+ * O botão principal abre a tela com o código já preenchido (no app, se ele estiver instalado); digitar o código na tela
+ * aberta continua valendo.
+ */
 function emailComCodigo(d: {
   assunto: string; titulo: string; motivo: string; tela: string; depois: string; codigo: string; suporte: string;
-  retomar?: { texto: string; rotulo: string; endereco: string };
+  continuar: { rotulo: string; endereco: string };
   naoFoiVoce: { titulo: string; texto: string };
 }): Email {
   const resumo = `Seu código é ${d.codigo}. Vale por ${VALIDADE} e só pode ser usado uma vez.`;
+  const link = linkComCodigo(d.continuar.endereco, d.codigo);
   const miolo = [
     linha(frase(d.motivo), { topo: 14, tom: 'texto2' }),
     caixaDoCodigo(d.codigo),
-    linha(`Volte para a tela ${forte(esc(d.tela))}, no app ou no site, digite o código e ${esc(d.depois)}.`, { topo: 22 }),
+    botao(d.continuar.rotulo, link, 'primario', 20),
+    linha(frase(`${ABRE_O_APP.charAt(0).toUpperCase()}${ABRE_O_APP.slice(1)}.`), { topo: 8, tamanho: 14, altura: 20, tom: 'texto2', centro: true }),
+    linha(`Ou volte para a tela ${forte(esc(d.tela))}, no app ou no site, digite o código e ${esc(d.depois)}.`, { topo: 22 }),
     linha(frase(SO_O_MAIS_RECENTE), { topo: 10, tamanho: 15, altura: 22, tom: 'texto2' }),
-    ...(d.retomar ? [
-      linha(frase(d.retomar.texto), { topo: 10, tamanho: 15, altura: 22, tom: 'texto2' }),
-      botao(d.retomar.rotulo, d.retomar.endereco, 'secundario', 12),
-    ] : []),
     seNaoFoiVoce(d.naoFoiVoce.titulo, `${d.naoFoiVoce.texto} ${NAO_COMPARTILHE}`),
   ].join('\n');
   const texto = [
@@ -275,11 +282,11 @@ function emailComCodigo(d: {
     `Seu código do Studoo é: ${d.codigo}`,
     `Ele vale por ${VALIDADE} e só pode ser usado uma vez.`,
     d.motivo,
+    `${d.continuar.rotulo} (${ABRE_O_APP}):\n${link}`,
     [
-      'O que fazer agora',
+      'Ou então',
       `Volte para a tela “${d.tela}”, no app ou no site, digite o código e ${d.depois}.`,
       SO_O_MAIS_RECENTE,
-      ...(d.retomar ? [`${d.retomar.texto.replace(/\.$/, ':')}\n${d.retomar.endereco}`] : []),
     ].join('\n'),
     `${d.naoFoiVoce.titulo}\n${d.naoFoiVoce.texto}\n${NAO_COMPARTILHE}`,
     rodapeDoTexto(d.suporte),
@@ -287,8 +294,8 @@ function emailComCodigo(d: {
   return { assunto: d.assunto, html: documento({ assunto: d.assunto, resumo, titulo: d.titulo, miolo, suporte: d.suporte }), texto };
 }
 
-/** Código de posse do e-mail para criar a conta. Não leva link para o cadastro: a tela aberta do zero pede outro código. */
-export function emailCodigoCadastro({ codigo, enderecos }: { codigo: string; enderecos: Pick<EnderecosEmail, 'suporte'> }): Email {
+/** Código de posse do e-mail para criar a conta. "Criar minha conta" abre o cadastro com o código já preenchido. */
+export function emailCodigoCadastro({ codigo, enderecos }: { codigo: string; enderecos: Pick<EnderecosEmail, 'cadastro' | 'suporte'> }): Email {
   return emailComCodigo({
     assunto: 'Seu código para criar a conta no Studoo',
     titulo: 'Falta pouco para criar sua conta',
@@ -297,11 +304,12 @@ export function emailCodigoCadastro({ codigo, enderecos }: { codigo: string; end
     depois: 'crie sua senha',
     codigo,
     suporte: enderecos.suporte,
+    continuar: { rotulo: 'Criar minha conta', endereco: enderecos.cadastro },
     naoFoiVoce: { titulo: 'Não foi você?', texto: 'Pode ignorar este e-mail. Sem o código, nenhuma conta é criada.' },
   });
 }
 
-/** Código para trocar a senha. O link leva à recuperação, onde "Já tenho um código" abre o campo sem pedir outro. */
+/** Código para trocar a senha. "Criar nova senha" abre a recuperação com o código já preenchido. */
 export function emailRecuperacao({ codigo, enderecos }: { codigo: string; enderecos: Pick<EnderecosEmail, 'recuperar' | 'suporte'> }): Email {
   return emailComCodigo({
     assunto: 'Seu código para recuperar a senha do Studoo',
@@ -311,11 +319,7 @@ export function emailRecuperacao({ codigo, enderecos }: { codigo: string; endere
     depois: 'escolha a nova senha',
     codigo,
     suporte: enderecos.suporte,
-    retomar: {
-      texto: `Fechou a tela? Abra a recuperação de senha e toque em “${t.acesso.tenhoCodigo}”.`,
-      rotulo: 'Abrir a recuperação de senha',
-      endereco: enderecos.recuperar,
-    },
+    continuar: { rotulo: 'Criar nova senha', endereco: enderecos.recuperar },
     naoFoiVoce: { titulo: 'Não pediu a troca?', texto: 'Pode ignorar este e-mail. Sua senha continua a mesma.' },
   });
 }

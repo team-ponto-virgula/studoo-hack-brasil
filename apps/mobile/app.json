@@ -50,10 +50,41 @@
       ]
     ],
     "android": {
-      "package": "com.studoo.mobile.dev"
+      "package": "com.studoo.mobile.dev",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.hellostudoo.com.br",
+              "path": "/login"
+            },
+            {
+              "scheme": "https",
+              "host": "app.hellostudoo.com.br",
+              "path": "/cadastro"
+            },
+            {
+              "scheme": "https",
+              "host": "app.hellostudoo.com.br",
+              "path": "/recuperar"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.studoo.mobile.dev",
+      "associatedDomains": [
+        "applinks:app.hellostudoo.com.br",
+        "webcredentials:app.hellostudoo.com.br"
+      ],
       "buildNumber": "1",
       "supportsTablet": false,
       "icon": "./assets/marca/icone-ios-1024.png",

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { criarClienteNativo, origemConfigurada } from './api-nativa';
+import { lembrarEmailDoCodigo } from './codigo-do-link';
 import { appleDisponivelNoAparelho } from './apple-nativo';
 import { googleNoAparelho } from './google-nativo';
 import { LOGO_GOOGLE } from './marca-google';
@@ -29,9 +30,13 @@ export function enderecoDaPoliticaPublica() {
  * Criar conta (igual à web, /cadastro): e-mail → código de 6 dígitos (prova que o e-mail é da pessoa) + senha → entra
  * na hora com a sessão do app. Mesmo desenho da recuperação de senha. Pedir código responde sempre "enviado" (o
  * servidor não revela quais e-mails já têm conta). Erros nos campos e do servidor no cartão de erro, sem janelas nativas.
+ * Pelo botão do e-mail (link universal ou App Link), a tela já abre no segundo passo com o código; sem o e-mail lembrado
+ * neste aparelho, o campo do e-mail fica aberto ali mesmo.
  */
-export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
+export function CriarConta({ emailInicial, codigoInicial, voltar, criar, google, apple }: {
   emailInicial: string;
+  /** O código que veio no link do e-mail (codigo-do-link.ts). */
+  codigoInicial?: string;
   voltar: () => void;
   /** "Continuar com Google" no topo do primeiro passo, antes do e-mail, quando o servidor e o build o oferecem (spec 06). */
   google?: () => Promise<void>;
@@ -40,9 +45,11 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
   /** Cria a conta e entra (guarda a sessão no aparelho). */
   criar: (email: string, codigo: string, senha: string) => Promise<void>;
 }) {
-  const [etapa, setEtapa] = useState<'email' | 'codigo'>('email');
+  const [etapa, setEtapa] = useState<'email' | 'codigo'>(codigoInicial ? 'codigo' : 'email');
   const [email, setEmail] = useState(emailInicial);
-  const [codigo, setCodigo] = useState('');
+  const [codigo, setCodigo] = useState(codigoInicial ?? '');
+  /** O código veio do link do e-mail: com o e-mail lembrado neste aparelho ou sem ele (aí o campo fica aberto). */
+  const [doLink, setDoLink] = useState<'com-email' | 'sem-email' | null>(codigoInicial ? (emailInicial ? 'com-email' : 'sem-email') : null);
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [mostrar, setMostrar] = useState(false);
@@ -83,7 +90,8 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
     if (!normalizado) { setErro(m.emailInvalido); return; }
     void executar(async () => {
       await criarClienteNativo().pedirCodigoCadastro(normalizado, true);
-      setEtapa('codigo'); setEspera(60);
+      void lembrarEmailDoCodigo(normalizado);
+      setEtapa('codigo'); setEspera(60); setDoLink(null);
     });
   }
   function concluir() {
@@ -123,9 +131,9 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
       {comProvedor && <Text testID="cadastro-instrucao" style={[estilos.introducao, { marginTop: 0 }]}>{m.instrucao}</Text>}
       <Campo rotulo={m.email} testID="cadastro-email" value={email} onChangeText={(v) => { setEmail(v); setErro(undefined); }}
         autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" maxLength={254}
-        editable={!ocupado && etapa === 'email'} returnKeyType="send" onSubmitEditing={etapa === 'email' ? enviar : undefined} />
+        editable={!ocupado && (etapa === 'email' || doLink === 'sem-email')} returnKeyType="send" onSubmitEditing={etapa === 'email' ? enviar : undefined} />
       {etapa === 'codigo' && <>
-        <Text testID="cadastro-enviado" accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>{m.enviado}</Text>
+        <Text testID="cadastro-enviado" accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>{doLink === 'com-email' ? m.codigoDoLink : doLink === 'sem-email' ? m.codigoDoLinkSemEmail : m.enviado}</Text>
         <Campo rotulo={m.codigo} testID="cadastro-codigo" value={codigo} onChangeText={(v) => { setCodigo(v.replace(/\D/g, '')); setErro(undefined); }}
           keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxLength={6} editable={!ocupado} />
         <Campo rotulo={m.senha} testID="cadastro-senha" value={senha} onChangeText={(v) => { setSenha(v); setErro(undefined); }} secureTextEntry={!mostrar}
@@ -137,7 +145,7 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
           editable={!ocupado} returnKeyType="go" onSubmitEditing={concluir} />
         <Botao variante="texto" testID="cadastro-reenviar" rotulo={espera ? m.aguarde(espera) : m.reenviar} desativado={ocupado || espera > 0} acao={enviar} />
         <Botao variante="texto" testID="cadastro-trocar-email" rotulo={m.trocarEmail} desativado={ocupado}
-          acao={() => { setEtapa('email'); setCodigo(''); setErro(undefined); }} />
+          acao={() => { setEtapa('email'); setCodigo(''); setDoLink(null); setErro(undefined); }} />
       </>}
       {erro && <EstadoErro mensagem={erro} foco />}
       {politica && (

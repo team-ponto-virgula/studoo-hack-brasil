@@ -9,12 +9,15 @@ import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo } from '../../ui';
 import { BotaoSom } from '../som';
 import { BotaoGoogle } from '../botao-google';
+import { emailDoCodigo, esquecerEmailDoCodigo, lembrarEmailDoCodigo, tomarCodigoDoLink } from '../codigo-do-link';
 
 const m = mensagens.cadastro;
 
 /**
  * Criar conta: e-mail → código de 6 dígitos (prova que o e-mail é da pessoa) + senha → entra na hora.
  * Mesmo desenho da recuperação de senha, sem janelas nativas do navegador.
+ * Pelo botão do e-mail (`/cadastro#codigo=…`), a tela já abre no segundo passo com o código; o e-mail vem do que este
+ * navegador lembrou ao pedir o código, e sem ele a pessoa digita o e-mail ali mesmo.
  */
 export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
   const router = useRouter();
@@ -28,8 +31,17 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
   const [ocupado, setOcupado] = useState(false);
   const [mostrar, setMostrar] = useState(false);
   const [espera, setEspera] = useState(0);
+  /** O código veio do link do e-mail: com o e-mail lembrado neste navegador ou sem ele (aí o campo fica aberto). */
+  const [doLink, setDoLink] = useState<'com-email' | 'sem-email' | null>(null);
   const emCurso = useRef(false);
   const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const codigoDoLink = tomarCodigoDoLink();
+    if (!codigoDoLink) return;
+    const lembrado = emailDoCodigo();
+    if (lembrado) setEmail(lembrado);
+    setCodigo(codigoDoLink); setDoLink(lembrado ? 'com-email' : 'sem-email'); setEtapa('codigo');
+  }, []);
   useEffect(() => { titulo.current?.focus(); }, [etapa]);
   useEffect(() => {
     if (!espera) return;
@@ -49,7 +61,8 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
     if (!normalizado) { setValidacao(m.emailInvalido); return; }
     void executar(async () => {
       await cliente.pedirCodigoCadastro(normalizado);
-      setEtapa('codigo'); setEspera(60);
+      lembrarEmailDoCodigo(normalizado);
+      setEtapa('codigo'); setEspera(60); setDoLink(null);
     });
   }
   function criar(evento: FormEvent) {
@@ -61,6 +74,7 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
     if (senha !== confirmacao) { setValidacao(m.senhasDiferentes); return; }
     void executar(async () => {
       await cliente.cadastrar(normalizado, codigo, senha);
+      esquecerEmailDoCodigo();
       setSenha(''); setConfirmacao('');
       router.replace('/');
     });
@@ -80,10 +94,10 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
         onSubmit={etapa === 'email' ? (e) => { e.preventDefault(); enviar(); } : criar}>
         <div className="campo"><label htmlFor="cadastro-email">{m.email}</label>
           <input id="cadastro-email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email}
-            disabled={ocupado || etapa === 'codigo'} maxLength={254} required
+            disabled={ocupado || (etapa === 'codigo' && doLink !== 'sem-email')} maxLength={254} required
             onChange={e => { setEmail(e.target.value); setValidacao(''); setErro(null); }} /></div>
         {etapa === 'codigo' && <>
-          <p role="status" className="recuperar-aviso">{m.enviado}</p>
+          <p role="status" className="recuperar-aviso">{doLink === 'com-email' ? m.codigoDoLink : doLink === 'sem-email' ? m.codigoDoLinkSemEmail : m.enviado}</p>
           <div className="campo"><label htmlFor="cadastro-codigo">{m.codigo}</label>
             <input id="cadastro-codigo" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}
               value={codigo} onChange={e => { setCodigo(e.target.value.replace(/\D/g, '')); setValidacao(''); setErro(null); }} disabled={ocupado} required /></div>
@@ -104,7 +118,7 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
         </Botao></AcaoPrincipal>
         {etapa === 'codigo' && <>
           <Botao variante="texto" disabled={ocupado || espera > 0} onClick={enviar}>{espera ? m.aguarde(espera) : m.reenviar}</Botao>
-          <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('email'); setCodigo(''); setValidacao(''); setErro(null); }}>{m.trocarEmail}</Botao>
+          <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('email'); setCodigo(''); setDoLink(null); setValidacao(''); setErro(null); }}>{m.trocarEmail}</Botao>
         </>}
       </form>
       <div className="cadastro-links">
