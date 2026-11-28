@@ -132,11 +132,11 @@ export function PaginaVista({ aparelho, links, origem, dominioProprio = false, c
             </svg>
             <Enfeite nome="arvore" onde={{ '--x': '3%', '--b': '34%', '--tam': 'clamp(46px, 6.4vw, 104px)' }} />
             <Enfeite nome="arbusto" onde={{ '--x': '12%', '--b': '26%', '--tam': 'clamp(38px, 4.6vw, 76px)' }} />
-            <Enfeite nome="flores" onde={{ '--x': '21%', '--b': '15%', '--tam': 'clamp(24px, 3vw, 46px)' }} />
+            <Enfeite nome="flores" onde={{ '--x': '21%', '--b': '22%', '--tam': 'clamp(24px, 3vw, 46px)' }} />
             <Enfeite nome="pinheiro" onde={{ '--xr': '2.5%', '--b': '40%', '--tam': 'clamp(34px, 4.6vw, 78px)' }} />
             <Enfeite nome="arvore" onde={{ '--xr': '9%', '--b': '30%', '--tam': 'clamp(40px, 5.4vw, 90px)' }} className="cn-enfeite--largo" />
-            <Enfeite nome="relva" onde={{ '--xr': '24%', '--b': '12%', '--tam': 'clamp(18px, 2vw, 30px)' }} className="cn-enfeite--largo" />
-            <Enfeite nome="cogumelo" onde={{ '--x': '34%', '--b': '9%', '--tam': 'clamp(18px, 2.1vw, 32px)' }} className="cn-enfeite--largo" />
+            <Enfeite nome="relva" onde={{ '--xr': '24%', '--b': '24%', '--tam': 'clamp(18px, 2vw, 30px)' }} className="cn-enfeite--largo" />
+            <Enfeite nome="cogumelo" onde={{ '--x': '34%', '--b': '20%', '--tam': 'clamp(18px, 2.1vw, 32px)' }} className="cn-enfeite--largo" />
           </div>
           <a className="cn-comecar" href={`#${PARADA_MATERIAL.id}`}>
             <span className="cn-comecar__selo">{textos.heroi.comecar.selo}</span>

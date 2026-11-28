@@ -58,3 +58,25 @@ Origem das capturas: web, navegador (Chromium sem janela), 28/11. Antes: o site 
 - Safari e aparelhos de verdade. Tudo foi visto só no Chromium.
 - `npm run typecheck` em `apps/mobile` não foi rodado localmente, porque o app não foi tocado. A Verificação do GitHub roda no PR #85, do ramo do site.
 - O clique até o fim em "Experimentar sem conta", porque a cópia local não tem banco. O código desse caminho não mudou.
+
+## Ajustes de 28/11, depois de publicar
+
+A pedido do dono, com quatro prints da página no ar. A regra está na spec 18, seção 0.9. Ramo: `design/landing-ajustes`.
+
+- **Moldura de celular realista.** Aro de metal, moldura preta do vidro e botões nas laterais; a ilha no iPhone e um furo de câmera no Android. É desenho de CSS do Studoo, sem imagem nem marca de aparelho.
+- **Etiqueta do marco com o texto no centro.** A etiqueta "Parada N de 5" ficava alta, com o texto no alto, e o nó ficava uns 20 px abaixo do lugar. A causa era a mesma: a grade esticava o marco.
+- **Começo da trilha sem corte.** O chão do alto cobria a metade de cima do primeiro marco e escondia a onda da primeira parada.
+
+![Antes e depois dos ajustes](ajustes-antes-e-depois.jpg)
+
+Origem das capturas: web, navegador (Chromium sem janela), 1400 × 820 a 2×, 28/11. Antes: o site no ar, em `e1957cac`. Depois: build de produção local do ramo.
+
+**Verificação**
+
+- `npm run typecheck` na raiz: sem erros.
+- `npm run test:estudio:interface`: 740 de 740, com um teste novo do marco e o da moldura reescrito.
+- `next build`, como o CI: sem erros, e sem erro de console.
+- Em 320, 360, 390, 768, 1024, 1400 e 1920: o centro do nó fica na fronteira em todos os marcos, as seis etiquetas têm o texto no centro, e nada passa da largura da janela.
+- axe-core sem violações em 360, 390, 768 e 1280. Movimento reduzido: tudo à vista, sem animação.
+
+**Não conferido:** Safari e aparelhos de verdade.

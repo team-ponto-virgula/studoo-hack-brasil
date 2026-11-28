@@ -3,15 +3,21 @@ import type { CapturaOtimizada, Plataforma } from './imagens';
 import { textos } from './textos';
 
 /**
- * A moldura própria do Studoo (spec 18, 1.4): retângulo de raio 44, borda de 10 px #0B1B5C e sombra suave. Segue a plataforma da captura: a
- * ilha no alto para o iPhone e um ponto de câmera de 10 px, centralizado, para o Android. Não desenha relógio (o que aparece é o da captura) e
- * não imita um aparelho de verdade nem de marca. O tamanho vem do CSS (`--celular`), e a tela mantém a proporção das capturas nativas.
+ * A moldura do celular (spec 18, seção 0.9): realista, a pedido do dono em 28/11. Aro de metal, moldura preta do vidro e botões nas laterais.
+ * Segue a plataforma da captura: no iPhone, a ilha no alto e os botões dos dois lados; no Android, um furo de câmera centralizado e os botões só
+ * do lado direito. É desenho de CSS, feito pelo Studoo: não usa imagem nem marca de aparelho de ninguém, e não desenha nada da barra de status
+ * (o que aparece é o da captura). O tamanho vem do CSS (`--celular`), e a tela mantém a proporção das capturas nativas.
  */
 export function Celular({ children, className = '', rotulo, plataforma = 'iphone' }: { children: ReactNode; className?: string; rotulo?: string; plataforma?: Plataforma }) {
   return (
     <div className={`cn-celular ${className}`.trim()} data-plataforma={plataforma} role={rotulo ? 'group' : undefined} aria-label={rotulo}>
-      <span className="cn-celular__ilha" aria-hidden="true" />
-      <div className="cn-celular__tela">{children}</div>
+      <div className="cn-celular__aparelho">
+        <span className="cn-celular__botoes" aria-hidden="true"><i /><i /><i /><i /></span>
+        <div className="cn-celular__corpo">
+          <div className="cn-celular__tela">{children}</div>
+          <span className="cn-celular__ilha" aria-hidden="true" />
+        </div>
+      </div>
     </div>
   );
 }
