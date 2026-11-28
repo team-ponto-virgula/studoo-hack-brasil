@@ -66,6 +66,8 @@ function montarPonte(ponte) {
     '../mensagens/pt-BR': { mensagens },
     '../ui': { Botao: 'Botao', Stu: 'Stu', Icone: 'Icone' },
     './sons': { tocaSons: { tocarEfeito: async () => {} } },
+    // A espera viva enquanto a ponte é montada: componente de apresentação.
+    '../ui/espera-viva': { EsperaViva: 'EsperaViva' },
   };
   const modulo = { exports: {}, require: (nome) => {
     assert.ok(nome in imports, nome);
