@@ -5,6 +5,7 @@ import { banco } from '../src/servidor/banco/cliente.ts';
 import { criarHashSenha, verificarSenha } from '../src/servidor/acesso/credenciais.ts';
 import {
   ORIGEM_APP_STUDOO,
+  origemGoogleDedicada,
   origemStudoo,
   origemWebDaRequisicao,
   origemWebPermitida,
@@ -12,13 +13,15 @@ import {
 } from '../src/servidor/acesso/origem.ts';
 import { criarSessao, hashToken, usuarioDaSessao } from '../src/servidor/acesso/sessao.ts';
 import { assinatura } from '../src/servidor/acesso/seguranca.ts';
-import { desafioPkce, iniciarGoogle, retornarGoogle } from '../src/servidor/acesso/google.ts';
+import { configuracaoGoogle, desafioPkce, iniciarGoogle, retornarGoogle } from '../src/servidor/acesso/google.ts';
 import { enviarAvisoContaExistente, enviarRecuperacao } from '../src/servidor/email/recuperacao.ts';
 import { POST as loginWeb } from '../src/app/api/login/route.ts';
 import { POST as visitanteWeb } from '../src/app/api/visitante/route.ts';
 import { DELETE as sairSessao, GET as lerSessao } from '../src/app/api/sessao/route.ts';
 import { POST as criarProposta } from '../src/app/api/aprendizado/propostas/route.ts';
 import { GET as iniciarGoogleRota } from '../src/app/api/auth/google/iniciar/route.ts';
+import { GET as callbackGoogleRota } from '../src/app/api/auth/google/callback/route.ts';
+import { GET as retornoGoogleRota } from '../src/app/api/auth/google/retorno/route.ts';
 import { POST as recuperarWeb } from '../src/app/api/senha/recuperar/route.ts';
 import { POST as redefinirWeb } from '../src/app/api/senha/redefinir/route.ts';
 import { POST as cadastroCodigoWeb } from '../src/app/api/cadastro/codigo/route.ts';
@@ -45,6 +48,7 @@ const envOriginal = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   STUDOO_GOOGLE_MOBILE_REDIRECT_URI: process.env.STUDOO_GOOGLE_MOBILE_REDIRECT_URI,
+  STUDOO_GOOGLE_ORIGEM: process.env.STUDOO_GOOGLE_ORIGEM,
   EMAIL: process.env.EMAIL,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
@@ -63,6 +67,7 @@ beforeEach(() => {
   process.env.GOOGLE_CLIENT_ID = 'teste-google.apps.googleusercontent.com';
   process.env.GOOGLE_CLIENT_SECRET = 'segredo-exclusivo-de-teste';
   process.env.STUDOO_GOOGLE_MOBILE_REDIRECT_URI = 'studoo-dev://auth/google';
+  delete process.env.STUDOO_GOOGLE_ORIGEM;
   process.env.EMAIL = 'resend';
   process.env.RESEND_API_KEY = 're_chave_sintetica';
   process.env.EMAIL_FROM = 'Studoo <acesso@example.test>';
@@ -367,6 +372,196 @@ test('Google iniciado em app.hellostudoo.com.br encaminha ao início canônico, 
   assert.equal(urlDireta.origin, 'https://accounts.google.com');
   assert.equal(urlDireta.searchParams.get('redirect_uri'), `${ORIGEM_APP_STUDOO}/api/auth/google/retorno`);
   estadosGoogle.push(hashToken(urlDireta.searchParams.get('state')));
+});
+
+const encaminhado = (host) => ({ 'x-forwarded-proto': 'https', 'x-forwarded-host': host });
+const INICIO_GOOGLE = 'http://127.0.0.1:3000/api/auth/google/iniciar';
+
+test('origem própria do Google: sem STUDOO_GOOGLE_ORIGEM vale o /retorno da STUDOO_ORIGEM; com ela, o /callback; valor fora das origens web aceitas é ignorado', () => {
+  assert.equal(origemGoogleDedicada(), null);
+  assert.equal(configuracaoGoogle().origem, ORIGEM_ANTIGA);
+  assert.equal(configuracaoGoogle().retorno, `${ORIGEM_ANTIGA}/api/auth/google/retorno`);
+
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  assert.equal(origemGoogleDedicada(), ORIGEM_APP_STUDOO);
+  assert.equal(configuracaoGoogle().origem, ORIGEM_APP_STUDOO);
+  assert.equal(configuracaoGoogle().retorno, `${ORIGEM_APP_STUDOO}/api/auth/google/callback`);
+
+  for (const invalida of [
+    '',
+    'app.hellostudoo.com.br',
+    'http://app.hellostudoo.com.br',
+    'https://hellostudoo.com.br',
+    'https://www.hellostudoo.com.br',
+    'https://app.hellostudoo.com.br/',
+    'https://app.hellostudoo.com.br:8443',
+    'https://APP.HELLOSTUDOO.COM.BR',
+    ' https://app.hellostudoo.com.br',
+    'https://app.hellostudoo.com.br.evil.test',
+    'https://malicioso.test',
+  ]) {
+    process.env.STUDOO_GOOGLE_ORIGEM = invalida;
+    assert.equal(origemGoogleDedicada(), null, `deveria ignorar ${JSON.stringify(invalida)}`);
+    assert.equal(configuracaoGoogle().retorno, `${ORIGEM_ANTIGA}/api/auth/google/retorno`);
+  }
+
+  // Em HTTP loopback local, o app. não é uma origem aceita e a origem própria é ignorada.
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  process.env.STUDOO_ORIGEM = 'http://localhost:3100';
+  assert.equal(origemGoogleDedicada(), null);
+  assert.equal(configuracaoGoogle().retorno, 'http://localhost:3100/api/auth/google/retorno');
+
+  // Sem STUDOO_ORIGEM válida o Google falha fechado, mesmo com a origem própria.
+  for (const invalida of ['', 'http://studoo.example.test', 'https://studoo.example.test/caminho']) {
+    process.env.STUDOO_ORIGEM = invalida;
+    assert.equal(origemGoogleDedicada(), null);
+    assert.equal(configuracaoGoogle(), null);
+  }
+});
+
+test('Google com origem própria: a web começa e volta em app.hellostudoo.com.br pelo /callback e termina com a sessão aberta ali', async () => {
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  const antes = await banco.autorizacaoGoogle.count();
+
+  // 1) Quem começa no endereço antigo é levado ao início do app., sem cookie nem estado órfão.
+  const salto = await iniciarGoogleRota(new Request(INICIO_GOOGLE, { headers: encaminhado(HOST_ANTIGO) }));
+  assert.equal(salto.status, 303);
+  assert.equal(salto.headers.get('location'), `${ORIGEM_APP_STUDOO}/api/auth/google/iniciar`);
+  assert.equal(salto.headers.get('set-cookie'), null);
+  assert.equal(await banco.autorizacaoGoogle.count(), antes);
+
+  // 2) No app.: estado, cookie do host do app. e o endereço de retorno /callback, sem novo salto.
+  const inicio = await iniciarGoogleRota(new Request(INICIO_GOOGLE, { headers: encaminhado(HOST_NOVO) }));
+  assert.equal(inicio.status, 303);
+  const urlGoogle = new URL(inicio.headers.get('location'));
+  assert.equal(urlGoogle.origin, 'https://accounts.google.com');
+  assert.equal(urlGoogle.searchParams.get('redirect_uri'), `${ORIGEM_APP_STUDOO}/api/auth/google/callback`);
+  const state = urlGoogle.searchParams.get('state');
+  estadosGoogle.push(hashToken(state));
+  const cookieBruto = inicio.headers.get('set-cookie') ?? '';
+  assert.ok(cookieBruto.startsWith('__Host-studoo-google=') && cookieBruto.includes('; Secure'));
+  assert.equal(/;\s*Domain=/i.test(cookieBruto), false, 'cookie __Host- não pode definir Domain');
+  const cookie = cookieBruto.split(';')[0];
+
+  // 3) O Google devolve a pessoa em /callback: a troca usa o mesmo endereço de retorno e a sessão nasce no app.
+  const email = emailNovo();
+  const sub = randomUUID();
+  const retorno = new URL('/api/auth/google/callback', ORIGEM_APP_STUDOO);
+  retorno.searchParams.set('state', state);
+  retorno.searchParams.set('code', 'codigo-google-teste');
+  const fim = await retornarGoogle(
+    new Request(retorno, { headers: { cookie } }),
+    async (_codigo, _verificador, nonce, endereco) => {
+      assert.equal(nonce, urlGoogle.searchParams.get('nonce'));
+      assert.equal(endereco, `${ORIGEM_APP_STUDOO}/api/auth/google/callback`);
+      return { sub, email };
+    },
+  );
+  assert.equal(fim.status, 303);
+  assert.equal(fim.headers.get('location'), `${ORIGEM_APP_STUDOO}/`);
+  const cookies = fim.headers.getSetCookie();
+  const sessaoCookie = cookies.find((c) => c.startsWith('__Host-studoo-sessao='));
+  assert.ok(sessaoCookie && sessaoCookie.includes('; Secure'));
+  assert.ok(cookies.some((c) => /^__Host-studoo-google=;.*Max-Age=0/.test(c)), 'o cookie do estado é limpo');
+  assert.ok(await usuarioDaSessao(/__Host-studoo-sessao=([\w-]+)/.exec(sessaoCookie)[1], 'WEB'));
+});
+
+test('Google do app instalado (endereço antigo): passa por app.hellostudoo.com.br, volta pelo /callback e o código é trocado no endereço antigo', async () => {
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  const antes = await banco.autorizacaoGoogle.count();
+  const verificador = randomBytes(32).toString('hex');
+  const desafio = desafioPkce(verificador);
+
+  // 1) O app abre o endereço da API gravado no build (o antigo). O servidor o leva ao início do app., só com mobile e desafio.
+  const inicioApp = new URL('/api/auth/google/iniciar', ORIGEM_ANTIGA);
+  inicioApp.searchParams.set('mobile', '1');
+  inicioApp.searchParams.set('desafio', desafio);
+  inicioApp.searchParams.set('extra', 'x');
+  const salto = await iniciarGoogleRota(new Request(inicioApp, { headers: encaminhado(HOST_ANTIGO) }));
+  assert.equal(salto.status, 303);
+  assert.equal(salto.headers.get('location'), `${ORIGEM_APP_STUDOO}/api/auth/google/iniciar?mobile=1&desafio=${desafio}`);
+  assert.equal(salto.headers.get('set-cookie'), null);
+  assert.equal(await banco.autorizacaoGoogle.count(), antes);
+
+  // 2) No app.: estado ligado ao desafio do aparelho, cookie do app. e retorno /callback.
+  const inicio = await iniciarGoogleRota(new Request(salto.headers.get('location'), { headers: encaminhado(HOST_NOVO) }));
+  assert.equal(inicio.status, 303);
+  const urlGoogle = new URL(inicio.headers.get('location'));
+  assert.equal(urlGoogle.searchParams.get('redirect_uri'), `${ORIGEM_APP_STUDOO}/api/auth/google/callback`);
+  const state = urlGoogle.searchParams.get('state');
+  estadosGoogle.push(hashToken(state));
+  const cookie = (inicio.headers.get('set-cookie') ?? '').split(';')[0];
+  assert.ok(cookie.startsWith('__Host-studoo-google='));
+  assert.equal((await banco.autorizacaoGoogle.findFirst({ where: { estadoHash: hashToken(state) } })).desafioMobile, desafio);
+
+  // 3) O /callback entrega ao app só o código temporário, pelo link do app, e não abre sessão de navegador.
+  const retorno = new URL('/api/auth/google/callback', ORIGEM_APP_STUDOO);
+  retorno.searchParams.set('state', state);
+  retorno.searchParams.set('code', 'codigo-google-app');
+  const fim = await retornarGoogle(
+    new Request(retorno, { headers: { cookie } }),
+    async (_codigo, _verificador, _nonce, endereco) => {
+      assert.equal(endereco, `${ORIGEM_APP_STUDOO}/api/auth/google/callback`);
+      return { sub: randomUUID(), email: emailNovo() };
+    },
+  );
+  const deepLink = new URL(fim.headers.get('location'));
+  assert.equal(deepLink.protocol, 'studoo-dev:');
+  assert.equal(deepLink.host, 'auth');
+  assert.equal(deepLink.pathname, '/google');
+  assert.equal(fim.headers.getSetCookie().some((c) => c.startsWith('__Host-studoo-sessao=')), false);
+  const codigo = deepLink.searchParams.get('codigo');
+
+  // 4) O app troca o código no endereço antigo, onde o canal do app segue aberto, e a sessão nasce como MOBILE.
+  const troca = await googleMobile(new Request('http://127.0.0.1:3000/api/mobile/google', {
+    method: 'POST',
+    headers: { ...encaminhado(HOST_ANTIGO), 'content-type': 'application/json' },
+    body: JSON.stringify({ codigo, verificador }),
+  }));
+  assert.equal(troca.status, 200);
+  assert.ok(await usuarioDaSessao((await troca.json()).token, 'MOBILE'));
+});
+
+test('as rotas /callback e /retorno respondem pela mesma função e o erro volta ao login da origem em que o Google devolveu a pessoa', async () => {
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  const consulta = `?state=${'a'.repeat(43)}&code=codigo-sem-estado`;
+
+  for (const [rota, caminho] of [[callbackGoogleRota, '/api/auth/google/callback'], [retornoGoogleRota, '/api/auth/google/retorno']]) {
+    for (const [origem, host] of [[ORIGEM_APP_STUDOO, HOST_NOVO], [ORIGEM_ANTIGA, HOST_ANTIGO]]) {
+      const resposta = await rota(new Request(`${origem}${caminho}${consulta}`, { headers: encaminhado(host) }));
+      assert.equal(resposta.status, 303, `${origem}${caminho}`);
+      assert.equal(resposta.headers.get('location'), `${origem}/login?erro=google_invalido`, `${origem}${caminho}`);
+      assert.match(resposta.headers.get('set-cookie') ?? '', /^__Host-studoo-google=;.*Max-Age=0/, `${origem}${caminho}`);
+    }
+  }
+});
+
+test('uma volta em curso na hora da troca ainda conclui no endereço onde começou, com a origem própria ligada depois', async () => {
+  // Começa no endereço antigo, ainda sem a origem própria: retorno /retorno e cookie no host antigo.
+  const inicio = await iniciarGoogleRota(new Request(INICIO_GOOGLE, { headers: encaminhado(HOST_ANTIGO) }));
+  assert.equal(inicio.status, 303);
+  const urlGoogle = new URL(inicio.headers.get('location'));
+  assert.equal(urlGoogle.searchParams.get('redirect_uri'), `${ORIGEM_ANTIGA}/api/auth/google/retorno`);
+  const state = urlGoogle.searchParams.get('state');
+  estadosGoogle.push(hashToken(state));
+  const cookie = (inicio.headers.get('set-cookie') ?? '').split(';')[0];
+
+  // A origem própria é ligada no meio do caminho e o Google devolve a pessoa ao /retorno antigo.
+  process.env.STUDOO_GOOGLE_ORIGEM = ORIGEM_APP_STUDOO;
+  const retorno = new URL('/api/auth/google/retorno', ORIGEM_ANTIGA);
+  retorno.searchParams.set('state', state);
+  retorno.searchParams.set('code', 'codigo-em-curso');
+  const email = emailNovo();
+  const fim = await retornarGoogle(
+    new Request(retorno, { headers: { cookie, ...encaminhado(HOST_ANTIGO) } }),
+    async (_codigo, _verificador, _nonce, endereco) => {
+      assert.equal(endereco, `${ORIGEM_ANTIGA}/api/auth/google/retorno`, 'a troca usa o endereço enviado no início');
+      return { sub: randomUUID(), email };
+    },
+  );
+  assert.equal(fim.status, 303);
+  assert.equal(fim.headers.get('location'), `${ORIGEM_ANTIGA}/`);
+  assert.ok(fim.headers.getSetCookie().some((c) => c.startsWith('__Host-studoo-sessao=')));
 });
 
 test('recuperação de senha e aviso de conta existente funcionam em ambos os hosts com link seguro e revogação total', async () => {
