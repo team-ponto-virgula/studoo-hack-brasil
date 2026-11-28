@@ -93,7 +93,7 @@ export const mensagens = {
       verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender',
       ponteMapa: 'Reforço', ponteMapaFeita: 'Ponte construída',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova.',
+      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique como se ensinasse um amigo e dê um exemplo seu.', ensinoOpcional: 'Opcional',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',

@@ -19,6 +19,22 @@ function funcao(fonte, nome, antes = '') {
   return new Function(`${js}; return ${nome};`)();
 }
 
+test('spec 19 (L2 e L3), web: as conquistas vêm logo depois do progresso e as ações ficam presas em telas largas', async () => {
+  const estudo = await readFile(new URL('../src/app/estudo.tsx', import.meta.url), 'utf8');
+  const conclusao = estudo.slice(estudo.indexOf('function LicaoConcluida('), estudo.indexOf('function ConfirmacaoModal('));
+  const posicao = (trecho) => { const i = conclusao.indexOf(trecho); assert.notEqual(i, -1, trecho); return i; };
+  const ordem = ['className="conclusao-progresso"', 'className="conclusao-historia"', 'className="conclusao-sincronia"', 'className="conclusao-liberada"',
+    'className="conclusao-aprendizado"', 'className="conclusao-rever"', 'className="conclusao-numeros"', 'className="acoes-tela"'].map(posicao);
+  assert.deepEqual(ordem, [...ordem].sort((a, b) => a - b));
+  // A frase genérica sai quando há conquista; a da trilha concluída fica.
+  assert.match(conclusao, /\(trilhaFeita \|\| !comConquista\) && <p className="conclusao-texto">/);
+  assert.match(conclusao, /<li data-tipo="ponte">\s*<Icone nome="check" \/>/);
+  assert.match(conclusao, /<li data-tipo="ensino">\s*<Icone nome="lapis" \/>/);
+  const css = await readFile(new URL('../src/app/clareza.css', import.meta.url), 'utf8');
+  const largo = css.slice(css.indexOf('@media (min-width: 768px)'));
+  assert.match(largo.slice(0, largo.indexOf('\n}')), /\.painel--concluida \.acoes-tela \{ position: sticky;[^}]*inset-block-end: 0;/);
+});
+
 test('item 5: a dica "use as teclas de A a C" nunca aparece no app', async () => {
   const arquivos = (await readdir(new URL('../apps/mobile/src/', import.meta.url))).filter((nome) => /\.tsx?$/.test(nome));
   for (const nome of arquivos) {
@@ -214,9 +230,18 @@ test('item 25: os passos do "Explique" são uma linha de indicador não tocável
   assert.match(contrato, /ponteIndicador: \(n: number\) => `Passo \$\{n\} de 3`/);
 });
 
-test('item 29: o convite do "Explique" sem "o mascote do Studoo"', () => {
-  assert.match(contrato, /ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu\. O Stu aponta o que fez sentido e propõe uma situação nova\.'/);
-  assert.doesNotMatch(contrato, /O Stu, o mascote do Studoo, aponta/);
+test('item 29 e spec 19 (L1): o convite do "Explique" é uma linha curta, sem "o mascote do Studoo"', async () => {
+  assert.match(contrato, /ensinoDica: 'Explique como se ensinasse um amigo e dê um exemplo seu\.', ensinoOpcional: 'Opcional',/);
+  assert.doesNotMatch(contrato, /O Stu, o mascote do Studoo, aponta|O Stu aponta o que fez sentido/);
+  // Na web, a linha da etapa é o título (com "Opcional") e a ajuda vem depois dos botões: o cartão que repetia o nome saiu.
+  const aulaWeb = await readFile(new URL('../src/app/aula.tsx', import.meta.url), 'utf8');
+  const estudioWeb = await readFile(new URL('../src/app/estudio.tsx', import.meta.url), 'utf8');
+  assert.match(aulaWeb, /<h2 className="aula-etapa aula-etapa--titulo" data-etapa="ensino" tabIndex=\{-1\} ref=\{tituloEtapa\}>/);
+  assert.match(aulaWeb, /className="aula-etapa__marca">\{mensagens\.estudio\.ensinoOpcional\}/);
+  assert.doesNotMatch(aulaWeb, /Esta etapa é opcional/);
+  const acoes = estudioWeb.indexOf('<div ref={acoesEnsinoRef} className="estudio-acoes">');
+  assert.ok(acoes > estudioWeb.indexOf('id="ensino-texto"'), 'os botões vêm logo depois do campo');
+  assert.ok(estudioWeb.indexOf('className="estudio-legenda ensino-ajuda">{m.ensinoDica}') > acoes, 'a ajuda vem depois dos botões');
 });
 
 test('item 14 (ee85828): o balão do nó fecha o aviso do alto na hora; o aviso não bloqueia toque fora dele, só "Desligar" responde', async () => {

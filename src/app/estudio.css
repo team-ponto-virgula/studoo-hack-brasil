@@ -203,6 +203,10 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
   .estudio-acoes > * {
     width: 100%;
   }
+  /* O campo de arquivo escondido continua com 1 px: com 100% ele alargava a página além da tela (spec 19, L5). */
+  .estudio-acoes > .estudio-arquivo-input {
+    width: 1px;
+  }
   /* A ação principal da prévia é a presa (globals.css): a largura dela vem das margens da ilha, não de 100%. */
   .estudio-acoes > .acao-principal {
     width: auto;
@@ -867,6 +871,9 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
 .reforco h2:focus, .reforco h3:focus { outline: none; }
 .reforco__selo { display: flex; align-items: center; gap: 8px; color: var(--acao-escura); font-weight: 900; text-transform: uppercase; }
 .reforco__motivo { color: var(--texto2); line-height: 1.5; }
+@media (max-width: 600px) {
+  .reforco__motivo[data-lido] { display: none; }
+}
 .reforco__faixa { position: relative; display: grid; grid-template-columns: 1fr 3fr 1fr; align-items: end; max-width: 560px;
   height: 88px; padding-bottom: 9px; border-radius: 16px; background: linear-gradient(to top,#bfdef7 0 16%,#edf6ff 16%); }
 .reforco__faixa > span { align-self: end; padding-inline: 3px; text-align: center; font-size: .73rem; font-weight: 800; color: var(--texto2); }
@@ -889,3 +896,14 @@ html[data-teclado='true'] .estudio-acoes > .acao-principal { display: contents; 
 @media (prefers-reduced-motion: reduce) { .reforco *, .reforco *::before { animation: none !important; transition: none !important; } }
 
 .estudio-ensino > summary[hidden] { display: none; }
+
+/* Spec 19, L1: o "Ensine ao Stu" como etapa da aula. O cartão encosta no título da etapa, o campo mostra quatro linhas
+   inteiras (três até 600 px) e a ajuda vem depois dos botões: o campo e o "Enviar" ficam na primeira tela. */
+.estudio-ensino[data-direto] { margin-top: 0; }
+.estudio-ensino[data-direto] > .ensino-stu { margin-top: 0; }
+.estudio-ensino textarea { height: 120px; min-height: 120px; padding-block: 10px; line-height: 24px; }
+.estudio-card .ensino-ajuda { margin: 12px 0 0; }
+.estudio-card .estudio-acoes + .ensino-ajuda, .estudio-card [role='status'] + .ensino-ajuda { margin-top: 16px; }
+@media (max-width: 600px) {
+  .estudio-ensino textarea { height: 96px; min-height: 96px; }
+}

@@ -108,3 +108,13 @@ test('B4: o botão reabre o mesmo cartão (pedirAceiteIa com o estado de privaci
   assert.match(fonte, /if \(await pedirAceiteIa\(await cliente\.privacidade\(\)\)\) tentar\(\);/);
   assert.match(fonte, /\) : semAceite \? \(\s*<Botao variante="secundario" disabled=\{ocupado\} onClick=\{\(\) => void permitirDeNovo\(\)\}>\{mensagens\.privacidade\.permitirAgora\}<\/Botao>/);
 });
+
+test('spec 19 (M1): em "Responder perguntas", "Agora não" mostra o que falta e "Permitir o uso de IA", não a falha de carregar a pergunta', () => {
+  const fonte = ler('src/app/diagnostico.tsx');
+  assert.match(fonte, /else setErro\(codigo === 'ia_indisponivel' \|\| codigo === 'consentimento_ia' \? codigo : 'outro'\);/, 'a recusa do aceite tem estado próprio');
+  assert.match(fonte, /\{erro === 'outro' \? 'Não foi possível carregar a pergunta\.[^']+' : mensagens\.erros\[erro\]\}/, 'a frase de falha fica só para a falha de verdade');
+  assert.equal(mensagens.erros.consentimento_ia, 'Para continuar, permita o uso de IA.');
+  assert.match(fonte, /onClick=\{\(\) => void consultar\(ultimaOpcao\)\}>\{erro === 'consentimento_ia' \? mensagens\.privacidade\.permitirAgora : mensagens\.tentarNovamente\}<\/Botao>/,
+    'o botão refaz o mesmo pedido, que reabre o mesmo cartão do aceite');
+  assert.equal(t.permitirAgora, 'Permitir o uso de IA');
+});

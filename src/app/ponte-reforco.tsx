@@ -89,7 +89,8 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
   return <section className="reforco" aria-labelledby={id}>
     <p className="reforco__selo"><Icone nome="revisao" />{m.ponteMapa}</p>
     <h2 ref={titulo} id={id} tabIndex={-1}>{m.ponte}</h2>
-    <p className="reforco__motivo">{reaberta ? m.ponteReabertaAviso : tentativa?.trim() ? m.ponteMotivoResposta(tentativa) : m.ponteMotivo}</p>
+    {/* Spec 19 (L8): a frase já foi lida no passo 1. Do passo 2 em diante ela some até 600 px (estudio.css) e as alternativas do desafio cabem acima do rodapé. */}
+    <p className="reforco__motivo" data-lido={passo > 1 ? '' : undefined}>{reaberta ? m.ponteReabertaAviso : tentativa?.trim() ? m.ponteMotivoResposta(tentativa) : m.ponteMotivo}</p>
     <FaixaDaPonte posicao={posicao} comemorar={concluida && !reaberta} />
     <p className="reforco__indicador" role="status">{indicador}{concluida && !reaberta && <span className="somente-leitor"> {m.ponteVencida}</span>}</p>
     <div className="reforco__cartao estudio-desafio" key={concluida ? 'pronta' : passo}>

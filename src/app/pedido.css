@@ -4,6 +4,10 @@
  */
 
 .painel--pedido { display: grid; gap: 24px; width: min(100%, 44rem); }
+/* "Por onde começamos?": o pedido da pessoa tem nome, em vez de um texto solto embaixo do título. */
+.diagnostico-pedido { display: grid; gap: 2px; margin: 0; }
+.diagnostico-pedido span { color: var(--texto2); font-size: 14px; font-weight: 700; line-height: 21px; }
+.diagnostico-pedido strong { font-size: 17px; font-weight: 800; line-height: 26px; overflow-wrap: anywhere; }
 
 .pedido-topo { display: grid; min-width: 0; }
 

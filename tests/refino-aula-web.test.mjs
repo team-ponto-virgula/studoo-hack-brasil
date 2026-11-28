@@ -87,3 +87,12 @@ test('item 11: a frase sobre pular fica embaixo da fileira de botões, em 13/18 
   assert.match(pular, /text-align: end;/, 'à direita, com "Pular por agora"');
   assert.match(css, /\.aula-rodape\[data-compacto\] \.aula-rodape__pular \{ display: none; \}/, 'com o Explique ou o reforço abertos, sai como a nota de sempre');
 });
+
+test('spec 19 (M4): o esqueleto da lição ganha "Abrindo a lição…" à vista depois de 2 s, sem mover nada e sem repetir para o leitor de tela', () => {
+  const estudo = ler('src/app/estudo.tsx');
+  const esqueleto = estudo.slice(estudo.indexOf('function SkeletonLicao('), estudo.indexOf('function SkeletonLicao(') + 1400);
+  assert.match(esqueleto, /<div className="aula-miolo" aria-hidden="true">[\s\S]+<p className="skeleton-licao__espera">\{texto\}…<\/p>\s*<\/div>/, 'a linha fica no miolo, que o leitor de tela não lê');
+  assert.equal((esqueleto.match(/<p className="somente-leitor">\{texto\}<\/p>/g) ?? []).length, 1, 'o leitor de tela continua ouvindo uma vez só');
+  assert.match(css, /\.skeleton-licao__espera \{[^}]*opacity: 0;[^}]*animation: skeleton-licao-espera 200ms 2s forwards; \}/, 'o lugar fica reservado e a linha só aparece depois de 2 s');
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{ \.skeleton-licao__espera \{ animation-delay: 2s !important; \} \}/, 'com movimento reduzido, os 2 s continuam valendo');
+});

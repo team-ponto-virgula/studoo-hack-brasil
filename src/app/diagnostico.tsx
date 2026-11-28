@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ErroStudoo, type PassoDiagnostico, type PerfilDiagnostico } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao } from '../ui';
+import { Botao, Stu } from '../ui';
 
 type Pergunta = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
 const niveis = { basico: 'Básico', intermediario: 'Intermediário', avancado: 'Avançado' } as const;
@@ -32,7 +32,7 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
   const [posicaoRevisao, setPosicaoRevisao] = useState<number | null>(null);
   const exibido = posicaoRevisao === null ? passo : anteriores[posicaoRevisao]?.passo;
   const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<'ia_indisponivel' | 'outro' | null>(null);
+  const [erro, setErro] = useState<'ia_indisponivel' | 'consentimento_ia' | 'outro' | null>(null);
   const [ultimaOpcao, setUltimaOpcao] = useState<string>();
   const vivo = useRef(true);
   const emCurso = useRef(false);
@@ -66,23 +66,30 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
       const codigo = falha instanceof ErroStudoo ? falha.codigo : null;
       if (aoDesconectar && codigo === 'nao_autenticado') aoDesconectar();
       else if (codigo === 'conteudo_nocivo') aoRecusar();
-      else setErro(codigo === 'ia_indisponivel' ? codigo : 'outro');
+      // Spec 19 (M1): "Agora não" no aceite de IA não é falha de carregamento. A tela diz o que falta e o botão reabre o mesmo aceite (como em "Pular perguntas", spec 17, B4).
+      else setErro(codigo === 'ia_indisponivel' || codigo === 'consentimento_ia' ? codigo : 'outro');
     } finally {
       emCurso.current = false;
       if (vivo.current) setOcupado(false);
     }
   }
 
+  const cabecalho = <h1 id="diagnostico-titulo" tabIndex={-1} ref={titulo}>
+    {exibido?.tipo === 'pergunta' ? exibido.pergunta.enunciado : exibido?.tipo === 'resultado' ? 'Seu ponto de partida' : 'Por onde começamos?'}
+  </h1>;
+
   return <section className="painel painel--pedido" aria-labelledby="diagnostico-titulo" aria-busy={ocupado}>
-    <h1 id="diagnostico-titulo" tabIndex={-1} ref={titulo}>
-      {exibido?.tipo === 'pergunta' ? exibido.pergunta.enunciado : exibido?.tipo === 'resultado' ? 'Seu ponto de partida' : 'Por onde começamos?'}
-    </h1>
-    <p>{objetivo}</p>
+    {/* Na abertura, o Stu acompanha o título, como em "O que você quer aprender?"; nas perguntas, o título é o enunciado e ocupa a linha toda. */}
+    {exibido ? cabecalho : <header className="pedido-heroi">
+      <div className="pedido-heroi__stu" aria-hidden="true"><Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" /></div>
+      {cabecalho}
+    </header>}
+    <p className="diagnostico-pedido"><span>Seu pedido</span> <strong>{objetivo}</strong></p>
     {!passo && <p>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</p>}
     {ocupado && <p role="status">Preparando o próximo passo…</p>}
-    {erro && <p role="alert">{erro === 'ia_indisponivel' ? mensagens.erros.ia_indisponivel : 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.'}</p>}
+    {erro && <p role="alert">{erro === 'outro' ? 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.' : mensagens.erros[erro]}</p>}
     <div className="estudio-acoes">
-      {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{mensagens.tentarNovamente}</Botao>
+      {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{erro === 'consentimento_ia' ? mensagens.privacidade.permitirAgora : mensagens.tentarNovamente}</Botao>
         : !passo && <Botao disabled={ocupado} onClick={() => void consultar()}>Responder perguntas</Botao>}
       {exibido?.tipo === 'pergunta' && exibido.pergunta.opcoes.map(opcao =>
         <Botao key={opcao.id} variante="secundario" disabled={ocupado} onClick={() => void consultar(opcao.id)}>{opcao.texto}</Botao>)}

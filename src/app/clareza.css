@@ -114,6 +114,12 @@
 .estudo[data-direcao='clareza'] .pedido-ideia[aria-pressed='true'] { border-color: var(--acao); background: #f4f7ff; color: var(--acao); }
 .estudo[data-direcao='clareza'] .pedido-ideia:active:not(:disabled) { transform: none; box-shadow: none; }
 .estudo[data-direcao='clareza'] .pedido-como { color: var(--texto2); font-size: 14px; line-height: 21px; }
+/* Até 600 px, as saídas de texto depois das ideias ficam a 4 px uma da outra (o vão da tela é 20 px): as três cabem
+   acima da cápsula em 360 × 800, sem tocável inteiro atrás dela na primeira vista (spec 16, item 35; spec 19, L6). */
+@media (max-width: 600px) {
+  .estudo[data-direcao='clareza'] .pedido-novo > .por-link__abrir + .por-link__abrir,
+  .estudo[data-direcao='clareza'] .pedido-novo > .por-link__abrir + .pedido-como { margin-top: -16px; }
+}
 
 /* Geração e proposta: o motor do caminho é o mesmo; a superfície deixa de disputar com os nós e a ação. */
 .estudo[data-direcao='clareza'] .painel--geracao { border-color: #e2e8f4; border-radius: 22px; }
@@ -171,10 +177,13 @@
 .estudo[data-direcao='clareza'] .conclusao-aprendizado p { margin: 0; font-size: 17px; line-height: 26px; }
 .estudo[data-direcao='clareza'] .conclusao-rever { justify-content: start; max-width: none; margin: 0; padding: 12px 14px; border-radius: 14px; color: #8a5100; background: #fff6e8; font-size: 16px; line-height: 24px; }
 .estudo[data-direcao='clareza'] .conclusao-texto { width: 100%; margin-top: 24px; color: var(--texto2); font-size: 16px; font-weight: 600; line-height: 24px; text-align: start; }
-.estudo[data-direcao='clareza'] .conclusao-historia { gap: 0; margin-top: 20px; }
-.estudo[data-direcao='clareza'] .conclusao-historia li { gap: 6px; padding: 16px 0; border: 0; border-top: 1px solid #e2e8f4; border-radius: 0; background: white; }
-.estudo[data-direcao='clareza'] .conclusao-historia strong { color: var(--texto); font-size: 14px; line-height: 21px; letter-spacing: 0; text-transform: none; }
-.estudo[data-direcao='clareza'] .conclusao-historia p { font-size: 16px; font-weight: 600; line-height: 24px; }
+/* Conquistas da lição (ponte, explicação ao Stu): uma linha cada, logo depois do progresso. */
+.estudo[data-direcao='clareza'] .conclusao-historia { grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0; }
+.estudo[data-direcao='clareza'] .conclusao-historia li { grid-template-columns: 20px minmax(0, 1fr); gap: 0 10px; padding: 0; border: 0; border-radius: 0; background: none; }
+.estudo[data-direcao='clareza'] .conclusao-historia li > .icone { grid-row: span 2; width: 20px; height: 20px; margin-top: 2px; color: var(--acao); }
+.estudo[data-direcao='clareza'] .conclusao-historia li[data-tipo='ensino'] > .icone { color: #17684a; }
+.estudo[data-direcao='clareza'] .conclusao-historia strong { color: var(--texto); font-size: 16px; font-weight: 800; line-height: 24px; letter-spacing: 0; text-transform: none; }
+.estudo[data-direcao='clareza'] .conclusao-historia p { margin: 0; color: var(--texto2); font-size: 14px; font-weight: 600; line-height: 21px; }
 .estudo[data-direcao='clareza'] .conclusao-numeros,
 .estudo[data-direcao='clareza'] .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
 .estudo[data-direcao='clareza'] .conclusao-numeros li { padding: 14px; border: 0; border-radius: 16px; background: #f7f9ff; box-shadow: none; animation: none; }
@@ -202,6 +211,14 @@
 .estudo[data-direcao='clareza'] .trilha-proximo > .botao--primario:active:not(:disabled) { box-shadow: none; transform: none; }
 
 @media (min-width: 768px) {
+  /* Conclusão em telas largas: as ações ficam presas embaixo, como o rodapé da aula, na coluna do conteúdo. */
+  .estudo[data-direcao='clareza'] .estudo-principal:has(.painel--concluida) { min-height: 100vh; min-height: 100svh; padding-bottom: 0; }
+  .estudo[data-direcao='clareza'] .painel--concluida { display: flex; flex-direction: column; align-items: center; justify-self: center; width: 100%; }
+  .estudo[data-direcao='clareza'] .painel--concluida .acoes-tela { position: sticky; z-index: 2; inset-block-end: 0; width: 100%; order: 2; justify-content: flex-start; margin-top: 0; padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); }
+  .estudo[data-direcao='clareza'] .painel--concluida .acoes-tela::before { content: ''; position: absolute; inset: 0 auto 0 50%; z-index: -1; width: 200vw; border-top: 2px solid var(--nevoa); background: var(--fundo); translate: -50% 0; }
+  .estudo[data-direcao='clareza'] .painel--concluida .acao-principal { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  /* O respiro entre o conteúdo e a barra: no mínimo 32 px; numa tela alta, ele cresce e a barra fica no pé. */
+  .estudo[data-direcao='clareza'] .painel--concluida::after { content: ''; order: 1; flex: 1 0 32px; }
   .estudo[data-direcao='clareza'] .pedido-novo { width: min(100%, 44rem); }
   .estudo[data-direcao='clareza'] .pedido-heroi h1 { font-size: 36px; line-height: 43px; }
 }
@@ -222,4 +239,16 @@
   .estudo[data-direcao='clareza'] .pedido-novo .pedido-heroi__fala { display: block; }
   .estudo[data-direcao='clareza'] .pedido-novo .pedido-campo textarea,
   .estudo[data-direcao='clareza'] .pedido-novo .pedido-campo__caixa::after { min-height: 88px; }
+}
+
+/* Nova trilha em telas largas (spec 19, M2). A fileira de ideias rolava para o lado e cortava a terceira ideia na borda da coluna, sem sinal de que havia mais;
+   agora as ideias quebram em linhas dentro da coluna. As três saídas de texto ("Adicionar por link", "Ver trilhas da comunidade", "Ver como funciona")
+   ocupavam uma linha cada; agora ficam numa fileira só, centralizada. As colunas do meio só existem para essa fileira: todo o resto ocupa a largura inteira. */
+@media (min-width: 768px) {
+  .estudo[data-direcao='clareza'] .pedido-ideias { flex-wrap: wrap; margin: 2px 0 0; padding: 4px 0; overflow: visible; scroll-snap-type: none; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo { grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); column-gap: 8px; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > * { grid-column: 1 / -1; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .por-link__abrir { grid-column: 2; margin-top: 0; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .por-link__abrir + .por-link__abrir { grid-column: 3; }
+  .estudo[data-direcao='clareza'] .painel--pedido.pedido-novo > .pedido-como { grid-column: 4; margin-top: 0; }
 }

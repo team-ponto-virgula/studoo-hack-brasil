@@ -103,6 +103,23 @@
 .aula-etapa[data-etapa='exemplo'] .icone { background: #fff1cc; }
 .aula-etapa[data-etapa='exercicio'] { color: var(--sucesso); }
 .aula-etapa[data-etapa='exercicio'] .icone { background: #e3f6ea; }
+/* Spec 19, L1: no "Ensine ao Stu" a linha da etapa é o título (h2 com o foco) e mostra "Opcional" à direita; o cartão que repetia o nome saiu. */
+.aula-etapa--titulo { display: flex; width: 100%; margin: 0; font-family: inherit; }
+/* O miolo só tem o título: quem ocupa a sobra da tela é o cartão do Stu, logo abaixo dele (sem vão no meio quando tudo cabe). */
+.aula-miolo:has(> .aula-etapa--titulo) { flex-grow: 0; }
+.aula-miolo:has(> .aula-etapa--titulo) + .estudio-apoio { flex: 1 0 auto; }
+.aula-etapa__marca {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--texto2);
+  background: #f4f7ff;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.385;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 
@@ -424,6 +441,11 @@
 .skeleton-licao__quadro span:first-child { width: 32%; height: 20px; }
 .skeleton-licao__quadro span:last-child { width: 64%; }
 .skeleton-licao__botao { width: min(100%, 11rem); height: 52px; border-radius: 16px; }
+/* A linha "Abrindo a lição…" só aparece se o esqueleto ainda estiver na tela depois de 2 s (spec 19, M4). Não move o esqueleto: o lugar dela já está reservado. */
+.skeleton-licao__espera { margin: 0; color: var(--texto2); font-size: 14px; line-height: 21px; text-align: center; opacity: 0; animation: skeleton-licao-espera 200ms 2s forwards; }
+@keyframes skeleton-licao-espera { to { opacity: 1; } }
+/* Com movimento reduzido, a regra geral zera o atraso das animações: aqui a espera de 2 s continua valendo e a linha entra sem transição. */
+@media (prefers-reduced-motion: reduce) { .skeleton-licao__espera { animation-delay: 2s !important; } }
 
 @media (max-width: 767px) {
   .skeleton-licao__botao { width: 100%; }
