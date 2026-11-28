@@ -6,7 +6,7 @@ O que sai daqui vem de simulador e de emulador: no iPhone, o app servido pelo Me
 
 ## Quando roda
 
-- A cada envio para `feat/hackathon-integracao` que mexa em `apps/mobile/**`, em `packages/contratos/**` ou no próprio workflow.
+- A cada envio para `main` que mexa em `apps/mobile/**`, em `packages/contratos/**` ou no próprio workflow.
 - Na mão, pelo botão "Run workflow" (ele só aparece quando o arquivo do workflow existe no ramo padrão) ou por `gh workflow run capturas-nativas.yml --ref <ramo>`.
 
 Ele é separado da verificação do PR: não é obrigatório e não entra na fila dela.
