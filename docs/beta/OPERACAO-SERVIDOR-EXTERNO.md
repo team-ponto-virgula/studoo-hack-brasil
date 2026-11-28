@@ -11,7 +11,7 @@ No Apple Developer → Certificates, Identifiers & Profiles:
 1. App ID explícito **`com.studoo.mobile.dev`**, time **`PYZ6U56AMV`**: habilitar **Sign in with Apple**, como App ID primário.
 2. Keys → criar uma chave **Sign in with Apple** associada a esse App ID e baixar o `.p8` **uma única vez**. É necessária conta Account Holder/Admin. **Não é a chave de API do App Store Connect usada para enviar o build.**
 3. Na configuração da capability, registrar o Server-to-Server Notification Endpoint:
-   `https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io/api/auth/apple/notificacoes`.
+   `https://app.hellostudoo.com.br/api/auth/apple/notificacoes`. (A rota não confere o host: se o endpoint já tiver sido cadastrado no endereço antigo, ele continua recebendo enquanto esse domínio estiver ligado ao serviço no Dokploy. Troque o cadastro na Apple para o endereço acima antes de desligar o domínio antigo.)
 
 Preparar no ambiente seguro do serviço (juntar com a escolha da conta da etapa 2 antes de aplicar/reiniciar uma vez):
 
