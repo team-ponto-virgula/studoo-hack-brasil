@@ -5,6 +5,7 @@ import { ErroStudoo, type PassoDiagnostico, type PerfilDiagnostico } from '@stud
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from '../ui';
+import { EsperaViva } from '../ui/espera-viva';
 
 type Pergunta = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
 const niveis = { basico: 'Básico', intermediario: 'Intermediário', avancado: 'Avançado' } as const;
@@ -86,7 +87,7 @@ export function DiagnosticoDoPedido({ objetivo, ativo, continuar, cancelar, aoRe
     </header>}
     <p className="diagnostico-pedido"><span>{mensagens.pedido.seuPedido}</span> <strong>{objetivo}</strong></p>
     {!passo && <p>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</p>}
-    {ocupado && <p role="status">Preparando o próximo passo…</p>}
+    {ocupado && <EsperaViva motivo="diagnostico" compacta />}
     {erro && <p role="alert">{erro === 'outro' ? 'Não foi possível carregar a pergunta. Você pode tentar novamente ou montar a trilha direto.' : mensagens.erros[erro]}</p>}
     <div className="estudio-acoes">
       {erro ? <Botao disabled={ocupado} onClick={() => void consultar(ultimaOpcao)}>{erro === 'consentimento_ia' ? mensagens.privacidade.permitirAgora : mensagens.tentarNovamente}</Botao>

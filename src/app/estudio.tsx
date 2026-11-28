@@ -27,6 +27,8 @@ import {
 } from './voz-ao-vivo';
 import { tocaSons } from './sons';
 import { PonteReforco } from './ponte-reforco';
+import { EsperaViva } from '../ui/espera-viva';
+import type { MotivoDaEspera } from '@studoo/contratos';
 import { linhaDoPassoDoEnsino, passoAtivoDoEnsino } from './ensino-passos';
 import { TextoComFormulas } from './texto-com-formulas';
 import './estudio.css';
@@ -103,6 +105,8 @@ export function MaterialParaTrilha({
   const [provedorIa, setProvedorIa] = useState<ProvedorIa>('falsa');
   const [toque, setToque] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  // O que o Stu está fazendo, para a espera viva dizer (ler o material ou montar a proposta); sem motivo, a frase de sempre.
+  const [motivo, setMotivo] = useState<MotivoDaEspera | null>(null);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const vivo = useRef(true);
@@ -137,10 +141,11 @@ export function MaterialParaTrilha({
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [material]);
-  async function executar(tarefa: () => Promise<void>, lendo = false) {
+  async function executar(tarefa: () => Promise<void>, lendo = false, motivoDaEspera: MotivoDaEspera | null = lendo ? 'material' : null) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
+    setMotivo(motivoDaEspera);
     setErro('');
     if (lendo) aoMudarLeitura?.(true);
     try {
@@ -320,7 +325,7 @@ export function MaterialParaTrilha({
                       objetivo.trim() || m.objetivo,
                     );
                     if (vivo.current) onProposta(p);
-                  })
+                  }, false, 'proposta')
                 }
               >
                 {m.gerar}
@@ -341,7 +346,7 @@ export function MaterialParaTrilha({
           </div>
         </>
       )}
-      {ocupado && <p role="status">{m.pensando}</p>}
+      {ocupado && (motivo ? <EsperaViva key={motivo} motivo={motivo} compacta /> : <p role="status">{m.pensando}</p>)}
       {erro && <p role="alert">{erro}</p>}
     </section>
   );
@@ -498,7 +503,7 @@ export function ApoioDaLicao({
       setEnsino(r);
       setAviso('');
       aoEnsinar?.();
-    });
+    }, 'ensino');
   }
 
   function iniciarConversaAoVivo() {
@@ -536,6 +541,8 @@ export function ApoioDaLicao({
   }, [etapaVoz]);
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  // O que o Stu está fazendo (montar a ponte, comentar a explicação, transcrever, conferir): a espera viva diz.
+  const [motivo, setMotivo] = useState<MotivoDaEspera | null>(null);
   const emExecucao = useRef(false);
   const [gravando, setGravando] = useState(false);
   const [segundos, setSegundos] = useState(0);
@@ -611,10 +618,11 @@ export function ApoioDaLicao({
     if (segundos >= 60 && recorder.current?.state === 'recording')
       recorder.current.stop();
   }, [segundos]);
-  async function executar(tarefa: () => Promise<void>) {
+  async function executar(tarefa: () => Promise<void>, motivoDaEspera: MotivoDaEspera | null = null) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
+    setMotivo(motivoDaEspera);
     setErro('');
     try {
       await tarefa();
@@ -677,7 +685,7 @@ export function ApoioDaLicao({
               setTexto(x.texto);
               setAviso(m.vozRevisar);
             }
-          });
+          }, 'transcricao');
         };
         rec.start();
         setEnsino(null);
@@ -722,7 +730,7 @@ export function ApoioDaLicao({
   }
   const ponte = apoio?.ponte;
   function carregarPonte() {
-    void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
+    void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)), 'ponte');
   }
   useEffect(() => {
     if (pedidoPonte > 0 && !gravando) carregarPonte();
@@ -770,7 +778,7 @@ export function ApoioDaLicao({
               const r = await cliente.avaliarPonte(licao.id, resposta);
               resultado = { correta: r.correta, feedback: r.feedback };
               atualizarApoio(r.apoio);
-            });
+            }, 'correcao');
             return resultado;
           }} />
       </div>
@@ -1028,9 +1036,10 @@ export function ApoioDaLicao({
                 setEnsino(r);
                 setAviso('');
                 aoEnsinar?.();
-              })
+              }, 'ensino')
             }
           >
+            {ocupado && motivo === 'ensino' && <span className="botao__giro" aria-hidden="true" />}
             {ocupado ? m.pensando : m.enviar}
           </Botao>
         </div>
@@ -1041,6 +1050,8 @@ export function ApoioDaLicao({
           {m.vozDica}
           {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
         </p>
+        {/* O retorno do Stu e a transcrição levam alguns segundos: a espera viva aparece onde o retorno vai entrar. */}
+        {ocupado && (motivo === 'ensino' || motivo === 'transcricao') && <EsperaViva key={motivo} motivo={motivo} compacta />}
         {ensino && (
           <div className="estudio-feedback ensino-caderno" role="status" ref={retornoDoEnsino}>
             <div className="ensino-caderno__cartao" data-tipo="acertos">
@@ -1074,7 +1085,8 @@ export function ApoioDaLicao({
           </div>
         )}
       </details>}
-      {ocupado && <p role="status">{m.pensando}</p>}
+      {ocupado && motivo === 'correcao' && <EsperaViva key={motivo} motivo={motivo} compacta />}
+      {ocupado && !motivo && <p role="status">{m.pensando}</p>}
       {erro && <p role="alert">{erro}</p>}
     </div>
   );

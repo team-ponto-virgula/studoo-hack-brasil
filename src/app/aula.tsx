@@ -716,19 +716,23 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   let acao: ReactNode;
   if (etapa.tipo === 'exercicio' && avaliacao) {
     acao = (
-      <Botao variante={avaliacao.correta ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()}>
+      <Botao variante={avaliacao.correta ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()} data-ocupado={pendente === 'concluir' || undefined}>
+        {pendente === 'concluir' && <span className="botao__giro" aria-hidden="true" />}
         {pendente === 'concluir' ? t.concluindo : avaliacao.correta ? t.continuar : revisao ? t.seguirSemAcertar : t.pular}
       </Botao>
     );
   } else if (exercicio) {
     acao = (
       <Botao type="submit" form="resposta-licao" disabled={ocupado || !respostaCompleta(exercicio, resposta, iniciais[indice])} aria-busy={pendente === 'avaliar' || undefined}>
+        {/* Conferindo (a correção com a IA leva alguns segundos): o botão afunda e o giro de 16 px roda ao lado de "Verificando…". */}
+        {pendente === 'avaliar' && <span className="botao__giro" aria-hidden="true" />}
         {pendente === 'avaliar' ? t.avaliando : t.avaliar}
       </Botao>
     );
   } else if (etapa.tipo === 'ensino') {
     const vaiPraticar = Boolean(licao.pratica && !autoAvaliacao);
-    acao = <Botao variante={ensinou ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()}>
+    acao = <Botao variante={ensinou ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()} data-ocupado={pendente === 'concluir' || undefined}>
+      {pendente === 'concluir' && <span className="botao__giro" aria-hidden="true" />}
       {ensinou ? (vaiPraticar ? 'Ir para a prática' : 'Concluir lição') : (vaiPraticar ? 'Pular' : 'Pular e concluir')}
     </Botao>;
   } else if (etapa.tipo === 'pratica') {
@@ -740,7 +744,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
           </Botao>
         )}
         <Botao variante={autoAvaliacao === 'ainda_nao' ? 'texto' : 'sucesso'} disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
-          onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())}>
+          onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} data-ocupado={pendente === 'concluir' || undefined}>
+          {pendente === 'concluir' && <span className="botao__giro" aria-hidden="true" />}
           {pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
         </Botao>
       </>
