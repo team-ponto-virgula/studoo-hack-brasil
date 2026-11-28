@@ -441,6 +441,11 @@
 .skeleton-licao__quadro span:first-child { width: 32%; height: 20px; }
 .skeleton-licao__quadro span:last-child { width: 64%; }
 .skeleton-licao__botao { width: min(100%, 11rem); height: 52px; border-radius: 16px; }
+/* A linha "Abrindo a lição…" só aparece se o esqueleto ainda estiver na tela depois de 2 s (spec 19, M4). Não move o esqueleto: o lugar dela já está reservado. */
+.skeleton-licao__espera { margin: 0; color: var(--texto2); font-size: 14px; line-height: 21px; text-align: center; opacity: 0; animation: skeleton-licao-espera 200ms 2s forwards; }
+@keyframes skeleton-licao-espera { to { opacity: 1; } }
+/* Com movimento reduzido, a regra geral zera o atraso das animações: aqui a espera de 2 s continua valendo e a linha entra sem transição. */
+@media (prefers-reduced-motion: reduce) { .skeleton-licao__espera { animation-delay: 2s !important; } }
 
 @media (max-width: 767px) {
   .skeleton-licao__botao { width: 100%; }
