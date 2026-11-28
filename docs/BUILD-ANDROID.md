@@ -96,6 +96,16 @@ O canal do app ainda está desligado no site.
 
 O `.env.local` não sobe para o EAS (está no `.gitignore`), então os valores do build vêm do `eas.json`. Trocar o endereço exige um novo build.
 
+Para o próximo APK de distribuição, atualize a `main` na raiz do repositório.
+
+```sh
+git switch main
+git pull --ff-only origin main
+git status --short --branch
+```
+
+Confira se a `main` está alinhada com `origin/main` e sem alterações locais antes de gerar o build. O EAS empacota os arquivos desse checkout.
+
 ```sh
 cd apps/mobile
 npx eas-cli@latest build --profile preview --platform android
