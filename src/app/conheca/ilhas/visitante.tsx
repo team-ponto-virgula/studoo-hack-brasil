@@ -77,11 +77,11 @@ export function AssuntoProprio({ ativo, comSessao }: { ativo: boolean; comSessao
   }
 
   return (
-    <form className="cn-assunto" aria-labelledby="cn-titulo-s3" onSubmit={continuar} noValidate>
-      <label htmlFor="cn-assunto-campo" className="somente-leitor">Seu assunto de estudo</label>
+    <form className="cn-assunto" aria-labelledby="cn-titulo-assuntos" onSubmit={continuar} noValidate>
+      <label htmlFor="cn-assunto-campo" className="somente-leitor">{textos.s3.campo}</label>
       <div className="cn-assunto__linha">
         <input id="cn-assunto-campo" ref={campo} type="text" required maxLength={LIMITES_GERACAO.objetivoMax} enterKeyHint="go"
-          placeholder="Ex.: astronomia" aria-invalid={curto || undefined} aria-describedby={curto ? 'cn-assunto-erro' : undefined}
+          placeholder={textos.s3.exemplo} aria-invalid={curto || undefined} aria-describedby={curto ? 'cn-assunto-erro' : undefined}
           onChange={(e) => { if (curto && e.target.value.trim().length >= LIMITES_GERACAO.objetivoMin) setCurto(false); }} />
         <button type="submit" className="botao botao--primario" disabled={enviando}>{enviando ? 'Abrindo…' : ativo || comSessao ? 'Continuar' : 'Continuar no login'} <span aria-hidden="true">→</span></button>
       </div>

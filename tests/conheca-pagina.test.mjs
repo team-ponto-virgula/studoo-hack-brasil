@@ -1,6 +1,6 @@
-// Página de apresentação (spec 18), o que a página entrega: o HTML de servidor por aparelho (o mesmo que o navegador hidrata), o QR, as imagens,
-// o seletor do S4, as fichas e as regras de animação do CSS. As ilhas de cliente rodam aqui só no desenho de servidor; o comportamento delas
-// (laço, troca de tela, fichas que correm) está nas capturas e nas medidas do navegador (refino/site... da entrega).
+// Página de apresentação, o que a página entrega: o HTML de servidor por aparelho (o mesmo que o navegador hidrata), a trilha das paradas, o QR,
+// as imagens, as abas de instalar, as fichas e as regras de movimento do CSS. As ilhas de cliente rodam aqui só no desenho de servidor; o que
+// elas fazem com o toque e com a rolagem (a fonte, a ponte, o retorno do Stu, os marcos) é conferido pelas contas que cada uma exporta.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -31,6 +31,11 @@ const { foraDoSafariNoIphone } = await import('../src/app/conheca/ilhas/folha-ip
 const { CAPTURAS } = await import('../src/app/conheca/imagens.gerado.ts');
 const { telasDoHeroi, escolherTelasDoHeroi, ALTS_DO_HEROI } = await import('../src/app/conheca/heroi.ts');
 const { TAMANHOS } = await import('../src/app/conheca/celular.tsx');
+const { STU_DA_PAGINA } = await import('../src/app/conheca/stu.gerado.ts');
+const { paradaAtual, estadoDoMarco } = await import('../src/app/conheca/ilhas/trilha.tsx');
+const { estadoDaPonte } = await import('../src/app/conheca/ilhas/ponte.tsx');
+const { stuDoEnsino } = await import('../src/app/conheca/ilhas/ensinar.tsx');
+const { regioesMundo, coresMundo } = await import('../src/ui/mundo-desenhos.ts');
 const sharp = (await import('sharp')).default;
 
 const ORIGEM = 'https://studoo.exemplo.test';
@@ -40,16 +45,20 @@ const texto = (html) => html.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<s
 const botoes = (html) => [...html.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/g)].map(([, tag, atributos, miolo]) => ({ tag, atributos, texto: texto(miolo).trim() }));
 const achar = (html, rotulo) => botoes(html).filter((b) => b.texto === rotulo);
 
-test('a página tem o título do herói, o subtítulo da spec, um só h1 e a ordem de títulos S2 a S5', () => {
+test('a página tem o título do alto, o subtítulo, um só h1 e as paradas na ordem, cada uma com o título, a linha e a fala do Stu', () => {
   const html = desenhar();
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
   assert.match(texto(html), new RegExp(textos.heroi.titulo.replace(/[.]/g, '\\.')));
   assert.ok(texto(html).includes(textos.heroi.subtitulo));
+  assert.ok(texto(html).includes(textos.falaDoStu + textos.heroi.ola), 'o Stu se apresenta, e o leitor de tela ouve quem está falando');
   const h2 = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)].map((m) => texto(m[1]).trim());
-  for (const titulo of [textos.s2.titulo, textos.s3.titulo, textos.s4.titulo, textos.s5.titulo]) assert.ok(h2.includes(titulo), titulo);
-  assert.deepEqual(textos.s2.momentos.map((m) => m.titulo), ['Seu material vira lição', 'Errou? Tem outro jeito', 'Explique do seu jeito', 'No computador e no celular']);
-  for (const momento of textos.s2.momentos) { assert.ok(texto(html).includes(momento.titulo)); assert.ok(texto(html).includes(momento.linha)); }
-  assert.match(texto(html), /Com uma conta, a sua trilha é a mesma no site e no app\./, 'o momento 4 diz "com uma conta": o progresso do visitante fica só no aparelho dele');
+  assert.deepEqual(h2, [...textos.paradas.map((parada) => parada.titulo), textos.s5.titulo], 'as cinco paradas e a chegada, nessa ordem');
+  assert.deepEqual(textos.paradas.map((parada) => parada.id), ['material', 'ponte', 'ensinar', 'assuntos', 'baixar']);
+  for (const parada of textos.paradas) {
+    assert.ok(texto(html).includes(parada.linha), parada.id);
+    assert.ok(texto(html).includes(textos.falaDoStu + parada.fala), `a fala do Stu em ${parada.id}`);
+  }
+  assert.match(texto(html), /Com uma conta, a sua trilha é a mesma no site e no app\./, 'a parada do app diz "com uma conta": o progresso do visitante fica só no aparelho dele');
 });
 
 test('o título contém uma única frase com quebra visual e espaço para o leitor de tela', () => {
@@ -132,18 +141,25 @@ test('iPad: o app nativo é só de iPhone, então o caminho é sempre a Tela de 
   assert.match(ler('apps/mobile/app.json'), /"supportsTablet": false/, 'se o app nativo passar a ter iPad, o caminho do iPad volta a seguir o do iPhone');
 });
 
-test('o seletor oferece quatro escolhas no mesmo grupo, cada uma ligada ao respectivo artigo; o material já vem selecionado', () => {
+test('a trilha do cabeçalho é a navegação da página: as cinco paradas numa lista, cada nó levando à sua região, e cada região com o seu marco numerado', () => {
   const html = desenhar();
-  const grupo = html.match(/<fieldset class="cn-escolhas">([\s\S]*?)<\/fieldset>/)[1];
-  const opcoes = [...grupo.matchAll(/<input[^>]*type="radio"[^>]*>/g)].map(([opcao]) => opcao);
-  assert.equal(opcoes.length, textos.s2.momentos.length);
-  for (const [indice, opcao] of opcoes.entries()) {
-    const id = `cn-momento-${indice + 1}`;
-    assert.ok(opcao.includes('name="cn-momento"') && opcao.includes(`aria-controls="${id}"`));
-    assert.ok(html.includes(`<article class="cn-momento" id="${id}"`));
-    assert.equal(opcao.includes('checked=""'), indice === 0);
-    assert.ok(grupo.includes(textos.s2.momentos[indice].escolha));
-  }
+  const trilha = html.match(/<nav class="cn-trilha" aria-label="Paradas desta página">([\s\S]*?)<\/nav>/)[1];
+  assert.match(trilha, /^<ol class="cn-trilha__lista">/);
+  const links = [...trilha.matchAll(/<a href="#([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => [m[1], texto(m[2]).trim()]);
+  assert.deepEqual(links, textos.paradas.map((parada) => [parada.id, parada.atalho]));
+  assert.doesNotMatch(trilha, /aria-current/, 'no desenho do servidor ninguém está em parada nenhuma: a ilha marca conforme a rolagem');
+  const marcos = [...html.matchAll(/<div class="cn-marco" data-marco="(\d)">[\s\S]*?<p class="cn-marco__rotulo">([\s\S]*?)<\/p>/g)].map((m) => [Number(m[1]), texto(m[2]).trim()]);
+  assert.deepEqual(marcos, [...textos.paradas.map((parada, indice) => [indice + 1, `Parada ${indice + 1} de 5 ${parada.lugar}`]), [6, textos.s5.lugar]], 'a chegada não é uma parada numerada');
+  // A conta da ilha: a parada da vez é a última cuja região já passou do meio da janela; as de trás viram ouro.
+  assert.equal(paradaAtual([{ numero: 1, topo: 900 }, { numero: 2, topo: 1800 }], 800), 0, 'no alto da página, nenhuma');
+  assert.equal(paradaAtual([{ numero: 1, topo: 390 }, { numero: 2, topo: 1200 }], 800), 1);
+  assert.equal(paradaAtual([{ numero: 1, topo: -900 }, { numero: 2, topo: 100 }, { numero: 3, topo: 1000 }], 800), 2);
+  assert.deepEqual([1, 2, 3].map((numero) => estadoDoMarco(numero, 2)), ['feito', 'atual', 'adiante']);
+  const ilha = ler('src/app/conheca/ilhas/trilha.tsx');
+  assert.match(ilha, /addEventListener\('scroll', pedir, \{ passive: true \}\)/, 'ouve a rolagem sem segurar a página');
+  assert.match(ilha, /if \(!quadro\) quadro = window\.requestAnimationFrame\(medir\)/, 'uma medida por quadro');
+  assert.match(ilha, /window\.cancelAnimationFrame\(quadro\)/, 'limpa ao sair');
+  assert.doesNotMatch(ilha, /setInterval|setTimeout/, 'nada roda sozinho: a trilha só responde à rolagem');
 });
 
 test('fontes: cada família em duas partes complementares (o latim, pré-carregado e com menos de 60% do tamanho, e a fonte inteira para o resto), e o latim tem todos os caracteres especiais do texto do app', async () => {
@@ -171,28 +187,58 @@ test('fontes: cada família em duas partes complementares (o latim, pré-carrega
   assert.doesNotMatch(layout, /href="\/marca\/(nunito|quicksand)-wght\.woff2"/, 'a fonte inteira não é pré-carregada');
 });
 
-test('a navegação leva às seções na ordem em que a pessoa as encontra depois do convite', () => {
+test('as regiões vêm na ordem da trilha, cada uma com o chão e o relevo do mapa do app, e o convite do alto leva à primeira parada', () => {
   const html = desenhar();
   const ids = [...html.matchAll(/<section id="([^"]+)"/g)].map(([, id]) => id);
-  assert.deepEqual(ids, ['conteudo', 'licao-de-exemplo', 'assuntos', 'como-funciona', 'baixar']);
-  const menu = html.match(/<nav class="cn-menu"[^>]*>([\s\S]*?)<\/nav>/)[1];
-  for (const id of ids.slice(1)) assert.ok(menu.includes(`href="#${id}"`));
-  assert.ok(html.includes('/marca/stu/stu-acolhida-480.webp'), 'o palco traz a versão maior do Stu oficial');
+  assert.deepEqual(ids, ['conteudo', ...textos.paradas.map((parada) => parada.id)]);
+  for (const parada of textos.paradas) {
+    const regiao = regioesMundo.find((r) => r.id === parada.regiao);
+    assert.ok(regiao, `${parada.regiao} é uma região do mapa do app`);
+    const abertura = html.match(new RegExp(`<section id="${parada.id}" class="cn-regiao cn-regiao--${parada.regiao}"[^>]*>`));
+    assert.ok(abertura, parada.id);
+    assert.ok(abertura[0].includes(`--chao:${coresMundo[regiao.chao]}`) && abertura[0].includes(`--relevo:${coresMundo[regiao.relevo]}`), `${parada.id}: as cores vêm de mundo-desenhos.ts`);
+  }
+  assert.equal(new Set(textos.paradas.map((parada) => parada.regiao)).size, textos.paradas.length, 'cada parada numa região diferente');
+  // Os desenhos do mundo não dependem da folha do mundo para ter tamanho: no build de produção ela pode chegar depois da folha da página (ou num pedaço à parte).
+  const css = ler('src/app/conheca/conheca.css');
+  const regraDoMundo = ler('src/ui/mundo.css').match(/\.mundo-desenho \{ ([^}]*) \}/)[1];
+  assert.ok(css.includes(`.cn-pagina .mundo-desenho { ${regraDoMundo} }`), 'a página repete a regra de tamanho dos desenhos, com a mesma conta de mundo.css');
+  assert.ok(css.indexOf('.cn-pagina .mundo-desenho {') < css.indexOf('.cn-cabecalho {'), 'e no alto da folha, antes das regras de cada lugar');
+  assert.match(html, /<a class="cn-comecar" href="#material">/);
+  assert.match(html, /<section class="cn-chegada" data-parada="6" aria-labelledby="cn-titulo-chegada"/);
+  // As ondas das fronteiras são as do mapa do app (a mesma forma, com o relevo atrás e o chão na frente).
+  assert.equal((html.match(/<svg class="cn-onda"/g) ?? []).length, textos.paradas.length + 1);
+  const onda = ler('src/app/conheca/cenario.tsx');
+  const mundo = ler('src/ui/mundo.tsx');
+  for (const caminho of ['M0 22C36 6 70 4 104 14S170 36 212 22 290 2 332 12 380 26 400 18V48H0Z', 'M0 32C40 16 76 14 110 24S176 44 218 30 296 10 338 20 384 34 400 28V48H0Z']) {
+    assert.ok(onda.includes(caminho) && mundo.includes(caminho), 'a onda da página é a da fronteira do mapa');
+  }
 });
 
-test('a questão e a fonte chegam no HTML, inclusive sem conta ou com o visitante desligado', () => {
+test('a anotação, a lição com a fonte e a questão chegam no HTML, inclusive sem conta ou com o visitante desligado', () => {
   for (const visitante of [true, false]) {
     const html = desenhar({ visitante });
-    const questao = html.match(/<section id="licao-de-exemplo"[\s\S]*?<\/section>/)[0];
-    assert.match(questao, /Anotação de exemplo/);
-    assert.match(questao, /role="img" aria-label="Retângulo dividido em oito partes iguais. Três estão pintadas com listras."/);
-    assert.equal((questao.match(/data-pintada=/g) ?? []).length, 3);
-    assert.deepEqual(botoes(questao).map(b => b.texto), ['3/5', '3/8', '5/8']);
-    assert.match(questao, /<noscript><details><summary>Ver a resposta/);
-    assert.match(questao, /role="status" aria-atomic="true"/);
+    const material = html.match(/<section id="material"[\s\S]*?<\/section>/)[0];
+    assert.match(material, /<figcaption>Anotação de exemplo<\/figcaption>/);
+    assert.match(material, /<mark class="cn-marca" id="cn-trecho-1">O número de baixo conta todas as partes iguais\.<\/mark>/);
+    assert.match(material, /<button type="button" class="cn-citar" aria-expanded="false" aria-controls="cn-fonte-1">/);
+    assert.match(material, /<div class="cn-fonte" id="cn-fonte-1" hidden="">/, 'a fonte abre quando a pessoa toca no [1]');
+    assert.ok(texto(material).includes('“O número de baixo conta todas as partes iguais.”'), 'a fonte cita a frase da anotação');
+    assert.ok(texto(material).includes(textos.material.licao.legenda), 'a lição é um exemplo, e a página diz');
+    const ponte = html.match(/<section id="ponte"[\s\S]*?<\/section>/)[0];
+    assert.match(ponte, /role="img" aria-label="Retângulo dividido em oito partes iguais\. Três estão pintadas com listras\."/);
+    assert.equal((ponte.match(/data-pintada=/g) ?? []).length, 3);
+    assert.deepEqual(botoes(ponte).filter((b) => b.tag === 'button').map((b) => b.texto), ['3/5', '3/8', '5/8']);
+    assert.match(ponte, /<noscript><details><summary>Ver a resposta/);
+    assert.match(ponte, /role="status" aria-atomic="true"/);
+    assert.match(ponte, /<div class="cn-lago" aria-hidden="true">/, 'o lago é só o desenho do que o cartão diz');
+    assert.doesNotMatch(ponte, /cn-tabuas/, 'a ponte só aparece depois do erro (ou a pedido de quem acertou de primeira)');
     assert.match(html, /<label for="cn-assunto-campo"/);
     assert.ok(html.includes(visitante ? 'Continuar' : 'Continuar no login'));
   }
+  assert.deepEqual([estadoDaPonte(false, false), estadoDaPonte(true, false), estadoDaPonte(true, true), estadoDaPonte(false, true)], ['vazia', 'montada', 'atravessada', 'vazia']);
+  assert.equal(textos.ponte.respostas.filter((resposta) => resposta.fracao === textos.ponte.certa).length, 1, 'uma resposta certa só');
+  assert.equal(textos.ponte.passos.length, 3, 'a ponte tem três tábuas, como no app');
 });
 
 test('computador: nenhum botão baixa o arquivo; "Experimentar sem conta" é o principal e o QR está na seção de instalação', () => {
@@ -295,10 +341,10 @@ test('no domínio próprio a entrada e o assunto vão ao app, inclusive com acen
   assert.equal(lerContinuacao('#assunto=irrelevante'), null);
 });
 
-test('as imagens: largura e altura declaradas, só do site, a primeira do herói com prioridade, as telas 2 e 3 do herói só no laço, as dos momentos só perto da tela, e nunca o stu-oi', () => {
+test('as imagens: largura e altura declaradas, só do site, o Stu do alto com prioridade, as telas do app só perto da tela, e nunca o stu-oi', async () => {
   const html = desenhar({ aparelho: 'android' });
   const imagens = [...html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
-  assert.ok(imagens.length >= 8);
+  assert.ok(imagens.length >= 12);
   for (const img of imagens) {
     assert.match(img, /\bwidth="\d+"/, img.slice(0, 80));
     assert.match(img, /\bheight="\d+"/, img.slice(0, 80));
@@ -306,32 +352,43 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
     for (const origem of origens) assert.match(origem, /^\/(landing|marca)\//, `só do próprio site: ${origem}`);
   }
   assert.doesNotMatch(html, /stu-oi/, 'o Stu "oi" fica de fora');
+  // A maior imagem da primeira dobra é o Stu do alto: é a única com prioridade alta.
   const alta = imagens.filter((img) => /fetchPriority="high"|fetchpriority="high"/i.test(img));
   assert.equal(alta.length, 1, 'só uma imagem com prioridade alta');
-  const [primeira, segunda, terceira] = telasDoHeroi('android').map((t) => t.captura);
-  assert.match(alta[0], new RegExp(primeira.src1x.replace(/[.]/g, '\\.')), 'e é a primeira do herói');
+  const acolhida = STU_DA_PAGINA['stu-acolhida'];
+  assert.ok(alta[0].includes(`src="${acolhida.fontes[0].src}"`), 'e é o Stu do alto');
+  for (const fonte of acolhida.fontes) assert.ok(alta[0].includes(`${fonte.src} ${fonte.largura}w`), `${fonte.largura}w no srcSet`);
   assert.match(alta[0], /loading="eager"/);
-  // A segunda e a terceira do herói só entram no carregamento quando o laço começa (hidden + lazy + prioridade baixa) e, mesmo então, só depois da carga (a ilha espera o `load` e mais 1 s).
-  const baixa = imagens.filter((img) => /fetchPriority="low"/.test(img));
-  assert.equal(baixa.length, 2, 'só as telas 2 e 3 do herói pedem a rede com prioridade baixa: não disputam a banda com a primeira');
-  for (const captura of [segunda, terceira]) {
-    const img = imagens.find((i) => i.includes(captura.src1x));
-    assert.match(img, /loading="lazy"/, captura.src1x);
-    assert.match(img, /\bhidden=""/, captura.src1x);
-    assert.match(img, /fetchPriority="low"/, captura.src1x);
+  assert.doesNotMatch(html, /fetchPriority="low"/);
+  // Os outros Stus grandes da página só entram perto da tela, e todos são decorativos (o texto ao lado diz tudo).
+  const stus = imagens.filter((img) => /\/landing\/stu-/.test(img));
+  assert.ok(stus.length >= 9);
+  for (const img of stus) {
+    assert.match(img, /\balt=""/, 'decorativo');
+    if (img !== alta[0]) assert.match(img, /loading="lazy"/);
   }
-  // As capturas dos momentos do S2 e a da janela (5) NÃO são buscadas na carga: pixel transparente no src e o endereço de verdade em data-src/data-srcset (a ilha `CarregarPerto` os passa para
-  // os atributos de verdade quando a página já carregou e a captura chega perto da tela); sem JavaScript, o <noscript> de cada uma traz a de verdade.
+  // Os arquivos do Stu da página existem, têm a largura declarada e a mesma proporção, e nenhum passa de 90 KB.
+  for (const [nome, stu] of Object.entries(STU_DA_PAGINA)) {
+    for (const fonte of stu.fontes) {
+      const dados = readFileSync(join(raiz, 'public', fonte.src));
+      assert.ok(dados.length <= 90 * 1024, `${nome} ${fonte.largura}w: ${dados.length} bytes`);
+      const meta = await sharp(dados).metadata();
+      assert.equal(meta.width, fonte.largura, fonte.src);
+      assert.ok(Math.abs(meta.height / meta.width - stu.altura / stu.largura) < 0.01, `${nome} ${fonte.largura}w: ${meta.width}x${meta.height}`);
+    }
+  }
+  // As seis capturas do app e do site (as três das paradas, a trilha pronta, o mapa e a janela) NÃO são buscadas na carga: pixel transparente no src e o endereço de verdade em
+  // data-src/data-srcset (a ilha `CarregarPerto` os passa para os atributos de verdade quando a página já carregou e a captura chega perto da tela); sem JavaScript, o <noscript> traz a de verdade.
   const adiadas = imagens.filter((img) => /\bdata-srcset=/.test(img));
-  assert.equal(adiadas.length, 5, 'os 3 momentos do celular, o do composto e a janela');
+  assert.equal(adiadas.length, 6, 'material, ponte, ensinar, trilha pronta, mapa e janela');
   for (const img of adiadas) {
     assert.match(img, /\bsrc="data:image\/gif;base64,[^"]+"/, 'o src é um pixel transparente (nada a baixar)');
     assert.doesNotMatch(img, /\bloading=|fetchPriority/, 'sem loading nem prioridade: o navegador decide quando a imagem de verdade entrar');
     assert.match(img, /\bdata-src="\/landing\/[^"]+\.webp"/);
   }
-  assert.equal([...html.matchAll(/<picture data-carregar-perto="">/g)].length, 5);
+  assert.equal([...html.matchAll(/<picture data-carregar-perto="">/g)].length, 6);
   const semScript = [...html.matchAll(/<noscript>([\s\S]*?)<\/noscript>/g)].map((m) => m[1]).filter((miolo) => miolo.includes('/landing/'));
-  assert.equal(semScript.length, 5, 'cada captura adiada tem o seu <noscript>');
+  assert.equal(semScript.length, 6, 'cada captura adiada tem o seu <noscript>');
   for (const miolo of semScript) assert.match(miolo, /<picture><source type="image\/avif" srcSet="[^"]+" sizes="[^"]+"\/><img [^>]*src="\/landing\/[^"]+\.webp" srcSet="[^"]+"/);
   // Os dois SVG que não são do alto da página (o ícone da aba da janela e o logo do rodapé) não são buscados na carga.
   for (const svg of ['/marca/icone.svg', '/marca/logo-com-sorriso.svg']) {
@@ -339,14 +396,19 @@ test('as imagens: largura e altura declaradas, só do site, a primeira do herói
     assert.ok(achada, svg);
     assert.match(achada, /loading="lazy"/, `${svg}: preguiçoso`);
   }
-  // Nenhuma captura passa de 120 KB em 2x (spec 18, seção 5).
+  // Nenhuma captura passa de 120 KB em 2x.
   for (const id of Object.keys(CAPTURAS)) {
     const bytes = readFileSync(join(raiz, 'public', CAPTURAS[id].src2x)).length;
     assert.ok(bytes <= 120 * 1024, `${id}: ${bytes} bytes`);
   }
+  // O roteiro que gera o Stu da página usa o recorte e a qualidade do kit, sem mexer no kit nem no catálogo do contrato.
+  const roteiro = ler('scripts/otimizar-stu-landing.mjs');
+  assert.match(roteiro, /assets\/mascote\/tabela\.json/);
+  assert.match(roteiro, /\.webp\(\{ \.\.\.tabela\.web\.webp, effort: 6 \}\)/);
+  assert.doesNotMatch(roteiro, /catalogo-mascote|public\/marca/, 'o kit do produto fica como está');
 });
 
-test('a ilha que busca as capturas perto da tela: só depois da carga, a uns 700 px da tela, trocando os data- pelos atributos (e pelo <source> do AVIF); e o herói libera as telas 2 e 3 só depois da carga', () => {
+test('a ilha que busca as capturas perto da tela: só depois da carga, a uns 700 px da tela, trocando os data- pelos atributos (e pelo <source> do AVIF)', () => {
   const ilha = ler('src/app/conheca/ilhas/carregar-perto.tsx');
   assert.match(ilha, /const MARGEM = '700px 0px';/);
   assert.match(ilha, /document\.readyState === 'complete'/, 'espera a página carregar');
@@ -359,34 +421,18 @@ test('a ilha que busca as capturas perto da tela: só depois da carga, a uns 700
   assert.match(ilha, /observador\?\.unobserve\(entrada\.target\)/, 'cada uma é buscada uma vez só');
   assert.match(ilha, /return \(\) => \{[\s\S]*observador\?\.disconnect\(\)/, 'limpa ao sair');
   assert.match(ler('src/app/conheca/pagina.tsx'), /<Revelar \/>\n      <CarregarPerto \/>/);
-  assert.match(ler('src/app/conheca/conheca.css'), /@media \(scripting: none\) \{ \.cn-celular__tela picture\[data-carregar-perto\], \.cn-janela__tela picture\[data-carregar-perto\] \{ display: none; \} \}/, 'sem JavaScript o pixel some e o <noscript> traz a captura');
-  const heroi = ler('src/app/conheca/ilhas/celular-heroi.tsx');
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}\n\/\*[^\n]*\*\/\n\.cn-captura\[hidden\] \{ display: none; \}/, 'o hidden vale: o display: block da captura passava por cima dele e as telas 2 e 3 eram buscadas na carga');
-  assert.match(css, /\.cn-heroi__celular \.cn-tela:nth-child\(2\) \.cn-captura\[hidden\] \{ display: block !important; \}/, 'com movimento reduzido a segunda tela aparece mesmo assim');
-  assert.match(heroi, /const ESPERA_PARA_LIBERAR_MS = 1000;/);
-  assert.match(heroi, /if \(document\.readyState === 'complete'\) liberarDepois\(\);\n    else window\.addEventListener\('load', liberarDepois, \{ once: true \}\);/);
-  assert.match(heroi, /setTimeout\(\(\) => setLiberadas\(true\), ESPERA_PARA_LIBERAR_MS\)/);
-  assert.doesNotMatch(heroi, /rodando\) return;\n\s*setLiberadas\(true\);/, 'não libera na hora em que o laço começa (era o que buscava as telas 2 e 3 junto com a primeira)');
+  assert.match(css, /@media \(scripting: none\) \{ \.cn-celular__tela picture\[data-carregar-perto\], \.cn-janela__tela picture\[data-carregar-perto\] \{ display: none; \} \}/, 'sem JavaScript o pixel some e o <noscript> traz a captura');
+  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}\n\.cn-captura\[hidden\] \{ display: none; \}/);
 });
 
 test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e o WebP de reserva, e nenhuma é esticada: a altura segue a proporção da própria captura', async () => {
   const html = desenhar({ aparelho: 'android' });
-  // O herói (a imagem do LCP): o AVIF em 320, 480 e 640 com o sizes do herói e, dentro do mesmo <picture>, o <img> com o WebP de reserva, a prioridade alta e o carregamento já.
-  const [primeira] = telasDoHeroi('android').map((t) => t.captura);
-  const srcSetAvif = primeira.avif.map((a) => `${a.src} ${a.largura}w`).join(', ');
-  const figura = html.match(new RegExp(`<picture><source type="image/avif" srcSet="${srcSetAvif.replace(/[.]/g, '\\.')}" sizes="[^"]*"/><img [^>]*>`));
-  assert.ok(figura, 'a primeira captura do herói vem num <picture> com o AVIF');
-  assert.ok(figura[0].includes(`sizes="${TAMANHOS.heroi}"/><img`), 'o herói usa o sizes do herói');
-  assert.match(figura[0], new RegExp(`<img [^>]*src="${primeira.src1x.replace(/[.]/g, '\\.')}" srcSet="${primeira.src1x.replace(/[.]/g, '\\.')} ${primeira.largura}w, ${primeira.src2x.replace(/[.]/g, '\\.')} ${primeira.largura * 2}w" sizes="${TAMANHOS.heroi.replace(/[().]/g, '\\$&')}"`), 'o WebP de reserva leva o mesmo sizes');
-  assert.match(figura[0], /loading="eager" fetchPriority="high"/);
-  assert.deepEqual(primeira.avif.map((a) => a.largura), [320, 480, 640]);
-  // Cada lugar com o seu sizes (a largura da TELA do celular em cada faixa, sem as bordas): o herói, os momentos, o celular do composto e a janela.
-  assert.equal(TAMANHOS.heroi, '(min-width: 1200px) 175px, (min-width: 740px) 14vw, 110px');
+  // Cada lugar com o seu sizes (a largura da TELA do celular em cada faixa, sem as bordas): as telas das paradas, o celular do composto e a janela.
+  assert.deepEqual(Object.keys(TAMANHOS), ['momento', 'celularDoComposto', 'janela']);
   const ocorrencias = (sizes) => [...html.matchAll(/<source type="image\/avif" srcSet="[^"]*" sizes="([^"]*)"\/>/g)].filter((m) => m[1] === sizes).length;
-  assert.equal(ocorrencias(TAMANHOS.heroi), 3, 'as três telas do herói');
-  assert.equal(ocorrencias(TAMANHOS.momento), 3, 'os momentos 1 a 3');
-  assert.equal(ocorrencias(TAMANHOS.celularDoComposto), 1, 'o celular do momento 4');
+  assert.equal(ocorrencias(TAMANHOS.momento), 4, 'material, ponte, ensinar e a trilha pronta');
+  assert.equal(ocorrencias(TAMANHOS.celularDoComposto), 1, 'o celular ao lado da janela');
   assert.equal(ocorrencias(TAMANHOS.janela), 1, 'a janela do navegador');
   // Os arquivos: AVIF de verdade, bem menor que o WebP do dobro, e com a MESMA proporção do WebP e da largura/altura declaradas (nada esticado nem achatado).
   for (const [id, captura] of Object.entries(CAPTURAS)) {
@@ -414,7 +460,7 @@ test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e 
   assert.ok(desenhar().includes('href="/landing/regra-dos-tercos.pdf"'));
   assert.equal(readFileSync(join(raiz, 'public/landing/regra-dos-tercos.pdf')).subarray(0, 5).toString(), '%PDF-');
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}/, 'a captura é encaixada inteira, nunca esticada (object-fit: fill esticava a do momento 1)');
+  assert.match(css, /\.cn-captura \{ display: block; width: 100%; height: 100%; object-fit: contain; \}/, 'a captura é encaixada inteira, nunca esticada');
   assert.doesNotMatch(css, /object-fit: (fill|cover)/);
   assert.match(css, /\.cn-celular__tela picture, \.cn-janela__tela picture \{ display: contents; \}/);
   // O roteiro que gera as imagens: a largura manda e a altura acompanha (nada de esticar para a proporção da plataforma).
@@ -423,74 +469,109 @@ test('as capturas chegam em AVIF em três larguras, com o sizes de cada lugar e 
   assert.doesNotMatch(roteiro, /Math\.round\(largura \/ razao\)/, 'a altura não vem mais da proporção da plataforma');
 });
 
-test('momento 4: o site numa janela de navegador desenhada pelo Studoo (captura real da web) ao lado do app, e nenhuma prévia web dentro de moldura de celular', () => {
+test('a parada do app: o site numa janela de navegador desenhada pelo Studoo (captura real da web) ao lado do app, e nenhuma prévia web dentro de moldura de celular', () => {
   const html = desenhar({ aparelho: 'android' });
-  const momentos = [...html.matchAll(/<article class="cn-momento"[^>]*data-momento="(\d)"[\s\S]*?<\/article>/g)].map((m) => [m[1], m[0]]);
-  assert.equal(momentos.length, 4);
-  for (const [numero, bloco] of momentos) {
-    if (numero !== '4') assert.doesNotMatch(bloco, /cn-composto|cn-janela/, `só o momento 4 tem a janela (${numero})`);
-  }
-  const quatro = momentos[3][1];
-  assert.match(quatro, /<div class="cn-momento__visual cn-momento__visual--composto"><div class="cn-composto">/);
-  const janela = quatro.match(/<div class="cn-janela">[\s\S]*?<div class="cn-janela__tela">([\s\S]*?)<\/div><\/div>/);
+  const regiao = (id) => html.match(new RegExp(`<section id="${id}"[\\s\\S]*?</section>`))[0];
+  for (const parada of textos.paradas.filter((p) => p.id !== 'baixar')) assert.doesNotMatch(regiao(parada.id), /cn-composto|cn-janela/, `só a parada do app tem a janela (${parada.id})`);
+  const baixar = regiao('baixar');
+  assert.match(baixar, /<div class="cn-composto"><div class="cn-janela">/);
+  const janela = baixar.match(/<div class="cn-janela">[\s\S]*?<div class="cn-janela__tela">([\s\S]*?)<\/div><\/div>/);
   assert.ok(janela, 'a janela e a tela dela');
   assert.ok(janela[1].includes(CAPTURAS['janela-4'].src1x) && janela[1].includes(CAPTURAS['janela-4'].src2x), 'a captura da web, em 1x e 2x (WebP de reserva)');
   assert.ok(CAPTURAS['janela-4'].avif.every((a) => janela[1].includes(a.src)), 'e em AVIF, nas três larguras');
-  assert.ok(janela[1].includes(`alt="${textos.s2.janelaAlt}"`));
+  assert.ok(janela[1].includes(`alt="${textos.sincronia.janelaAlt}"`));
   assert.equal(CAPTURAS['janela-4'].plataforma, 'web');
   assert.match(janela[1], /<picture data-carregar-perto="">/, 'a captura da web só é buscada perto da tela');
   // A barra é só desenho (escondida do leitor de tela) e não inventa endereço: tem a aba "Studoo" e nada com cara de URL.
-  const barra = quatro.match(/<div class="cn-janela__barra" aria-hidden="true">([\s\S]*?)<\/div>/)[1];
+  const barra = baixar.match(/<div class="cn-janela__barra" aria-hidden="true">([\s\S]*?)<\/div>/)[1];
   assert.ok(texto(barra).includes('Studoo'));
   assert.doesNotMatch(texto(barra), /https?:|www\.|\.com|\.app|\.br|sslip/i);
   // A captura da web nunca está dentro de uma moldura de celular, e a do app nunca dentro da janela.
   const celulares = [...html.matchAll(/<div class="cn-celular[^"]*"[\s\S]*?<\/div><\/div>/g)].map((m) => m[0]);
-  assert.ok(celulares.length >= 5);
+  assert.equal(celulares.length, 5, 'material, ponte, ensinar, trilha pronta e o mapa');
   for (const celular of celulares) assert.ok(!celular.includes('janela-4-'), 'a web fora do celular');
   assert.ok(!janela[1].includes(CAPTURAS['momento-4'].src1x), 'o app fora da janela');
+  assert.match(ler('src/app/conheca/cenario.tsx'), /if \(captura\.plataforma === 'web'\) throw new Error/, 'a tela "no app" de uma parada recusa captura da web');
   // O selo "Progresso salvo agora" fica no composto e o celular dele (o do app) mostra o mapa.
-  assert.match(quatro, /<p class="cn-selo-sincronia">[\s\S]*Progresso salvo agora<\/p>/);
-  assert.ok(quatro.includes(CAPTURAS['momento-4'].src1x));
-  // Frases do texto do momento: "com uma conta" (o progresso do visitante fica só no aparelho dele).
-  assert.match(texto(quatro), /Com uma conta, a sua trilha é a mesma no site e no app\./);
+  assert.match(baixar, /<p class="cn-selo-sincronia">[\s\S]*Progresso salvo agora<\/p>/);
+  assert.ok(baixar.includes(CAPTURAS['momento-4'].src1x));
+  assert.match(texto(baixar), /Com uma conta, a sua trilha é a mesma no site e no app\./);
 });
 
-test('contraste: os botões de texto da página usam o azul escuro do app (o azul da ação não chega a 4,5:1 sobre o céu do herói)', () => {
+test('contraste: o texto passa de 4,5:1 sobre o céu do alto, sobre o chão e o relevo de cada região e na chegada', () => {
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-pagina \.cn-entrar, \.cn-pagina \.cn-visitante-texto, \.cn-pagina \.cn-instalar-celular \{ color: var\(--acao-escura\); \}/);
+  assert.match(css, /\.cn-pagina \.cn-entrar:not\(\.cn-entrar--abrir\), \.cn-pagina \.cn-visitante-texto, \.cn-pagina \.cn-instalar-celular \{ color: var\(--acao-escura\); \}/);
   assert.match(ler('src/app/globals.css'), /--acao-escura: #1d4ed8;/);
-  // A conta: #1D4ED8 sobre #EAF0FF (o céu do cabeçalho) e sobre o branco.
-  const luz = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const canais = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luz = (hex) => { const [r, g, b] = canais(hex).map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
   const razao = (a, b) => { const [x, y] = [luz(a), luz(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
-  assert.ok(razao('#1d4ed8', '#eaf0ff') >= 4.5, 'sobre o céu');
-  assert.ok(razao('#1d4ed8', '#ffffff') >= 4.5, 'sobre o branco');
-  assert.ok(razao('#2563ff', '#eaf0ff') < 4.5, 'e é por isso que o azul da ação não serve ali');
+  /** A cor que se vê com `cima` a `opacidade` sobre `baixo` (as manchas do relevo ficam a 55% sobre o chão). */
+  const mistura = (cima, baixo, opacidade) => '#' + canais(cima).map((c, i) => Math.round(c * opacidade + canais(baixo)[i] * (1 - opacidade)).toString(16).padStart(2, '0')).join('');
+  const tinta = css.match(/--cn-tinta: (#[0-9a-f]{6});/)[1];
+  const marinho = css.match(/--cn-marinho: (#[0-9a-f]{6});/)[1];
+  const azulEscuro = '#1d4ed8';
+  // O céu do alto: o cabeçalho, o título, o subtítulo e os botões de texto ficam sobre ele.
+  const ceu = [...css.match(/\.cn-heroi \{[\s\S]*?background: linear-gradient\(180deg, ([^)]*)\)/)[1].matchAll(/#[0-9a-f]{6}/g)].map((m) => m[0]);
+  assert.equal(ceu.length, 4);
+  for (const fundo of ceu) {
+    for (const cor of [azulEscuro, tinta, marinho, '#47557a']) assert.ok(razao(cor, fundo) >= 4.5, `${cor} sobre o céu ${fundo}: ${razao(cor, fundo).toFixed(2)}`);
+  }
+  assert.ok(razao('#2563ff', ceu[0]) < 4.5, 'e é por isso que o azul da ação não serve de texto ali');
+  // Cada região: o texto fica sobre o chão e, às vezes, sobre uma mancha do relevo (a 55%).
+  assert.match(css, /\.cn-regiao__enfeites::before, \.cn-regiao__enfeites::after \{[^}]*background: var\(--relevo\); opacity: 0\.55; \}/);
+  for (const parada of textos.paradas) {
+    const regiao = regioesMundo.find((r) => r.id === parada.regiao);
+    for (const fundo of [coresMundo[regiao.chao].toLowerCase(), mistura(coresMundo[regiao.relevo].toLowerCase(), coresMundo[regiao.chao].toLowerCase(), 0.55)]) {
+      for (const cor of [azulEscuro, tinta, marinho]) assert.ok(razao(cor, fundo) >= 4.5, `${parada.id}: ${cor} sobre ${fundo}: ${razao(cor, fundo).toFixed(2)}`);
+    }
+  }
+  // Os cartões e os avisos de dentro deles.
+  for (const [cor, fundo, onde] of [['#ffffff', '#2563ff', 'botão principal'], ['#ffffff', css.match(/--cn-madeira: (#[0-9a-f]{6});/)[1], 'número da tábua'], ['#5a3f0c', '#fff6de', 'pista'], ['#1c4c33', '#e6f6eb', 'acerto'],
+    ['#6b4424', '#fff9f1', 'título da ponte'], ['#505b78', '#ffffff', 'legenda'], ['#6d28d9', '#eef3ff', 'rótulo da explicação'], ['#ffffff', '#0d1f6b', 'chegada'], ['#d9e2ff', '#0a1750', 'rodapé'], ['#3d2900', '#ffd666', 'marco da chegada']]) {
+    assert.ok(razao(cor, fundo) >= 4.5, `${onde}: ${cor} sobre ${fundo}: ${razao(cor, fundo).toFixed(2)}`);
+  }
 });
 
-test('cada escolha oferece a captura ampliada correspondente; continuar depois também mostra o site', () => {
+test('cada tela do app pode ser ampliada, e a parada do app também mostra o site', () => {
   const html = desenhar();
-  for (let numero = 1; numero <= 4; numero++) {
-    const artigo = html.match(new RegExp(`<article[^>]*id="cn-momento-${numero}"[^>]*>([\\s\\S]*?)</article>`))[1];
-    const app = achar(artigo, 'Ampliar tela do app')[0];
-    assert.ok(app.atributos.includes(`href="${CAPTURAS['momento-' + numero].src2x}"`));
-    assert.ok(app.atributos.includes('aria-haspopup="dialog"'));
-    const site = achar(artigo, 'Ampliar tela do site');
-    assert.equal(site.length, numero === 4 ? 1 : 0);
-    if (numero === 4) assert.ok(site[0].atributos.includes(`href="${CAPTURAS['janela-4'].src2x}"`));
+  const regiao = (id) => html.match(new RegExp(`<section id="${id}"[\\s\\S]*?</section>`))[0];
+  const esperadas = { material: CAPTURAS['momento-1'], ponte: CAPTURAS['momento-2'], ensinar: CAPTURAS['momento-3'], assuntos: telasDoHeroi('computador')[1].captura, baixar: CAPTURAS['momento-4'] };
+  for (const [id, captura] of Object.entries(esperadas)) {
+    const app = achar(regiao(id), 'Ampliar tela do app');
+    assert.equal(app.length, 1, id);
+    assert.ok(app[0].atributos.includes(`href="${captura.src2x}"`), id);
+    assert.ok(app[0].atributos.includes('aria-haspopup="dialog"'));
+    const site = achar(regiao(id), 'Ampliar tela do site');
+    assert.equal(site.length, id === 'baixar' ? 1 : 0, id);
+    if (id === 'baixar') assert.ok(site[0].atributos.includes(`href="${CAPTURAS['janela-4'].src2x}"`));
   }
   assert.match(html, /<dialog class="cn-visor"><\/dialog>/, 'a imagem grande só é carregada ao abrir a captura');
 });
 
-test('os momentos podem ser escolhidos sem JavaScript e sem depender de animações', () => {
-  const css = ler('src/app/conheca/conheca.css');
-  for (let numero = 1; numero <= 4; numero++) {
-    assert.ok(css.includes(`input[value="${numero}"]:checked) .cn-momento:not([data-momento="${numero}"])`));
+test('as demonstrações usam controles nativos, dizem que são exemplo e, sem JavaScript, a página ainda mostra a fonte e a resposta', () => {
+  const html = desenhar();
+  const ensinar = html.match(/<section id="ensinar"[\s\S]*?<\/section>/)[0];
+  assert.match(ensinar, /<fieldset class="cn-explicacoes"><legend>Escolha uma explicação de exemplo<\/legend>/);
+  const opcoes = [...ensinar.matchAll(/<input[^>]*type="radio"[^>]*>/g)].map(([opcao]) => opcao);
+  assert.equal(opcoes.length, textos.ensinar.explicacoes.length);
+  for (const opcao of opcoes) {
+    assert.ok(opcao.includes('name="cn-explicacao"'), 'um grupo só: toque e setas do teclado');
+    assert.doesNotMatch(opcao, /checked=""/, 'nenhuma vem escolhida: o retorno é de quem escolhe');
   }
-  assert.doesNotMatch(ler('src/app/conheca/ilhas/momentos.tsx'), /use client|useEffect/);
-  assert.match(css, /input:focus-visible \+ span/);
+  for (const explicacao of textos.ensinar.explicacoes) assert.ok(texto(ensinar).includes(explicacao.texto));
+  assert.ok(texto(ensinar).includes(textos.ensinar.vazio));
+  assert.ok(texto(ensinar).includes(textos.ensinar.aviso), 'o retorno é de exemplo, e a página diz');
+  assert.doesNotMatch(ensinar, /cn-retorno-stu__bloco/, 'o retorno só aparece depois da escolha');
+  // A expressão do Stu em cada fase, como no "Ensine ao Stu" do app.
+  assert.deepEqual([stuDoEnsino('vazio', false), stuDoEnsino('ouvindo', true), stuDoEnsino('retorno', false), stuDoEnsino('retorno', true)], ['stu-curioso', 'stu-concentrado', 'stu-animado', 'stu-encorajador']);
+  assert.match(ler('src/app/conheca/ilhas/ensinar.tsx'), /prefers-reduced-motion: reduce\)'\)\.matches\) \{ setFase\('retorno'\); return; \}/, 'com movimento reduzido, o retorno vem sem a pausa do "ouvindo"');
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /@media \(scripting: none\) \{ \.cn-fonte\[hidden\] \{ display: block; \} \.cn-citar \{ display: none; \} \}/, 'sem JavaScript a fonte já vem aberta');
+  assert.match(css, /@media \(scripting: none\) \{ \.cn-respostas, \.cn-retorno, \.cn-assunto, \.cn-explicacoes, \.cn-retorno-stu \{ display: none; \} \}/, 'e o que depende de toque sai (a resposta fica no <noscript>)');
+  assert.match(css, /\.cn-explicacao input:focus-visible \+ \.cn-explicacao__cartao \{ outline: 3px solid var\(--acao\); outline-offset: 3px; \}/);
 });
 
-test('o herói escolhe as três telas pela plataforma do aparelho: Android vê as do Android, os outros as do iPhone, e sem as da rodada limpa vale o conjunto provisório', () => {
+test('as telas do app seguem a plataforma do aparelho: Android vê a trilha pronta do Android, os outros a do iPhone, e sem as da rodada limpa vale o conjunto provisório', () => {
   const fabrica = (id, plataforma) => ({ plataforma, provisoria: false, src1x: `/landing/${id}-1x.webp`, src2x: `/landing/${id}-2x.webp`, largura: 320, altura: 696, origem: 'teste' });
   const provisorio = { 'heroi-1': fabrica('heroi-1', 'iphone'), 'heroi-2': fabrica('heroi-2', 'android'), 'heroi-3': fabrica('heroi-3', 'iphone') };
   // Só o conjunto provisório: o mesmo para todos (ele mistura as plataformas, e por isso é provisório).
@@ -505,19 +586,23 @@ test('o herói escolhe as três telas pela plataforma do aparelho: Android vê a
   // Captura da web nunca entra numa moldura de celular, e a falta de uma é um erro alto (não uma tela vazia).
   assert.throws(() => escolherTelasDoHeroi({ ...provisorio, 'heroi-2': fabrica('heroi-2', 'web') }, 'android'), /Falta a captura 2 do herói/);
   assert.throws(() => escolherTelasDoHeroi({ 'heroi-1': provisorio['heroi-1'] }, 'iphone'), /Falta a captura 2 do herói/);
-  // A página usa a escolha: o conjunto do aparelho vira o do HTML.
+  // A página usa a segunda (a trilha pronta), na parada dos assuntos, e só ela.
   for (const aparelho of ['android', 'iphone']) {
     const html = desenhar({ aparelho });
-    for (const tela of telasDoHeroi(aparelho)) assert.ok(html.includes(tela.captura.src1x), `${aparelho}: ${tela.captura.src1x}`);
+    const [primeira, trilha, terceira] = telasDoHeroi(aparelho).map((t) => t.captura);
+    const assuntos = html.match(/<section id="assuntos"[\s\S]*?<\/section>/)[0];
+    assert.ok(assuntos.includes(trilha.src1x), `${aparelho}: ${trilha.src1x}`);
+    assert.ok(!html.includes(primeira.src1x) && !html.includes(terceira.src1x), `${aparelho}: só a trilha pronta`);
   }
 });
 
-test('o celular do herói é um grupo com um rótulo só e cada captura tem o seu alt da spec', () => {
+test('cada tela do app tem a sua descrição, e nada é anunciado sozinho', () => {
   const html = desenhar({ aparelho: 'android' });
-  assert.match(html, /role="group" aria-label="Telas do Studoo: escolher o que aprender, a trilha pronta e uma lição com o acerto"/);
-  for (const alt of ['Tela do Studoo perguntando o que você quer aprender', 'Tela do Studoo com a trilha pronta', 'Lição do Studoo com a resposta certa e o Stu comemorando',
-    'A ponte do Studoo: outro jeito de entender, em 3 passos', 'O retorno do Stu à sua explicação', 'O mapa da trilha no app']) assert.ok(html.includes(`alt="${alt}"`), alt);
-  assert.doesNotMatch(html, /aria-live/, 'a troca das telas nunca é anunciada');
+  for (const alt of [textos.material.noApp.alt, textos.ponte.noApp.alt, textos.ensinar.noApp.alt, textos.assuntos.noApp.alt, textos.sincronia.celularAlt, textos.sincronia.janelaAlt]) assert.ok(html.includes(`alt="${alt}"`), alt);
+  assert.doesNotMatch(html, /aria-live/);
+  assert.equal((html.match(/role="status"/g) ?? []).length, 2, 'só o retorno da questão e o retorno do Stu: os dois respondem a um toque da pessoa');
+  // O cenário é desenho: fica fora do leitor de tela.
+  for (const classe of ['cn-heroi__ceu', 'cn-heroi__chao', 'cn-regiao__enfeites', 'cn-chegada__ceu', 'cn-entradas']) assert.match(html, new RegExp(`class="${classe}" aria-hidden="true"`), classe);
 });
 
 test('as molduras seguem a plataforma da captura: ilha no iPhone, ponto de câmera no Android, e nenhum relógio desenhado', () => {
@@ -525,8 +610,8 @@ test('as molduras seguem a plataforma da captura: ilha no iPhone, ponto de câme
   const plataformas = [...html.matchAll(/class="cn-celular[^"]*" data-plataforma="(iphone|android)"/g)].map((m) => m[1]);
   assert.ok(plataformas.includes('iphone') && plataformas.includes('android'));
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__ilha \{[^}]*width: 10px; height: 10px; border-radius: 50%/);
-  assert.match(css, /border: 10px solid var\(--cn-marinho\);\n  border-radius: 44px;/);
+  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__ilha \{ top: 4px; width: 7px; height: 7px; border-radius: 50%; \}/);
+  assert.match(css, /border: 7px solid var\(--cn-marinho\); border-radius: 32px;/);
   assert.doesNotMatch(ler('src/app/conheca/celular.tsx'), /\d\d:\d\d|relogio|hora/i, 'o relógio que aparece é o da captura');
 });
 
@@ -552,23 +637,23 @@ test('S3: as seis ideias da tela inicial estão UMA vez no código, em grade que
   assert.doesNotMatch(fichas, /use client|useEffect|cloneNode|setAttribute\('inert'/, 'a lista é de servidor: não copia nada no navegador');
   const css = ler('src/app/conheca/conheca.css');
   assert.doesNotMatch(css, /cn-correr|data-correndo|cn-fichas__pista|cn-fichas__copia/, 'sem a fileira em laço');
-  assert.match(css, /\.cn-fichas__lista \{ display: grid; grid-template-columns: repeat\(6,/);
+  assert.match(css, /\.cn-fichas__lista \{ display: grid; grid-template-columns: repeat\(3,/);
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
-test('S3: as fichas entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, subindo 8 px), só com movimento permitido; sem movimento, todas à vista', () => {
+test('as fichas dos assuntos entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, subindo 8 px), só com movimento permitido; sem movimento, todas à vista', () => {
   const css = ler('src/app/conheca/conheca.css');
-  const abertura = css.indexOf('@media (prefers-reduced-motion: no-preference) {\n  /* As seis entram uma a uma');
-  assert.ok(abertura > 0, 'a entrada das fichas vive dentro do bloco com movimento permitido');
-  const bloco = css.slice(abertura, css.indexOf('/* ---------- S4', abertura));
+  const abertura = css.indexOf('/* Parada 4: as seis fichas entram uma a uma');
+  assert.ok(abertura > css.indexOf('@media (prefers-reduced-motion: no-preference) {'), 'a entrada das fichas vive dentro do bloco com movimento permitido');
+  const bloco = css.slice(abertura, css.indexOf('@media (hover: hover)', abertura));
   assert.match(bloco, /\.cn-ficha-item \{ transition: opacity 300ms ease-out, transform 300ms ease-out; \}/);
   const atrasos = [...bloco.matchAll(/\.cn-ficha-item:nth-child\((\d)\) \{ transition-delay: (\d+)ms; \}/g)].map((m) => [Number(m[1]), Number(m[2])]);
   assert.deepEqual(atrasos, [[2, 60], [3, 120], [4, 180], [5, 240], [6, 300]], '60 ms entre uma e outra');
   assert.match(bloco, /\[data-revelar-itens\]\[data-oculto\]:not\(\[data-revelado\]\) > \.cn-ficha-item \{ opacity: 0; transform: translateY\(8px\); \}/);
-  // A ilha que revela cuida das duas marcas, e a lista das fichas não tem entrada própria da seção inteira.
+  // A ilha que revela cuida das duas marcas, e a região inteira não tem entrada própria (só os blocos de dentro dela).
   assert.match(ler('src/app/conheca/ilhas/revelar.tsx'), /querySelectorAll<HTMLElement>\('\[data-revelar\], \[data-revelar-itens\]'\)/);
   const html = desenhar({ aparelho: 'android' });
-  assert.doesNotMatch(html, /<section class="cn-secao cn-s3"[^>]*data-revelar/);
+  assert.doesNotMatch(html, /<section id="[^"]+" class="cn-regiao[^>]*data-revelar/);
 });
 
 test('S4: grupo de abas acessível com Android e iPhone, e os textos dos passos da spec', () => {
@@ -618,7 +703,7 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.doesNotMatch(texto(iphone), /Com o app aberto, toque em Compartilhar/, 'os passos da folha (do celular) não aparecem no computador');
   // A âncora #iphone não é item da grade do painel (tomava uma linha e empurrava o cartão do QR para baixo do alinhamento dos passos): fica solta, posicionada no painel.
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-ancora \{ position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; \}/);
+  assert.match(css, /\.cn-ancora \{ position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; scroll-margin-top: 110px; \}/);
   // A aba do iPhone antes do TestFlight, no computador: o estado do convite e o botão embaixo dos passos, na coluna da esquerda, alinhados ao texto dos passos e na
   // largura do botão principal; o cartão do QR sozinho à direita.
   assert.match(iphone, /<div role="tabpanel" id="cn-painel-iphone"[^>]*class="cn-painel cn-painel--iphone-com-qr"/, 'só a aba do iPhone sem TestFlight e com QR leva a variante');
@@ -630,7 +715,7 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__qr \{ grid-row: 1 \/ span 3; align-self: start; \}/);
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-apoio--painel, \.cn-painel--iphone-com-qr \.cn-painel__acao \{ grid-column: 1; margin-left: calc\(var\(--cn-passo-numero, 32px\) \+ var\(--cn-passo-vao, 14px\)\); \}/, 'na coluna da esquerda, no recuo do texto dos passos');
   assert.match(css, /\.cn-painel--iphone-com-qr \.cn-painel__acao \{ width: var\(--cn-botao-principal-computador, 280px\); max-width: 100%; \}/, 'na largura do botão principal, não a coluna toda');
-  assert.match(css, /\.cn-painel \{ position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; \}/);
+  assert.match(css, /\.cn-painel \{ position: relative; display: grid; gap: 22px; justify-items: start; margin-top: 24px; \}/);
   // iPhone com o TestFlight: QR e alternativa de texto para abrir ou compartilhar o convite.
   const comLink = desenhar({ links: { testflight: 'https://testflight.apple.com/join/ABC123' } });
   const iphoneComLink = painel(comLink, 'iphone');
@@ -649,10 +734,12 @@ test('S4 no computador (spec 18, seção 3, d7f2abb): os passos de cada aba fala
   for (const passo of textos.s4.android.passos) assert.ok(texto(semQr).includes(passo), passo);
 });
 
-test('o endereço /baixar abre S4: o id baixar na seção e o id iphone no painel do iPhone', () => {
+test('o endereço /baixar abre a parada do app: o id baixar na região e o id iphone no painel do iPhone', () => {
   const html = desenhar({ aparelho: 'iphone' });
-  assert.match(html, /<section id="baixar" class="cn-secao cn-s4"/);
+  assert.match(html, /<section id="baixar" class="cn-regiao cn-regiao--nuvens"/);
   assert.match(html, /<span id="iphone" class="cn-ancora"/);
+  const css = ler('src/app/conheca/conheca.css');
+  assert.match(css, /\.cn-regiao, \.cn-chegada \{ position: relative; scroll-margin-top: 124px; \}/, 'a âncora para abaixo da cápsula do cabeçalho, com o marco à vista');
 });
 
 test('rodapé e metadados: logo, a linha do HackBrasil e os três links; o título e a descrição da spec', () => {
@@ -713,7 +800,7 @@ test('o iPhone fora do Safari (outros navegadores e os de dentro de aplicativos)
   assert.equal(foraDoSafariNoIphone('Mozilla/5.0 (Linux; Android 14) Chrome/130.0 Mobile Safari/537.36'), false, 'não é iPhone');
 });
 
-test('animações só dentro de prefers-reduced-motion: no-preference (com a parada à mão), e o herói parado mostra só a proposta pronta', () => {
+test('movimento só dentro de prefers-reduced-motion: no-preference, e nada se mexe sozinho sem parar', () => {
   const css = ler('src/app/conheca/conheca.css');
   // Tira os blocos @media (prefers-reduced-motion: no-preference) { ... } (chaves casadas) e vê o que sobra.
   let sobra = css;
@@ -727,55 +814,36 @@ test('animações só dentro de prefers-reduced-motion: no-preference (com a par
     sobra = sobra.slice(0, inicio) + sobra.slice(i);
   }
   const semMovimento = sobra.split('\n').filter((linha) => /\banimation\b\s*:|\btransition\b\s*:/.test(linha) && !/^\s*\*|^\s*\/\*/.test(linha));
-  // Fora do bloco "com movimento" só valem: o desligamento (animation: none / transition: none) e a troca de cor do ponto, que não é movimento.
-  for (const linha of semMovimento) assert.match(linha, /animation: none|transition: none|transition: background-color 200ms linear/, linha.trim());
-  // As animações da página: o laço do herói, a entrada das seções e o pulso do selo (as fichas entram por transição, uma a uma, e não correm).
-  for (const nome of ['cn-entrar', 'cn-aceno']) assert.match(css, new RegExp(`@keyframes ${nome}`));
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.cn-heroi__celular \.cn-tela \{ opacity: 0 !important; transition: none; \}\n  \.cn-heroi__celular \.cn-tela:nth-child\(2\) \{ opacity: 1 !important; \}/);
+  assert.deepEqual(semMovimento, [], 'fora do bloco "com movimento" não há animação nem transição');
+  // Nenhuma animação em laço: nada passa de uns segundos nem recomeça, então a página não precisa de botão de pausa (WCAG 2.2.2).
+  assert.doesNotMatch(css, /\binfinite\b/);
+  assert.doesNotMatch(css, /mundo-balanca/, 'os enfeites do mundo não balançam na página');
+  for (const nome of ['cn-entrar', 'cn-aceno', 'cn-marcador', 'cn-tabua-cai', 'cn-passos', 'cn-pulo']) assert.match(css, new RegExp(`@keyframes ${nome} `));
   assert.match(css, /cubic-bezier\(0\.2, 0\.8, 0\.2, 1\)/);
   assert.match(css, /\[data-revelar\]\[data-oculto\]:not\(\[data-revelado\]\) \{ opacity: 0; transform: translateY\(16px\); \}/);
-  assert.ok(desenhar().includes('aria-label="Pausar prévia do app"'));
+  // O céu do alto só acompanha a rolagem onde o navegador liga a animação a ela: quem move é a própria pessoa.
+  assert.match(css, /@supports \(animation-timeline: scroll\(\)\) \{\n    \.cn-heroi__ceu \{ animation: cn-ceu-se-afasta linear both; animation-timeline: scroll\(root block\); animation-range: 0 90vh; \}/);
+  // Parada, a página mostra o estado final inteiro: as tábuas no lugar e o Stu do outro lado.
+  assert.ok(sobra.includes(".cn-ponte:not([data-ponte='vazia']) .cn-lago__tabua { opacity: 1; }"));
+  assert.ok(sobra.includes(".cn-ponte[data-ponte='atravessada'] .cn-lago__stu { left: 70%; }"));
+  assert.ok(sobra.includes('.cn-material[data-fonte-aberta] .cn-marca { background-size: 100% 78%; box-shadow: none; }'));
 });
 
-test('a troca de tela do herói não deixa quadro vazio: a nova entra por cima da que sai, que fica inteira por baixo até a nova terminar, e só troca com a próxima captura carregada', () => {
-  const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-tela\[data-ativa\] \{ opacity: 1; z-index: 2; \}/, 'a tela de agora fica por cima');
-  assert.match(css, /\.cn-tela\[data-saindo\] \{ opacity: 1; z-index: 1; \}/, 'a que sai fica inteira por baixo (a soma das opacidades nunca cai abaixo de 1)');
-  assert.doesNotMatch(css, /\.cn-heroi__celular \.cn-tela \{ transition: opacity/, 'sem transição de opacidade nas telas (a que saía sumia na hora e a nova subia do zero)');
-  assert.match(css, /\.cn-heroi__celular \.cn-tela\[data-entrando\] \{ animation: cn-entrar 400ms cubic-bezier\(0\.2, 0\.8, 0\.2, 1\) both; \}/, 'a troca continua em 400 ms, com a nova subindo 12 px');
-  assert.doesNotMatch(css, /\.cn-tela\[data-ativa\] \{ animation/, 'a animação NÃO é da tela ativa em geral: reiniciava na primeira tela quando a página hidratava e ela piscava a 0 na carga');
-  assert.doesNotMatch(css, /\[data-pronto\] \.cn-tela/, 'nada de animação ligada pela hidratação (data-pronto)');
-  assert.match(css, /@keyframes cn-entrar \{ from \{ opacity: 0; transform: translateY\(12px\); \} to \{ opacity: 1; transform: none; \} \}/);
-  const ilha = ler('src/app/conheca/ilhas/celular-heroi.tsx');
-  assert.match(ilha, /data-saindo=\{indice === troca\.anterior \|\| undefined\}/, 'a que sai leva a marca na mesma troca em que a nova leva data-ativa');
-  assert.match(ilha, /data-entrando=\{\(indice === troca\.ativa && troca\.anterior !== null\) \|\| undefined\}/, 'só a tela que entra numa troca anima (a primeira, no carregamento, nunca)');
-  assert.match(ilha, /setTroca\(\{ ativa: proxima, anterior: ativaAgora\.current \}\);/, 'um estado só: nova e anterior mudam juntas');
-  assert.match(ilha, /onAnimationEnd=\{\(evento\) => \{ if \(evento\.target === evento\.currentTarget && indice === troca\.ativa\) soltarAnterior\(\); \}\}/, 'a que saiu só é solta quando a nova terminou de entrar');
-  assert.match(ilha, /imagem && imagem\.complete && imagem\.naturalWidth > 0/, 'só entra uma captura que já chegou');
-  assert.match(ilha, /if \(!pronta\(proxima\)\) \{ agendar\(250\); return; \}/, 'rede lenta: a atual fica e a pergunta se repete (nunca uma tela vazia)');
-  // Com movimento reduzido nada muda: só a proposta pronta, parada (o laço nem roda).
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.cn-heroi__celular \.cn-tela \{ opacity: 0 !important; transition: none; \}\n  \.cn-heroi__celular \.cn-tela:nth-child\(2\) \{ opacity: 1 !important; \}/);
-  assert.match(ilha, /!reduzido\.matches/);
-  // O teste de navegador (Chromium e WebKit, a cada 50 ms, dois ciclos, soma mínima 0,95) mora em scripts/qa/heroi-troca.mjs.
-  const roteiro = ler('scripts/qa/heroi-troca.mjs');
-  assert.match(roteiro, /ciclos \* 3 \* 3500/);
-  assert.match(roteiro, /setTimeout\(passo, 50\)/);
-  assert.match(roteiro, /argumento\("minimo", "0\.95"\)/);
-  assert.match(roteiro, /addInitScript/, 'a carga é amostrada desde o começo do documento (a primeira tela piscava na hidratação)');
-  assert.match(roteiro, /cargaOk && abaixo\.length === 0/);
-});
-
-test('as ilhas de movimento respeitam o movimento reduzido e a aba escondida, e só rodam com o herói na tela', () => {
-  const heroi = ler('src/app/conheca/ilhas/celular-heroi.tsx');
-  assert.match(heroi, /prefers-reduced-motion: reduce/);
-  assert.match(heroi, /document\.hidden/);
-  assert.match(heroi, /visibilitychange/);
-  assert.match(heroi, /IntersectionObserver/);
-  assert.match(heroi, /MS_POR_TELA = 3500/);
+test('as ilhas de movimento respeitam o movimento reduzido e a aba escondida', () => {
   const revelar = ler('src/app/conheca/ilhas/revelar.tsx');
   assert.match(revelar, /prefers-reduced-motion: reduce\)'\)\.matches\) return;/);
   const logo = ler('src/app/conheca/ilhas/logo.tsx');
   assert.match(logo, /source media="\(prefers-reduced-motion: reduce\)" srcSet="\/marca\/logo-com-sorriso\.svg"/);
   assert.match(logo, /setTimeout\(\(\) => setParado\(true\), 3200\)/, 'o logo acorda uma vez (um ciclo de 3 s)');
+  assert.match(ler('src/app/conheca/ilhas/ensinar.tsx'), /prefers-reduced-motion: reduce/);
   assert.match(ler('src/app/globals.css'), /html\[data-pausado='true'\] \*/, 'a aba escondida pausa toda animação CSS do site');
+  // Nenhuma ilha de cliente importa `ui/mundo` (que traz a folha de estilos dele): os desenhos chegam prontos do servidor. Importado numa ilha, o build com webpack
+  // pedia essa folha como script (erro no console) e os desenhos ficavam sem tamanho.
+  for (const arquivo of readdirSync(join(raiz, 'src/app/conheca/ilhas'))) {
+    const fonte = ler(`src/app/conheca/ilhas/${arquivo}`);
+    if (/^'use client'/.test(fonte)) assert.doesNotMatch(fonte, /from '(?:\.\.\/)+ui\/mundo'/, arquivo);
+  }
+  // As ilhas novas não põem relógio em laço: a ponte e a fonte só mudam com o toque, e a trilha só com a rolagem.
+  for (const ilha of ['ponte', 'material', 'trilha']) assert.doesNotMatch(ler(`src/app/conheca/ilhas/${ilha}.tsx`), /setInterval/, ilha);
 });
+

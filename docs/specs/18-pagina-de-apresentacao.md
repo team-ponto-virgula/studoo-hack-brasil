@@ -1,6 +1,6 @@
 # Página de apresentação do Studoo
 
-**Estado:** regra de design de 23/11, a pedido do dono: "quero que crie uma landing page para o studoo, com animações, boa CTA, seja uma ui e ux muito boa com foco no app". Só web. Ainda não implementada.
+**Estado:** regra de design de 23/11, a pedido do dono: "quero que crie uma landing page para o studoo, com animações, boa CTA, seja uma ui e ux muito boa com foco no app". Só web. **Revista em 28/11 (seção 0): a página virou uma trilha pelo mundo do Studoo.** A seção 0 vale sobre as outras quando divergirem.
 - **Objetivo principal:** a pessoa instalar o app no Android ou no iPhone.
 - **Objetivo secundário:** experimentar no navegador, sem conta.
 
@@ -14,6 +14,81 @@
 - **Animações leves**, com uma versão parada para movimento reduzido.
 - **Spec 07:** a página só existe na web.
 - **Música:** o mesmo ambiente de som do site.
+
+## 0. Revisão de 28/11: a página é uma trilha
+
+Pedido do dono em 28/11: estudar a UI e a UX das páginas de referência e criar "uma nova landing page para o studoo", "sensacional e única, com personalidade". Estudadas: Duolingo, Wondering, Lumia AI, Brilliant, StudyFetch, Kahoot! Study Path, Studey e Gizmo (o ThinkU não respondeu).
+
+### 0.1 A ideia
+- **A página é uma trilha do Studoo.** A pessoa desce pelo mesmo mundo do mapa do app. O alto é o campo, e cada parada é uma região do mapa (floresta, lago, montanhas, vila e nuvens), com o chão e o relevo de `src/ui/mundo-desenhos.ts` e a onda da fronteira de `src/ui/mundo.tsx`. A trilha termina à noite, com o troféu.
+- **Uma lição só, do caderno ao troféu.** As três primeiras paradas acompanham a mesma lição de exemplo, a de frações: a anotação vira lição com a fonte, o erro vira ponte e a pessoa ensina ao Stu. Depois vêm o assunto dela e o app no celular.
+- **O Stu é o anfitrião.** Ele recebe a pessoa no alto e diz uma frase curta em cada parada. Um Stu por parada, parado no lugar dele (nada flutua sobre o texto).
+- **Mostrar o produto, não contar.** Cada parada tem uma demonstração que a pessoa usa ali mesmo e, ao lado, a tela de verdade do app (seção 9), com o link para ampliar. Toda demonstração diz que é exemplo.
+
+### 0.2 Ordem e textos
+
+| # | Âncora | Região | Nó do cabeçalho | Lugar | Título | Fala do Stu |
+|---|---|---|---|---|---|---|
+| Alto | `#conteudo` | campo | — | — | "Seu caderno vira lição." | "Oi! Eu sou o Stu." |
+| 1 | `#material` | floresta | Caderno | Floresta das Anotações | "Seu material vira lição" | "Eu não invento nada. Toque no [1] e veja de onde saiu." |
+| 2 | `#ponte` | lago | Ponte | Lago da Ponte | "Errar não tira ponto. Vira ponte." | "Eu também erro. Por isso ando com tábuas na mochila." |
+| 3 | `#ensinar` | montanhas | Ensinar | Pico do Entendi | "Entendeu? Ensine ao Stu." | "Me explica como se eu tivesse faltado na aula." |
+| 4 | `#assuntos` | vila | Assuntos | Vila dos Assuntos | "O que você quer aprender?" | "Já estudei violão, frações e receita de bolo. Qual é o seu?" |
+| 5 | `#baixar` | nuvens | Instalar | Acima das Nuvens | "Leve o Stu no celular" | "Me leva no bolso?" |
+| Chegada | — | noite | — | Chegada | "Qual vai ser a sua primeira lição?" | — |
+
+- **Subtítulo do alto:** "Mande uma foto, um PDF ou só o assunto que você quer estudar. O Stu cria lições curtas e explica de outro jeito quando você erra." A imagem de compartilhar usa a última frase.
+- **As linhas das paradas 1, 2, 3 e 5** são as dos quatro momentos da seção 3 (a 5 continua dizendo "Com uma conta"). A da 4: "Comece por uma ideia pronta ou escreva a sua."
+- **No alto**, três fichas ao lado do Stu dizem as três entradas: "Foto do caderno", "PDF ou documento" e "Só o assunto". O convite "Começar · Veja uma lição nascer" leva à parada 1.
+- **Marco de cada parada:** o nó da trilha com o ícone, e a etiqueta "Parada N de 5" com o nome do lugar. A chegada leva só "Chegada".
+- Todos os textos ficam em `src/app/conheca/textos.ts`. O leitor de tela ouve "O Stu diz:" antes de cada fala.
+
+### 0.3 As demonstrações
+1. **Caderno.** Uma anotação de exemplo ("Frações") vira a lição "Numerador e denominador", com "Baseado no seu material [1]". Tocar no [1] abre o cartão "Fonte do seu material" e risca na anotação a frase citada. Embaixo, "O Studoo lê: Foto, PDF, DOCX, CSV, ou só o assunto". Ao lado, a captura do momento 1 e o link "Abrir PDF de exemplo".
+2. **Ponte.** A questão "Que fração do retângulo está pintada?" (3/5, 3/8 e 5/8). A resposta errada traz a pista daquele erro e "Outro jeito de entender", em 3 passos; no lago ao lado, três tábuas caem no lugar. Com o acerto, "Mandou bem!" e o Stu atravessa. Quem acerta de primeira lê "Se errasse, o Stu montaria uma ponte de 3 passos" e pode "Ver a ponte mesmo assim". A fala do Stu acompanha: "Três tábuas e a gente chega do outro lado." e "Chegamos! Errar fazia parte do caminho." O lago é desenho, fora do leitor de tela; o cartão diz tudo em texto.
+3. **Ensinar.** Duas explicações de exemplo ("Com exemplo" e "Bem curta"). Ao escolher, o Stu ouve por 900 ms e responde com os dois blocos do app, "O que fez sentido" e "O que revisar". Embaixo: "Retorno de exemplo. No app, o Stu responde ao que você escrever." O Stu troca de expressão como no app: curioso, concentrado, e depois animado ou dando força.
+4. **Assuntos.** O campo "O que você quer aprender?" e as seis ideias, como antes: começam a sessão de visitante com a ideia no campo. Ao lado, a trilha pronta no app.
+5. **Instalar.** As abas e os passos da S4, sem mudança, e o cartão do QR no computador. Ao lado, a mesma trilha no site e no app, com o selo "Progresso salvo agora".
+
+A resposta da questão, as pistas e os retornos ficam só na página. Nada aqui chama a IA nem cria conta.
+
+### 0.4 Cabeçalho
+- Uma cápsula que acompanha a página: o logo, a trilha das paradas e as ações.
+- **A trilha é a navegação e o andamento.** Cada nó leva à sua parada. Conforme a pessoa rola, o nó da vez fica azul e os que ficaram para trás viram ouro, como as lições concluídas do mapa; os marcos da própria página acompanham. A parada da vez é a última que já passou do meio da janela.
+- Até 1039 px os nomes somem e ficam só os nós (o nome continua para o leitor de tela, com 44 px de toque). Até 739 px a trilha vira a barra de andamento da lição, na borda de baixo da cápsula.
+- **Ações:** "Entrar" e, só depois que os botões do alto saem da tela, o convite do aparelho: "Experimentar sem conta" no computador e "Instalar" no celular (leva à parada 5). Quem já entrou vê só "Abrir o Studoo".
+
+### 0.5 Movimento
+Tudo dentro de `prefers-reduced-motion: no-preference`. Nenhuma animação em laço: nada se mexe sozinho por mais que uns segundos, então a página não precisa de botão de pausa (WCAG 2.2.2). Parada, a página mostra o estado final inteiro.
+
+| Onde | Gatilho | O que mostra |
+|---|---|---|
+| Alto | Ao abrir, uma vez | As nuvens assentam, o marcador risca "vira lição.", o Stu chega acenando, e o balão e as fichas entram |
+| Céu do alto | A rolagem, onde o navegador liga a animação a ela | O céu se afasta devagar; quem move é a pessoa |
+| Marcos e nós | A rolagem | O da vez acende; o que ficou para trás vira ouro, com um pulo curto |
+| Blocos de cada parada | 20% na tela, uma vez | Entram subindo 16 px em 400 ms |
+| Fonte (parada 1) | O toque no [1] | O marcador risca a frase citada e o cartão da fonte entra |
+| Ponte (parada 2) | A resposta | As tábuas caem uma a uma (150 ms entre elas) e, no acerto, o Stu atravessa |
+| Retorno do Stu (parada 3) | A escolha | Os dois blocos entram em sequência; sem movimento, vêm sem a pausa do "ouvindo" |
+| Fichas (parada 4) | A lista na tela, uma vez | Uma a uma, como na seção 4 |
+
+### 0.6 O que saiu e o que continua
+- **Saíram:** a primeira dobra em duas colunas com o caderno (1.2), o celular do herói com três telas em laço (1.4) e o botão de pausar a prévia, os quatro momentos em abas (S2), a faixa "Resolva uma com o Stu." e a tabela de animações da seção 4. O roteiro `scripts/qa/heroi-troca.mjs` saiu junto com o laço.
+- **Continuam como estão:** as decisões do Lead, os estados do botão por aparelho (1.3), a folha do iPhone (1.5), o cartão do QR (1.6, só na parada 5), os passos de instalar (S4), o rodapé (S6), as metas de acessibilidade e de peso (seção 5), a paridade (seção 7) e as capturas nativas, sem recorte (seção 9).
+- **Capturas em uso:** os momentos 1 a 4, a janela do momento 4 e a trilha pronta (herói 2) da plataforma de quem abre. As capturas 1 e 3 do herói ficam no conjunto, sem aparecer.
+- **Som:** a página é silenciosa, como já era no site. A seção 6 não vale.
+- **Imagem com prioridade:** agora é o Stu do alto, e não mais a primeira captura do herói.
+
+### 0.7 O Stu em tamanho grande
+O kit do produto (spec 13) vai até 480 px. Na página o Stu aparece maior, e uma tela de 2× pedia mais do que o kit tem. `scripts/otimizar-stu-landing.mjs` gera, dos mesmos originais e com o recorte e a qualidade da tabela do kit, as imagens da página em `public/landing/`, com até 90 KB cada, e escreve `src/app/conheca/stu.gerado.ts`. O kit e o catálogo do contrato não mudam.
+
+### 0.8 Conferência de 28/11
+Fotos do build de produção local, no Chromium. Ainda não é o site publicado.
+- **Larguras:** 320 × 568, 360 × 640, 390 × 844, 768 × 1024, 844 × 390 (deitado), 1280, 1440 e 1920. Nada passa da largura da janela. O botão principal fica inteiro na primeira dobra em todas.
+- **Acessibilidade:** o axe sem violações em 360, 390, 768 e 1280, também com a fonte aberta, a ponte montada, o acerto e o retorno do Stu. Alvos de toque com 44 px ou mais. A ordem do Tab segue a ordem da tela.
+- **Movimento reduzido:** tudo à vista desde o começo, sem animação nenhuma, e os estados finais das demonstrações inteiros.
+- **Peso:** cerca de 550 KB na primeira carga, e nenhum salto de layout medido (CLS 0).
+- **Não conferido:** Safari e aparelhos de verdade.
 
 ## 1. Herói e botão (primeira entrega, para o Web & API começar)
 
