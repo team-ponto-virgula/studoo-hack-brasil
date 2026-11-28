@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
+import { CAMINHOS_DOS_EMAILS } from '@studoo/contratos/autenticacao';
 import { origemStudoo, origemWebPermitida } from '../acesso/origem';
 import { emailCodigoCadastro, emailContaExistente, emailRecuperacao, type Email, type EnderecosEmail } from './modelos';
 
@@ -62,7 +63,9 @@ type Mensagem = { to: string; subject: string; html: string; text: string };
 function enderecos(origem?: string | null): EnderecosEmail {
   const base = (origem && origemWebPermitida(origem) ? origem : origemStudoo()) ?? 'http://localhost';
   const em = (caminho: string) => new URL(caminho, base).href;
-  return { recuperar: em('/recuperar'), entrar: em('/login'), suporte: em('/suporte') };
+  return {
+    cadastro: em(CAMINHOS_DOS_EMAILS.cadastro), recuperar: em(CAMINHOS_DOS_EMAILS.recuperar), entrar: em(CAMINHOS_DOS_EMAILS.entrar), suporte: em('/suporte'),
+  };
 }
 const montar = (to: string, { assunto, html, texto }: Email): Mensagem => ({ to, subject: assunto, html, text: texto });
 

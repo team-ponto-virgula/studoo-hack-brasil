@@ -77,6 +77,52 @@ export function codigoAceito(codigo: string): boolean {
   return new RegExp(`^\\d{${DIGITOS_CODIGO}}$`).test(codigo);
 }
 
+/*
+ * Os links dos e-mails. "Criar minha conta" e "Criar nova senha" levam o código já preenchido; no aparelho com o app, o
+ * link universal (iPhone) ou o App Link (Android) abre o app na mesma tela, e sem o app abre o site.
+ * - O código vai no fragmento (`#codigo=123456`): o fragmento não sai do aparelho (não chega ao servidor, aos registros
+ *   do proxy nem ao Referer), e quem abre a tela tira ele do endereço.
+ * - O e-mail da pessoa não vai no link (nenhum dado dela entra na mensagem): o app e o site lembram, só no aparelho, o
+ *   e-mail que pediu o código, pelo tempo que o código vale. Em outro aparelho, a tela pede o e-mail de novo.
+ */
+
+/** As telas que os links dos e-mails abrem (no site e, com o app instalado, no app). */
+export const CAMINHOS_DOS_EMAILS = { cadastro: '/cadastro', recuperar: '/recuperar', entrar: '/login' } as const;
+
+/** O endereço da tela com o código no fragmento. */
+export function linkComCodigo(endereco: string, codigo: string): string {
+  return `${endereco.split('#')[0]}#codigo=${encodeURIComponent(codigo)}`;
+}
+
+/** O código que veio no fragmento do link (`#codigo=…`, com ou sem o `#`); null sem código válido. */
+export function codigoDoFragmento(fragmento: string | null | undefined): string | null {
+  const achado = /(?:^|[#&])codigo=([^&#]*)/.exec(fragmento ?? '');
+  const codigo = achado ? achado[1] : '';
+  return codigoAceito(codigo) ? codigo : null;
+}
+
+/** Por quanto tempo o aparelho lembra o e-mail que pediu o código: o tempo que o código vale. */
+export const VALIDADE_EMAIL_LEMBRADO_MS = VALIDADE_CODIGO_MIN * 60_000;
+
+/** O que o aparelho guarda ao pedir um código: o e-mail e até quando ele vale. */
+export function lembrancaDoEmail(email: string, agora = Date.now()): string {
+  return JSON.stringify({ email, ate: agora + VALIDADE_EMAIL_LEMBRADO_MS });
+}
+
+/** O e-mail lembrado, se ainda vale e está no formato; null em qualquer outro caso (nada guardado, vencido, estragado). */
+export function emailDaLembranca(guardado: string | null | undefined, agora = Date.now()): string | null {
+  if (!guardado) return null;
+  try {
+    const dados: unknown = JSON.parse(guardado);
+    if (!dados || typeof dados !== 'object') return null;
+    const { email, ate } = dados as { email?: unknown; ate?: unknown };
+    if (typeof email !== 'string' || typeof ate !== 'number' || ate <= agora || ate > agora + VALIDADE_EMAIL_LEMBRADO_MS) return null;
+    return normalizarEmailEntrada(email);
+  } catch {
+    return null;
+  }
+}
+
 /** E-mail de retransmissão privada da Apple ("Ocultar meu e-mail"). */
 export function emailPrivadoApple(email: string): boolean {
   return email.trim().toLowerCase().endsWith("@privaterelay.appleid.com");

@@ -23,7 +23,7 @@ const opcao = (nome) => process.argv.find((a) => a.startsWith(`--${nome}=`))?.sl
 const tem = (nome) => process.argv.includes(`--${nome}`);
 const saida = resolve(opcao('saida') ?? '.studoo-local/emails-previa');
 const ORIGEM = 'https://app.hellostudoo.com.br';
-const enderecos = { recuperar: `${ORIGEM}/recuperar`, entrar: `${ORIGEM}/login`, suporte: `${ORIGEM}/suporte` };
+const enderecos = { cadastro: `${ORIGEM}/cadastro`, recuperar: `${ORIGEM}/recuperar`, entrar: `${ORIGEM}/login`, suporte: `${ORIGEM}/suporte` };
 // Códigos fictícios: nenhum código real passa por aqui.
 const modelos = {
   cadastro: { nome: 'Código de cadastro', email: emailCodigoCadastro({ codigo: '482913', enderecos }) },

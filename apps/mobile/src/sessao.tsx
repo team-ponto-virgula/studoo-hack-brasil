@@ -12,6 +12,7 @@ import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { CriarConta, enderecoDaPoliticaPublica } from './cadastro';
+import { emailDoCodigo, esquecerEmailDoCodigo, type AcessoPeloLink } from './codigo-do-link';
 import { BotaoPrecisaDeAjuda } from './seguranca';
 import { abrirNoNavegador } from './social';
 import { Estudo, type DestinoPublico } from './estudo';
@@ -34,13 +35,26 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Sessao =
   | { tipo: 'verificando' }
-  | { tipo: 'entrada'; erro?: string }
-  | { tipo: 'recuperar'; email: string }
-  | { tipo: 'cadastro'; email: string }
+  | { tipo: 'entrada'; erro?: string; email?: string }
+  | { tipo: 'recuperar'; email: string; codigo?: string }
+  | { tipo: 'cadastro'; email: string; codigo?: string }
   | { tipo: 'falha'; erro: string }
   | { tipo: 'ativa'; cliente: ClienteNativo; visitante?: boolean };
 
-export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
+/**
+ * Sem sessão no aparelho, o link do e-mail abre a tela dele (codigo-do-link.ts): entrar, criar conta ou recuperar a
+ * senha, com o código do link e o e-mail que pediu o código, se o app lembrar dele. Sem link, a entrada de sempre.
+ */
+async function telaDoLink(acesso?: AcessoPeloLink): Promise<Sessao> {
+  if (!acesso) return { tipo: 'entrada' };
+  const email = (await emailDoCodigo()) ?? '';
+  const codigo = acesso.codigo ?? undefined;
+  if (acesso.tela === 'cadastro') return { tipo: 'cadastro', email, codigo };
+  if (acesso.tela === 'recuperar') return { tipo: 'recuperar', email, codigo };
+  return { tipo: 'entrada', email };
+}
+
+export function AppMobile({ destino, acesso }: { destino?: DestinoPublico; acesso?: AcessoPeloLink } = {}) {
   const [sessao, setSessao] = useState<Sessao>({ tipo: 'verificando' });
   const [tentativa, setTentativa] = useState(0);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
@@ -64,7 +78,8 @@ export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
         const token = await lerToken();
         if (!ativo) return;
         if (!token) {
-          setSessao({ tipo: 'entrada' });
+          const inicial = await telaDoLink(acesso);
+          if (ativo) setSessao(inicial);
           return;
         }
 
@@ -95,6 +110,7 @@ export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
   async function cadastrar(email: string, codigo: string, senha: string) {
     const { token } = await criarClienteNativo().cadastrarNativo(email, codigo, senha);
     await abrirSessao(token);
+    void esquecerEmailDoCodigo();
   }
 
   /** Guarda o token novo no aparelho e abre o estudo; sem conseguir guardar, encerra a sessão no servidor. */
@@ -161,7 +177,7 @@ export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
         </ConsentimentoIa>
       );
     case 'entrada':
-      return <Entrada erroInicial={sessao.erro} entrar={entrar}
+      return <Entrada erroInicial={sessao.erro} emailInicial={sessao.email} entrar={entrar}
         google={continuarComGoogle}
         apple={continuarComApple}
         criarConta={(email) => setSessao({ tipo: 'cadastro', email })}
@@ -172,9 +188,9 @@ export function AppMobile({ destino }: { destino?: DestinoPublico } = {}) {
         }}
         recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':
-      return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
+      return <RecuperarAcesso emailInicial={sessao.email} codigoInicial={sessao.codigo} voltar={() => setSessao({ tipo: 'entrada' })} />;
     case 'cadastro':
-      return <CriarConta emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} criar={cadastrar}
+      return <CriarConta emailInicial={sessao.email} codigoInicial={sessao.codigo} voltar={() => setSessao({ tipo: 'entrada' })} criar={cadastrar}
         google={continuarComGoogle} apple={continuarComApple} />;
     case 'falha':
       return (
@@ -276,7 +292,7 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
   );
 }
 
-function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, recuperar }: {
+function Entrada({ erroInicial, emailInicial, entrar, google, apple, criarConta, visitante, recuperar }: {
   google: () => Promise<void>;
   /** "Continuar com a Apple" (App Review 4.8): só no iPhone e só com `apple: true` em /api/auth/config. */
   apple: () => Promise<void>;
@@ -286,6 +302,8 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
   visitante: () => Promise<void>;
   recuperar: (email: string) => void;
   erroInicial?: string;
+  /** O e-mail que pediu um código neste aparelho, quando a entrada abre pelo link "Entrar no Studoo" do e-mail. */
+  emailInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
 }) {
   // Como na web (rodada 4A): o Google e o "Esqueci minha senha" só aparecem quando o servidor os oferece; nada apagado.
@@ -324,7 +342,7 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
       .finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     return () => { ativo = false; };
   }, []);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailInicial ?? '');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(erroInicial);
   const [erroEmail, setErroEmail] = useState<string | undefined>();

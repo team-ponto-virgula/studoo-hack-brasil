@@ -61,7 +61,7 @@ test('MillionSend envia recuperação de senha via POST /emails transacional par
     assert.match(corpo.html, /^<!DOCTYPE html>\n<html lang="pt-BR"/);
     assert.match(corpo.html, />654321<\/p>/);
     assert.match(corpo.html, /Vale por 15&nbsp;minutos/);
-    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar"/);
+    assert.match(corpo.html, /<a href="https:\/\/studoo\.example\.test\/recuperar#codigo=654321"/);
     for (const parte of [corpo.subject, corpo.html, corpo.text]) {
       for (const segredo of [process.env.MILLIONSEND_API_KEY, 'pessoa@example.test', 'acesso@example.test']) assert.equal(parte.includes(segredo), false);
     }

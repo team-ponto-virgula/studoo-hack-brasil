@@ -3,16 +3,20 @@ import { Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
 import { Icone } from './icone';
 import { cores } from './tema';
 import { criarClienteNativo } from './api-nativa';
+import { esquecerEmailDoCodigo, lembrarEmailDoCodigo } from './codigo-do-link';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { ouvirVoltar } from './voltar';
 import { BotaoPrecisaDeAjuda } from './seguranca';
 
 const m = mensagens.acesso;
-export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string; voltar: () => void }) {
-  const [etapa, setEtapa] = useState<'email' | 'codigo' | 'pronto'>('email');
+/** Pelo botão do e-mail (link universal ou App Link), a tela já abre no passo da nova senha, com o código do link. */
+export function RecuperarAcesso({ emailInicial, codigoInicial, voltar }: { emailInicial: string; codigoInicial?: string; voltar: () => void }) {
+  const [etapa, setEtapa] = useState<'email' | 'codigo' | 'pronto'>(codigoInicial ? 'codigo' : 'email');
   const [email, setEmail] = useState(emailInicial);
-  const [codigo, setCodigo] = useState('');
+  const [codigo, setCodigo] = useState(codigoInicial ?? '');
+  /** O código veio do link do e-mail: com o e-mail lembrado neste aparelho ou sem ele. */
+  const [doLink, setDoLink] = useState<'com-email' | 'sem-email' | null>(codigoInicial ? (emailInicial ? 'com-email' : 'sem-email') : null);
   const [senha, setSenha] = useState('');
   const [confirmacao, setConfirmacao] = useState('');
   const [mostrar, setMostrar] = useState(false);
@@ -42,7 +46,8 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
     if (!emailValido()) { setErro(m.emailInvalido); return; }
     void executar(async () => {
       await criarClienteNativo().recuperarSenha(email.trim(), true);
-      setEtapa('codigo'); setEnviado(true); setEspera(60);
+      void lembrarEmailDoCodigo(email.trim());
+      setEtapa('codigo'); setEnviado(true); setEspera(60); setDoLink(null);
     });
   }
   function salvar() {
@@ -52,6 +57,7 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
     if (senha !== confirmacao) { setErro(m.senhasDiferentes); return; }
     void executar(async () => {
       await criarClienteNativo().redefinirSenha(email.trim(), codigo, senha, true);
+      void esquecerEmailDoCodigo();
       setSenha(''); setConfirmacao(''); setCodigo(''); setEtapa('pronto');
     });
   }
@@ -65,6 +71,8 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
       <Campo rotulo={m.email} testID="recuperar-email" value={email} onChangeText={v => { setEmail(v); setEnviado(false); setErro(undefined); }}
         autoCapitalize="none" keyboardType="email-address" autoComplete="email" maxLength={254} editable={!ocupado} />
       {enviado && <Text accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>{m.enviado}</Text>}
+      {doLink && <Text testID="recuperar-do-link" accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>
+        {doLink === 'com-email' ? m.codigoDoLink : m.codigoDoLinkSemEmail}</Text>}
       {etapa === 'codigo' && <>
         <Campo rotulo={m.codigo} testID="recuperar-codigo" value={codigo} onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setErro(undefined); }}
           keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxLength={6} editable={!ocupado} />
