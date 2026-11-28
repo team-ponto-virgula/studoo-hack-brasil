@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { mensagens } from '../packages/contratos/src/experiencia.ts';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
@@ -49,9 +50,10 @@ test('spec 19 (L4): "Ver o fim da trilha" é um atalho branco de 44 px (borda e 
 
 test('spec 19 (L7): "Por onde começamos?" abre com o Stu ao lado do título e o pedido com o rótulo "Seu pedido"; nas perguntas, o título fica sozinho', () => {
   const tela = ler('src/app/diagnostico.tsx');
+  assert.equal(mensagens.pedido.seuPedido, 'Seu pedido');
   assert.match(tela, /\{exibido \? cabecalho : <header className="pedido-heroi">/);
   assert.match(tela, /<div className="pedido-heroi__stu" aria-hidden="true"><Stu expressao="stu-curioso" tamanho=\{96\} animado="uma-vez" \/><\/div>/);
-  assert.match(tela, /<p className="diagnostico-pedido"><span>Seu pedido<\/span> <strong>\{objetivo\}<\/strong><\/p>/);
+  assert.match(tela, /<p className="diagnostico-pedido"><span>\{mensagens\.pedido\.seuPedido\}<\/span> <strong>\{objetivo\}<\/strong><\/p>/);
   assert.doesNotMatch(tela, /<p>\{objetivo\}<\/p>/);
   // O título continua um só, com o id e o foco de antes.
   assert.equal(tela.match(/<h1 /g)?.length, 1);

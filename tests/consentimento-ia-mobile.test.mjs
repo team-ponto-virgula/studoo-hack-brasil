@@ -99,6 +99,50 @@ test('sem permissão, "Agora não" barra o envio: nenhuma ação de IA chega ao 
   }
 });
 
+test('diagnóstico: recusar duas vezes preserva a tentativa, e permitir envia a primeira pergunta ou a opção original uma vez', async () => {
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  const inicio = estudo.indexOf('async function pedirPassoDiagnostico(');
+  const fim = estudo.indexOf('function iniciarPedido(', inicio);
+  assert.ok(inicio >= 0 && fim > inicio);
+  const consultar = ts.transpileModule(estudo.slice(inicio, fim), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const pergunta = { tipo: 'pergunta', id: 'diagnostico', numero: 1, pergunta: { id: 'pergunta' } };
+  for (const passo of [null, pergunta]) {
+    const atual = { current: { objetivo: 'Frações', anteriores: [], revisando: null, passo } };
+    const opcaoId = passo ? 'opcao-b' : undefined;
+    let permissao = false;
+    let cartoes = 0;
+    const chamadas = [];
+    const enviar = async (...args) => { chamadas.push(args); return { tipo: 'resultado' }; };
+    const cliente = comConsentimento({ iniciarDiagnostico: enviar, responderDiagnostico: enviar }, async () => {
+      cartoes++;
+      if (!permissao) throw new ErroStudoo('consentimento_ia');
+    }, assert.fail);
+    const pedir = runInNewContext(consultar + '\npedirPassoDiagnostico', {
+      cliente, diagnosticoAtual: atual, diagnosticoVisivel: { current: true }, passoVisivel: s => s.passo,
+      salvarDiagnostico: s => { atual.current = s; }, passoValido: () => true,
+      codigoDaFalha: e => e.codigo, sessaoInvalida: () => false, navegar: () => assert.fail('saiu do diagnóstico'),
+    });
+    await pedir(atual.current, opcaoId);
+    assert.equal(atual.current.erro.codigo, 'consentimento_ia');
+    await pedir(atual.current, atual.current.erro.opcaoId);
+    assert.equal(atual.current.erro.codigo, 'consentimento_ia');
+    assert.equal(atual.current.erro.opcaoId, opcaoId);
+    assert.equal(atual.current.passo, passo);
+    assert.deepEqual(chamadas, []);
+    permissao = true;
+    await pedir(atual.current, atual.current.erro.opcaoId);
+    assert.equal(cartoes, 3);
+    assert.equal(atual.current.erro, null);
+    assert.equal(atual.current.passo.tipo, 'resultado');
+    assert.deepEqual(chamadas, [passo ? ['diagnostico', 'pergunta', opcaoId] : ['Frações']]);
+  }
+  const tela = await ler('apps/mobile/src/diagnostico.tsx');
+  assert.match(tela, /erro === 'consentimento_ia' \? mensagens\.privacidade\.permitirAgora : mensagens\.tentarNovamente/);
+  assert.match(tela, /erro === 'consentimento_ia' \|\| erro === 'ia_indisponivel' \? mensagemDoCodigo\(erro\) : 'Não foi possível carregar a pergunta\./);
+  assert.match(tela, /acao=\{erro \? repetir : \(\) => consultar\(\)\}/);
+  assert.match(estudo, /repetir=\{\(\) => \{[^}]+pedirPassoDiagnostico\(atual, atual\.erro\.opcaoId\)/);
+});
+
 test('permitida uma vez, as ações seguem direto, sem perguntar de novo', async () => {
   const { cliente, chamadas } = clienteDuble();
   const t = trava({ aceita: true });

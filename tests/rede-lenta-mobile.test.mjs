@@ -6,6 +6,16 @@ import { test } from 'node:test';
 // parado sem dizer nada, sem navegação ou sem saída.
 const estudo = await readFile(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
 
+test('a espera da lição reserva a linha desde o começo, aguarda dois segundos e respeita o movimento reduzido', () => {
+  const tela = estudo.slice(estudo.indexOf('function SkeletonLicao('), estudo.indexOf('function TelaPlano('));
+  assert.match(tela, /setTimeout\(\(\) => setEsperaLonga\(true\), 2000\)/);
+  assert.match(tela, /return \(\) => clearTimeout\(espera\)/);
+  assert.match(tela, /new Animated\.Value\(0\)/);
+  assert.match(tela, /if \(!esperaLonga\) return;\s*if \(reduzir !== false\) \{ opacidade\.setValue\(1\); return; \}/);
+  assert.match(tela, /<Animated\.Text aria-hidden[^>]+opacity: opacidade[^>]*>\{texto\}…/);
+  assert.equal(tela.match(/accessibilityLabel=\{texto\}/g)?.length, 1);
+});
+
 test('1: na abertura, se o detalhe da trilha falha, Minhas trilhas mostra o erro com "Tentar novamente"', () => {
   const abertura = estudo.slice(estudo.indexOf('const inicial = planoInicial(lista);'), estudo.indexOf('void carregarPlanos();'));
   assert.match(abertura, /const plano = await cliente\.obterPlano\(inicial\.id\);/);
