@@ -43,3 +43,22 @@ test('a cópia repete a letra, o recuo e a borda do campo, no computador e no ce
   const celular = css.slice(css.indexOf('@media (max-width: 767px) {\n  .painel--pedido.pedido-novo'));
   assert.match(celular, /\.pedido-novo \.pedido-campo textarea \{ min-height: 88px; padding: 12px 16px; \}\s*\.pedido-novo \.pedido-campo__caixa::after \{ padding: 12px 16px; \}/);
 });
+
+// Refino para a banca (spec 19, M2): em telas largas, as ideias quebram em linhas dentro da coluna e as três saídas de texto ficam numa fileira só.
+test('spec 19 (M2): a partir de 768 px as ideias não rolam para o lado e as saídas de texto dividem uma fileira centralizada', () => {
+  const clareza = ler('src/app/clareza.css');
+  const inicio = clareza.indexOf('/* Nova trilha em telas largas (spec 19, M2).');
+  assert.ok(inicio > 0, 'o bloco de telas largas da Nova trilha existe');
+  const largo = clareza.slice(clareza.indexOf('@media (min-width: 768px) {', inicio));
+  assert.match(largo, /\.pedido-ideias \{ flex-wrap: wrap; margin: 2px 0 0; padding: 4px 0; overflow: visible; scroll-snap-type: none; \}/);
+  assert.match(largo, /\.painel--pedido\.pedido-novo \{ grid-template-columns: minmax\(0, 1fr\) auto auto auto minmax\(0, 1fr\); column-gap: 8px; \}/);
+  // Tudo ocupa a largura inteira, menos as saídas: uma coluna do meio para cada.
+  assert.match(largo, /\.painel--pedido\.pedido-novo > \* \{ grid-column: 1 \/ -1; \}/);
+  assert.match(largo, /\.painel--pedido\.pedido-novo > \.por-link__abrir \{ grid-column: 2; margin-top: 0; \}/);
+  assert.match(largo, /\.painel--pedido\.pedido-novo > \.por-link__abrir \+ \.por-link__abrir \{ grid-column: 3; \}/);
+  assert.match(largo, /\.painel--pedido\.pedido-novo > \.pedido-como \{ grid-column: 4; margin-top: 0; \}/);
+  // As saídas continuam filhas diretas da tela, depois das ideias: é disso que a fileira depende.
+  assert.match(pedido, /\{porLink\}\s*<button type="button" className="pedido-como" onClick=\{comoFunciona\}>/);
+  // No celular a fileira de ideias continua rolando para o lado.
+  assert.match(css, /\.pedido-ideias \{[^}]*flex-wrap: nowrap;[^}]*overflow-x: auto;/);
+});
