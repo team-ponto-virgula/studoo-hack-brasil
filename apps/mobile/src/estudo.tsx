@@ -1,4 +1,4 @@
-import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica, pedidoIdValido, type CriacaoPendente } from '@studoo/contratos';
+import { ESPERA_DA_GERACAO, dicaDaEspera, direcaoDaTroca, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica, pedidoIdValido, type CriacaoPendente } from '@studoo/contratos';
 import { AcompanharCriacao } from './acompanhar-criacao';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { MaterialEstudo, ProvedorIa } from '@studoo/contratos';
@@ -13,7 +13,7 @@ import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, expiraEmDaProposta, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, RolagemDaTela, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, DirecaoDaTrocaContexto, EstadoErro, RolagemDaTela, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { TextoComFormulas } from './texto-com-formulas';
@@ -158,6 +158,10 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
     if (planos) void guardarTinhaTrilhas(planos.length > 0);
   }, [planos]);
   const [etapa, setEtapa] = useState<Etapa>(() => destino ? { ...destino, voltar: { tipo: 'explorar' } } : { tipo: 'planos' });
+  // Troca de tela com direção (contrato `transicao-de-tela.ts`): quando a etapa muda, a direção da troca vai para a Tela nova,
+  // que entra pelo lado de quem avança ou volta. Calculada no próprio render, a partir da etapa anterior.
+  const [troca, setTroca] = useState<{ tipo: Etapa['tipo']; direcao: ReturnType<typeof direcaoDaTroca> }>(() => ({ tipo: etapa.tipo, direcao: null }));
+  if (troca.tipo !== etapa.tipo) setTroca({ tipo: etapa.tipo, direcao: direcaoDaTroca(troca.tipo, etapa.tipo) });
   // O pedido guardado quando a sessão terminou no meio volta para o campo (rodada 4 da web).
   const [objetivo, setObjetivo] = useState(() => tomarRascunho());
   const objetivoAtual = useRef(objetivo);
@@ -1106,7 +1110,9 @@ export function Estudo({ cliente, visitante, destino, sair, expirar }: {
   } : null}>
     {/* Os nomes de quem compartilhou (marcas, prévia, cartões) abrem o perfil dela dentro do app, como os links /p da web. */}
     <AbrirPerfil.Provider value={compartilhar ? abrirPerfilPublico : null}>
-      {renderizarTela()}
+      <DirecaoDaTrocaContexto.Provider value={troca.direcao}>
+        {renderizarTela()}
+      </DirecaoDaTrocaContexto.Provider>
     </AbrirPerfil.Provider>
     {folha && (
       <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
