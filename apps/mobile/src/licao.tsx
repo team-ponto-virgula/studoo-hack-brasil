@@ -244,6 +244,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Quem saiu no meio continua de onde parou.
   const [retomada] = useState(() => lerAndamento(licao, etapas, exercicios.length));
   const [passo, setPasso] = useState(retomada?.passo ?? 0);
+  // Troca de etapa com direção, como na web: voltar a uma etapa anterior entra pela esquerda; avançar, pela direita.
+  const [etapaVista, setEtapaVista] = useState({ passo, voltando: false });
+  if (etapaVista.passo !== passo) setEtapaVista({ passo, voltando: passo < etapaVista.passo });
   const [respostas, setRespostas] = useState<string[]>(() => exercicios.map((exercicio, numero) => respostaRetomada(exercicio, retomada?.respostas?.[numero])));
   /** Ordenar em lista única (spec 08, 19/11): a ordem com que cada tentativa começou (o "Voltar à ordem inicial" e a falta). */
   const [iniciais, setIniciais] = useState<string[]>(() => exercicios.map(respostaDoComeco));
@@ -826,7 +829,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       {/* Com a ponte aberta, a etapa fica recolhida (sem desmontar: a resposta e as medidas continuam), como na web 4D. */}
       <View style={ponteAberta ? licaoEstilos.recolhido : undefined}>
       {/* Como na web: na revisão rápida, a etapa entra de novo, mesmo com o mesmo exercício (o último, pulado agora). */}
-      <EntradaDaEtapa key={`${passo}-${rodadaDeOpcoes}`}>
+      <EntradaDaEtapa key={`${passo}-${rodadaDeOpcoes}`} voltando={etapaVista.voltando}>
         {passo > 0 && !revisao && (
           <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado || (ensinando && ensinoOcupado)} hitSlop={{ top: 10, bottom: 10, left: 0, right: 0 }}
             onPress={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }} style={licaoEstilos.voltarEtapa}>
@@ -1077,12 +1080,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   );
 }
 
-/** Cada etapa entra deslizando da direita, como na web; com movimento reduzido, já aparece pronta. */
-function EntradaDaEtapa({ children }: { children: ReactNode }) {
+/**
+ * Cada etapa entra deslizando, como na web: da direita ao avançar e da esquerda ao voltar a uma etapa anterior. Com
+ * movimento reduzido, já aparece pronta. A direção fica a do momento em que a etapa montou.
+ */
+function EntradaDaEtapa({ children, voltando = false }: { children: ReactNode; voltando?: boolean }) {
   const entrada = useAparecer(0, 380);
+  const [lado] = useState(() => (voltando ? -28 : 28));
   return (
     <Animated.View style={{
-      opacity: entrada, transform: [{ translateX: entrada.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }],
+      opacity: entrada, transform: [{ translateX: entrada.interpolate({ inputRange: [0, 1], outputRange: [lado, 0] }) }],
     }}>
       {children}
     </Animated.View>
