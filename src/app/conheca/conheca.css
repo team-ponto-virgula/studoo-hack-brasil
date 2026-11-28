@@ -1,439 +1,491 @@
-/* A apresentação usa apenas os recursos locais da marca. A largura do desenho e a da coluna
-   de leitura são independentes, para que o botão caiba mesmo em celulares pequenos. */
+/*
+ * A página de apresentação é uma trilha pelo mundo do Studoo: o alto é o campo, e cada parada é uma região do mapa do app
+ * (floresta, lago, montanhas, vila e nuvens), com o chão (--chao) e o relevo (--relevo) que o mapa usa. Só recursos locais da marca.
+ * Todo movimento fica dentro de `prefers-reduced-motion: no-preference`: parada, a página mostra tudo inteiro.
+ */
 .cn-pagina {
-  --cn-coluna: 1160px;
-  --cn-margem: clamp(18px, 4vw, 60px);
-  --cn-marinho: #11205a;
+  --cn-coluna: 1180px;
+  --cn-margem: clamp(18px, 4.4vw, 64px);
+  --cn-cabecalho: 76px;
+  --cn-topo-da-regiao: clamp(92px, 10.5vw, 148px);
+  --cn-marinho: #0b1b5c;
+  --cn-tinta: #3f4b6b;
   --cn-borda-cartao: #dce1f1;
+  --cn-labio: rgb(11 27 92 / 0.1);
+  --cn-estrada: #fff;
+  /* A madeira das tábuas: escura o bastante para o número branco passar de 4,5:1. */
+  --cn-madeira: #8a5d3c;
+  --cn-madeira-escura: #6b4424;
   --cn-passo-numero: 32px;
   --cn-passo-vao: 14px;
   --cn-botao-principal-computador: 280px;
   position: relative;
   overflow-x: clip;
   background: #fff;
-  color: var(--texto);
+  color: var(--cn-marinho);
 }
 @media (display-mode: standalone) { .cn-pagina[data-na-raiz] { visibility: hidden; } }
-.cn-pagina :where(h1, h2, h3, p) { margin: 0; }
+.cn-pagina :where(h1, h2, h3, p, figure, blockquote, ol, ul) { margin: 0; }
 .cn-pagina :where(h1, h2, h3) { text-wrap: balance; }
-.cn-pagina :where(a, button, input) { touch-action: manipulation; }
+.cn-pagina :where(a, button, input, label) { touch-action: manipulation; }
 .cn-secao { width: min(calc(100% - 2 * var(--cn-margem)), var(--cn-coluna)); margin-inline: auto; }
-.cn-secao__titulo { font: 850 clamp(2rem, 4.1vw, 3.7rem)/1.08 Nunito, sans-serif; letter-spacing: -.035em; color: var(--cn-marinho); }
-.cn-cabecalho, .cn-rodape, .cn-heroi { padding-inline: max(var(--cn-margem), calc((100% - var(--cn-coluna)) / 2)); }
-.cn-cabecalho {
-  position: relative;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  min-height: 72px;
-  border-bottom: 1px solid #e6e9f4;
-  background: white;
-}
-.cn-cabecalho .cn-logo img { display: block; width: clamp(105px, 11vw, 133px); height: auto; }
-.cn-menu { display: flex; align-items: center; gap: clamp(14px, 2vw, 29px); margin-inline: auto; }
-.cn-menu a, .cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; color: #4e5876; text-decoration: none; font-size: .95rem; font-weight: 800; }
-.cn-menu a:hover, .cn-rodape__links a:hover { color: var(--acao-escura); text-decoration: underline; text-underline-offset: 4px; }
-.cn-cabecalho__acoes { display: flex; align-items: center; gap: 10px; }
-.cn-cabecalho .cn-entrar { min-height: 44px; padding: 0 21px; background: #fff; border: 1.5px solid var(--cn-borda-cartao); border-radius: 13px; box-shadow: 0 2px 0 var(--cn-borda-cartao); text-decoration: none; }
-.cn-pagina .cn-entrar, .cn-pagina .cn-visitante-texto, .cn-pagina .cn-instalar-celular { color: var(--acao-escura); }
+.cn-icone { display: block; flex: none; }
+/*
+ * Os desenhos do mundo (src/ui/mundo.tsx) na página: o tamanho vem de --tam e a altura acompanha. A regra é a de mundo.css, repetida aqui com a página
+ * na frente: no build de produção, a folha do mundo pode chegar depois desta ou nem chegar com a página (ela vai num pedaço dividido com o app), e sem
+ * a regra cada desenho ficava do tamanho do próprio SVG (40 px). Fica no alto desta folha, para as regras de cada lugar poderem trocar o que precisam.
+ */
+.cn-pagina .mundo-desenho { display: block; width: var(--tam, 40px); height: auto; overflow: visible; }
 
-.cn-heroi {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.03fr);
-  align-items: center;
-  gap: clamp(32px, 5.5vw, 95px);
-  padding-block: clamp(28px, 3.8vw, 64px);
-  background: #fffdf8;
+/* ---------- Cabeçalho: uma cápsula que acompanha a página, com a trilha das paradas ---------- */
+.cn-cabecalho { position: sticky; top: 0; z-index: 4; height: var(--cn-cabecalho); padding: 10px var(--cn-margem) 0; pointer-events: none; }
+.cn-capsula {
+  position: relative; display: flex; align-items: center; gap: clamp(10px, 2vw, 26px); width: min(100%, var(--cn-coluna)); min-height: 60px; margin-inline: auto;
+  padding: 6px 8px 6px 18px; border: 2px solid transparent; border-radius: 22px; pointer-events: auto;
 }
-.cn-heroi:focus { outline: none; }
-.cn-heroi__texto { min-width: 0; }
-.cn-heroi__titulo { font: 850 clamp(3rem, 5.8vw, 5.5rem)/1.01 Nunito, sans-serif; color: var(--cn-marinho); letter-spacing: -.045em; }
-.cn-heroi__frase { display: block; text-wrap: balance; }
-.cn-heroi__frase:last-child { position: relative; isolation: isolate; width: fit-content; color: #2454dd; }
-.cn-heroi__frase:last-child::after {
-  content: ''; position: absolute; z-index: -1; left: 0; right: -.035em; bottom: .02em; height: .16em;
-  border-radius: 55% 25% 45% 15%; background: #ffdb81; transform: rotate(-2deg);
-}
-.cn-heroi__subtitulo { max-width: 41ch; margin-top: 20px; font: 650 clamp(1rem, 1.4vw, 1.23rem)/1.5 Nunito, sans-serif; color: #505e77; }
-.cn-acoes { display: grid; gap: 11px; width: 100%; margin-top: 26px; }
-.cn-acoes--computador, .cn-acoes--celular { max-width: 338px; }
-.cn-pagina .cn-botao-principal, .cn-instalar-celular, .cn-visitante-texto {
-  width: 100%; min-height: 51px; padding-inline: 18px; font: 850 1.02rem/1.22 Nunito, sans-serif; text-decoration: none;
-}
-.cn-pagina .cn-botao-principal { border-radius: 15px; }
-.cn-instalar-celular, .cn-visitante-texto { border: 1.5px solid var(--cn-borda-cartao); border-radius: 15px; background: #fff; box-shadow: 0 3px 0 var(--cn-borda-cartao); }
-.cn-botao-principal .cn-icone, .cn-icone { display: block; flex: none; }
+.cn-cabecalho[data-rolou] .cn-capsula { border-color: var(--cn-borda-cartao); background: rgb(255 255 255 / 0.96); box-shadow: 0 4px 0 var(--cn-labio), 0 16px 32px rgb(11 27 92 / 0.1); }
+.cn-capsula .cn-logo { flex: none; }
+.cn-capsula .cn-logo img { display: block; width: clamp(96px, 10vw, 124px); height: auto; }
+.cn-trilha { position: relative; flex: 1 1 auto; min-width: 0; }
+.cn-trilha__lista { display: flex; align-items: center; justify-content: center; gap: clamp(2px, 1vw, 14px); padding: 0; list-style: none; }
+.cn-trilha__parada { position: relative; }
+.cn-trilha__parada a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; border-radius: 14px; color: #47557a; font: 800 0.93rem/1.2 Nunito, sans-serif; text-decoration: none; }
+.cn-trilha__no { flex: none; width: 14px; height: 14px; border: 2.5px solid #9fb0ec; border-radius: 50%; background: #fff; }
+.cn-trilha__parada[data-estado='atual'] a { color: var(--cn-marinho); background: #e9efff; }
+.cn-trilha__parada[data-estado='atual'] .cn-trilha__no { border: 0; background: var(--acao); box-shadow: 0 0 0 4px rgb(37 99 255 / 0.2); }
+.cn-trilha__parada[data-estado='feito'] .cn-trilha__no { border: 0; background: var(--ouro); box-shadow: 0 2px 0 var(--ouro-escuro); }
+@media (hover: hover) { .cn-trilha__parada a:hover { color: var(--acao-escura); background: #eef3ff; } }
+.cn-trilha__barra { display: none; }
+.cn-cabecalho__acoes { display: flex; flex: none; align-items: center; gap: 8px; margin-left: auto; }
+.cn-cabecalho .cn-entrar { min-height: 46px; padding: 0 16px; border-radius: 14px; text-decoration: none; }
+.cn-cabecalho .cn-entrar--abrir, .cn-cabecalho .cn-capsula__convite { min-height: 46px; padding: 0 18px; border-radius: 14px; font: 850 0.98rem/1.2 Nunito, sans-serif; text-decoration: none; white-space: nowrap; }
+.cn-pagina .cn-entrar:not(.cn-entrar--abrir), .cn-pagina .cn-visitante-texto, .cn-pagina .cn-instalar-celular { color: var(--acao-escura); }
+/* O convite do cabeçalho só entra quando os botões do alto já saíram da tela: antes disso, ele repetiria o botão que está logo abaixo. */
+.cn-cabecalho:not([data-passou-do-alto]) .cn-capsula__convite { display: none; }
+@media (scripting: none) { .cn-cabecalho:not([data-passou-do-alto]) .cn-capsula__convite { display: inline-flex; } }
+
+/* ---------- Botões da página: os do Studoo (face e degrau), um pouco maiores ---------- */
+.cn-acoes { display: grid; gap: 12px; width: 100%; margin-top: 28px; }
+.cn-acoes--computador, .cn-acoes--celular { max-width: 348px; }
+.cn-pagina .cn-botao-principal, .cn-instalar-celular, .cn-visitante-texto { width: 100%; min-height: 56px; padding-inline: 20px; font: 850 1.06rem/1.22 Nunito, sans-serif; text-decoration: none; }
+.cn-pagina .cn-botao-principal { border-radius: 18px; box-shadow: 0 5px 0 var(--labio); }
+.cn-pagina .cn-botao-principal:active:not(:disabled) { box-shadow: 0 1px 0 var(--labio); transform: translateY(4px); }
+.cn-instalar-celular, .cn-visitante-texto { border: 2px solid var(--cn-borda-cartao); border-radius: 18px; background: #fff; box-shadow: 0 4px 0 var(--cn-borda-cartao); }
 .cn-instalar-celular .cn-icone { width: 19px; height: 19px; }
-.cn-apoio { color: #505e77; font-size: .875rem; line-height: 1.42; }
+.cn-apoio { color: var(--cn-tinta); font-size: 0.875rem; line-height: 1.42; }
 /* A reserva segue a mesma fonte e a mesma quebra da ajuda do iPad, inclusive com zoom. */
 .cn-reserva-ipad { visibility: hidden; }
 .cn-apoio--instalar { color: var(--texto); }
-.cn-erro { color: var(--erro); font-size: .9rem; font-weight: 750; }
-.cn-pagina .botao[data-enviando] { opacity: .7; pointer-events: none; }
+.cn-erro { color: var(--erro); font-size: 0.9rem; font-weight: 750; }
+.cn-pagina .botao[data-enviando] { opacity: 0.7; pointer-events: none; }
 .cn-botao-principal[data-baixando] { background: var(--sucesso); }
 
-/* Capa, folha quadriculada, lombada e fita de um caderno. As duas imagens são do Studoo. */
-.cn-heroi__palco { position: relative; width: 100%; max-width: min(590px, 74svh); aspect-ratio: 1.28; margin: 0 auto; isolation: isolate; }
-.cn-caderno {
-  position: absolute; inset: 10% 4% 13% 4%; transform: rotate(-5deg); border-radius: 5px 22px 18px 5px;
-  background-color: #edf2ff; background-image: linear-gradient(#bccbeb73 1px, transparent 1px), linear-gradient(90deg, #bccbeb73 1px, transparent 1px);
-  background-size: 7% 9%; border: 1px solid #c4ceec; border-left: 8px solid #97ace0;
-  box-shadow: 0 5px #fafbff, 0 7px #bac6e4, 5px 13px #a4b6ee, 4px 20px 30px #35487a14;
+/* ---------- O alto da página: o campo, com o Stu recebendo a pessoa ---------- */
+.cn-heroi {
+  position: relative; overflow: clip; margin-top: calc(-1 * var(--cn-cabecalho));
+  padding-top: calc(var(--cn-cabecalho) + clamp(18px, 3.6vw, 56px));
+  background: linear-gradient(180deg, #c3daff 0%, #d9e7ff 36%, #ecf3ff 70%, #f5f9ff 100%);
 }
-.cn-caderno::before {
-  content: ''; position: absolute; left: -4%; top: 7%; bottom: 4%; width: 8%;
-  background: repeating-linear-gradient(180deg, #52658c 0 3%, transparent 3% 13%); border-radius: 4px;
+.cn-heroi:focus { outline: none; }
+.cn-heroi__ceu { position: absolute; inset: 0; pointer-events: none; }
+.cn-heroi__sol { position: absolute; top: clamp(70px, 9vw, 120px); right: clamp(8px, 6vw, 110px); --tam: clamp(86px, 12vw, 190px); }
+.cn-nuvem { position: absolute; }
+.cn-nuvem--1 { top: clamp(78px, 6.6vw, 98px); left: 49%; --tam: clamp(86px, 10.5vw, 168px); opacity: 0.95; }
+.cn-nuvem--2 { top: 46%; left: 46.5%; --tam: clamp(60px, 7.4vw, 120px); opacity: 0.75; }
+.cn-nuvem--3 { top: 31%; right: -1.5%; --tam: clamp(54px, 8vw, 128px); opacity: 0.8; }
+.cn-heroi__balao { position: absolute; top: 23%; left: 47.5%; --tam: clamp(22px, 2.6vw, 40px); }
+.cn-heroi__miolo {
+  position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr); align-items: center;
+  gap: clamp(24px, 4vw, 70px); padding-bottom: clamp(210px, 23vw, 330px);
 }
-.cn-caderno::after { content: ''; position: absolute; top: -4%; right: 8%; width: 28%; height: 10%; background: #f7d57bbd; transform: rotate(12deg); }
-.cn-caderno span { position: absolute; inset: 0 auto 0 11%; border-left: 2px solid #ebadb8; }
-.cn-heroi__palco .cn-heroi__celular { position: absolute; top: 4%; left: 17%; width: 33%; transform: rotate(-9deg); }
-.cn-heroi__celular .cn-celular { --celular: 100%; border-width: clamp(4px, .55vw, 8px); border-radius: 16% / 7.5%; box-shadow: 5px 8px 0 #bdc9ef, 0 15px 21px #12265b22; }
-.cn-heroi__celular .cn-celular__tela { border-radius: 13% / 6%; }
-.cn-heroi__celular .cn-celular__ilha { top: 1.3%; height: 3.3%; }
-.cn-heroi__celular [data-plataforma='android'] .cn-celular__ilha { top: 1%; width: 3.7%; height: 1.7%; }
-.cn-heroi__stu { position: absolute; z-index: 2; width: 53%; left: 45%; bottom: 16%; transform: rotate(4deg); filter: drop-shadow(0 10px 7px #203a8b24); }
-.cn-heroi__stu img { display: block; width: 100%; height: auto; }
-.cn-heroi__exemplo {
-  position: absolute; z-index: 3; right: 2%; bottom: 5%; display: inline-flex; align-items: center; gap: 9px; min-height: 44px;
-  padding: 7px 16px; border-radius: 9px; border: 1px solid #d6b761; box-shadow: 0 3px 0 #dec47b;
-  background: #fff0b5; color: #4b370f; font: 850 1rem/1.24 Nunito, sans-serif; text-decoration: none; transform: rotate(-3deg);
+.cn-heroi__texto { min-width: 0; }
+.cn-heroi__titulo { font: 900 clamp(3rem, 6.5vw, 6.1rem)/0.99 Nunito, sans-serif; letter-spacing: -0.047em; color: var(--cn-marinho); }
+.cn-heroi__frase { display: block; text-wrap: balance; }
+.cn-heroi__frase:last-child { position: relative; isolation: isolate; width: fit-content; color: #1f4fd8; }
+.cn-heroi__frase:last-child::after {
+  content: ''; position: absolute; z-index: -1; left: 0; right: -0.035em; bottom: 0.03em; height: 0.17em;
+  border-radius: 55% 25% 45% 15%; background: #ffd666; transform: rotate(-2deg); transform-origin: left center;
 }
-.cn-heroi__exemplo:hover { background: #ffe392; }
-.cn-heroi__exemplo span, .cn-assunto button span { font-size: 1.25em; }
-@media (prefers-reduced-motion: no-preference) {
-  .cn-heroi__stu { animation: cn-aceno 900ms ease-out 1; }
-}
-.cn-previa-controle {
-  position: absolute; left: 30%; bottom: -5%; transform: translateX(-50%); display: inline-flex;
-  align-items: center; justify-content: center; gap: 9px; min-height: 44px; padding: 0 9px; border: 0;
-  background: transparent; color: #354575; cursor: pointer; border-radius: 12px;
-}
-.cn-previa-controle span { display: flex; align-items: center; gap: 4px; }
-.cn-previa-controle i { display: block; width: 6px; height: 6px; border-radius: 99px; background: #9aa8cb; }
-.cn-previa-controle i[data-atual] { width: 15px; background: #3c5192; }
-.cn-previa-controle::after { content: ''; width: 8px; height: 10px; border-inline: 3px solid currentColor; }
-.cn-previa-controle[data-parada]::after { width: 0; border: solid transparent; border-width: 5px 0 5px 8px; border-left-color: currentColor; }
-@media (prefers-reduced-motion: reduce), (scripting: none) { .cn-previa-controle { display: none; } }
-@keyframes cn-aceno { 0% { transform: translateY(6%) rotate(-3deg); } 65% { transform: translateY(-2%) rotate(6deg); } 100% { transform: rotate(4deg); } }
+.cn-heroi__subtitulo { max-width: 40ch; margin-top: 22px; font: 650 clamp(1.04rem, 1.5vw, 1.3rem)/1.5 Nunito, sans-serif; color: var(--cn-tinta); }
+.cn-heroi__palco { position: relative; display: grid; justify-items: center; align-content: end; min-width: 0; min-height: clamp(250px, 33vw, 460px); margin-bottom: calc(-1 * clamp(70px, 8.5vw, 132px)); }
+.cn-heroi__figura { position: relative; }
+.cn-heroi__stu { position: relative; display: block; width: clamp(196px, 27vw, 368px); }
+.cn-heroi__stu::after { content: ''; position: absolute; z-index: -1; left: 16%; right: 12%; bottom: -1%; height: 9%; border-radius: 50%; background: rgb(11 27 92 / 0.16); filter: blur(6px); }
+.cn-stu { display: block; width: 100%; height: auto; }
 
-@media (max-width: 739px) {
-  .cn-cabecalho { min-height: 58px; }
-  .cn-menu { display: none; }
-  .cn-cabecalho__acoes { margin-left: auto; }
-  .cn-heroi { grid-template-columns: 1fr; gap: 22px; padding-block: 28px 25px; }
-  .cn-heroi__palco { width: min(96%, 38svh, 350px); }
-  .cn-heroi__texto { text-align: left; }
-  .cn-heroi__titulo { font-size: clamp(2.7rem, 10.8vw, 3.9rem); }
-  .cn-heroi__subtitulo { max-width: 42ch; margin: 12px 0 0; }
-  .cn-heroi .cn-acoes { max-width: 420px; margin: 18px 0 0; }
-  .cn-heroi__exemplo { right: -2%; bottom: 2%; min-height: 44px; padding-inline: 10px; font-size: .87rem; }
+/* O que o Stu diz: um balão. */
+.cn-fala {
+  position: relative; max-width: 30ch; padding: 11px 16px 12px; border: 2px solid rgb(11 27 92 / 0.08); border-radius: 20px 20px 20px 6px;
+  background: #fff; box-shadow: 0 4px 0 var(--cn-labio); color: var(--cn-marinho); font: 800 1.02rem/1.35 Nunito, sans-serif; text-wrap: balance;
 }
-@media (min-width: 740px) and (max-width: 1039px) {
-  .cn-heroi { gap: 28px; padding-block: 50px; }
-  .cn-heroi__titulo { font-size: clamp(3.1rem, 6.3vw, 4.1rem); }
+.cn-heroi__ola { position: absolute; z-index: 2; right: 74%; bottom: 82%; width: max-content; border-radius: 20px 20px 6px 20px; font-size: clamp(1rem, 1.5vw, 1.24rem); transform: rotate(-4deg); }
+.cn-entradas { position: absolute; inset: 0; padding: 0; list-style: none; pointer-events: none; }
+.cn-entrada {
+  position: absolute; display: inline-flex; align-items: center; gap: 9px; padding: 7px 14px 7px 7px; border: 2px solid rgb(11 27 92 / 0.07); border-radius: 17px;
+  background: #fff; box-shadow: 0 4px 0 var(--cn-labio); color: var(--cn-marinho); font: 800 clamp(0.8rem, 1.1vw, 0.96rem)/1.2 Nunito, sans-serif; white-space: nowrap;
 }
-@media (min-width: 1040px) {
-  .cn-heroi .cn-acoes { grid-template-columns: max-content max-content; align-items: start; gap: 12px 14px; max-width: none; }
-  .cn-heroi .cn-apoio, .cn-heroi .cn-erro { grid-column: 1 / -1; max-width: 47ch; }
-}
-@media (orientation: landscape) and (max-height: 520px) and (min-width: 560px) {
-  .cn-heroi { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 22px; padding-block: 20px; }
-  .cn-heroi__palco { width: min(100%, 78svh); }
-  .cn-heroi__texto { text-align: left; }
-  .cn-heroi__titulo { font-size: 2.65rem; }
-  .cn-heroi__subtitulo { margin: 10px 0 0; }
-  .cn-heroi .cn-acoes { margin: 16px 0 0; }
-}
-/* O cartão do QR: 196 × 248, borda de 2 px, raio 20. */
-.cn-qr {
-  display: grid;
-  width: 196px;
-  min-height: 248px;
-  box-sizing: border-box;
-  grid-template-rows: auto auto auto 1fr;
-  justify-items: center;
-  gap: 6px;
-  padding: 12px 12px 4px;
-  border: 2px solid var(--cn-borda-cartao);
-  border-radius: 20px;
-  background: #fff;
-  text-align: center;
-}
-.cn-qr__titulo { margin: 0; font: 800 0.9375rem/20px Nunito, sans-serif; letter-spacing: 0; color: var(--texto); }
-.cn-qr__codigo { display: block; width: 136px; height: 136px; }
-.cn-qr__codigo svg { display: block; width: 100%; height: 100%; }
-.cn-qr__legenda { margin: 0; font-size: 0.875rem; line-height: 20px; font-weight: 700; color: var(--texto); }
-.cn-qr__arquivo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 4px; font-size: 0.8125rem; line-height: 18px; font-weight: 700; color: var(--acao-escura); text-decoration: underline; text-underline-offset: 3px; }
-.cn-painel__qr .cn-qr { display: grid; margin-inline: auto; }
+.cn-entrada__icone { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: #e9efff; color: var(--acao-escura); }
+.cn-entrada:nth-child(1) { top: 49%; left: -6%; transform: rotate(-5deg); }
+.cn-entrada:nth-child(1) .cn-entrada__icone { background: #fff0c9; color: #8a5a00; }
+.cn-entrada:nth-child(2) { top: 9%; right: -3%; transform: rotate(4deg); }
+.cn-entrada:nth-child(3) { top: 62%; right: -7%; transform: rotate(-3deg); }
+.cn-entrada:nth-child(3) .cn-entrada__icone { background: #efe7ff; color: var(--violeta-texto); }
 
-/* ---------- O celular (moldura própria do Studoo) ---------- */
-.cn-celular {
-  --celular: 260px;
-  position: relative;
-  box-sizing: border-box;
-  width: var(--celular);
-  border: 10px solid var(--cn-marinho);
-  border-radius: 44px;
-  background: var(--cn-marinho);
-  box-shadow: 0 24px 48px rgb(11 27 92 / 0.18);
+.cn-heroi__chao { position: absolute; right: 0; bottom: 0; left: 0; z-index: 1; height: clamp(190px, 25vw, 360px); pointer-events: none; }
+.cn-colinas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+/* A estrada sai dos pés do Stu, que só fica à direita nas telas largas. */
+.cn-colinas__estrada { display: none; }
+@media (min-width: 1040px) { .cn-colinas__estrada { display: inline; } }
+.cn-enfeite { position: absolute; top: var(--t, auto); right: var(--xr, auto); bottom: var(--b, auto); left: var(--x, auto); }
+/* O convite do primeiro marco, como o balão do nó no mapa do app. */
+.cn-comecar {
+  position: absolute; z-index: 3; left: 50%; bottom: 112px; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 7px 14px 7px 8px;
+  border: 2px solid rgb(11 27 92 / 0.08); border-radius: 18px; background: #fff; box-shadow: 0 5px 0 var(--cn-labio); color: var(--cn-marinho);
+  font: 850 1rem/1.2 Nunito, sans-serif; text-decoration: none; white-space: nowrap; translate: -50% 0;
 }
-.cn-celular__tela { position: relative; overflow: hidden; border-radius: 34px; background: #fff; aspect-ratio: 1206 / 2622; }
-.cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
-.cn-celular__ilha { position: absolute; z-index: 3; top: 8px; left: 50%; width: 28%; height: 20px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
-.cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 10px; height: 10px; border-radius: 50%; }
-/* A captura mantém a proporção e entra inteira na moldura. O <picture> só escolhe o formato. */
-.cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
-/* O atributo hidden VALE: sem esta regra o `display: block` acima passava por cima do display: none do navegador e as telas 2 e 3 do herói (hidden + loading="lazy") eram buscadas na carga, junto com a primeira. */
-.cn-captura[hidden] { display: none; }
-.cn-celular__tela picture, .cn-janela__tela picture { display: contents; }
-/* Sem JavaScript, as capturas que só se buscam perto da tela (<picture data-carregar-perto>) somem e o <noscript> de cada uma traz a de verdade. */
-@media (scripting: none) { .cn-celular__tela picture[data-carregar-perto], .cn-janela__tela picture[data-carregar-perto] { display: none; } }
-.cn-tela { position: absolute; inset: 0; opacity: 0; }
-.cn-tela[data-ativa] { opacity: 1; z-index: 2; }
-/* A tela que sai fica INTEIRA e por baixo até a nova terminar de entrar por cima dela: nenhum quadro vazio na troca (a soma das opacidades nunca cai abaixo de 1). */
-.cn-tela[data-saindo] { opacity: 1; z-index: 1; }
+.cn-comecar__selo { padding: 6px 11px; border-radius: 11px; background: var(--acao); color: #fff; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.cn-comecar .cn-icone { width: 20px; height: 20px; color: var(--acao-escura); }
+@media (hover: hover) { .cn-comecar:hover { background: #f1f5ff; } }
 
-/* Com movimento reduzido: só a proposta pronta, parada (a segunda captura). */
-@media (prefers-reduced-motion: reduce) {
-  .cn-heroi__celular .cn-tela { opacity: 0 !important; transition: none; }
-  .cn-heroi__celular .cn-tela:nth-child(2) { opacity: 1 !important; }
-  .cn-heroi__celular .cn-tela:nth-child(2) .cn-captura[hidden] { display: block !important; }
+/* ---------- As paradas: regiões do mapa, com a onda da fronteira, o marco e o título ---------- */
+.cn-regiao, .cn-chegada { position: relative; scroll-margin-top: 124px; }
+.cn-regiao { padding-block: var(--cn-topo-da-regiao) clamp(110px, 12vw, 176px); background: var(--chao); }
+.cn-onda { position: absolute; bottom: calc(100% - 1px); left: 0; display: block; width: 100%; height: clamp(30px, 4.6vw, 66px); }
+.cn-regiao__enfeites, .cn-chegada__ceu { position: absolute; inset: 0; overflow: clip; pointer-events: none; }
+/* O relevo da região, como no mapa: duas manchas largas do tom de cima, atrás de tudo. */
+.cn-regiao__enfeites::before, .cn-regiao__enfeites::after { content: ''; position: absolute; border-radius: 50%; background: var(--relevo); opacity: 0.55; }
+.cn-regiao__enfeites::before { top: 16%; left: -14%; width: 46%; height: 30%; }
+.cn-regiao__enfeites::after { right: -16%; bottom: 9%; width: 52%; height: 34%; }
+.cn-regiao__miolo, .cn-chegada__miolo { position: relative; }
+.cn-intro { display: grid; justify-items: center; text-align: center; margin-bottom: clamp(26px, 3.6vw, 48px); }
+.cn-marco { display: grid; justify-items: center; margin-top: calc(-1 * (var(--cn-topo-da-regiao) + 38px + 64px)); }
+.cn-marco__estrada { width: 8px; height: 56px; margin-bottom: 8px; border-radius: 4px; background: repeating-linear-gradient(180deg, var(--cn-estrada) 0 9px, transparent 9px 20px); }
+.cn-marco__no {
+  position: relative; display: grid; place-items: center; width: 76px; height: 76px; border: 3px dashed #8da2f2; border-radius: 50%;
+  background: #fff; box-shadow: 0 6px 0 var(--cn-labio); color: var(--acao-escura);
 }
-@media (prefers-reduced-motion: no-preference) {
-  .cn-heroi__celular .cn-tela[data-entrando] { animation: cn-entrar 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.cn-marco__icone .cn-icone { width: 32px; height: 32px; }
+.cn-marco__visto { position: absolute; display: none; }
+.cn-marco[data-estado='atual'] .cn-marco__no { border-color: transparent; background: var(--acao); box-shadow: 0 6px 0 var(--acao-escura), 0 0 0 10px rgb(37 99 255 / 0.16); color: #fff; }
+.cn-marco[data-estado='feito'] .cn-marco__no { border-color: transparent; background: var(--ouro); box-shadow: 0 6px 0 var(--ouro-escuro); color: #5b3d00; }
+.cn-marco[data-estado='feito'] .cn-marco__icone { visibility: hidden; }
+.cn-marco[data-estado='feito'] .cn-marco__visto { display: block; }
+.cn-marco__rotulo {
+  display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; margin-top: 18px; padding: 6px 14px; border-radius: 999px; background: #fff;
+  box-shadow: 0 3px 0 var(--cn-labio); color: var(--cn-marinho); font: 850 0.8rem/1.3 Nunito, sans-serif; letter-spacing: 0.05em; text-transform: uppercase;
 }
-@keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.cn-marco__numero { color: var(--acao-escura); }
+.cn-titulo { max-width: 19ch; margin-top: 20px; font: 900 clamp(2.05rem, 4.5vw, 3.85rem)/1.04 Nunito, sans-serif; letter-spacing: -0.04em; color: var(--cn-marinho); }
+.cn-linha { max-width: 50ch; margin-top: 14px; font: 600 clamp(1.02rem, 1.45vw, 1.22rem)/1.5 Nunito, sans-serif; color: var(--cn-tinta); }
 
+/* O Stu da parada e a fala dele. */
+.cn-anfitriao { display: flex; align-items: flex-end; justify-content: center; gap: 6px; margin-bottom: clamp(20px, 3vw, 36px); }
+.cn-anfitriao__stu { flex: none; width: clamp(104px, 12vw, 150px); }
+.cn-anfitriao .cn-fala { margin-bottom: clamp(26px, 4vw, 52px); }
+.cn-anfitriao--lado { justify-content: flex-start; margin-bottom: 4px; }
+.cn-anfitriao--lado .cn-fala { margin-bottom: clamp(24px, 3.4vw, 44px); }
 
-/* Uma folha com a fonte e, ao lado, a questão que a pessoa já consegue responder. */
-.cn-licao {
-  background: #183763; color: white;
-  background-image: radial-gradient(ellipse at 14% 120%, #284d79, transparent 54%);
+/* O palco da parada: a demonstração e, ao lado, a tela de verdade do app. */
+.cn-palco { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: clamp(26px, 4vw, 60px); }
+.cn-palco__demo { min-width: 0; }
+.cn-questao, .cn-licao-exemplo, .cn-caderno-stu, .cn-instalador, .cn-pedido {
+  border: 2px solid rgb(11 27 92 / 0.07); border-radius: 28px; background: #fff; box-shadow: 0 6px 0 var(--cn-labio);
 }
-.cn-licao__miolo {
-  display: grid; grid-template-columns: minmax(0, .93fr) minmax(0, 1.07fr); align-items: center;
-  gap: clamp(28px, 8vw, 112px); padding-block: clamp(40px, 5.5vw, 76px);
+.cn-selo {
+  display: inline-flex; align-items: center; padding: 5px 11px; border-radius: 10px; background: #e9efff; color: var(--acao-escura);
+  font: 850 0.76rem/1.2 Nunito, sans-serif; letter-spacing: 0.07em; text-transform: uppercase;
 }
-.cn-licao__origem { min-width: 0; }
-.cn-licao .cn-secao__titulo { max-width: 13ch; color: #fff; }
+.cn-legenda { color: #505b78; font-size: 0.85rem; line-height: 1.4; }
+.cn-noapp { display: grid; justify-items: center; gap: 14px; width: clamp(190px, 19vw, 226px); }
+.cn-noapp .cn-celular { --celular: 100%; transform: rotate(3deg); }
+.cn-noapp__legenda { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.cn-noapp__titulo { color: var(--cn-marinho); font: 800 0.9rem/1.3 Nunito, sans-serif; }
+.cn-noapp__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 14px; }
+.cn-noapp__links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--acao-escura); font-size: 0.88rem; font-weight: 800; text-underline-offset: 4px; }
+
+/* ---------- Parada 1: a anotação vira lição, com a fonte ---------- */
+.cn-material { display: grid; grid-template-columns: minmax(0, 0.8fr) auto minmax(0, 1.2fr); align-items: center; gap: clamp(6px, 1.4vw, 18px); }
 .cn-anotacao {
-  position: relative; width: min(94%, 378px); margin: 32px 0 0 5px; padding: 20px 20px 21px 32px;
-  border-radius: 3px 8px 12px 3px; background: #fff6dd; color: #322c25; box-shadow: 3px 5px #c8bc96; transform: rotate(-2deg);
+  position: relative; padding: 22px 20px 24px 34px; border-radius: 4px 10px 14px 4px; background: #fff6dd; box-shadow: 4px 6px 0 #d9cda6; color: #322c25; transform: rotate(-3deg);
 }
-.cn-anotacao::before { content: ''; position: absolute; inset: 0 auto 0 17px; border-left: 1px solid #dba99d; }
-.cn-anotacao::after { content: ''; position: absolute; top: -8px; right: 15%; width: 56px; height: 17px; background: #f9ce75ce; transform: rotate(7deg); }
-.cn-anotacao figcaption { font-size: .8rem; font-weight: 850; color: #665538; }
-.cn-anotacao blockquote { margin: 6px 0 0; }
-.cn-anotacao strong { display: block; font: 850 1.65rem/1.15 Nunito, sans-serif; letter-spacing: -.03em; }
-.cn-anotacao p { margin-top: 7px; background: repeating-linear-gradient(transparent 0 calc(1.5em - 1px), #dcd4bb calc(1.5em - 1px) 1.5em); font: 650 1.025rem/1.5 Nunito, sans-serif; }
-.cn-questao { min-width: 0; padding: clamp(22px, 3.6vw, 44px); border-radius: 24px; background: #fff; color: var(--cn-marinho); box-shadow: 0 6px 0 #0e284b; }
-.cn-questao h3 { max-width: 24ch; font: 850 clamp(1.4rem, 2.25vw, 2rem)/1.16 Nunito, sans-serif; letter-spacing: -.028em; }
-.cn-fracao {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(100%, 260px); gap: 3px;
-  margin-block: 22px; padding: 3px; background: #183968; border-radius: 9px; overflow: hidden;
+.cn-anotacao::before { content: ''; position: absolute; inset: 0 auto 0 19px; border-left: 1.5px solid #e0a69a; }
+.cn-anotacao::after { content: ''; position: absolute; top: -9px; right: 16%; width: 62px; height: 19px; background: rgb(249 206 117 / 0.85); transform: rotate(6deg); }
+.cn-anotacao figcaption { color: #6a5731; font-size: 0.8rem; font-weight: 850; }
+.cn-anotacao blockquote { margin-top: 6px; }
+.cn-anotacao strong { display: block; font: 900 1.7rem/1.15 Nunito, sans-serif; letter-spacing: -0.03em; }
+.cn-anotacao p { margin-top: 8px; background: repeating-linear-gradient(transparent 0 calc(1.6em - 1px), #dcd4bb calc(1.6em - 1px) 1.6em); font: 650 1.04rem/1.6 Nunito, sans-serif; }
+.cn-marca { padding: 0 2px; border-radius: 3px; background: linear-gradient(#ffd666, #ffd666) no-repeat 0 60% / 0% 78%; box-shadow: inset 0 -2px 0 #e0b040; color: inherit; }
+.cn-material[data-fonte-aberta] .cn-marca { background-size: 100% 78%; box-shadow: none; }
+.cn-vira { display: grid; justify-items: center; color: #2f6f52; font: 900 0.92rem/1 Nunito, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.cn-vira svg { display: block; width: clamp(60px, 7vw, 108px); height: auto; }
+.cn-licao-exemplo { display: grid; gap: 12px; justify-items: start; padding: clamp(18px, 2.4vw, 28px); }
+.cn-licao-exemplo h3 { font: 700 clamp(1.3rem, 2vw, 1.62rem)/1.2 Quicksand, sans-serif; letter-spacing: -0.02em; color: var(--cn-marinho); }
+.cn-explica { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; width: 100%; }
+.cn-explica__stu { width: 52px; margin-top: 4px; }
+.cn-explica__balao { display: grid; gap: 8px; justify-items: start; padding: 14px 16px; border: 2px solid var(--gelo); border-radius: 6px 18px 18px 18px; background: #f7f9ff; }
+.cn-explica__balao p { color: var(--cn-marinho); font-size: 1rem; line-height: 1.5; }
+.cn-explica__quem { font: 700 1.06rem/1.25 Quicksand, sans-serif; }
+.cn-citar {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--cn-tinta);
+  font: 800 0.9rem/1.2 Nunito, sans-serif; cursor: pointer;
 }
+.cn-citar__numero { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 26px; padding: 0 7px; border-radius: 9px; background: var(--acao); color: #fff; font: 850 0.84rem/1 Nunito, sans-serif; }
+.cn-citar[aria-expanded='false'] .cn-citar__numero { box-shadow: 0 0 0 4px rgb(37 99 255 / 0.2); }
+.cn-fonte { width: 100%; padding: 12px 14px; border: 2px solid #c9d7ff; border-radius: 16px; background: #f1f5ff; }
+.cn-fonte[hidden] { display: none; }
+.cn-fonte__origem { display: flex; align-items: center; gap: 8px; color: var(--acao-escura); font: 850 0.78rem/1.3 Nunito, sans-serif; letter-spacing: 0.05em; text-transform: uppercase; }
+.cn-fonte blockquote { margin-top: 6px; color: var(--cn-marinho); font-size: 0.98rem; line-height: 1.45; }
+@media (scripting: none) { .cn-fonte[hidden] { display: block; } .cn-citar { display: none; } }
+.cn-formatos { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: clamp(22px, 3vw, 34px); color: var(--cn-tinta); font: 800 0.94rem/1.2 Nunito, sans-serif; }
+.cn-formato { padding: 6px 12px; border-radius: 11px; background: #fff; box-shadow: 0 3px 0 var(--cn-labio); color: var(--cn-marinho); }
+
+/* ---------- Parada 2: a questão e a ponte ---------- */
+.cn-ponte { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr); align-items: start; gap: clamp(18px, 2.6vw, 34px); }
+.cn-ponte__lado { display: grid; gap: clamp(14px, 2vw, 24px); min-width: 0; }
+.cn-ponte__lado .cn-anfitriao { margin-bottom: 0; }
+.cn-questao { display: grid; justify-items: start; min-width: 0; padding: clamp(20px, 2.8vw, 34px); }
+.cn-questao h3 { max-width: 22ch; margin-top: 12px; font: 900 clamp(1.4rem, 2.3vw, 1.95rem)/1.16 Nunito, sans-serif; letter-spacing: -0.028em; color: var(--cn-marinho); }
+.cn-fracao { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; width: min(100%, 268px); margin-block: 20px; padding: 3px; overflow: hidden; border-radius: 10px; background: #183968; }
 .cn-fracao span { aspect-ratio: 1.9; background: #f3f6ff; }
 .cn-fracao span[data-pintada] { background: repeating-linear-gradient(135deg, #245bd1 0 7px, #84adff 7px 10px); }
-.cn-respostas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.cn-respostas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; width: 100%; }
 .cn-respostas button {
-  min-height: 53px; border: 1.5px solid #bac8e3; border-radius: 12px; background: #fff;
-  box-shadow: 0 3px 0 #c4d1e7; color: var(--cn-marinho); font: 850 1.3rem/1 Nunito, sans-serif; cursor: pointer;
+  min-height: 56px; border: 2px solid #bac8e3; border-radius: 15px; background: #fff; box-shadow: 0 4px 0 #c4d1e7;
+  color: var(--cn-marinho); font: 900 1.34rem/1 Nunito, sans-serif; cursor: pointer;
 }
-@media (hover: hover) { .cn-respostas button:where(:not([aria-disabled], [data-resultado])):hover { background: #eef3ff; border-color: #6485ca; } }
-.cn-respostas button[data-resultado='acerto'] { border-color: #257051; background: #e0f5e7; box-shadow: 0 3px 0 #257051; color: #195037; }
-.cn-respostas button[data-resultado='pista'] { border-color: #9b6419; background: #fff1cf; box-shadow: 0 3px 0 #9b6419; color: #75480e; }
+@media (hover: hover) { .cn-respostas button:where(:not([aria-disabled], [data-resultado])):hover { border-color: #6485ca; background: #eef3ff; } }
+.cn-respostas button:active:not([aria-disabled]) { box-shadow: 0 1px 0 #c4d1e7; transform: translateY(3px); }
+.cn-respostas button[data-resultado='acerto'] { border-color: #257051; background: #e0f5e7; box-shadow: 0 4px 0 #257051; color: #195037; }
+.cn-respostas button[data-resultado='pista'] { border-color: #9b6419; background: #fff1cf; box-shadow: 0 4px 0 #9b6419; color: #75480e; }
 .cn-respostas button[aria-disabled] { cursor: default; }
-.cn-questao .cn-retorno { margin-top: 18px; min-height: 1.5em; color: #495c77; font-size: .96rem; line-height: 1.5; }
-.cn-retorno[data-resultado] { padding: 10px 14px; border-left: 3px solid #d69e39; border-radius: 0 9px 9px 0; background: #fff6de; }
-.cn-questao .cn-retorno[data-resultado='acerto'] { background: #e6f6eb; border-color: #35815b; color: #205438; }
-.cn-questao__fim { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 3px; }
-.cn-questao__fim a, .cn-questao__fim button, .cn-questao summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--acao-escura); font: 850 .95rem/1.3 Nunito, sans-serif; cursor: pointer; }
-.cn-questao__fim button { background: none; border: 0; padding: 0; color: #465774; text-decoration: underline; }
-@media (max-width: 739px) {
-  .cn-licao__miolo { grid-template-columns: 1fr; gap: 20px; padding-block: 31px; }
-  .cn-licao .cn-secao__titulo { max-width: none; }
-  .cn-anotacao { width: min(96%, 420px); margin: 18px 0 0 3px; padding: 12px 16px 14px 27px; transform: rotate(-1deg); }
-  .cn-anotacao strong { font-size: 1.22rem; }
-  .cn-anotacao p { font-size: .98rem; margin-top: 3px; }
-  .cn-questao { border-radius: 17px; padding: 21px 17px; }
-  .cn-fracao { margin-block: 16px; }
-  .cn-respostas { gap: 8px; }
-}
-@media (scripting: none) { .cn-respostas, .cn-retorno, .cn-assunto { display: none; } }
+.cn-retorno { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; width: 100%; min-height: 1.5em; margin-top: 16px; color: #495c77; font-size: 0.97rem; line-height: 1.5; }
+.cn-retorno p { grid-column: 2; }
+.cn-retorno:not([data-resultado]) p { grid-column: 1 / -1; }
+.cn-retorno__stu { width: 48px; }
+.cn-retorno[data-resultado] { padding: 10px 14px; border: 2px solid #ecc777; border-radius: 16px; background: #fff6de; color: #5a3f0c; }
+.cn-retorno[data-resultado='acerto'] { border-color: #8fcfa9; background: #e6f6eb; color: #1c4c33; }
+.cn-tabuas { width: 100%; margin-top: 14px; padding: 14px 16px 12px; border: 2px dashed #d7b48f; border-radius: 18px; background: #fff9f1; }
+.cn-tabuas__titulo { color: #6b4424; font: 700 1.08rem/1.3 Quicksand, sans-serif; }
+.cn-tabuas__lista { display: grid; gap: 8px; margin-top: 10px; padding: 0; list-style: none; }
+.cn-tabuas__lista li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; color: #3d2a17; font-size: 0.97rem; line-height: 1.4; }
+.cn-tabuas__numero { display: grid; place-items: center; width: 44px; height: 30px; border-radius: 9px; background: var(--cn-madeira); box-shadow: 0 3px 0 var(--cn-madeira-escura); color: #fff; font: 900 0.95rem/1 Nunito, sans-serif; }
+.cn-tabuas__volta { margin-top: 10px; color: #6b4424; font-size: 0.92rem; font-weight: 800; }
+.cn-questao__fim { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 18px; margin-top: 6px; }
+.cn-questao__fim a, .cn-questao__fim button, .cn-questao summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--acao-escura); font: 850 0.95rem/1.3 Nunito, sans-serif; cursor: pointer; }
+.cn-questao__fim button { padding: 0; border: 0; background: none; color: #465774; text-decoration: underline; text-underline-offset: 4px; }
+.cn-questao__fim .cn-questao__ponte { color: #6b4424; }
+@media (scripting: none) { .cn-respostas, .cn-retorno, .cn-assunto, .cn-explicacoes, .cn-retorno-stu { display: none; } }
+/* O lago: o desenho do que o cartão diz. As tábuas ficam nos encaixes; o Stu vai de uma margem à outra. */
+.cn-lago { position: relative; overflow: hidden; aspect-ratio: 8 / 5; border: 2px solid rgb(11 27 92 / 0.07); border-radius: 28px; box-shadow: 0 6px 0 var(--cn-labio); container-type: inline-size; }
+.cn-lago__chao { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.cn-lago__encaixe { fill: rgb(255 255 255 / 0.22); stroke: #fff; stroke-width: 2.5; stroke-dasharray: 6 6; }
+.cn-lago__tabua { opacity: 0; }
+.cn-lago__tabua text { fill: #fff; font: 900 20px Nunito, sans-serif; }
+.cn-ponte:not([data-ponte='vazia']) .cn-lago__tabua { opacity: 1; }
+.cn-ponte:not([data-ponte='vazia']) .cn-lago__encaixe { opacity: 0; }
+.cn-lago__enfeite { position: absolute; }
+.cn-lago__barco { top: 9%; left: 46%; --tam: 9cqw; }
+.cn-lago__arvore { top: 8%; left: 7%; --tam: 11cqw; }
+.cn-lago__arbusto { right: 5%; bottom: 7%; --tam: 11cqw; }
+.cn-lago__flores { top: 12%; left: 24%; --tam: 6cqw; }
+.cn-lago__bandeira { top: 39%; right: 9%; --tam: 6.4cqw; }
+.cn-lago__placa { position: absolute; bottom: 9%; padding: 0.9cqw 2cqw; border-radius: 2cqw; background: #fff; box-shadow: 0 0.6cqw 0 var(--cn-labio); color: var(--cn-marinho); font: 850 clamp(0.66rem, 2.7cqw, 0.86rem)/1.3 Nunito, sans-serif; white-space: nowrap; }
+.cn-lago__placa--travou { left: 4%; }
+.cn-lago__placa--exercicio { top: 22%; right: 3.5%; bottom: auto; }
+.cn-lago__stu { position: absolute; bottom: 30%; left: 10%; width: 15.5cqw; }
+.cn-lago__stu img { display: block; width: 100%; height: auto; }
+.cn-ponte[data-ponte='atravessada'] .cn-lago__stu { left: 70%; }
 
-/* Um assunto livre ou uma das seis ideias do app, usando o mesmo rascunho. */
-.cn-s3 {
-  padding-block: clamp(44px, 6.7vw, 92px) clamp(36px, 5.2vw, 72px); border-bottom: 1px solid #dce2ee; background: #fff;
-}
-.cn-s3 .cn-secao__titulo { margin-bottom: 20px; }
-.cn-assunto { max-width: 670px; margin-bottom: 17px; }
+/* ---------- Parada 3: ensine ao Stu ---------- */
+.cn-ensinar { display: grid; grid-template-columns: clamp(150px, 19vw, 226px) minmax(0, 1fr); align-items: center; gap: clamp(12px, 2vw, 28px); }
+.cn-ensinar__aluno { display: grid; justify-items: center; gap: 6px; min-width: 0; }
+.cn-ensinar__fala { border-radius: 20px 20px 6px 20px; font-size: 0.98rem; }
+.cn-ensinar__stu { position: relative; width: 100%; aspect-ratio: 1; }
+.cn-ensinar__stu::after { content: ''; position: absolute; z-index: 0; left: 18%; right: 18%; bottom: 3%; height: 8%; border-radius: 50%; background: rgb(11 27 92 / 0.14); filter: blur(5px); }
+.cn-ensinar__stu img { position: absolute; z-index: 1; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; visibility: hidden; opacity: 0; }
+.cn-ensinar__stu img[data-visivel] { visibility: visible; opacity: 1; }
+.cn-caderno-stu { display: grid; gap: 16px; padding: clamp(18px, 2.6vw, 30px); }
+.cn-explicacoes { min-width: 0; margin: 0; padding: 0; border: 0; }
+.cn-explicacoes legend { margin-bottom: 12px; padding: 0; color: var(--cn-marinho); font: 700 1.14rem/1.3 Quicksand, sans-serif; }
+.cn-explicacoes__lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cn-explicacao { position: relative; display: block; min-width: 0; cursor: pointer; }
+.cn-explicacao input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.cn-explicacao__cartao { display: grid; gap: 6px; height: 100%; padding: 14px 16px; border: 2px solid #c9d1ea; border-radius: 18px; background: #fff; box-shadow: 0 4px 0 #d5dbee; }
+.cn-explicacao__rotulo { color: var(--violeta-texto); font: 850 0.78rem/1.2 Nunito, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
+.cn-explicacao__texto { color: var(--cn-marinho); font-size: 0.98rem; line-height: 1.45; }
+.cn-explicacao input:checked + .cn-explicacao__cartao { border-color: var(--acao); background: #eef3ff; box-shadow: 0 4px 0 var(--acao-escura); }
+.cn-explicacao input:focus-visible + .cn-explicacao__cartao { outline: 3px solid var(--acao); outline-offset: 3px; }
+@media (hover: hover) { .cn-explicacao input:hover:not(:checked) + .cn-explicacao__cartao { background: #f6f8ff; } }
+.cn-retorno-stu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-height: 132px; }
+.cn-retorno-stu__espera { grid-column: 1 / -1; align-self: center; padding: 18px; border: 2px dashed #c9d1ea; border-radius: 18px; color: var(--cn-tinta); font-weight: 700; text-align: center; }
+.cn-retorno-stu__bloco { padding: 14px 16px; border: 2px solid #bfe3cf; border-radius: 18px; background: #eefaf2; }
+.cn-retorno-stu__bloco[data-tipo='revisar'] { border-color: #f1d79b; background: #fff8e6; }
+.cn-retorno-stu__titulo { color: #17503a; font: 700 1.04rem/1.3 Quicksand, sans-serif; }
+.cn-retorno-stu__bloco[data-tipo='revisar'] .cn-retorno-stu__titulo { color: #6b4703; }
+.cn-retorno-stu__bloco ul { display: grid; gap: 6px; margin-top: 8px; padding: 0; list-style: none; }
+.cn-retorno-stu__bloco li { position: relative; padding-left: 24px; color: var(--cn-marinho); font-size: 0.96rem; line-height: 1.42; }
+.cn-retorno-stu__bloco li::before { content: '✓'; position: absolute; left: 0; color: #1f7a5a; font-weight: 900; }
+.cn-retorno-stu__bloco[data-tipo='revisar'] li::before { content: '•'; left: 6px; color: #9a5b00; }
+
+/* ---------- Parada 4: o assunto da pessoa ---------- */
+.cn-pedido { padding: clamp(18px, 2.8vw, 34px); }
+.cn-assunto { margin-bottom: 18px; }
 .cn-assunto__linha { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
 .cn-assunto input {
-  flex: 1 1 215px; width: 100%; min-width: 0; min-height: 51px; padding: 10px 16px; border: 1.5px solid #a6b5d0; border-radius: 12px;
-  background: #f8faff; color: #192c4c; font: 650 1.04rem/1.4 Nunito, sans-serif;
+  flex: 1 1 215px; width: 100%; min-width: 0; min-height: 58px; padding: 10px 18px; border: 2px solid #7b8aaf; border-radius: 16px;
+  background: #f8faff; color: #192c4c; font: 650 1.1rem/1.4 Nunito, sans-serif;
 }
 .cn-assunto input::placeholder { color: #5c6a81; }
 .cn-assunto input[aria-invalid] { border-color: #a53121; }
-.cn-assunto .botao { min-height: 51px; gap: 9px; padding-inline: 24px; border-radius: 12px; }
+.cn-assunto .botao { min-height: 58px; gap: 9px; padding-inline: 26px; border-radius: 16px; box-shadow: 0 5px 0 var(--labio); font-size: 1.04rem; }
+.cn-assunto .botao span { font-size: 1.25em; }
 .cn-assunto .cn-erro { margin-top: 8px; }
-@media (max-width: 480px) {
-  .cn-assunto input { flex-basis: 140px; padding-inline: 10px; font-size: 1rem; }
-  .cn-assunto .botao { padding-inline: 12px; }
-}
-.cn-fichas__lista { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 11px; margin: 0; padding: 0; list-style: none; }
-.cn-ficha-item { min-width: 0; --pastel: #eee5ff; --relevo: #c4b2ec; }
-.cn-ficha-item:nth-child(2) { --pastel: #dcf1ff; --relevo: #a5d5f6; }
-.cn-ficha-item:nth-child(3) { --pastel: #ffedd7; --relevo: #f3c593; }
-.cn-ficha-item:nth-child(4) { --pastel: #ffedc3; --relevo: #ebcc8a; }
-.cn-ficha-item:nth-child(5) { --pastel: #e4ecff; --relevo: #b7c8f9; }
-.cn-ficha-item:nth-child(6) { --pastel: #ddf6e9; --relevo: #a9d9c6; }
+.cn-fichas__lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; padding: 0; list-style: none; }
+.cn-ficha-item { min-width: 0; --pastel: #eee5ff; --relevo-da-ficha: #c4b2ec; }
+.cn-ficha-item:nth-child(2) { --pastel: #dcf1ff; --relevo-da-ficha: #a5d5f6; }
+.cn-ficha-item:nth-child(3) { --pastel: #ffedd7; --relevo-da-ficha: #f3c593; }
+.cn-ficha-item:nth-child(4) { --pastel: #ffedc3; --relevo-da-ficha: #ebcc8a; }
+.cn-ficha-item:nth-child(5) { --pastel: #e4ecff; --relevo-da-ficha: #b7c8f9; }
+.cn-ficha-item:nth-child(6) { --pastel: #ddf6e9; --relevo-da-ficha: #a9d9c6; }
 .cn-ficha.botao {
-  display: flex; width: 100%; min-width: 0; min-height: 58px; gap: 9px; padding: 7px 10px; justify-content: flex-start;
-  border: 1.5px solid var(--cn-borda-cartao); border-radius: 15px; box-shadow: 0 3px 0 #e3e7f0;
-  background: #fff; color: var(--cn-marinho); font: 850 1rem/1.2 Nunito, sans-serif; text-align: left; text-decoration: none;
+  display: flex; width: 100%; min-width: 0; min-height: 62px; gap: 10px; padding: 8px 12px; justify-content: flex-start;
+  border: 2px solid var(--cn-borda-cartao); border-radius: 17px; background: #fff; box-shadow: 0 4px 0 #e3e7f0;
+  color: var(--cn-marinho); font: 850 1.02rem/1.2 Nunito, sans-serif; text-align: left; text-decoration: none;
 }
-.cn-ficha__icone { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: var(--pastel); box-shadow: 0 2px 0 var(--relevo); }
-.cn-ficha__icone .mundo-desenho { display: block; width: 25px; height: 25px; }
-@media (hover: hover) { .cn-ficha.botao:hover { background: var(--pastel); border-color: var(--relevo); } }
-@media (max-width: 960px) { .cn-fichas__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 540px) {
-  .cn-fichas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-  .cn-ficha.botao { min-height: 48px; font-size: .93rem; }
-  .cn-ficha__icone { width: 29px; height: 29px; border-radius: 9px; }
-  .cn-ficha__icone .mundo-desenho { width: 21px; height: 21px; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  /* As seis entram uma a uma, uma vez, quando a lista chega à tela (a ilha Revelar põe data-oculto e depois data-revelado): 300 ms cada, 60 ms entre elas, subindo 8 px. Só `opacity` e `transform`. */
-  .cn-ficha-item { transition: opacity 300ms ease-out, transform 300ms ease-out; }
-  .cn-ficha-item:nth-child(2) { transition-delay: 60ms; }
-  .cn-ficha-item:nth-child(3) { transition-delay: 120ms; }
-  .cn-ficha-item:nth-child(4) { transition-delay: 180ms; }
-  .cn-ficha-item:nth-child(5) { transition-delay: 240ms; }
-  .cn-ficha-item:nth-child(6) { transition-delay: 300ms; }
-  [data-revelar-itens][data-oculto]:not([data-revelado]) > .cn-ficha-item { opacity: 0; transform: translateY(8px); }
-}
+.cn-ficha__icone { display: grid; flex: none; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--pastel); box-shadow: 0 2px 0 var(--relevo-da-ficha); }
+.cn-ficha__icone .mundo-desenho { display: block; width: 27px; height: 27px; }
+@media (hover: hover) { .cn-ficha.botao:hover { border-color: var(--relevo-da-ficha); background: var(--pastel); } }
 
-
-/* Cada opção do grupo expõe seu artigo. O mesmo painel atende ao toque e às setas do teclado. */
-.cn-s2, .cn-s4 { padding-block: clamp(48px, 7vw, 98px) 0; }
-.cn-escolhas { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; border: 0; padding: 0; }
-.cn-escolha { position: relative; display: block; }
-.cn-escolha input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; margin: 0; }
-.cn-escolha span { display: grid; align-content: center; min-height: 44px; padding: 8px 18px; border: 1.5px solid #d8ddec; border-radius: 100px; color: #495677; font-weight: 850; }
-.cn-escolha input:checked + span { background: var(--cn-marinho); border-color: var(--cn-marinho); color: white; }
-.cn-escolha input:focus-visible + span { outline: 3px solid var(--acao); outline-offset: 3px; }
-.cn-escolha input:hover:not(:checked) + span { background: #f1f4ff; }
-.cn-s2__momentos:has(input[value="1"]:checked) .cn-momento:not([data-momento="1"]),
-.cn-s2__momentos:has(input[value="2"]:checked) .cn-momento:not([data-momento="2"]),
-.cn-s2__momentos:has(input[value="3"]:checked) .cn-momento:not([data-momento="3"]),
-.cn-s2__momentos:has(input[value="4"]:checked) .cn-momento:not([data-momento="4"]) { display: none; }
-.cn-momento {
-  --papel: #eeedff; --halo: #dcd8ff; --tinta: #382b79;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; min-height: 420px;
-  padding: 28px clamp(24px, 6vw, 84px); border-radius: 32px; background: var(--papel);
-}
-.cn-momento[data-momento='2'] { --papel: #fff2cd; --halo: #ffe099; --tinta: #604616; }
-.cn-momento[data-momento='3'] { --papel: #e1f6eb; --halo: #c2e9d2; --tinta: #164d43; }
-.cn-momento[data-momento='4'] { --papel: #e9f1ff; --halo: #cedfff; --tinta: #213d7f; }
-.cn-momento__titulo { max-width: 15ch; font: 850 clamp(1.95rem, 4vw, 3.5rem)/1.08 Nunito, sans-serif; letter-spacing: -.035em; color: var(--tinta); }
-.cn-momento__linha { max-width: 38ch; margin-top: 14px; font: 650 clamp(1rem, 1.45vw, 1.21rem)/1.5 Nunito, sans-serif; color: #3f4d66; }
-.cn-fonte { margin: 17px 0 0; padding: 11px 15px; max-width: 37ch; border-left: 3px solid #7763b1; border-radius: 0 11px 11px 0; background: #fffc; color: #403659; }
-.cn-fonte figcaption { font-size: .82rem; font-weight: 850; }
-.cn-fonte blockquote { margin: 5px 0 0; font-size: .97rem; line-height: 1.45; }
-.cn-momento__ampliar { display: flex; flex-wrap: wrap; gap: 0 18px; margin-top: 7px; }
-.cn-momento__ampliar a { display: inline-flex; align-items: center; min-height: 44px; font-size: .91rem; font-weight: 850; color: var(--tinta); text-underline-offset: 4px; }
-.cn-visor {
-  position: fixed; inset: 0; margin: auto; width: min(840px, calc(100% - 24px)); max-width: none;
-  max-height: calc(100svh - 32px); border: 1px solid #c9d4e8; padding: 0; border-radius: 21px;
-  background: #fff; color: var(--cn-marinho); box-shadow: 0 18px 70px #0c1a3b52;
-}
-.cn-visor[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
-.cn-visor[data-retrato] { width: min(430px, calc(100% - 24px)); }
-.cn-visor::backdrop { background: #101f40b5; }
-.cn-visor__barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 17px 4px; }
-.cn-visor__barra h2 { font: 850 1.37rem/1.2 Nunito, sans-serif; color: var(--cn-marinho); }
-.cn-visor button { min-height: 44px; padding-inline: 12px; border: 1px solid #b9c7e1; border-radius: 12px; background: white; color: #284888; font: 800 .95rem/1.2 Nunito, sans-serif; cursor: pointer; }
-.cn-visor__fechar span { margin-left: 3px; }
-.cn-visor__ferramentas { padding: 0 17px 8px; }
-.cn-visor__ferramentas button { border-color: transparent; padding-inline: 2px; text-decoration: underline; text-underline-offset: 4px; }
-.cn-visor__ferramentas button[aria-pressed='true'] { background: #e6edff; padding-inline: 9px; }
-.cn-visor__imagem { min-height: 0; overflow: auto; overscroll-behavior: contain; background: #eaf0f8; border-top: 1px solid #c9d4e8; }
-.cn-visor__imagem img { display: block; margin-inline: auto; width: 100%; height: auto; }
-.cn-visor__imagem[data-original] img { width: auto; max-width: none; }
-.cn-visor__imagem:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
-.cn-momento__visual { position: relative; isolation: isolate; display: grid; place-items: center; }
-.cn-momento__visual::before { content: ''; position: absolute; z-index: -1; width: min(100%, 360px); aspect-ratio: 1.12; border-radius: 46% 54% 53% 47%; background: var(--halo); transform: rotate(-12deg); }
-.cn-momento__visual .cn-celular { --celular: clamp(156px, 16vw, 202px); border-width: 6px; border-radius: 30px; box-shadow: 3px 5px 0 #17225325, 0 12px 22px #19214e15; }
-.cn-momento__visual .cn-celular__tela { border-radius: 24px; }
-.cn-momento__visual .cn-celular__ilha { top: 4px; height: 10px; }
-.cn-momento__visual [data-plataforma='android'] .cn-celular__ilha { width: 6px; height: 6px; }
-.cn-selo-sincronia { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 7px 11px; border-radius: 14px; background: white; box-shadow: 0 3px 9px #16234118; color: var(--cn-marinho); font-size: .8rem; font-weight: 850; }
-.cn-selo-sincronia__ponto { width: 9px; height: 9px; border-radius: 50%; background: #32824e; }
-.cn-composto { position: relative; display: grid; width: 100%; max-width: 440px; margin-inline: auto; }
-.cn-janela { width: 86%; border: 2px solid var(--cn-borda-cartao); border-radius: 14px; background: #fff; box-shadow: 0 16px 36px rgb(11 27 92 / 0.12); overflow: hidden; }
-.cn-janela__barra { display: flex; align-items: flex-end; gap: 14px; height: 34px; padding: 0 12px; background: #e9eefc; }
-.cn-janela__pontos { display: flex; align-items: center; align-self: center; gap: 6px; }
-.cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
-.cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
-.cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
-.cn-momento__visual .cn-composto .cn-celular { --celular: 44%; justify-self: end; margin-top: -22%; z-index: 2; box-shadow: 0 24px 48px rgb(11 27 92 / 0.18); }
-.cn-momento__visual .cn-composto .cn-selo-sincronia { position: absolute; z-index: 3; left: 0; top: 49%; margin-top: 8px; }
-
-.cn-momento__visual--composto .cn-composto { width: min(100%, 305px); }
-@media (max-width: 639px) {
-  .cn-escolhas { display: grid; grid-template-columns: repeat(2, 1fr); }
-  .cn-escolha span { text-align: center; padding: 6px; font-size: .91rem; }
-  .cn-momento { grid-template-columns: 1fr; padding: 27px 22px; gap: 20px; border-radius: 23px; }
-  .cn-momento__titulo { max-width: none; }
-  .cn-momento__linha { margin-top: 8px; }
-  .cn-momento__visual { min-height: 318px; }
-  .cn-momento__visual .cn-celular { --celular: 148px; }
-  .cn-momento__visual--composto .cn-composto { max-width: 240px; }
-}
-/* ---------- S4: instale em 3 passos ---------- */
-.cn-s4 { scroll-margin-top: 16px; }
-.cn-abas { display: inline-grid; grid-auto-flow: column; gap: 4px; margin-top: 24px; padding: 4px; border-radius: 16px; background: var(--nevoa); border: 2px solid var(--cn-borda-cartao); }
-.cn-aba { min-width: 112px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: transparent; color: var(--texto2); font: 800 1rem/22px Nunito, sans-serif; cursor: pointer; }
-.cn-aba[aria-selected='true'] { background: var(--acao); color: #fff; }
-.cn-painel { position: relative; margin-top: 28px; display: grid; gap: 24px; justify-items: start; }
+/* ---------- Parada 5: o app no celular e a mesma trilha no site ---------- */
+.cn-palco--levar { grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr); align-items: start; }
+.cn-instalador { padding: clamp(16px, 2.4vw, 28px) clamp(18px, 2.8vw, 34px) clamp(22px, 2.8vw, 32px); }
+.cn-abas { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 4px; border: 2px solid var(--cn-borda-cartao); border-radius: 18px; background: var(--nevoa); }
+.cn-aba { min-width: 112px; min-height: 46px; padding: 0 20px; border: 0; border-radius: 13px; background: transparent; color: #47557a; font: 800 1rem/22px Nunito, sans-serif; cursor: pointer; }
+.cn-aba[aria-selected='true'] { background: var(--acao); box-shadow: 0 3px 0 var(--acao-escura); color: #fff; }
+.cn-painel { position: relative; display: grid; gap: 22px; justify-items: start; margin-top: 24px; }
 .cn-painel[hidden] { display: none; }
 .cn-painel:focus-visible { outline-offset: 6px; }
 .cn-painel__acao { display: grid; gap: 8px; width: 100%; max-width: 420px; }
 .cn-painel__qr { width: 100%; }
-/* A âncora do painel do iPhone (#iphone) fica FORA da grade do painel: como item da grade ela tomava uma linha (e o vão de 24 px) e empurrava o cartão do QR e o botão para baixo, fora do alinhamento com os passos. */
-.cn-ancora { position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; }
+/* A âncora do painel do iPhone (#iphone) fica FORA da grade do painel: como item da grade ela tomava uma linha (e o vão) e empurrava o cartão do QR e o botão para baixo. */
+.cn-ancora { position: absolute; top: -16px; left: 0; display: block; width: 0; height: 0; scroll-margin-top: 110px; }
 .cn-apoio--painel { max-width: 420px; }
-.cn-passos { display: grid; gap: 16px; margin: 0; padding: 0; list-style: none; width: 100%; max-width: 560px; }
-.cn-passo { display: grid; grid-template-columns: var(--cn-passo-numero, 32px) minmax(0, 1fr) auto; align-items: start; gap: var(--cn-passo-vao, 14px); font-size: 1.0625rem; line-height: 26px; font-weight: 600; color: var(--texto); }
-.cn-passo__numero { display: grid; place-items: center; width: var(--cn-passo-numero, 32px); height: var(--cn-passo-numero, 32px); border-radius: 50%; background: var(--lavanda); color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
+.cn-passos { display: grid; gap: 16px; width: 100%; max-width: 560px; padding: 0; list-style: none; }
+.cn-passo { display: grid; grid-template-columns: var(--cn-passo-numero, 32px) minmax(0, 1fr) auto; align-items: start; gap: var(--cn-passo-vao, 14px); color: var(--texto); font-size: 1.0625rem; font-weight: 600; line-height: 26px; }
+.cn-passo__numero { display: grid; place-items: center; width: var(--cn-passo-numero, 32px); height: var(--cn-passo-numero, 32px); border-radius: 50%; background: #e0e9ff; color: var(--acao-escura); font: 800 1rem/1 Nunito, sans-serif; }
 .cn-passo__texto { padding-top: 3px; }
 .cn-passo__icone { display: grid; place-items: center; width: 32px; height: 32px; color: var(--acao-escura); }
 .cn-icone--passo { width: 24px; height: 24px; }
-/* S4 no tablet: centrado, como o S3 e o S5 (os passos continuam alinhados à esquerda dentro do bloco). */
-@media (min-width: 600px) and (max-width: 1023px) {
-  .cn-s4 { display: grid; justify-items: center; }
-  .cn-s4 > .cn-secao__titulo { text-align: center; }
-  .cn-s4 .cn-painel { justify-items: center; width: 100%; max-width: 560px; }
-  .cn-s4 .cn-painel__acao { justify-items: center; }
-  .cn-s4 .cn-apoio--painel, .cn-s4 .cn-painel__acao .cn-apoio { text-align: center; }
+/* O cartão do QR: 196 × 248, borda de 2 px, raio 20. */
+.cn-qr {
+  display: grid; box-sizing: border-box; grid-template-rows: auto auto auto 1fr; justify-items: center; gap: 6px; width: 196px; min-height: 248px;
+  padding: 12px 12px 4px; border: 2px solid var(--cn-borda-cartao); border-radius: 20px; background: #fff; text-align: center;
 }
-@media (min-width: 1024px) {
-  /* No computador, o bloco do S4 também fica centrado: o título, as abas e o painel numa largura de até 920 px. */
-  .cn-s4 { display: grid; justify-items: center; }
-  .cn-s4 > .cn-secao__titulo { text-align: center; }
-  .cn-s4 .cn-painel { width: 100%; max-width: 920px; }
-  .cn-painel { grid-template-columns: minmax(0, 560px) minmax(0, 1fr); column-gap: 64px; align-items: start; }
+.cn-qr__titulo { color: var(--texto); font: 800 0.9375rem/20px Nunito, sans-serif; letter-spacing: 0; }
+.cn-qr__codigo { display: block; width: 136px; height: 136px; }
+.cn-qr__codigo svg { display: block; width: 100%; height: 100%; }
+.cn-qr__legenda { color: var(--texto); font-size: 0.875rem; font-weight: 700; line-height: 20px; }
+.cn-qr__arquivo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 4px; color: var(--acao-escura); font-size: 0.8125rem; font-weight: 700; line-height: 18px; text-decoration: underline; text-underline-offset: 3px; }
+.cn-painel__qr .cn-qr { display: grid; }
+@media (min-width: 1040px) {
+  /* No computador, os passos ficam à esquerda e o cartão do QR à direita, dentro do cartão do instalador. */
+  .cn-painel { grid-template-columns: minmax(0, 1fr) auto; column-gap: 28px; align-items: start; }
   .cn-painel__acao, .cn-painel__qr, .cn-apoio--painel { grid-column: 2; }
+  .cn-painel__acao { max-width: 240px; }
   .cn-passos { grid-column: 1; grid-row: 1 / span 3; }
-  /* A aba do iPhone antes do TestFlight, no computador: o aviso do convite público e o botão "Experimentar sem conta" ficam
-     embaixo dos passos, na coluna da esquerda, alinhados ao TEXTO dos passos (depois do número e do vão) e na largura do botão principal do computador (não a coluna toda); o cartão do QR fica
-     sozinho à direita, como na aba do Android. */
+  /* A aba do iPhone antes do TestFlight, no computador: o aviso do convite público e o botão ficam embaixo dos passos, alinhados ao TEXTO deles; o cartão do QR fica sozinho à direita. */
   .cn-painel--iphone-com-qr .cn-passos { grid-row: 1; }
   .cn-painel--iphone-com-qr .cn-painel__qr { grid-row: 1 / span 3; align-self: start; }
   .cn-painel--iphone-com-qr .cn-apoio--painel, .cn-painel--iphone-com-qr .cn-painel__acao { grid-column: 1; margin-left: calc(var(--cn-passo-numero, 32px) + var(--cn-passo-vao, 14px)); }
   .cn-painel--iphone-com-qr .cn-painel__acao { width: var(--cn-botao-principal-computador, 280px); max-width: 100%; }
 }
+.cn-sincronia { display: grid; justify-items: center; min-width: 0; }
+.cn-sincronia .cn-anfitriao { width: 100%; }
+.cn-composto { position: relative; display: grid; width: min(100%, 430px); }
+.cn-janela { width: 88%; overflow: hidden; border: 2px solid var(--cn-borda-cartao); border-radius: 16px; background: #fff; box-shadow: 0 6px 0 var(--cn-labio); }
+.cn-janela__barra { display: flex; align-items: flex-end; gap: 14px; height: 34px; padding: 0 12px; background: #e9eefc; }
+.cn-janela__pontos { display: flex; align-items: center; align-self: center; gap: 6px; }
+.cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
+.cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
+.cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
+.cn-composto .cn-celular { --celular: 42%; z-index: 2; justify-self: end; margin-top: -24%; border-width: 6px; border-radius: 26px; }
+.cn-composto .cn-celular__tela { border-radius: 20px; }
+.cn-composto .cn-celular__ilha { top: 4px; height: 10px; }
+.cn-selo-sincronia {
+  position: absolute; z-index: 3; top: 52%; left: 0; display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 14px;
+  background: #fff; box-shadow: 0 4px 0 var(--cn-labio); color: var(--cn-marinho); font-size: 0.82rem; font-weight: 850;
+}
+.cn-selo-sincronia__ponto { width: 9px; height: 9px; border-radius: 50%; background: #32824e; }
+.cn-sincronia__links { margin-top: 8px; }
+
+/* ---------- O celular (moldura própria do Studoo) ---------- */
+.cn-celular {
+  --celular: 260px;
+  position: relative; box-sizing: border-box; width: var(--celular); border: 7px solid var(--cn-marinho); border-radius: 32px;
+  background: var(--cn-marinho); box-shadow: 5px 8px 0 rgb(11 27 92 / 0.14), 0 18px 30px rgb(11 27 92 / 0.14);
+}
+.cn-celular__tela { position: relative; overflow: hidden; border-radius: 25px; background: #fff; aspect-ratio: 1206 / 2622; }
+.cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
+.cn-celular__ilha { position: absolute; z-index: 3; top: 6px; left: 50%; width: 28%; height: 13px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
+.cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 7px; height: 7px; border-radius: 50%; }
+/* A captura mantém a proporção e entra inteira na moldura. O <picture> só escolhe o formato. */
+.cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
+.cn-captura[hidden] { display: none; }
+.cn-celular__tela picture, .cn-janela__tela picture { display: contents; }
+/* Sem JavaScript, as capturas que só se buscam perto da tela (<picture data-carregar-perto>) somem e o <noscript> de cada uma traz a de verdade. */
+@media (scripting: none) { .cn-celular__tela picture[data-carregar-perto], .cn-janela__tela picture[data-carregar-perto] { display: none; } }
+
+/* ---------- A chegada: a noite, o troféu e o convite ---------- */
+.cn-chegada {
+  --chao: #0d1f6b; --relevo: #23389a; --cn-estrada: #ffd666; --cn-labio: rgb(0 0 0 / 0.28);
+  padding-block: var(--cn-topo-da-regiao) clamp(64px, 8vw, 116px); background: linear-gradient(180deg, #0d1f6b 0%, #0a1750 100%); color: #fff;
+}
+.cn-chegada__miolo { display: grid; justify-items: center; }
+.cn-chegada .cn-marco { margin-bottom: clamp(18px, 3vw, 34px); }
+.cn-chegada .cn-marco .cn-marco__no, .cn-chegada .cn-marco[data-estado] .cn-marco__no { border-color: transparent; background: var(--ouro); box-shadow: 0 6px 0 var(--ouro-escuro), 0 0 0 10px rgb(251 191 36 / 0.2); color: #5b3d00; }
+.cn-chegada .cn-marco[data-estado] .cn-marco__icone { visibility: visible; }
+.cn-chegada .cn-marco[data-estado] .cn-marco__visto { display: none; }
+.cn-chegada .cn-marco__rotulo { background: #ffd666; box-shadow: 0 3px 0 #c08a00; color: #3d2900; }
+.cn-chegada__palco { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(20px, 5vw, 76px); width: min(100%, 940px); }
+.cn-chegada__stu { position: relative; display: block; width: clamp(180px, 26vw, 340px); }
+.cn-chegada__stu::after { content: ''; position: absolute; z-index: -1; left: 14%; right: 14%; bottom: 1%; height: 9%; border-radius: 50%; background: rgb(0 0 0 / 0.34); filter: blur(7px); }
+.cn-chegada .cn-titulo { max-width: 15ch; margin-top: 0; color: #fff; }
+.cn-chegada .cn-botao-principal { --labio: #a9bee9; background: #fff; color: #1c46b0; }
+@media (hover: hover) { .cn-chegada .cn-botao-principal:hover:not(:disabled) { background: #eaf0ff; } }
+.cn-chegada .cn-botao-principal[data-baixando] { --labio: #145a42; background: var(--sucesso); color: #fff; }
+.cn-chegada .cn-instalar-celular, .cn-chegada .cn-visitante-texto { border-color: #8da2f2; background: transparent; box-shadow: 0 4px 0 rgb(141 162 242 / 0.5); color: #fff; }
+@media (hover: hover) { .cn-chegada .cn-instalar-celular:hover, .cn-chegada .cn-visitante-texto:hover:not(:disabled) { background: rgb(255 255 255 / 0.1); } }
+.cn-chegada .cn-apoio, .cn-chegada .cn-erro { color: #fff; }
+.cn-chegada :where(a, button):focus-visible { outline-color: #ffd666; }
+
+/* ---------- Rodapé ---------- */
+.cn-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; min-height: 96px; padding: 22px max(var(--cn-margem), calc((100% - var(--cn-coluna)) / 2)); background: #0a1750; color: #fff; }
+.cn-rodape .logo-quadro { padding: 8px 14px; border-radius: 14px; background: #fff; }
+.cn-rodape .logo-quadro img { display: block; width: 104px; height: auto; }
+.cn-rodape__linha { color: #d9e2ff; font-size: 0.9rem; font-weight: 700; }
+.cn-rodape__links { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: auto; }
+.cn-rodape__links a { display: inline-flex; align-items: center; min-height: 44px; color: #fff; font-size: 0.95rem; font-weight: 800; text-underline-offset: 4px; }
+.cn-rodape :where(a):focus-visible { outline-color: #ffd666; }
+
+/* ---------- A tela ampliada ---------- */
+.cn-visor {
+  position: fixed; inset: 0; width: min(840px, calc(100% - 24px)); max-width: none; max-height: calc(100svh - 32px); margin: auto; padding: 0;
+  border: 1px solid #c9d4e8; border-radius: 21px; background: #fff; box-shadow: 0 18px 70px #0c1a3b52; color: var(--cn-marinho);
+}
+.cn-visor[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.cn-visor[data-retrato] { width: min(430px, calc(100% - 24px)); }
+.cn-visor::backdrop { background: #101f40b5; }
+.cn-visor__barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 17px 4px; }
+.cn-visor__barra h2 { color: var(--cn-marinho); font: 850 1.37rem/1.2 Nunito, sans-serif; }
+.cn-visor button { min-height: 44px; padding-inline: 12px; border: 1px solid #b9c7e1; border-radius: 12px; background: #fff; color: #284888; font: 800 0.95rem/1.2 Nunito, sans-serif; cursor: pointer; }
+.cn-visor__fechar span { margin-left: 3px; }
+.cn-visor__ferramentas { padding: 0 17px 8px; }
+.cn-visor__ferramentas button { padding-inline: 2px; border-color: transparent; text-decoration: underline; text-underline-offset: 4px; }
+.cn-visor__ferramentas button[aria-pressed='true'] { padding-inline: 9px; background: #e6edff; }
+.cn-visor__imagem { min-height: 0; overflow: auto; overscroll-behavior: contain; border-top: 1px solid #c9d4e8; background: #eaf0f8; }
+.cn-visor__imagem img { display: block; width: 100%; height: auto; margin-inline: auto; }
+.cn-visor__imagem[data-original] img { width: auto; max-width: none; }
+.cn-visor__imagem:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
 
 /* ---------- A folha do iPhone (usa a folha do Studoo, spec 11) ---------- */
 .cn-folha .cn-passos { margin-block: 4px 8px; }
@@ -441,35 +493,183 @@
 .cn-folha__acoes { margin-top: 8px; }
 .cn-folha .folha-fechar .cn-icone { width: 22px; height: 22px; }
 
-
-.cn-s4 { display: grid; justify-items: start; }
-.cn-instalador { width: 100%; margin-top: 22px; padding: 0 clamp(18px, 4vw, 56px) 30px; background: #f6f8fd; border: 1px solid #e3e8f4; border-radius: 26px; }
-.cn-instalador .cn-abas { background: white; }
-.cn-s4 .cn-painel { margin: 24px 0 0; max-width: none; justify-items: start; }
-.cn-instalador .cn-passo__numero, .cn-folha .cn-passo__numero { background: #e0e9ff; }
-.cn-s5 { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; gap: clamp(24px, 6vw, 86px); margin-block: clamp(50px, 7vw, 96px); padding: clamp(30px, 4vw, 55px); border-radius: 32px; background: #173876; color: white; overflow: hidden; }
-.cn-s5::before { content: ''; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(#ffffff26 1px, transparent 1.4px); background-size: 18px 18px; }
-.cn-s5__stu { flex: 0 1 225px; min-width: 0; }
-.cn-s5__stu > *, .cn-s5__stu img { display: block; max-width: 100%; height: auto; }
-.cn-s5__convite { max-width: 460px; }
-.cn-s5 .cn-secao__titulo { font-size: clamp(1.9rem, 3.3vw, 3.1rem); color: white; }
-.cn-s5 .cn-botao-principal { background: white; color: #1c46b0; --labio: #a9bee9; }
-.cn-s5 .cn-instalar-celular, .cn-s5 .cn-visitante-texto { background: #173876; border-color: #859dcd; box-shadow: 0 2px 0 #859dcd; color: #fff; }
-.cn-s5 .cn-apoio, .cn-s5 .cn-erro { color: #fff; }
-.cn-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; min-height: 95px; padding-block: 22px; border-top: 1px solid #e3e7f1; }
-.cn-rodape .logo-quadro img { display: block; width: 104px; height: auto; }
-.cn-rodape__linha { font-size: .87rem; font-weight: 700; color: #505e77; }
-.cn-rodape__links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-left: auto; }
-@media (max-width: 639px) {
-  .cn-s5 { flex-direction: column; text-align: center; gap: 12px; padding: 26px 20px 32px; border-radius: 23px; }
-  .cn-s5__stu { flex: none; width: 110px; }
-  .cn-s5 .cn-acoes { margin-inline: auto; }
-  .cn-rodape { column-gap: 15px; }
+/* ---------- Telas menores ---------- */
+@media (max-width: 1039px) {
+  /* Sem espaço para os nomes, ficam só os nós: o nome continua lá para o leitor de tela, e o toque continua com 44 px. */
+  .cn-trilha__nome { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .cn-trilha__parada a { position: relative; min-width: 44px; padding: 0; justify-content: center; }
+  .cn-trilha__lista { gap: 0; }
+  .cn-palco { grid-template-columns: 1fr; justify-items: center; }
+  .cn-palco__demo { width: 100%; }
+  .cn-noapp { width: min(100%, 372px); grid-template-columns: minmax(0, 150px) minmax(0, 1fr); align-items: center; justify-items: start; gap: 18px; }
+  .cn-noapp__legenda { justify-items: start; text-align: left; }
+  .cn-noapp__links { justify-content: flex-start; }
+  .cn-palco--levar { grid-template-columns: 1fr; }
+  .cn-palco--levar > * { width: 100%; }
+}
+@media (max-width: 859px) {
+  .cn-ponte { grid-template-columns: 1fr; }
+  .cn-material { grid-template-columns: 1fr; justify-items: center; gap: 4px; }
+  .cn-anotacao { width: min(100%, 400px); transform: rotate(-1.5deg); }
+  .cn-vira { grid-auto-flow: column; align-items: center; gap: 6px; margin-block: 12px 8px; }
+  .cn-vira svg { width: 46px; rotate: 62deg; }
+  .cn-licao-exemplo { width: 100%; }
+}
+@media (max-width: 739px) {
+  .cn-pagina { --cn-cabecalho: 68px; }
+  .cn-cabecalho { padding-top: 8px; }
+  .cn-capsula { min-height: 54px; padding: 4px 6px 4px 14px; border-radius: 19px; }
+  .cn-trilha { position: static; }
+  .cn-trilha__lista { display: none; }
+  /* No celular, a trilha vira a barra de andamento da lição, na borda de baixo da cápsula. */
+  .cn-trilha__barra { position: absolute; right: 16px; bottom: 3px; left: 16px; display: block; height: 5px; overflow: hidden; border-radius: 99px; background: #e1e7fa; }
+  .cn-trilha__barra::after { content: ''; position: absolute; inset: 0; border-radius: 99px; background: var(--acao); transform: scaleX(var(--feito, 0)); transform-origin: left center; }
+  .cn-cabecalho:not([data-rolou]) .cn-trilha__barra { visibility: hidden; }
+  .cn-cabecalho .cn-entrar:not(.cn-entrar--abrir) { padding-inline: 10px; }
+  .cn-cabecalho .cn-entrar--abrir, .cn-cabecalho .cn-capsula__convite { min-height: 44px; padding-inline: 14px; }
+  .cn-heroi__miolo { grid-template-columns: 1fr; gap: 14px; padding-bottom: 196px; }
+  .cn-heroi__titulo { font-size: clamp(2.75rem, 11.4vw, 4rem); }
+  .cn-heroi__subtitulo { max-width: 42ch; margin-top: 14px; }
+  .cn-heroi .cn-acoes { max-width: 430px; margin-top: 20px; }
+  .cn-heroi__palco { min-height: 0; margin-bottom: -22px; }
+  .cn-heroi__ola { right: 78%; bottom: 70%; }
+  .cn-heroi__figura { margin-left: 22%; }
+  .cn-entradas { position: static; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 26px; }
+  .cn-entrada, .cn-entrada:nth-child(n) { position: static; padding: 5px 11px 5px 5px; border-radius: 14px; transform: none; }
+  .cn-entrada__icone { width: 28px; height: 28px; border-radius: 9px; }
+  .cn-entrada__icone .cn-icone { width: 18px; height: 18px; }
+  .cn-heroi__sol { top: 62px; right: -34px; --tam: 104px; }
+  .cn-nuvem--1 { top: auto; bottom: 42%; left: -6%; }
+  .cn-pagina .cn-nuvem--2, .cn-pagina .cn-heroi__balao { display: none; }
+  .cn-nuvem--3 { top: auto; right: -4%; bottom: 33%; }
+  .cn-comecar { bottom: 104px; font-size: 0.94rem; }
+  .cn-marco__no { width: 66px; height: 66px; }
+  .cn-marco { margin-top: calc(-1 * (var(--cn-topo-da-regiao) + 33px + 64px)); }
+  .cn-marco__icone .cn-icone { width: 28px; height: 28px; }
+  .cn-anfitriao .cn-fala { margin-bottom: 22px; }
+  .cn-questao, .cn-licao-exemplo, .cn-caderno-stu, .cn-instalador, .cn-pedido, .cn-lago { border-radius: 22px; }
+  .cn-respostas { gap: 8px; }
+  .cn-ensinar { grid-template-columns: 1fr; justify-items: center; gap: 4px; }
+  .cn-ensinar__aluno { grid-template-columns: auto minmax(0, 1fr); align-items: end; }
+  .cn-ensinar__stu { order: -1; width: 118px; }
+  .cn-ensinar__fala { margin-bottom: 30px; border-radius: 20px 20px 20px 6px; }
+  .cn-explicacoes__lista, .cn-retorno-stu { grid-template-columns: 1fr; }
+  .cn-fichas__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .cn-ficha.botao { min-height: 54px; padding: 6px 9px; font-size: 0.95rem; }
+  .cn-ficha__icone { width: 34px; height: 34px; border-radius: 10px; }
+  .cn-ficha__icone .mundo-desenho { width: 23px; height: 23px; }
+  .cn-assunto input { flex-basis: 150px; padding-inline: 12px; font-size: 1rem; }
+  .cn-assunto .botao { padding-inline: 16px; }
+  .cn-chegada__palco { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 8px; }
+  .cn-chegada .cn-acoes { margin-inline: auto; }
+  .cn-chegada .cn-titulo { max-width: 14ch; }
   .cn-rodape__links { width: 100%; margin: 0; }
+  .cn-pagina .cn-enfeite--largo { display: none; }
 }
-/* ---------- Entrada de cada seção (20% na tela, uma vez) ---------- */
+@media (max-width: 400px) {
+  .cn-noapp { grid-template-columns: minmax(0, 132px) minmax(0, 1fr); gap: 14px; }
+}
+@media (min-width: 740px) and (max-width: 1039px) {
+  .cn-heroi__miolo { gap: 20px; }
+  .cn-heroi__titulo { font-size: clamp(3rem, 6.6vw, 4.2rem); }
+  .cn-heroi__palco { min-height: 0; }
+  .cn-heroi__figura { margin-left: 26%; }
+  .cn-heroi__ola { right: 80%; bottom: 74%; }
+  .cn-entradas { position: static; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 30px; }
+  .cn-entrada, .cn-entrada:nth-child(n) { position: static; transform: none; }
+}
+@media (min-width: 1040px) {
+  .cn-heroi .cn-acoes { grid-template-columns: max-content max-content; align-items: start; gap: 12px 14px; max-width: none; }
+  .cn-heroi .cn-apoio, .cn-heroi .cn-erro { grid-column: 1 / -1; max-width: 47ch; }
+  .cn-heroi .cn-botao-principal { min-width: 264px; }
+}
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 560px) {
+  .cn-heroi__miolo { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: 20px; padding-bottom: 190px; }
+  .cn-heroi__titulo { font-size: 2.7rem; }
+  .cn-heroi__palco { min-height: 200px; }
+  .cn-heroi__stu { width: 170px; }
+  .cn-entradas { display: none; }
+}
+
+/* ---------- Movimento: só com movimento permitido, e nada se mexe sozinho por mais que uns segundos ---------- */
 @media (prefers-reduced-motion: no-preference) {
-  [data-revelar] { transition: opacity 400ms ease-out, transform 400ms ease-out; }
+  .cn-capsula { transition: background-color 200ms ease-out, border-color 200ms ease-out, box-shadow 200ms ease-out; }
+  .cn-cabecalho[data-passou-do-alto] .cn-capsula__convite { animation: cn-balao 240ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+  .cn-trilha__no, .cn-trilha__parada a { transition: background-color 180ms ease-out, box-shadow 180ms ease-out, color 180ms ease-out; }
+  .cn-trilha__barra::after { transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  /* O alto da página entra uma vez: as nuvens assentam, o marcador risca o título e o Stu chega acenando. */
+  .cn-nuvem--1 { animation: cn-nuvem-chega 1400ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .cn-nuvem--2 { animation: cn-nuvem-chega 1700ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both; --de: 40px; }
+  .cn-nuvem--3 { animation: cn-nuvem-chega 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) 60ms both; --de: 32px; }
+  .cn-heroi__frase:last-child::after { animation: cn-marcador 520ms cubic-bezier(0.2, 0.8, 0.2, 1) 420ms both; }
+  .cn-heroi__stu { animation: cn-aceno 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 160ms both; transform-origin: 50% 100%; }
+  .cn-heroi__ola { animation: cn-balao 420ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 900ms both; }
+  .cn-entrada { animation: cn-ficha-chega 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .cn-entrada:nth-child(1) { animation-delay: 1050ms; }
+  .cn-entrada:nth-child(2) { animation-delay: 1180ms; }
+  .cn-entrada:nth-child(3) { animation-delay: 1310ms; }
+
+  /* O marco responde à rolagem: o da vez acende, e o que ficou para trás vira ouro com um pulo curto. */
+  .cn-marco__no { transition: background-color 220ms ease-out, box-shadow 220ms ease-out, color 220ms ease-out, border-color 220ms ease-out; }
+  .cn-marco[data-estado='feito'] .cn-marco__no, .cn-marco[data-estado='atual'] .cn-marco__no { animation: cn-pulo 360ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  /* Entrada de cada bloco (20% na tela, uma vez): a ilha Revelar põe data-oculto e depois data-revelado. */
+  [data-revelar] { transition: opacity 400ms ease-out, transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
   [data-revelar][data-oculto]:not([data-revelado]) { opacity: 0; transform: translateY(16px); }
+  .cn-anotacao[data-revelar][data-oculto]:not([data-revelado]) { transform: translateY(16px) rotate(-3deg); }
+  .cn-noapp[data-revelar][data-oculto]:not([data-revelado]) { transform: translateY(16px); }
+
+  /* Parada 1: o marcador risca a frase citada quando a fonte abre. */
+  .cn-marca { transition: background-size 420ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .cn-fonte:not([hidden]) { animation: cn-entrar 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+  /* Parada 2: as tábuas caem no lugar, uma a uma, e o Stu atravessa. */
+  .cn-respostas button { transition: background-color 140ms ease-out, border-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out; }
+  .cn-tabuas { animation: cn-entrar 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .cn-tabuas__lista li { animation: cn-tabua-do-cartao 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(160ms + var(--i) * 150ms); }
+  .cn-lago__tabua { transform-box: fill-box; transform-origin: 50% 50%; transition: opacity 160ms ease-out calc(var(--i) * 150ms); }
+  .cn-ponte:not([data-ponte='vazia']) .cn-lago__vao .cn-lago__tabua { animation: cn-tabua-cai 420ms cubic-bezier(0.3, 1.4, 0.5, 1) both; animation-delay: calc(var(--i) * 150ms); }
+  .cn-lago__stu { transition: left 1300ms cubic-bezier(0.5, 0, 0.3, 1) 380ms; }
+  .cn-ponte[data-ponte='atravessada'] .cn-lago__stu img { animation: cn-passos 1300ms linear 380ms both; }
+  .cn-retorno__stu { animation: cn-balao 340ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+  /* Parada 3: o Stu troca de expressão sem pular. */
+  .cn-ensinar__stu img { transition: opacity 160ms ease-out, visibility 160ms; }
+  .cn-explicacao__cartao { transition: background-color 140ms ease-out, border-color 140ms ease-out, box-shadow 140ms ease-out; }
+  .cn-retorno-stu__bloco { animation: cn-entrar 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .cn-retorno-stu__bloco[data-tipo='revisar'] { animation-delay: 120ms; }
+
+  /* Parada 4: as seis fichas entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, subindo 8 px). */
+  .cn-ficha-item { transition: opacity 300ms ease-out, transform 300ms ease-out; }
+  .cn-ficha-item:nth-child(2) { transition-delay: 60ms; }
+  .cn-ficha-item:nth-child(3) { transition-delay: 120ms; }
+  .cn-ficha-item:nth-child(4) { transition-delay: 180ms; }
+  .cn-ficha-item:nth-child(5) { transition-delay: 240ms; }
+  .cn-ficha-item:nth-child(6) { transition-delay: 300ms; }
+  [data-revelar-itens][data-oculto]:not([data-revelado]) > .cn-ficha-item { opacity: 0; transform: translateY(8px); }
+
+  @media (hover: hover) {
+    .cn-ficha.botao, .cn-comecar, .cn-entrada { transition: background-color 140ms ease-out, border-color 140ms ease-out, translate 160ms ease-out; }
+    .cn-ficha.botao:hover { translate: 0 -2px; }
+    .cn-comecar:hover { translate: -50% 3px; }
+  }
+
+  /* Onde o navegador liga a animação à rolagem, o céu do alto se afasta devagar: quem move é a própria pessoa. */
+  @supports (animation-timeline: scroll()) {
+    .cn-heroi__ceu { animation: cn-ceu-se-afasta linear both; animation-timeline: scroll(root block); animation-range: 0 90vh; }
+    .cn-heroi__palco { animation: cn-palco-se-afasta linear both; animation-timeline: scroll(root block); animation-range: 0 90vh; }
+  }
 }
-@media (display-mode: standalone) { .cn-instalado-esconde { display: none; } }
+@keyframes cn-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes cn-aceno { 0% { opacity: 0; transform: translateY(9%) rotate(-5deg); } 55% { opacity: 1; transform: translateY(-2.5%) rotate(4deg); } 100% { opacity: 1; transform: none; } }
+@keyframes cn-balao { from { opacity: 0; scale: 0.7; } to { opacity: 1; scale: 1; } }
+@keyframes cn-ficha-chega { from { opacity: 0; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+@keyframes cn-nuvem-chega { from { opacity: 0; translate: calc(-1 * var(--de, 56px)) 0; } }
+@keyframes cn-marcador { from { transform: rotate(-2deg) scaleX(0); } to { transform: rotate(-2deg) scaleX(1); } }
+@keyframes cn-pulo { 0% { scale: 1; } 45% { scale: 1.14; } 100% { scale: 1; } }
+@keyframes cn-tabua-cai { from { opacity: 0; transform: translateY(-34px) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@keyframes cn-tabua-do-cartao { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@keyframes cn-passos { 0%, 100% { translate: 0 0; } 12%, 37%, 62%, 87% { translate: 0 -14%; } 25%, 50%, 75% { translate: 0 0; } }
+@keyframes cn-ceu-se-afasta { to { translate: 0 90px; } }
+@keyframes cn-palco-se-afasta { to { translate: 0 -26px; } }

@@ -81,6 +81,6 @@ test('a imagem sai do gerador do servidor como PNG de paleta, leve e do tamanho 
 test('o cartão usa o título e uma frase inteira que a pessoa encontra ao abrir a página', () => {
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.subtitulo\.split\('\. '\)\.slice\(-1\)\[0\]/);
-  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Stu cria lições curtas e dá uma pista quando você erra.');
+  assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Stu cria lições curtas e explica de outro jeito quando você erra.');
   assert.equal(linhasDoTitulo.join(' '), textos.heroi.titulo);
 });

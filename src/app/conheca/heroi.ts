@@ -2,7 +2,10 @@ import type { Aparelho } from './aparelho';
 import { CAPTURAS } from './imagens.gerado';
 import type { CapturaOtimizada, Plataforma } from './imagens';
 
-/** Os `alt` das três telas do herói (spec 18, seção 9). */
+/**
+ * As três telas do começo do app (pedir, trilha pronta e acerto), nas capturas `heroi-N`. A página mostra a segunda, a trilha pronta, na parada dos
+ * assuntos, e a imagem de compartilhar usa a mesma; as outras duas continuam no conjunto do Mobile & QA. Os `alt` são os da spec 18, seção 9.
+ */
 export const ALTS_DO_HEROI = [
   'Tela do Studoo perguntando o que você quer aprender',
   'Tela do Studoo com a trilha pronta',

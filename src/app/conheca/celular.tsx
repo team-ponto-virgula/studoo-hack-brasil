@@ -17,14 +17,13 @@ export function Celular({ children, className = '', rotulo, plataforma = 'iphone
 }
 
 /**
- * A largura, em px do CSS, em que a captura aparece em cada lugar (a TELA do celular, sem as bordas de 10 px, por faixa de largura da janela): é o `sizes` que o navegador usa, junto com a
- * densidade da tela, para escolher entre as larguras do AVIF (320, 480 e 640). Em 390 px com tela de 2x, por exemplo, o herói pede 480 e não os 640 de antes.
+ * A largura, em px do CSS, em que a captura aparece em cada lugar (a TELA do celular, sem as bordas, por faixa de largura da janela): é o `sizes` que o navegador usa, junto com a
+ * densidade da tela, para escolher entre as larguras do AVIF (320, 480 e 640). Em 390 px com tela de 2x, por exemplo, a tela de uma parada pede 480 e não 640.
  */
 export const TAMANHOS = {
-  heroi: '(min-width: 1200px) 175px, (min-width: 740px) 14vw, 110px',
-  momento: '(min-width: 1024px) 300px, (min-width: 768px) 260px, 220px',
-  celularDoComposto: '(min-width: 1024px) 230px, 180px',
-  janela: '(min-width: 1024px) 480px, 380px',
+  momento: '(min-width: 1040px) 206px, 176px',
+  celularDoComposto: '(min-width: 1040px) 170px, 132px',
+  janela: '(min-width: 1040px) 400px, 300px',
 } as const;
 
 const srcSetDoAvif = (captura: CapturaOtimizada) => captura.avif.map((item) => `${item.src} ${item.largura}w`).join(', ');
@@ -93,7 +92,7 @@ export function JanelaDoNavegador({ captura, alt, className = '' }: { captura: C
         <span className="cn-janela__aba">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/marca/icone.svg" width={14} height={14} alt="" loading="lazy" decoding="async" />
-          {textos.s2.janelaAba}
+          {textos.sincronia.janelaAba}
         </span>
       </div>
       <div className="cn-janela__tela">
