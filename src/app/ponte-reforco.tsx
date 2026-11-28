@@ -5,6 +5,7 @@ import type { ApoioEstudo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
 import { tocaSons } from './sons';
+import { EsperaViva } from '../ui/espera-viva';
 
 const m = mensagens.estudio;
 const passos = [m.pontePassoExplicacao, m.pontePassoExemplo, m.pontePassoDesafio] as const;
@@ -94,7 +95,8 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
     <FaixaDaPonte posicao={posicao} comemorar={concluida && !reaberta} />
     <p className="reforco__indicador" role="status">{indicador}{concluida && !reaberta && <span className="somente-leitor"> {m.ponteVencida}</span>}</p>
     <div className="reforco__cartao estudio-desafio" key={concluida ? 'pronta' : passo}>
-      {!ponte ? <p role="status">{erro || m.pensando}</p> : <>
+      {/* Enquanto a ponte é montada, o Stu mostra o que está fazendo (espera viva); com falha, a mensagem dela. */}
+      {!ponte ? (erro ? <p role="status">{erro}</p> : <EsperaViva motivo="ponte" />) : <>
         <h3 tabIndex={-1} ref={tituloCartao}>{concluida ? reaberta ? m.pontePassoExplicacao : m.ponteVencida : nomePasso}</h3>
         {(reaberta || (!concluida && passo === 1)) && explicacao}
         {(reaberta || (!concluida && passo === 2)) && exemplo}

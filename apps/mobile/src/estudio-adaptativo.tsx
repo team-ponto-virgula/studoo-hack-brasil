@@ -33,6 +33,7 @@ import {
   type MaterialEstudo,
   type PropostaPlano,
   type ProvedorIa,
+  type MotivoDaEspera,
 } from '@studoo/contratos';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Botao, Campo, estilos, EstadoErro, SeloDemonstracao, LinhaAbrir, useMovimentoReduzido } from './interface';
@@ -45,6 +46,7 @@ import { cores, fontes } from './tema';
 import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
 import { focoVisivel } from './foco';
 import { tocaSons } from './sons';
+import { EsperaViva } from './espera-viva';
 import {
   EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, provedorDaGravacao, provedorDaVozAoVivo, type ClienteElegibilidadeVoz,
   type ProvedorTexto,
@@ -131,6 +133,8 @@ export function MaterialParaTrilha({
   ultimaOpcao?: Ref<ComponentRef<typeof View>>;
 }) {
   const [ocupado, setOcupado] = useState(false);
+  // O que o Stu está fazendo (ler o material ou montar a proposta), para a espera viva dizer; sem motivo, a frase de sempre.
+  const [motivo, setMotivo] = useState<MotivoDaEspera | null>(null);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState<{ texto: string; codigo?: string; aoPropor?: boolean } | null>(null);
   const objetivoDoMaterial = objetivo.trim() || m.objetivo;
@@ -158,10 +162,11 @@ export function MaterialParaTrilha({
     const espera = setTimeout(() => avisarEspera.current?.(true), 1000);
     return () => clearTimeout(espera);
   }, [ocupado]);
-  async function executar(f: () => Promise<void>, aoPropor = false) {
+  async function executar(f: () => Promise<void>, aoPropor = false, motivoDaEspera: MotivoDaEspera | null = aoPropor ? 'proposta' : 'material') {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
+    setMotivo(motivoDaEspera);
     setErro(null);
     try {
       await f();
@@ -308,16 +313,16 @@ export function MaterialParaTrilha({
               void executar(async () => {
                 await cliente.excluirMaterial(material.id);
                 if (vivo.current) aoMudarMaterial(null);
-              })
+              }, false, null)
             }
           />
         </>
       )}
-      {ocupado && (
+      {ocupado && (motivo ? <EsperaViva key={motivo} motivo={motivo} compacta testID="espera-material" /> : (
         <Text testID="espera-material" accessibilityLiveRegion="polite" style={estilos.texto}>
           {m.pensando}
         </Text>
-      )}
+      ))}
       {/* Como na web (<p role="alert">): o erro (rede, material) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
       {erro?.codigo === 'conteudo_nocivo' ? <EstadoErro mensagem={erro.texto} testID="recusa-material" foco={ativo}
         acao={{ rotulo: mensagens.pedido.editarTema, testID: 'editar-tema-material', acao: editarTema }} />
@@ -447,6 +452,8 @@ export function ApoioDaLicao({
   const [erro, setErro] = useState('');
   const [erroPonte, setErroPonte] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  // O que o Stu está fazendo (montar a ponte, comentar a explicação, transcrever, conferir): a espera viva diz.
+  const [motivo, setMotivo] = useState<MotivoDaEspera | null>(null);
   const emExecucao = useRef(false);
   const [fontes, setFontes] = useState(false);
   const [gravando, setGravando] = useState(false);
@@ -524,10 +531,11 @@ export function ApoioDaLicao({
   useEffect(() => {
     if (segundos >= 60 && ativo.current) void parar();
   }, [segundos]);
-  async function executar(f: () => Promise<void>, mostrarErro = setErro) {
+  async function executar(f: () => Promise<void>, mostrarErro = setErro, motivoDaEspera: MotivoDaEspera | null = null) {
     if (emExecucao.current) return;
     emExecucao.current = true;
     setOcupado(true);
+    setMotivo(motivoDaEspera);
     setErro('');
     try {
       await f();
@@ -601,7 +609,7 @@ export function ApoioDaLicao({
         setTexto(r.texto);
         setAviso(m.vozRevisar);
       }
-    });
+    }, setErro, 'transcricao');
   }
   // Voz ao vivo (spec 12, como a web): com a conversa aberta, o fundo para e os outros efeitos esperam; ao fechar, o bipe de fim.
   useEffect(() => {
@@ -661,7 +669,7 @@ export function ApoioDaLicao({
       setEnviado(preparada);
       setAviso('');
       aoEnsinar?.();
-    });
+    }, setErro, 'ensino');
   }
   function iniciarConversaAoVivo() {
     setAviso('');
@@ -772,7 +780,7 @@ export function ApoioDaLicao({
       atualizarApoio(novo);
       setRevendo(novo.ponte?.concluida === true);
       setPonteChegou(true);
-    });
+    }, setErro, 'ponte');
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
@@ -798,7 +806,7 @@ export function ApoioDaLicao({
       setRetorno(r.feedback);
       void tocaSons.tocarEfeito(r.correta ? 'acerto' : 'erro');
       if (r.correta) setVenceu(true);
-    }, setErroPonte);
+    }, setErroPonte, 'correcao');
   }
   // O rodapé preso da aula com a ação do passo (spec 05, ponte clara): sempre à vista.
   const errouAgora = Boolean(resultadoPonte && !resultadoPonte.correta && resposta === resultadoPonte.id);
@@ -819,7 +827,7 @@ export function ApoioDaLicao({
       definirRodapePonte(
         <View style={{ gap: 8 }}>
           {erroPonte ? <AvisoAlerta texto={erroPonte} /> : null}
-          <Botao testID="ponte-conferir" peso="900" rotulo={ocupado ? m.pensando : m.verificar} ocupado={ocupado}
+          <Botao testID="ponte-conferir" peso="900" rotulo={ocupado ? m.pensando : m.verificar} ocupado={ocupado} giro={ocupado && motivo === 'correcao'}
             desativado={ocupado || gravando || !resposta} acao={verificarPonte} />
         </View>,
       );
@@ -838,7 +846,7 @@ export function ApoioDaLicao({
       setEnviado(explicacao);
       setAviso('');
       aoEnsinar?.();
-    });
+    }, setErro, 'ensino');
   }
 
   useEffect(() => {
@@ -847,7 +855,7 @@ export function ApoioDaLicao({
   useEffect(() => () => aoOcuparEnsino?.(false), [aoOcuparEnsino]);
 
   const prenderEnvio = Boolean(definirRodapeEnsino && ensinoEmEtapa && (!ensino || texto.trim() !== enviado));
-  const botaoEnviar = <Botao testID="enviar-explicacao" rotulo={ocupado ? m.pensando : m.enviar} ocupado={ocupado}
+  const botaoEnviar = <Botao testID="enviar-explicacao" rotulo={ocupado ? m.pensando : m.enviar} ocupado={ocupado} giro={ocupado && motivo === 'ensino'}
     desativado={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20} acao={enviarEnsino} />;
   useEffect(() => {
     definirRodapeEnsino?.(prenderEnvio ? botaoEnviar : null);
@@ -886,7 +894,8 @@ export function ApoioDaLicao({
           <FaixaDaPonte passo={etapaPonte} construida={venceu || (revendo && Boolean(ponte))} carregando={!ponte} comemorar={venceu} />
           <Animated.View key={`passo-${venceu ? 'vencida' : revendo ? 'reaberta' : etapaPonte}`} style={[s.ponteCartao, estiloDeEntrada(entradaPasso, 8, 1)]}>
             {!ponte ? (
-              <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
+              // Enquanto a ponte é montada, o Stu mostra o que está fazendo (espera viva); com falha, a mensagem dela.
+              erro ? <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro}</Text> : <EsperaViva motivo="ponte" compacta testID="espera-ponte" />
             ) : venceu ? (
               <>
                 {/* "Ponte construída!" fica só na linha do indicador (d29947f); o título do cartão é o que fazer agora. */}
@@ -1066,7 +1075,9 @@ export function ApoioDaLicao({
               </View>
             )}
       </Card></View>}
-      {ocupado && <T>{m.pensando}</T>}
+      {/* O retorno do Stu, a transcrição e a conferência levam alguns segundos: a espera viva diz o que está acontecendo.
+          A ponte tem a dela, no próprio cartão. */}
+      {ocupado && motivo !== 'ponte' && (motivo ? <EsperaViva key={motivo} motivo={motivo} compacta testID={`espera-${motivo}`} /> : <T>{m.pensando}</T>)}
       {/* Como na web (<p role="alert">): o erro (rede, voz, transcrição) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
       {/* Depois do cartão, a web tem os 24 da margem dele (o cartão aqui tem 12 embaixo). */}
       {!!erro && <View style={s.depoisDoCartao}><AvisoAlerta texto={erro} /></View>}

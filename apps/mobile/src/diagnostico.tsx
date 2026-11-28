@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Botao, Tela, Titulo, estilos } from './interface';
 import { Stu } from './mascote';
+import { EsperaViva } from './espera-viva';
 import { mensagemDoCodigo, mensagens } from './mensagens';
 
 type Pergunta = Extract<PassoDiagnostico, { tipo: 'pergunta' }>;
@@ -60,7 +61,7 @@ export function Diagnostico({ objetivo, passo, ocupado, erro, acoes, consultar, 
           <Text style={[estilos.texto, s.objetivo]}>{objetivo}</Text>
         </View>
         {!passo && <Text style={estilos.texto}>Responda algumas perguntas rápidas para ajustar a trilha ao que você quer aprender e ao que já sabe fazer.</Text>}
-        {ocupado && <Text role="status" accessibilityLiveRegion="polite" style={estilos.legenda}>Preparando o próximo passo…</Text>}
+        {ocupado && <EsperaViva motivo="diagnostico" compacta testID="espera-diagnostico" />}
         {erro && <Text role="alert" accessibilityLiveRegion="assertive" style={estilos.texto}>
           {erro === 'consentimento_ia' || erro === 'ia_indisponivel' ? mensagemDoCodigo(erro) : 'Não foi possível carregar a pergunta. Tente novamente.'}
         </Text>}

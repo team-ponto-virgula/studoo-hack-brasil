@@ -160,6 +160,9 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     '../ui/rodape-movel': { medirAcaoFixa() {} },
     './estudio.css': {},
     './ponte-reforco': { PonteReforco: 'PonteReforco' },
+    // A espera viva (o Stu concentrado e a frase do que ele está fazendo): componente de apresentação, nas duas plataformas.
+    '../ui/espera-viva': { EsperaViva: 'EsperaViva' },
+    './espera-viva': { EsperaViva: 'EsperaViva' },
     './ensino-passos': ensinoPassos.exports,
     // A fórmula em linha do texto da lição (o objetivo no "Ensine o Stu"): componente de apresentação.
     './texto-com-formulas': { TextoComFormulas: 'TextoComFormulas' },
@@ -358,7 +361,7 @@ test('web: a ponte aberta ocupa a etapa inteira e esconde o ensino opcional', as
 
 test('web: o reforço em preparação, falho, pronto ou reaberto tem um só indicador e a ação do estado', async () => {
   const componentes = { Botao: 'button', Stu: () => null, Icone: () => null };
-  const imports = { react, 'react/jsx-runtime': jsx, '../ui': componentes, '../mensagens/pt-BR': { mensagens }, './sons': {} };
+  const imports = { react, 'react/jsx-runtime': jsx, '../ui': componentes, '../mensagens/pt-BR': { mensagens }, './sons': {}, '../ui/espera-viva': { EsperaViva: () => null } };
   const contexto = { exports: {}, require: nome => imports[nome] };
   vm.runInNewContext(await compilar('src/app/ponte-reforco.tsx'), contexto);
   const base = { ocupado: false, erro: '', feedbackOriginal: '', tentativa: 'normal' };

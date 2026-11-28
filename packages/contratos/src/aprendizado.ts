@@ -34,6 +34,7 @@ export * from './comunidade';
 export * from './codigo-studoo';
 export * from './espera-geracao';
 export * from './transicao-de-tela';
+export * from './espera-viva';
 export * from './pedido-criacao';
 export * from './conceito';
 export * from './aula-regras';

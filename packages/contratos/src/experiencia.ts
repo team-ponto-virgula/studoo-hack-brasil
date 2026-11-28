@@ -1060,6 +1060,20 @@ export const mensagens = {
         exemplosDigitados: ['Quero aprender violão do zero', 'Inglês para conversar em viagens', 'Cozinhar o básico sem medo', 'História do Brasil para a prova'],
         exemploPrefixo: 'Ex.: '
     },
+    /**
+     * Esperas vivas (`espera-viva.ts`): a frase do que o Stu está fazendo, que avança enquanto a ação demora e para na
+     * última. Descrevem o trabalho de verdade, sem número nem promessa de tempo; cada uma cabe numa linha em 320 px.
+     */
+    esperaViva: {
+        material: ['Lendo seu material…', 'Separando as ideias principais…', 'Conferindo o texto de cada parte…'],
+        proposta: ['Lendo as ideias do seu material…', 'Escolhendo o que vira lição…', 'Pondo as lições em ordem…'],
+        ponte: ['Vendo onde você travou…', 'Pensando em outro caminho…', 'Montando um exemplo novo…', 'Preparando o desafio…'],
+        ensino: ['Lendo sua explicação…', 'Procurando as ideias da lição…', 'Escrevendo o retorno…'],
+        transcricao: ['Ouvindo sua gravação…', 'Passando a fala para texto…'],
+        correcao: ['Lendo sua resposta…', 'Conferindo com o que a lição pede…'],
+        diagnostico: ['Preparando o próximo passo…', 'Ajustando a trilha ao que você já sabe…'],
+        demorada: 'Está levando um pouco mais que o normal. Pode esperar aqui.',
+    },
     geracao: {
         contexto: 'Nova trilha',
         montandoTitulo: 'Montando sua trilha',
