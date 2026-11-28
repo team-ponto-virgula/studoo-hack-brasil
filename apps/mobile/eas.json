@@ -12,7 +12,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://app.hellostudoo.com.br",
         "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
       }
     },
@@ -30,7 +30,7 @@
         "autoIncrement": true
       },
       "env": {
-        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://app.hellostudoo.com.br",
         "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
       }
     },
@@ -47,7 +47,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://app.hellostudoo.com.br",
         "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
       }
     },
@@ -59,7 +59,7 @@
         "image": "auto"
       },
       "env": {
-        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://app.hellostudoo.com.br",
         "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
       }
     }
