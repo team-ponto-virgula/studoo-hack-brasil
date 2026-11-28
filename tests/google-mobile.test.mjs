@@ -102,7 +102,9 @@ test('a entrada só mostra o Google quando o servidor oferece e o build não des
   const perfil = eas.build.testflight;
   assert.equal(perfil.ios.simulator, undefined);
   assert.equal(perfil.distribution, 'store');
-  assert.match(perfil.env.EXPO_PUBLIC_STUDOO_API_URL, /^https:\/\//);
+  for (const nome of ['development', 'preview', 'production', 'testflight']) {
+    assert.equal(eas.build[nome].env.EXPO_PUBLIC_STUDOO_API_URL, 'https://app.hellostudoo.com.br', nome);
+  }
   // Decisão de 20/11: nenhum perfil desliga o Google; no iPhone ele vem com a Apple (4.8), que o app.json habilita.
   for (const nome of Object.keys(eas.build)) {
     assert.notEqual(eas.build[nome].env?.EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO, 'desligado', nome);

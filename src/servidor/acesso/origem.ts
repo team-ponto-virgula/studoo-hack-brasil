@@ -29,22 +29,6 @@ export function origemWebPermitida(origem: string | null): origem is string {
   return origem !== null && origensWebPermitidas().includes(origem);
 }
 
-/**
- * Origem própria do login com Google: início, cookie do estado, endereço de retorno cadastrado no Google e destino final.
- * Sem STUDOO_GOOGLE_ORIGEM, o Google usa a STUDOO_ORIGEM, como antes. Com ela, passa a usar outro domínio web já aceito
- * (hoje https://app.hellostudoo.com.br) e a STUDOO_ORIGEM segue sendo a dos aplicativos instalados (canal mobile, sessões, Apple).
- * Um valor que não seja exatamente uma origem web aceita é ignorado, o que devolve o comportamento anterior.
- */
-export function origemGoogleDedicada(): string | null {
-  const configurada = process.env.STUDOO_GOOGLE_ORIGEM;
-  if (!configurada) return null;
-  try {
-    return configurada === new URL(configurada).origin && origemWebPermitida(configurada) ? configurada : null;
-  } catch {
-    return null;
-  }
-}
-
 function origemPorHost(proto: string, host: string | undefined): string | null {
   if (!host || /[\s/\\@#?]/.test(host) || (proto !== "https" && proto !== "http")) return null;
   try {
@@ -58,8 +42,10 @@ function origemPorHost(proto: string, host: string | undefined): string | null {
 
 export function origemWebDaRequisicao(request: Request): string | null {
   const cabecalhoOrigem = request.headers.get("origin");
-  if (origemWebPermitida(cabecalhoOrigem)) return cabecalhoOrigem;
+  return origemWebPermitida(cabecalhoOrigem) ? cabecalhoOrigem : origemWebDoHost(request);
+}
 
+export function origemWebDoHost(request: Request): string | null {
   const url = new URL(request.url);
   if (process.env.STUDOO_PROXY_HTTPS === "1") {
     const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase()

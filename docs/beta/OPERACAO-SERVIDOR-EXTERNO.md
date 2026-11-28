@@ -21,7 +21,7 @@ APPLE_TEAM_ID=PYZ6U56AMV
 APPLE_BUNDLE_IDS=com.studoo.mobile.dev
 STUDOO_SESSAO_MOBILE_PILOTO=1
 STUDOO_PROXY_HTTPS=1
-STUDOO_ORIGEM=https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io
+STUDOO_ORIGEM=https://app.hellostudoo.com.br
 ```
 
 Acrescentar **`APPLE_KEY_ID`** e **`APPLE_PRIVATE_KEY`** pelo campo secreto, sem colar valores neste documento. `APPLE_PRIVATE_KEY` recebe o PEM completo; o servidor aceita quebras reais ou escritas como `\n`. Manter a restrição de domínio/email vazia conforme a decisão já registrada, para permitir o revisor e “Ocultar meu email”. Não mudar `IA` para falsa nem desligar Google para contornar a revisão.

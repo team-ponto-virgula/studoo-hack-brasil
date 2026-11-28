@@ -27,7 +27,7 @@ function cenario(tempoRestanteMs) {
 test('somente aberturas limpas de entrada recebem a assinatura; links e retornos seguem direto', () => {
   assert.equal(permiteAbertura('/'), true);
   assert.equal(permiteAbertura('/login'), true);
-  for (const path of ['/auth/google', '/api/auth/google/retorno', '/api/auth/google/callback', '/t/compartilhada', '/p/perfil', '/suporte', '/privacidade', '/cadastro', '/recuperar']) {
+  for (const path of ['/auth/google', '/api/auth/google/callback', '/t/compartilhada', '/p/perfil', '/suporte', '/privacidade', '/cadastro', '/recuperar']) {
     assert.equal(permiteAbertura(path), false, path);
   }
   assert.equal(permiteAbertura('/login', '?erro=google_invalido'), false);

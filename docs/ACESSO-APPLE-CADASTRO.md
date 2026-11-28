@@ -61,4 +61,4 @@ sessões e esquece o token; `account-deleted` exclui a conta. A revogação e as
 ## Esqueci minha senha e Google
 
 Seguem como antes: `/api/senha/recuperar` e `/api/senha/redefinir` (e `/api/mobile/senha/...`), e o Google com
-`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e o redirecionamento `${STUDOO_ORIGEM}/api/auth/google/retorno` (ou `${STUDOO_GOOGLE_ORIGEM}/api/auth/google/callback`, com a origem própria do Google ligada: spec 06).
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e o redirecionamento `${STUDOO_ORIGEM}/api/auth/google/callback`.

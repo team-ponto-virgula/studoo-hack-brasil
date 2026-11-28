@@ -52,7 +52,7 @@ npx eas-cli@latest build --profile development --platform android
 Instale o APK pelo link ou QR do EAS. Depois, com o celular no cabo:
 
 ```sh
-# apps/mobile/.env.local com EXPO_PUBLIC_STUDOO_API_URL=https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io
+# apps/mobile/.env.local com EXPO_PUBLIC_STUDOO_API_URL=https://app.hellostudoo.com.br
 adb reverse tcp:8083 tcp:8083
 npx expo start --dev-client --port 8083
 ```
@@ -61,7 +61,7 @@ No build de desenvolvimento, o `EXPO_PUBLIC_*` vem do `.env.local` lido pelo Met
 
 ## Rota B: APK falando com o site publicado em HTTPS
 
-O APK do perfil `preview` grava `EXPO_PUBLIC_STUDOO_API_URL=https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io` no build. O certificado do site é público (Let's Encrypt, conferido em 18/11/2026), e o APK confia nele sem CA local. Não precisa de cabo nem de notebook ligado na hora da demo.
+O APK do perfil `preview` grava `EXPO_PUBLIC_STUDOO_API_URL=https://app.hellostudoo.com.br` no build. O certificado do site é público (Let's Encrypt, conferido em 18/11/2026), e o APK confia nele sem CA local. Não precisa de cabo nem de notebook ligado na hora da demo.
 
 ### O que o dono precisa ter em mãos
 
@@ -76,7 +76,7 @@ O APK do perfil `preview` grava `EXPO_PUBLIC_STUDOO_API_URL=https://studoo-web-s
 | Variável | Valor | Por quê |
 | --- | --- | --- |
 | `STUDOO_SESSAO_MOBILE_PILOTO` | `1` | Liga o login nativo (`/api/mobile/sessao`) e as chamadas com token. |
-| `STUDOO_ORIGEM` | `https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io` | O canal do app confere o host público contra esta origem. |
+| `STUDOO_ORIGEM` | `https://app.hellostudoo.com.br` | O canal do app confere o host público contra esta origem. |
 | `STUDOO_PROXY_HTTPS` | `1` | O Traefik termina o TLS. Com `1`, o servidor aceita `X-Forwarded-Proto: https` e `X-Forwarded-Host` do proxy. |
 | `IA` e `OPENAI_API_KEY` | `openai` e a chave | Só para voz (Explique e "Falar") e leitura real de material. Com `IA=falsa`, o app mostra o aviso de voz indisponível, e o material de demonstração e o texto funcionam. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `STUDOO_GOOGLE_MOBILE_REDIRECT_URI=studoo-dev://auth/google` | | Opcional. Sem elas, a entrada é por e-mail e senha. |
@@ -91,7 +91,7 @@ O canal do app ainda está desligado no site.
 
 ### Variáveis do app (já no perfil `preview` do `eas.json`)
 
-- `EXPO_PUBLIC_STUDOO_API_URL=https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io`: só a origem HTTPS, sem caminho.
+- `EXPO_PUBLIC_STUDOO_API_URL=https://app.hellostudoo.com.br`: só a origem HTTPS, sem caminho.
 - `EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI=studoo-dev://auth/google`: igual ao `scheme` do `app.json` e a `STUDOO_GOOGLE_MOBILE_REDIRECT_URI` no servidor.
 
 O `.env.local` não sobe para o EAS (está no `.gitignore`), então os valores do build vêm do `eas.json`. Trocar o endereço exige um novo build.

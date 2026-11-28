@@ -60,7 +60,8 @@ async function autorizacao(mobile = false) {
   assert.ok(!google.searchParams.has('client_secret'));
   const state = google.searchParams.get('state'); estados.push(hashToken(state));
   const cookie = resposta.headers.get('set-cookie').split(';')[0];
-  const retorno = new URL('/api/auth/google/retorno', process.env.STUDOO_ORIGEM);
+  assert.equal(google.searchParams.get('redirect_uri'), `${process.env.STUDOO_ORIGEM}/api/auth/google/callback`);
+  const retorno = new URL(google.searchParams.get('redirect_uri'));
   retorno.searchParams.set('state', state); retorno.searchParams.set('code', 'codigo-google-de-teste');
   return { retorno, cookie, verificador, nonce: google.searchParams.get('nonce'), state };
 }

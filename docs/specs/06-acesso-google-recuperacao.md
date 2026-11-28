@@ -1,6 +1,6 @@
 # Acesso com Google e recuperação de senha
 
-A web e o app Android oferecem **Continuar com Google** e **Esqueci minha senha**. O login existente por e-mail e senha continua disponível. O servidor informa quais provedores estão configurados por `/api/auth/config`; sem credenciais Google, a interface explica a indisponibilidade.
+A web e os apps Android e iPhone oferecem **Continuar com Google** e **Esqueci minha senha**. O login existente por e-mail e senha continua disponível. O servidor informa quais provedores estão configurados por `/api/auth/config`; sem credenciais Google, a interface explica a indisponibilidade.
 
 ## Configuração do servidor
 
@@ -8,22 +8,18 @@ Use os campos de `.env.example` em seu ambiente privado. O bootstrap local conti
 
 1. Instale as dependências com `npm ci`, gere o cliente com `npm run db:generate` e aplique `npm run db:migrate` ao banco de destino. A migração mantém usuários e planos existentes e acrescenta os registros temporários de autenticação.
 2. Configure `STUDOO_ORIGEM` com a origem pública HTTPS exata, sem caminho. Para aceitar Gmail e outros domínios, deixe `STUDOO_DOMINIO_EMAIL=` vazio. Um valor preenchido restringe todos os métodos de entrada ao domínio escolhido. Para liberar contas específicas fora desse domínio sem abrir o domínio delas, use `STUDOO_EMAILS_PERMITIDOS` com os e-mails exatos, separados por vírgula (por exemplo `pessoa@exemplo.com,outra.pessoa@exemplo.org`): comparados em minúsculas e sem espaços, entradas vazias ou sem formato de e-mail são ignoradas, no máximo 20. Vale para senha, recuperação e Google, que usam a mesma regra (`emailPermitido`). Ausente ou vazia, só o domínio vale. A conta sintética do seed continua exigindo domínio `.test`.
-3. No Google Cloud, configure a tela de consentimento e um cliente OAuth **Aplicativo da Web**. Cadastre a URI exata `https://SEU-DOMINIO/api/auth/google/retorno` (ou `https://SEU-DOMINIO/api/auth/google/callback`, com a origem própria do Google ligada: veja a seção abaixo). No desenvolvimento web, cadastre também a origem loopback usada, por exemplo `http://localhost:3100/api/auth/google/retorno`. Se o consentimento estiver em teste, inclua as contas de teste no Google.
-4. Preencha `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` somente no servidor. O mesmo cliente atende web e Android: o servidor recebe o callback do Google e depois entrega ao app um código temporário próprio.
+3. No Google Cloud, configure a tela de consentimento e um cliente OAuth **Aplicativo da Web**. Cadastre a URI exata `https://app.hellostudoo.com.br/api/auth/google/callback`. No desenvolvimento web, cadastre também a origem loopback usada, por exemplo `http://localhost:3100/api/auth/google/callback`. Se o consentimento estiver em teste, inclua as contas de teste no Google.
+4. Preencha `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` somente no servidor. O mesmo cliente atende a web, o Android e o iPhone: o servidor recebe o callback do Google e depois entrega ao app um código temporário próprio.
 5. Configure `EMAIL=resend`, `RESEND_API_KEY` e `EMAIL_FROM` no servidor. Verifique seu domínio no painel do Resend e use um remetente desse domínio, como `Studoo <acesso@seu-dominio.com>`. Crie uma chave com permissão de envio. Não coloque essa chave nas variáveis públicas da web ou do Expo. O envio usa a API HTTPS do Resend, com limite de 10 segundos por pedido. As antigas variáveis `SMTP_*` não são usadas.
 6. Reinicie o servidor após alterar as variáveis. Verifique uma entrada Google e o recebimento do e-mail em uma conta de teste antes de liberar o ambiente.
 
-## Domínio próprio do Google e apps instalados
+## Domínio de produção e apps instalados
 
-Para o Google mostrar o domínio do Studoo (`hellostudoo.com.br`) e não o endereço antigo do Dokploy (`*.sslip.io`), o login com Google tem uma origem própria, separada da `STUDOO_ORIGEM`:
+Em produção, configure `STUDOO_ORIGEM=https://app.hellostudoo.com.br` e use esse mesmo endereço em `EXPO_PUBLIC_STUDOO_API_URL`. O Google começa e volta pelo domínio do app, onde o servidor grava o cookie de estado. Em seguida, a web abre uma sessão nesse domínio, e os apps recebem um código temporário pelo link `studoo-dev://auth/google` e o trocam na API.
 
-- `STUDOO_GOOGLE_ORIGEM=https://app.hellostudoo.com.br` liga a origem própria. Precisa ser exatamente uma origem web aceita (a `STUDOO_ORIGEM` ou `https://app.hellostudoo.com.br`); qualquer outro valor é ignorado e o comportamento volta ao anterior. Para desligar, esvazie a variável e reinicie o serviço.
-- Com ela ligada, o Google recebe a URI de retorno `https://app.hellostudoo.com.br/api/auth/google/callback`, que precisa estar cadastrada no cliente OAuth. Sem ela, a URI continua `${STUDOO_ORIGEM}/api/auth/google/retorno`. As duas rotas, `/callback` e `/retorno`, respondem pela mesma função (`retornarGoogle`) e cada uma trata a volta na origem em que o Google devolveu a pessoa, então uma volta em curso na hora da troca ainda conclui.
-- A `STUDOO_ORIGEM` **não muda**: os apps instalados têm o endereço antigo gravado no build (`EXPO_PUBLIC_STUDOO_API_URL`) e o canal do app, as sessões e a notificação da Apple só valem nesse host. Quem começa o Google por esse host (o app instalado, ou a web antiga) é levado ao início em `STUDOO_GOOGLE_ORIGEM`, com o mesmo `mobile` e `desafio`, antes de gravar cookie ou estado. O cookie `__Host-studoo-google` e o retorno ficam no mesmo host, o app recebe o código temporário pelo link `studoo-dev://auth/google` e o troca no endereço antigo, como antes.
-- Na web, quem entra pelo Google termina no `app.hellostudoo.com.br` com a sessão aberta ali. O cookie de sessão é por host (8 horas), então a sessão da web aberta no endereço antigo não passa para o `app.`: é uma nova entrada, uma vez.
-- Cadastre a nova URI sem tirar a antiga até os testes passarem na web, no Android e no iPhone. Só depois a URI do endereço antigo pode sair do cliente OAuth, porque nenhum caminho do Google a usa mais com a origem própria ligada.
+Quem ainda usa uma versão com o endereço antigo precisa instalar a versão publicada com o domínio atualizado. A sessão é guardada por domínio, então o primeiro acesso pelo novo endereço pede um novo login.
 
-## Android
+## Android e iPhone
 
 No servidor, habilite `STUDOO_SESSAO_MOBILE_PILOTO=1` e use HTTPS. Configure `STUDOO_GOOGLE_MOBILE_REDIRECT_URI=studoo-dev://auth/google`.
 
