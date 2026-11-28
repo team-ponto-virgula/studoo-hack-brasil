@@ -18,7 +18,7 @@ const regra = (folha, seletor) => {
 
 test('item 4: o Conceito e o Exemplo (fora do "Resolva comigo") medem a folga; o miolo recebe data-folga; o Stu só entra no Exemplo, acima do cartão, decorativo', () => {
   assert.match(aula, /useFolgaDaEtapa\(etapa\.tipo === 'conceito' \|\| \(etapa\.tipo === 'exemplo' && !resolva\.ativo\)\)/);
-  assert.match(aula, /<div className="aula-miolo" key=\{`\$\{passo\}-\$\{rodadaDeOpcoes\}`\} ref=\{refDoMiolo\} data-folga=\{folga \|\| undefined\}>/);
+  assert.match(aula, /<div className="aula-miolo" key=\{`\$\{passo\}-\$\{rodadaDeOpcoes\}`\} ref=\{refDoMiolo\} data-folga=\{folga \|\| undefined\}(?: data-voltando=\{etapaVista\.voltando \|\| undefined\})?>/);
   assert.match(aula, /\{etapa\.tipo === 'exemplo' && !resolva\.ativo && folga && \(\s*<div className="aula-folga-stu" data-folga-stu="" aria-hidden="true"><Stu expressao="stu-feliz" tamanho=\{72\} \/><\/div>\s*\)\}/);
   // O Stu do Conceito já fica ao lado do balão: ele não ganha um segundo.
   assert.equal((aula.match(/aula-folga-stu/g) ?? []).length, 1);

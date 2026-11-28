@@ -241,6 +241,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   // Quem saiu no meio continua de onde parou (o andamento fica no navegador por um dia).
   const [retomada] = useState(() => lerAndamento(licao, etapas, exercicios.length));
   const [passo, setPasso] = useState(retomada?.passo ?? 0);
+  // Troca de etapa com direção (contrato `transicao-de-tela.ts`): voltar a uma etapa anterior entra pela esquerda; avançar,
+  // pela direita. Calculada no render, comparando com a etapa que estava na tela.
+  const [etapaVista, setEtapaVista] = useState({ passo, voltando: false });
+  if (etapaVista.passo !== passo) setEtapaVista({ passo, voltando: passo < etapaVista.passo });
   const [respostas, setRespostas] = useState<string[]>(() => (retomada
     ? retomada.respostas.map((guardada, numero) => respostaRetomada(exercicios[numero], guardada))
     : exercicios.map(respostaDoComeco)));
@@ -785,7 +789,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         <BotaoSom />
       </header>
       {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
-      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`} ref={refDoMiolo} data-folga={folga || undefined}>
+      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`} ref={refDoMiolo} data-folga={folga || undefined} data-voltando={etapaVista.voltando || undefined}>
         {passo > 0 && !revisao && (
           <button type="button" className="aula-voltar-etapa" disabled={ocupado}
             onClick={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }}>

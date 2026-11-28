@@ -327,6 +327,9 @@
 .aula-revisao .icone { width: 18px; height: 18px; }
 
 @keyframes aula-entrar { from { opacity: 0; transform: translateX(28px); } }
+/* Voltar a uma etapa anterior: a etapa entra pela esquerda (contrato `transicao-de-tela.ts`). */
+.aula-miolo[data-voltando] { animation-name: aula-voltar; }
+@keyframes aula-voltar { from { opacity: 0; transform: translateX(-28px); } }
 @keyframes aula-balao { from { opacity: 0; transform: scale(0.94); } }
 @keyframes aula-retorno { from { opacity: 0; transform: translateY(24px); } }
 @keyframes aula-icone { from { transform: scale(0.3) rotate(-30deg); } }

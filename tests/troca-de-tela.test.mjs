@@ -120,3 +120,17 @@ test('app: a Tela nova entra pelo lado da troca, e o movimento reduzido continua
   assert.match(estudo, /if \(troca\.tipo !== etapa\.tipo\) setTroca\(\{ tipo: etapa\.tipo, direcao: direcaoDaTroca\(troca\.tipo, etapa\.tipo\) \}\);/);
   assert.match(estudo, /<DirecaoDaTrocaContexto\.Provider value=\{troca\.direcao\}>\s*\{renderizarTela\(\)\}/);
 });
+
+test('aula: voltar a uma etapa anterior entra pela esquerda; avançar, pela direita (web e app)', () => {
+  const regra = /const \[etapaVista, setEtapaVista\] = useState\(\{ passo, voltando: false \}\);\s*if \(etapaVista\.passo !== passo\) setEtapaVista\(\{ passo, voltando: passo < etapaVista\.passo \}\);/;
+  const aula = ler('src/app/aula.tsx');
+  assert.match(aula, regra);
+  assert.match(aula, /className="aula-miolo"[^>]*data-voltando=\{etapaVista\.voltando \|\| undefined\}/);
+  const css = ler('src/app/aula.css');
+  assert.match(css, /\.aula-miolo\[data-voltando\] \{ animation-name: aula-voltar; \}/);
+  assert.match(css, /@keyframes aula-voltar \{ from \{ opacity: 0; transform: translateX\(-28px\); \} \}/);
+  const licao = ler('apps/mobile/src/licao.tsx');
+  assert.match(licao, regra);
+  assert.match(licao, /<EntradaDaEtapa key=\{`\$\{passo\}-\$\{rodadaDeOpcoes\}`\} voltando=\{etapaVista\.voltando\}>/);
+  assert.match(licao, /const \[lado\] = useState\(\(\) => \(voltando \? -28 : 28\)\);/);
+});
