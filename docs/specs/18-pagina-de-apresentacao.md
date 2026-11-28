@@ -74,7 +74,7 @@ Tudo dentro de `prefers-reduced-motion: no-preference`. Nenhuma animação em la
 
 ### 0.6 O que saiu e o que continua
 - **Saíram:** a primeira dobra em duas colunas com o caderno (1.2), o celular do herói com três telas em laço (1.4) e o botão de pausar a prévia, os quatro momentos em abas (S2), a faixa "Resolva uma com o Stu." e a tabela de animações da seção 4. O roteiro `scripts/qa/heroi-troca.mjs` saiu junto com o laço.
-- **Continuam como estão:** as decisões do Lead, os estados do botão por aparelho (1.3), a folha do iPhone (1.5), o cartão do QR (1.6, só na parada 5), os passos de instalar (S4), o rodapé (S6), as metas de acessibilidade e de peso (seção 5), a paridade (seção 7) e as capturas nativas, sem recorte (seção 9).
+- **Continuam como estão:** as decisões do Lead, os estados do botão por aparelho (1.3), a folha do iPhone (1.5), o cartão do QR (1.6, só na parada 5), os passos de instalar (S4), o rodapé (S6), as metas de acessibilidade e de peso (seção 5), a paridade (seção 7) e as capturas nativas, sem recorte (seção 9). A moldura do celular mudou depois (0.9).
 - **Capturas em uso:** os momentos 1 a 4, a janela do momento 4 e a trilha pronta (herói 2) da plataforma de quem abre. As capturas 1 e 3 do herói ficam no conjunto, sem aparecer.
 - **Som:** a página é silenciosa, como já era no site. A seção 6 não vale.
 - **Imagem com prioridade:** agora é o Stu do alto, e não mais a primeira captura do herói.
@@ -89,6 +89,15 @@ Fotos do build de produção local, no Chromium. Ainda não é o site publicado.
 - **Movimento reduzido:** tudo à vista desde o começo, sem animação nenhuma, e os estados finais das demonstrações inteiros.
 - **Peso:** cerca de 550 KB na primeira carga, e nenhum salto de layout medido (CLS 0).
 - **Não conferido:** Safari e aparelhos de verdade.
+
+### 0.9 Ajustes de 28/11, depois de publicar
+A pedido do dono, com prints da página no ar.
+- **Moldura de celular realista.** Aro de metal, moldura preta do vidro e botões nas laterais. No iPhone, a ilha e os botões dos dois lados. No Android, um furo de câmera, os botões só à direita e o canto da tela menor, para não cortar o relógio da captura. É desenho de CSS do Studoo, sem imagem nem marca de aparelho, e todas as medidas acompanham a largura do celular. Substitui a moldura chapada da 1.4 e da seção 9. O resto da seção 9 continua: a moldura segue a plataforma da captura, não desenha relógio, e as capturas são nativas e sem recorte.
+- **Etiqueta do marco com o texto no centro.** O marco ficava esticado: o nó descia uns 20 px e a etiqueta ficava alta, com o texto no alto. Agora o centro do nó fica na fronteira da região, a etiqueta tem o mesmo respiro em cima e embaixo, e o título vem 20 px depois dela. No cartão de explicação mais curto, o rótulo e o texto também ficam juntos.
+- **Começo da trilha sem corte.** O chão do alto cobria a metade de cima do primeiro marco e escondia a onda da primeira parada. A onda agora passa por cima da borda do alto, como nas outras fronteiras, e o marco aparece inteiro. Nas telas largas, a estrada que sai dos pés do Stu chega direto ao primeiro nó.
+- **Estrada de pontos.** O trecho de estrada de cada marco passa a ser de pontos, como a estrada do alto.
+
+Conferido no build de produção local, no Chromium, em 320, 360, 390, 768, 1024, 1400 e 1920: o centro do nó fica na fronteira em todos os marcos, as seis etiquetas têm o texto no centro, e nada passa da largura da janela. Não conferido: Safari e aparelhos de verdade.
 
 ## 1. Herói e botão (primeira entrega, para o Web & API começar)
 

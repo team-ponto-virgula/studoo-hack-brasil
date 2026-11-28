@@ -7,7 +7,9 @@
   --cn-coluna: 1180px;
   --cn-margem: clamp(18px, 4.4vw, 64px);
   --cn-cabecalho: 76px;
-  --cn-topo-da-regiao: clamp(92px, 10.5vw, 148px);
+  /* O marco de cada parada: o nó fica com o centro na fronteira da região, e o trecho de estrada que chega a ele fica por cima da região anterior. */
+  --cn-no: 76px;
+  --cn-chegada-da-estrada: 64px;
   --cn-marinho: #0b1b5c;
   --cn-tinta: #3f4b6b;
   --cn-borda-cartao: #dce1f1;
@@ -81,8 +83,12 @@
 .cn-botao-principal[data-baixando] { background: var(--sucesso); }
 
 /* ---------- O alto da página: o campo, com o Stu recebendo a pessoa ---------- */
+/*
+ * `isolation` prende dentro do alto as camadas dele (o chão, o texto e o convite têm z-index). Sem isso elas ficavam por cima da primeira parada,
+ * que vem depois: o chão do alto cortava a metade de cima do primeiro marco e escondia a onda da fronteira.
+ */
 .cn-heroi {
-  position: relative; overflow: clip; margin-top: calc(-1 * var(--cn-cabecalho));
+  position: relative; isolation: isolate; overflow: clip; margin-top: calc(-1 * var(--cn-cabecalho));
   padding-top: calc(var(--cn-cabecalho) + clamp(18px, 3.6vw, 56px));
   background: linear-gradient(180deg, #c3daff 0%, #d9e7ff 36%, #ecf3ff 70%, #f5f9ff 100%);
 }
@@ -135,7 +141,10 @@
 .cn-colinas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 /* A estrada sai dos pés do Stu, que só fica à direita nas telas largas. */
 .cn-colinas__estrada { display: none; }
-@media (min-width: 1040px) { .cn-colinas__estrada { display: inline; } }
+@media (min-width: 1040px) {
+  .cn-colinas__estrada { display: inline; }
+  .cn-regiao[data-parada='1'] .cn-marco__estrada { visibility: hidden; }
+}
 .cn-enfeite { position: absolute; top: var(--t, auto); right: var(--xr, auto); bottom: var(--b, auto); left: var(--x, auto); }
 /* O convite do primeiro marco, como o balão do nó no mapa do app. */
 .cn-comecar {
@@ -149,7 +158,7 @@
 
 /* ---------- As paradas: regiões do mapa, com a onda da fronteira, o marco e o título ---------- */
 .cn-regiao, .cn-chegada { position: relative; scroll-margin-top: 124px; }
-.cn-regiao { padding-block: var(--cn-topo-da-regiao) clamp(110px, 12vw, 176px); background: var(--chao); }
+.cn-regiao { padding-bottom: clamp(110px, 12vw, 176px); background: var(--chao); }
 .cn-onda { position: absolute; bottom: calc(100% - 1px); left: 0; display: block; width: 100%; height: clamp(30px, 4.6vw, 66px); }
 .cn-regiao__enfeites, .cn-chegada__ceu { position: absolute; inset: 0; overflow: clip; pointer-events: none; }
 /* O relevo da região, como no mapa: duas manchas largas do tom de cima, atrás de tudo. */
@@ -157,11 +166,19 @@
 .cn-regiao__enfeites::before { top: 16%; left: -14%; width: 46%; height: 30%; }
 .cn-regiao__enfeites::after { right: -16%; bottom: 9%; width: 52%; height: 34%; }
 .cn-regiao__miolo, .cn-chegada__miolo { position: relative; }
-.cn-intro { display: grid; justify-items: center; text-align: center; margin-bottom: clamp(26px, 3.6vw, 48px); }
-.cn-marco { display: grid; justify-items: center; margin-top: calc(-1 * (var(--cn-topo-da-regiao) + 38px + 64px)); }
-.cn-marco__estrada { width: 8px; height: 56px; margin-bottom: 8px; border-radius: 4px; background: repeating-linear-gradient(180deg, var(--cn-estrada) 0 9px, transparent 9px 20px); }
+/*
+ * A introdução e o marco são colunas flexíveis, e não grades: numa grade, a linha de um item com margem negativa maior que ele mesmo fica com zero de altura,
+ * o item estica até preencher a margem e o que sobra é repartido entre o trecho de estrada, o nó e a etiqueta (o nó descia e a etiqueta ficava alta, com o texto no alto).
+ * A margem do marco é só a parte dele que fica por cima da região anterior: a chegada da estrada e a metade de cima do nó.
+ */
+.cn-intro { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: clamp(26px, 3.6vw, 48px); }
+.cn-marco { display: flex; flex: none; flex-direction: column; align-items: center; margin-top: calc(-1 * (var(--cn-chegada-da-estrada) + var(--cn-no) / 2)); }
+.cn-marco__estrada {
+  flex: none; width: 9px; height: calc(var(--cn-chegada-da-estrada) - 8px); margin-bottom: 8px;
+  background: radial-gradient(circle closest-side, var(--cn-estrada) 92%, transparent) center top / 9px 19px repeat-y;
+}
 .cn-marco__no {
-  position: relative; display: grid; place-items: center; width: 76px; height: 76px; border: 3px dashed #8da2f2; border-radius: 50%;
+  position: relative; display: grid; flex: none; place-items: center; width: var(--cn-no); height: var(--cn-no); border: 3px dashed #8da2f2; border-radius: 50%;
   background: #fff; box-shadow: 0 6px 0 var(--cn-labio); color: var(--acao-escura);
 }
 .cn-marco__icone .cn-icone { width: 32px; height: 32px; }
@@ -170,11 +187,12 @@
 .cn-marco[data-estado='feito'] .cn-marco__no { border-color: transparent; background: var(--ouro); box-shadow: 0 6px 0 var(--ouro-escuro); color: #5b3d00; }
 .cn-marco[data-estado='feito'] .cn-marco__icone { visibility: hidden; }
 .cn-marco[data-estado='feito'] .cn-marco__visto { display: block; }
+/* A etiqueta é um bloco de texto centrado: a altura é só a das linhas do texto mais o respiro, igual em cima e embaixo. */
 .cn-marco__rotulo {
-  display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; margin-top: 18px; padding: 6px 14px; border-radius: 999px; background: #fff;
-  box-shadow: 0 3px 0 var(--cn-labio); color: var(--cn-marinho); font: 850 0.8rem/1.3 Nunito, sans-serif; letter-spacing: 0.05em; text-transform: uppercase;
+  display: block; flex: none; margin-top: 18px; padding: 7px 16px; border-radius: 999px; background: #fff;
+  box-shadow: 0 3px 0 var(--cn-labio); color: var(--cn-marinho); font: 850 0.8rem/1.3 Nunito, sans-serif; letter-spacing: 0.05em; text-align: center; text-transform: uppercase;
 }
-.cn-marco__numero { color: var(--acao-escura); }
+.cn-marco__numero { margin-right: 0.3em; color: var(--acao-escura); }
 .cn-titulo { max-width: 19ch; margin-top: 20px; font: 900 clamp(2.05rem, 4.5vw, 3.85rem)/1.04 Nunito, sans-serif; letter-spacing: -0.04em; color: var(--cn-marinho); }
 .cn-linha { max-width: 50ch; margin-top: 14px; font: 600 clamp(1.02rem, 1.45vw, 1.22rem)/1.5 Nunito, sans-serif; color: var(--cn-tinta); }
 
@@ -310,7 +328,7 @@
 .cn-explicacoes__lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .cn-explicacao { position: relative; display: block; min-width: 0; cursor: pointer; }
 .cn-explicacao input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.cn-explicacao__cartao { display: grid; gap: 6px; height: 100%; padding: 14px 16px; border: 2px solid #c9d1ea; border-radius: 18px; background: #fff; box-shadow: 0 4px 0 #d5dbee; }
+.cn-explicacao__cartao { display: grid; align-content: start; gap: 6px; height: 100%; padding: 14px 16px; border: 2px solid #c9d1ea; border-radius: 18px; background: #fff; box-shadow: 0 4px 0 #d5dbee; }
 .cn-explicacao__rotulo { color: var(--violeta-texto); font: 850 0.78rem/1.2 Nunito, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; }
 .cn-explicacao__texto { color: var(--cn-marinho); font-size: 0.98rem; line-height: 1.45; }
 .cn-explicacao input:checked + .cn-explicacao__cartao { border-color: var(--acao); background: #eef3ff; box-shadow: 0 4px 0 var(--acao-escura); }
@@ -408,9 +426,7 @@
 .cn-janela__pontos span { width: 9px; height: 9px; border-radius: 50%; background: #c3cdec; }
 .cn-janela__aba { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #fff; color: var(--texto); font: 800 0.75rem/26px Nunito, sans-serif; }
 .cn-janela__tela { aspect-ratio: 1024 / 684; background: #fff; }
-.cn-composto .cn-celular { --celular: 42%; z-index: 2; justify-self: end; margin-top: -24%; border-width: 6px; border-radius: 26px; }
-.cn-composto .cn-celular__tela { border-radius: 20px; }
-.cn-composto .cn-celular__ilha { top: 4px; height: 10px; }
+.cn-composto .cn-celular { --celular: 42%; z-index: 2; justify-self: end; margin-top: -24%; }
 .cn-selo-sincronia {
   position: absolute; z-index: 3; top: 52%; left: 0; display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 14px;
   background: #fff; box-shadow: 0 4px 0 var(--cn-labio); color: var(--cn-marinho); font-size: 0.82rem; font-weight: 850;
@@ -418,16 +434,34 @@
 .cn-selo-sincronia__ponto { width: 9px; height: 9px; border-radius: 50%; background: #32824e; }
 .cn-sincronia__links { margin-top: 8px; }
 
-/* ---------- O celular (moldura própria do Studoo) ---------- */
-.cn-celular {
-  --celular: 260px;
-  position: relative; box-sizing: border-box; width: var(--celular); border: 7px solid var(--cn-marinho); border-radius: 32px;
-  background: var(--cn-marinho); box-shadow: 5px 8px 0 rgb(11 27 92 / 0.14), 0 18px 30px rgb(11 27 92 / 0.14);
+/*
+ * ---------- O celular: uma moldura realista, desenhada pelo Studoo ----------
+ * Aro de metal, moldura preta do vidro, botões nas laterais e a câmera (a ilha no iPhone, um furo no Android). É desenho de CSS: não usa imagem
+ * nem marca de aparelho de ninguém. Todas as medidas são em `cqw`, a largura do próprio celular, para a moldura manter as proporções em qualquer
+ * tamanho; a medida em px antes de cada uma vale só para um navegador sem `cqw`.
+ */
+.cn-celular { --celular: 260px; position: relative; box-sizing: border-box; width: var(--celular); container-type: inline-size; }
+.cn-celular__aparelho { position: relative; filter: drop-shadow(0 2px 3px rgb(11 27 92 / 0.2)) drop-shadow(0 14px 18px rgb(11 27 92 / 0.2)); }
+.cn-celular__corpo {
+  position: relative; padding: 6px; padding: 2.5cqw; border: 2px solid transparent; border-width: 1cqw; border-radius: 38px; border-radius: 16.6cqw;
+  background: linear-gradient(#07070a, #07070a) padding-box, linear-gradient(140deg, #8e919b 0%, #4a4c54 12%, #1d1e22 34%, #0f1013 58%, #34363d 82%, #7b7e88 100%) border-box;
+  box-shadow: inset 0 0 0 0.3cqw rgb(255 255 255 / 0.09);
 }
-.cn-celular__tela { position: relative; overflow: hidden; border-radius: 25px; background: #fff; aspect-ratio: 1206 / 2622; }
-.cn-celular[data-plataforma='android'] .cn-celular__tela { aspect-ratio: 720 / 1560; }
-.cn-celular__ilha { position: absolute; z-index: 3; top: 6px; left: 50%; width: 28%; height: 13px; border-radius: 12px; background: var(--cn-marinho); transform: translateX(-50%); pointer-events: none; }
-.cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4px; width: 7px; height: 7px; border-radius: 50%; }
+.cn-celular__tela { position: relative; overflow: hidden; border-radius: 30px; border-radius: 13.2cqw; background: #fff; aspect-ratio: 1206 / 2622; }
+.cn-celular__ilha { position: absolute; z-index: 3; top: 12px; top: 5.1cqw; left: 50%; width: 28.6cqw; height: 8.4cqw; border-radius: 999px; background: #07070a; translate: -50% 0; pointer-events: none; }
+/* Os botões ficam por trás do corpo: só aparece o que passa da lateral. */
+.cn-celular__botoes i { position: absolute; z-index: -1; width: 1.6cqw; border-radius: 0.7cqw; background: linear-gradient(90deg, #17181c, #777a84 50%, #26272c); }
+.cn-celular__botoes i:nth-child(1) { top: 16.5%; left: -0.8cqw; height: 4.2%; }
+.cn-celular__botoes i:nth-child(2) { top: 24%; left: -0.8cqw; height: 7.6%; }
+.cn-celular__botoes i:nth-child(3) { top: 33.4%; left: -0.8cqw; height: 7.6%; }
+.cn-celular__botoes i:nth-child(4) { top: 27.5%; right: -0.8cqw; height: 12%; }
+/* Android: cantos mais retos, moldura mais fina, a câmera num furo e os botões só do lado direito. O canto da tela é menor para não cortar o relógio da captura. */
+.cn-celular[data-plataforma='android'] .cn-celular__corpo { padding: 2cqw; border-radius: 11.2cqw; }
+.cn-celular[data-plataforma='android'] .cn-celular__tela { border-radius: 8.2cqw; aspect-ratio: 720 / 1560; }
+.cn-celular[data-plataforma='android'] .cn-celular__ilha { top: 4.2cqw; width: 3.8cqw; height: 3.8cqw; border-radius: 50%; background: radial-gradient(circle at 36% 34%, #33415f 0 14%, #07070a 44%); }
+.cn-celular[data-plataforma='android'] .cn-celular__botoes i:nth-child(-n+2) { display: none; }
+.cn-celular[data-plataforma='android'] .cn-celular__botoes i:nth-child(3) { top: 21%; right: -0.8cqw; left: auto; height: 6%; }
+.cn-celular[data-plataforma='android'] .cn-celular__botoes i:nth-child(4) { top: 30.5%; height: 13.5%; }
 /* A captura mantém a proporção e entra inteira na moldura. O <picture> só escolhe o formato. */
 .cn-captura { display: block; width: 100%; height: 100%; object-fit: contain; }
 .cn-captura[hidden] { display: none; }
@@ -438,9 +472,9 @@
 /* ---------- A chegada: a noite, o troféu e o convite ---------- */
 .cn-chegada {
   --chao: #0d1f6b; --relevo: #23389a; --cn-estrada: #ffd666; --cn-labio: rgb(0 0 0 / 0.28);
-  padding-block: var(--cn-topo-da-regiao) clamp(64px, 8vw, 116px); background: linear-gradient(180deg, #0d1f6b 0%, #0a1750 100%); color: #fff;
+  padding-bottom: clamp(64px, 8vw, 116px); background: linear-gradient(180deg, #0d1f6b 0%, #0a1750 100%); color: #fff;
 }
-.cn-chegada__miolo { display: grid; justify-items: center; }
+.cn-chegada__miolo { display: flex; flex-direction: column; align-items: center; }
 .cn-chegada .cn-marco { margin-bottom: clamp(18px, 3vw, 34px); }
 .cn-chegada .cn-marco .cn-marco__no, .cn-chegada .cn-marco[data-estado] .cn-marco__no { border-color: transparent; background: var(--ouro); box-shadow: 0 6px 0 var(--ouro-escuro), 0 0 0 10px rgb(251 191 36 / 0.2); color: #5b3d00; }
 .cn-chegada .cn-marco[data-estado] .cn-marco__icone { visibility: visible; }
@@ -516,7 +550,7 @@
   .cn-licao-exemplo { width: 100%; }
 }
 @media (max-width: 739px) {
-  .cn-pagina { --cn-cabecalho: 68px; }
+  .cn-pagina { --cn-cabecalho: 68px; --cn-no: 66px; }
   .cn-cabecalho { padding-top: 8px; }
   .cn-capsula { min-height: 54px; padding: 4px 6px 4px 14px; border-radius: 19px; }
   .cn-trilha { position: static; }
@@ -543,8 +577,6 @@
   .cn-pagina .cn-nuvem--2, .cn-pagina .cn-heroi__balao { display: none; }
   .cn-nuvem--3 { top: auto; right: -4%; bottom: 33%; }
   .cn-comecar { bottom: 104px; font-size: 0.94rem; }
-  .cn-marco__no { width: 66px; height: 66px; }
-  .cn-marco { margin-top: calc(-1 * (var(--cn-topo-da-regiao) + 33px + 64px)); }
   .cn-marco__icone .cn-icone { width: 28px; height: 28px; }
   .cn-anfitriao .cn-fala { margin-bottom: 22px; }
   .cn-questao, .cn-licao-exemplo, .cn-caderno-stu, .cn-instalador, .cn-pedido, .cn-lago { border-radius: 22px; }

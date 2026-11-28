@@ -187,6 +187,30 @@ test('fontes: cada família em duas partes complementares (o latim, pré-carrega
   assert.doesNotMatch(layout, /href="\/marca\/(nunito|quicksand)-wght\.woff2"/, 'a fonte inteira não é pré-carregada');
 });
 
+test('o marco fica com o centro do nó na fronteira da região, a etiqueta tem o texto no centro e o alto não cobre a primeira parada', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  // A margem do marco é só a parte dele que fica por cima da região anterior: a chegada da estrada e a metade de cima do nó.
+  assert.match(css, /--cn-no: 76px;\n  --cn-chegada-da-estrada: 64px;/);
+  assert.match(css, /\.cn-marco \{ display: flex; flex: none; flex-direction: column; align-items: center; margin-top: calc\(-1 \* \(var\(--cn-chegada-da-estrada\) \+ var\(--cn-no\) \/ 2\)\); \}/);
+  assert.match(css, /\.cn-pagina \{ --cn-cabecalho: 68px; --cn-no: 66px; \}/, 'no celular o nó é menor, e a margem acompanha');
+  // As regiões não têm respiro em cima: quem ocupa o alto delas é o marco. Com respiro, a margem do marco passava da altura dele e a grade o esticava.
+  assert.match(css, /\.cn-regiao \{ padding-bottom: clamp\(110px, 12vw, 176px\); background: var\(--chao\); \}/);
+  assert.doesNotMatch(css, /cn-topo-da-regiao/);
+  // A introdução, o marco e a chegada são colunas flexíveis: uma grade repartia a sobra entre a estrada, o nó e a etiqueta, que ficava alta com o texto no alto.
+  assert.match(css, /\.cn-intro \{ display: flex; flex-direction: column; align-items: center; text-align: center;/);
+  assert.match(css, /\.cn-chegada__miolo \{ display: flex; flex-direction: column; align-items: center; \}/);
+  const etiqueta = css.match(/\.cn-marco__rotulo \{([^}]*)\}/)[1];
+  assert.match(etiqueta, /display: block; flex: none; margin-top: 18px; padding: 7px 16px;/, 'o mesmo respiro em cima e embaixo');
+  assert.match(etiqueta, /text-align: center;/);
+  assert.doesNotMatch(etiqueta, /flex-wrap|inline-flex/);
+  // O alto prende as camadas dele: sem isso o chão do alto (z-index 1) cortava o primeiro marco e escondia a onda da primeira parada.
+  assert.match(css, /\.cn-heroi \{\n  position: relative; isolation: isolate; overflow: clip;/);
+  // Nas telas largas a estrada que sai dos pés do Stu já chega ao primeiro marco, e o trecho próprio dele não aparece em dobro.
+  assert.match(css, /@media \(min-width: 1040px\) \{\n  \.cn-colinas__estrada \{ display: inline; \}\n  \.cn-regiao\[data-parada='1'\] \.cn-marco__estrada \{ visibility: hidden; \}\n\}/);
+  // O cartão de explicação mais curto não espalha o rótulo e o texto pela altura do vizinho.
+  assert.match(css, /\.cn-explicacao__cartao \{ display: grid; align-content: start; gap: 6px; height: 100%;/);
+});
+
 test('as regiões vêm na ordem da trilha, cada uma com o chão e o relevo do mapa do app, e o convite do alto leva à primeira parada', () => {
   const html = desenhar();
   const ids = [...html.matchAll(/<section id="([^"]+)"/g)].map(([, id]) => id);
@@ -487,8 +511,9 @@ test('a parada do app: o site numa janela de navegador desenhada pelo Studoo (ca
   assert.ok(texto(barra).includes('Studoo'));
   assert.doesNotMatch(texto(barra), /https?:|www\.|\.com|\.app|\.br|sslip/i);
   // A captura da web nunca está dentro de uma moldura de celular, e a do app nunca dentro da janela.
-  const celulares = [...html.matchAll(/<div class="cn-celular[^"]*"[\s\S]*?<\/div><\/div>/g)].map((m) => m[0]);
+  const celulares = [...html.matchAll(/<div class="cn-celular" data-plataforma="(?:iphone|android)">[\s\S]*?<span class="cn-celular__ilha" aria-hidden="true"><\/span>/g)].map((m) => m[0]);
   assert.equal(celulares.length, 5, 'material, ponte, ensinar, trilha pronta e o mapa');
+  for (const celular of celulares) assert.match(celular, /<div class="cn-celular__tela"><picture data-carregar-perto="">/, 'cada moldura traz a captura dela dentro da tela');
   for (const celular of celulares) assert.ok(!celular.includes('janela-4-'), 'a web fora do celular');
   assert.ok(!janela[1].includes(CAPTURAS['momento-4'].src1x), 'o app fora da janela');
   assert.match(ler('src/app/conheca/cenario.tsx'), /if \(captura\.plataforma === 'web'\) throw new Error/, 'a tela "no app" de uma parada recusa captura da web');
@@ -605,14 +630,30 @@ test('cada tela do app tem a sua descrição, e nada é anunciado sozinho', () =
   for (const classe of ['cn-heroi__ceu', 'cn-heroi__chao', 'cn-regiao__enfeites', 'cn-chegada__ceu', 'cn-entradas']) assert.match(html, new RegExp(`class="${classe}" aria-hidden="true"`), classe);
 });
 
-test('as molduras seguem a plataforma da captura: ilha no iPhone, ponto de câmera no Android, e nenhum relógio desenhado', () => {
+test('as molduras seguem a plataforma da captura e são realistas, desenhadas em CSS: ilha e botões dos dois lados no iPhone, furo de câmera e botões à direita no Android, e nada da barra de status desenhado', () => {
   const html = desenhar({ aparelho: 'android' });
-  const plataformas = [...html.matchAll(/class="cn-celular[^"]*" data-plataforma="(iphone|android)"/g)].map((m) => m[1]);
+  const plataformas = [...html.matchAll(/class="cn-celular" data-plataforma="(iphone|android)"/g)].map((m) => m[1]);
   assert.ok(plataformas.includes('iphone') && plataformas.includes('android'));
+  // As peças da moldura: os quatro botões das laterais (só desenho), o corpo com a tela e a câmera.
+  const moldura = html.match(/<div class="cn-celular" data-plataforma="[^"]+"><div class="cn-celular__aparelho">([\s\S]*?)<div class="cn-celular__tela">/)[1];
+  assert.equal(moldura, '<span class="cn-celular__botoes" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div class="cn-celular__corpo">');
   const css = ler('src/app/conheca/conheca.css');
-  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__ilha \{ top: 4px; width: 7px; height: 7px; border-radius: 50%; \}/);
-  assert.match(css, /border: 7px solid var\(--cn-marinho\); border-radius: 32px;/);
-  assert.doesNotMatch(ler('src/app/conheca/celular.tsx'), /\d\d:\d\d|relogio|hora/i, 'o relógio que aparece é o da captura');
+  // Todas as medidas acompanham a largura do próprio celular.
+  assert.match(css, /\.cn-celular \{ --celular: 260px; position: relative; box-sizing: border-box; width: var\(--celular\); container-type: inline-size; \}/);
+  const regrasDoCelular = css.split('\n').filter((linha) => /^\.cn-celular/.test(linha));
+  assert.ok(regrasDoCelular.filter((linha) => /cqw/.test(linha)).length >= 8, 'o aro, a tela, a câmera e os botões em cqw');
+  // O aro de metal é a borda, e a moldura preta do vidro, o preenchimento: um elemento só.
+  assert.match(css, /background: linear-gradient\(#07070a, #07070a\) padding-box, linear-gradient\(140deg, [^;]*\) border-box;/);
+  // Android: a câmera é um furo redondo, o canto da tela é menor (não corta o relógio da captura) e os botões ficam só do lado direito.
+  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__ilha \{ top: 4\.2cqw; width: 3\.8cqw; height: 3\.8cqw; border-radius: 50%;/);
+  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__tela \{ border-radius: 8\.2cqw; aspect-ratio: 720 \/ 1560; \}/);
+  assert.match(css, /\.cn-celular\[data-plataforma='android'\] \.cn-celular__botoes i:nth-child\(-n\+2\) \{ display: none; \}/);
+  assert.match(css, /\.cn-celular__tela \{ position: relative; overflow: hidden; border-radius: 30px; border-radius: 13\.2cqw; background: #fff; aspect-ratio: 1206 \/ 2622; \}/);
+  // É desenho do Studoo: nenhuma imagem nem marca de aparelho, e nada da barra de status (o relógio que aparece é o da captura).
+  const fonte = ler('src/app/conheca/celular.tsx');
+  assert.doesNotMatch(fonte, /\d\d:\d\d|relogio|hora/i, 'o relógio que aparece é o da captura');
+  assert.doesNotMatch(regrasDoCelular.join('\n'), /url\(/, 'a moldura não usa imagem');
+  assert.doesNotMatch(fonte + regrasDoCelular.join('\n'), /apple|iphone 1\d|pixel \d|galaxy|samsung/i, 'sem marca nem modelo de aparelho');
 });
 
 test('S3: as seis ideias da tela inicial estão UMA vez no código, em grade que quebra linha com todas à vista, com o ícone da área de origem e sem fileira em laço', () => {
