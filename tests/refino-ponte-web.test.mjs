@@ -60,3 +60,13 @@ test('item 27: o estudo monta o recolhível uma vez só (com a guarda das refer�
   const ponteFonte = ler('src/app/ponte-reforco.tsx');
   assert.match(ponteFonte, /<\/div>\s*\{origem\}\s*\{!concluida && <Botao variante="texto" onClick=\{voltar\}>\{m\.ponteVoltarExercicio\}<\/Botao>\}/, 'entre o cartão e "Voltar ao exercício"');
 });
+
+test('spec 19 (L8): a frase "Você respondeu…" aparece no passo 1 e, do passo 2 em diante, some até 600 px', () => {
+  const html = desenhar();
+  assert.match(html, /<p class="reforco__motivo">Você respondeu “1\/2”\./, 'no passo 1 a frase aparece inteira, sem a marca de lida');
+  const ponteFonte = ler('src/app/ponte-reforco.tsx');
+  assert.match(ponteFonte, /<p className="reforco__motivo" data-lido=\{passo > 1 \? '' : undefined\}>/, 'a marca entra do passo 2 em diante');
+  const css = ler('src/app/estudio.css');
+  assert.match(css, /@media \(max-width: 600px\) \{\s*\.reforco__motivo\[data-lido\] \{ display: none; \}\s*\}/, 'só some em telas de até 600 px');
+  assert.equal((css.match(/reforco__motivo\[data-lido\]/g) ?? []).length, 1, 'acima de 600 px nada muda');
+});
