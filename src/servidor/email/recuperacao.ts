@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { origemStudoo, origemWebPermitida } from '../acesso/origem';
+import { emailCodigoCadastro, emailContaExistente, emailRecuperacao, type Email, type EnderecosEmail } from './modelos';
 
 function ehLoopback(hostname: string) {
   return ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
@@ -54,36 +55,29 @@ export function recuperacaoDisponivel() {
   if (!origemStudoo()) return false;
   return process.env.EMAIL === 'falso' ? !!local() : !!configuracaoProvedor();
 }
-type Mensagem = { to: string; subject: string; text: string };
+/** Toda mensagem vai em HTML e em texto simples: o cliente de e-mail escolhe a parte que sabe mostrar. */
+type Mensagem = { to: string; subject: string; html: string; text: string };
 
-function urlRecuperacao(origem?: string | null) {
+/** Os links da mensagem ficam na origem de quem pediu (quando ela é permitida) ou na do servidor: nunca numa origem alheia. */
+function enderecos(origem?: string | null): EnderecosEmail {
   const base = (origem && origemWebPermitida(origem) ? origem : origemStudoo()) ?? 'http://localhost';
-  return new URL('/recuperar', base);
+  const em = (caminho: string) => new URL(caminho, base).href;
+  return { recuperar: em('/recuperar'), entrar: em('/login'), suporte: em('/suporte') };
 }
+const montar = (to: string, { assunto, html, texto }: Email): Mensagem => ({ to, subject: assunto, html, text: texto });
 
 export async function enviarRecuperacao(email: string, codigo: string, origem?: string | null) {
-  const url = urlRecuperacao(origem);
-  await enviarEmail({
-    to: email, subject: 'Seu código para recuperar a senha do Studoo',
-    text: `Seu código do Studoo é: ${codigo}\n\nEle vale por 15 minutos e só pode ser usado uma vez. Informe-o no app ou em ${url}.\n\nSe você não solicitou a troca, ignore esta mensagem. Sua senha continua a mesma.`,
-  });
+  await enviarEmail(montar(email, emailRecuperacao({ codigo, enderecos: enderecos(origem) })));
 }
 
 /** Código de posse do e-mail para criar a conta. */
 export async function enviarCodigoCadastro(email: string, codigo: string) {
-  await enviarEmail({
-    to: email, subject: 'Seu código para criar a conta no Studoo',
-    text: `Seu código do Studoo é: ${codigo}\n\nEle vale por 15 minutos e só pode ser usado uma vez. Informe-o no app ou no site para criar sua conta.\n\nSe você não pediu para criar uma conta, ignore esta mensagem.`,
-  });
+  await enviarEmail(montar(email, emailCodigoCadastro({ codigo, enderecos: enderecos() })));
 }
 
 /** Quem tenta criar conta com um e-mail que já tem conta recebe este aviso, e nenhum código (a API responde igual). */
 export async function enviarAvisoContaExistente(email: string, origem?: string | null) {
-  const url = urlRecuperacao(origem);
-  await enviarEmail({
-    to: email, subject: 'Você já tem uma conta no Studoo',
-    text: `Alguém pediu para criar uma conta no Studoo com este e-mail, mas ele já tem uma conta.\n\nPara entrar, use o mesmo jeito de sempre (e-mail e senha, Google ou Apple). Se esqueceu a senha, recupere em ${url}.\n\nSe não foi você, ignore esta mensagem.`,
-  });
+  await enviarEmail(montar(email, emailContaExistente({ enderecos: enderecos(origem) })));
 }
 
 async function enviarEmail(mensagem: Mensagem) {
@@ -103,7 +97,7 @@ async function enviarEmail(mensagem: Mensagem) {
       method: 'POST', cache: 'no-store', redirect: 'error',
       signal: AbortSignal.timeout(10_000),
       headers: { Authorization: `Bearer ${config.chave}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: config.from, to: [email], subject: mensagem.subject, text: mensagem.text }),
+      body: JSON.stringify({ from: config.from, to: [email], subject: mensagem.subject, html: mensagem.html, text: mensagem.text }),
     });
     if (!resposta.ok) throw new Error('Envio recusado');
     const dados: unknown = await resposta.json();
