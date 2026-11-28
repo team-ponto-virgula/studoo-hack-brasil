@@ -98,10 +98,43 @@ export async function lerJson(request: Request, maximo = 8192): Promise<unknown>
   }
 }
 
-async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
+/** Uma resposta que demora isto ou mais vira uma linha no log (a rota sem identificadores, o status e a duração). */
+export const RESPOSTA_LENTA_MS = 3000;
+
+/**
+ * O caminho da rota sem identificadores, para o log: cada trecho com número, maiúscula ou sublinhado (ids, códigos, tokens)
+ * vira `:id`. Os trechos fixos das rotas são palavras minúsculas com hífen (`ponte`, `voz-ao-vivo`).
+ */
+export function rotaSemIdentificadores(url: string): string {
+  try {
+    return new URL(url, 'http://localhost').pathname.split('/').map((trecho) => (/^[a-z-]*$/.test(trecho) ? trecho : ':id')).join('/');
+  } catch {
+    return ':invalida';
+  }
+}
+
+/**
+ * O tempo da resposta (spec das esperas vivas): o cabeçalho `Server-Timing` (`app;dur=…`, o tempo até a resposta começar;
+ * numa resposta em fluxo, até o primeiro byte) e, quando passa de `RESPOSTA_LENTA_MS`, uma linha no log para acompanhar as
+ * esperas de verdade (sem objetivo, conteúdo, conta nem identificador, SEGURANCA.md §8).
+ */
+export function marcarTempoDaResposta(resposta: Response, inicio: number, request?: Request): Response {
+  const duracaoMs = Math.round(performance.now() - inicio);
+  try {
+    resposta.headers.append('Server-Timing', `app;dur=${duracaoMs}`);
+  } catch {
+    // Cabeçalhos imutáveis (um redirecionamento, por exemplo): a resposta segue como está.
+  }
+  if (request && duracaoMs >= RESPOSTA_LENTA_MS) {
+    console.info(JSON.stringify({ rota: rotaSemIdentificadores(request.url), metodo: request.method, status: resposta.status, duracaoMs, lenta: true }));
+  }
+  return resposta;
+}
+
+async function tratarRota(acao: () => Promise<Response>, request?: Request): Promise<Response> {
   const inicio = performance.now();
   try {
-    return await acao();
+    return marcarTempoDaResposta(await acao(), inicio, request);
   } catch (erro) {
     const codigo = erro instanceof FalhaApi ? erro.codigo : "falha";
     const extra = erro instanceof FalhaApi ? erro.extra : undefined;
@@ -113,7 +146,7 @@ async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
     }
     const resposta = responder({ ...extra, codigo, mensagem: mensagensApi[codigo] }, status);
     resposta.headers.set("X-Correlation-Id", correlationId);
-    return resposta;
+    return marcarTempoDaResposta(resposta, inicio, request);
   }
 }
 
@@ -154,7 +187,7 @@ export function rotaPublica(request: Request, acao: () => Promise<Response>): Pr
     validarOrigemWeb(request);
     if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
     return acao();
-  });
+  }, request);
 }
 
 /**
@@ -173,7 +206,7 @@ export function rotaPublicaComSessao(
     }
     const credencial = lerCredencial(request);
     return acao(await usuarioDaSessao(credencial.token, credencial.canal));
-  });
+  }, request);
 }
 
 export function rotaEntradaMobile(request: Request, acao: () => Promise<Response>): Promise<Response> {
@@ -181,7 +214,7 @@ export function rotaEntradaMobile(request: Request, acao: () => Promise<Response
     validarCanalMobile(request, "nao_encontrado");
     if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
     return acao();
-  });
+  }, request);
 }
 
 type CredencialSessao = { canal: CanalSessao; token: string };
@@ -210,5 +243,5 @@ export function rotaPrivada(
     const usuarioId = await usuarioDaSessao(credencial.token, credencial.canal);
     if (!usuarioId) throw new FalhaApi("nao_autenticado");
     return acao(usuarioId, credencial);
-  });
+  }, request);
 }
